@@ -8,12 +8,13 @@ model
 `replicatr` is a `nostr` relay written in pure Go, aimed at becoming a single,
 modular, and extensible reference implementation of the `nostr` protocol as
 described in the
-nostr [NIP (nostr improvement possibilities) specification](https://github.com/nostr-protocol/nips).
+nostr [NIP (nostr implementation possibilities) specification](https://github.com/nostr-protocol/nips).
 
 In its initial form it will use a [badger](https://github.com/dgraph-io/badger)
 data store, interface with
 the [internet computer](https://internetcomputer.org/) database for out-of-band
-replication and implement a publish/subscribe system based on
+replication and potentially ICP based relay subscription payments, and
+implement a publish/subscribe system based on
 the [Scionic Merkle DAG](https://github.com/HORNET-Storage/scionic-merkletree)
 content addressing scheme, aggregating user events with associated media and
 complex data types such as Git repositories and immutable filesystem tree
@@ -24,12 +25,13 @@ structured data, for its primary mechanism of event propagation.
 Social networks function as a generalised publish-subscribe distributed database
 system.
 
-In order to implement this, users are connected to one or two nodes in the
-network, a primary and a secondary that picks up the slack if the primary is
+In order to implement this, users are connected to one or a few nodes in the
+network, a primary and secondaries that pick up the slack if the primary is
 unresponsive.
 
 Their messages are stored on their nodes, and other users who are subscribing to
-their messages, their nodes set up subscriptions with the nodes the user is
+their published events, their nodes set up subscriptions with the nodes the user
+is
 attached to and when new events are published, they are propagated to the
 subscribing relays in order to deliver them to the users.
 
@@ -57,7 +59,8 @@ quickly query each other for copies of data that their users are requesting or
 are interlinking with their data (via reply threads and tagging) to efficiently
 replicate and distribute the data of users published events while enabling users
 to efficiently shard their data storage and minimise infrastructure costs and
-propagation delays.
+propagation delays. This covers not just simple text based events but media
+files and complex data structures such as Git repositories.
 
 ### extensible storage and network implementations
 
@@ -71,7 +74,8 @@ terrible, extremely inefficient format with a complex syntax, and websockets are
 excessively complex layering on top of HTTP and TCP, and for rapid
 synchronisation between to nodes on a network, a UDP based, binary encoded
 format is far more suitable. For this, any number of implementations could be
-added, at minimum, QUIC and Protocol Buffers.
+added, at minimum, QUIC and Protocol Buffers should be added, as these are
+widely supported and more efficient.
 
 Likewise, for cases of bulk synchronisation without a latency minimisation
 requirement, the efficiently encoded form of the map of data objects associated
@@ -88,6 +92,9 @@ initial release of this project is to integrate it to one or more highly
 consistent distributed database ledger protocols, aka "blockchains", both as
 reliable replicas of the indexes of data, as well as directly storing the data,
 where the protocol in question has this facility built into it.
+
+This will beimplemented in the initial release of `replicatr` on
+the `internet computer protocol`.
 
 ### multimedia distribution
 
