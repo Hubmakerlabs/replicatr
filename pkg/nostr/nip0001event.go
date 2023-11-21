@@ -11,17 +11,36 @@ import (
 	"github.com/mleku/ec/schnorr"
 )
 
+// Event is the primary datatype of nostr.
 type Event struct {
-	ID        string    `json:"id"`
-	PubKey    string    `json:"pubkey"`
+
+	// ID is the SHA256 hash of the canonical encoding of the event
+	ID string `json:"id"`
+
+	// PubKey is the public key of the event creator
+	PubKey string `json:"pubkey"`
+
+	// CreatedAt is the UNIX timestamp of the event according to the event
+	// creator (never trust a timestamp!)
 	CreatedAt Timestamp `json:"created_at"`
-	Kind      int       `json:"kind"`
-	Tags      Tags      `json:"tags"`
-	Content   string    `json:"content"`
-	Sig       string    `json:"sig"`
+
+	// Kind is the nostr protocol code for the type of event. See kind.T
+	Kind int `json:"kind"`
+
+	// Tags are a list of tags, which are a list of strings usually structured
+	// as a 3 layer scheme indicating specific features of an event.
+	Tags Tags `json:"tags"`
+
+	// Content is an arbitrary string that can contain anything, but usually
+	// conforming to a specification relating to the Kind and the Tags.
+	Content string `json:"content"`
+
+	// Sig is the signature on the ID hash that validates as coming from the
+	// Pubkey.
+	Sig string `json:"sig"`
 
 	// anything here will be mashed together with the main event object when
-	// serializing
+	// serializing (todo WHO THE FUCK WROTE THIS COMMENT?)
 	extra map[string]any
 }
 
