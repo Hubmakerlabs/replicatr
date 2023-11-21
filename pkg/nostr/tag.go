@@ -1,6 +1,7 @@
 package nostr
 
 import (
+	"github.com/mleku/replicatr/pkg/jsontext"
 	"strings"
 )
 
@@ -11,6 +12,9 @@ const (
 	TagRelay
 )
 
+// Tag is a list of strings with a literal ordering.
+//
+// Not a set, there can be repeating elements.
 type Tag []string
 
 // StartsWith checks a tag has the same initial set of elements.
@@ -33,7 +37,7 @@ func (tag Tag) StartsWith(prefix []string) bool {
 	return strings.HasPrefix(tag[prefixLen-1], prefix[prefixLen-1])
 }
 
-// Key returns the first element of the tags
+// Key returns the first element of the tags.
 func (tag Tag) Key() string {
 	if len(tag) > TagKey {
 		return tag[TagKey]
@@ -41,7 +45,7 @@ func (tag Tag) Key() string {
 	return ""
 }
 
-// Value returns the second element of the tag
+// Value returns the second element of the tag.
 func (tag Tag) Value() string {
 	if len(tag) > TagValue {
 		return tag[TagValue]
@@ -49,7 +53,7 @@ func (tag Tag) Value() string {
 	return ""
 }
 
-// Relay returns the third element of the tag
+// Relay returns the third element of the tag.
 func (tag Tag) Relay() string {
 	if (tag.Key() == "e" || tag.Key() == "p") && len(tag) > TagRelay {
 		return NormalizeURL(tag[TagRelay])
@@ -57,14 +61,15 @@ func (tag Tag) Relay() string {
 	return ""
 }
 
-// Marshal Tag. Used for Serialization so string escaping should be as in RFC8259.
+// Marshal Tag. Used for Serialization so string escaping should be as in
+// RFC8259.
 func (tag Tag) marshalTo(dst []byte) []byte {
 	dst = append(dst, '[')
 	for i, s := range tag {
 		if i > 0 {
 			dst = append(dst, ',')
 		}
-		dst = EscapeString(dst, s)
+		dst = append(dst, jsontext.EscapeJSONStringAndWrap(s)...)
 	}
 	dst = append(dst, ']')
 	return dst

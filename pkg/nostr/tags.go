@@ -5,6 +5,8 @@ import (
 	"errors"
 )
 
+// Tags is a list of Tag - which are lists of string elements with ordering and
+// no uniqueness constraint (not a set).
 type Tags []Tag
 
 // GetFirst gets the first tag in tags that matches the prefix, see [Tag.StartsWith]
@@ -57,16 +59,16 @@ func (tags Tags) AppendUnique(tag Tag) Tags {
 	if n > 2 {
 		n = 2
 	}
-
 	if tags.GetFirst(tag[:n]) == nil {
 		return append(tags, tag)
 	}
 	return tags
 }
 
-func (tags Tags) Scan(src any) error {
+// Scan parses a string or raw bytes that should be a string and embeds the
+// values into the tags variable from which this method is invoked.
+func (tags Tags) Scan(src any) (err error) {
 	var jtags []byte
-
 	switch v := src.(type) {
 	case []byte:
 		jtags = v
@@ -75,11 +77,12 @@ func (tags Tags) Scan(src any) error {
 	default:
 		return errors.New("couldn't scan tags, it's not a json string")
 	}
-
-	json.Unmarshal(jtags, &tags)
-	return nil
+	err = json.Unmarshal(jtags, &tags)
+	return
 }
 
+// ContainsAny returns true if any of the strings given in `values` matches any
+// of the tag elements.
 func (tags Tags) ContainsAny(tagName string, values []string) bool {
 	for _, v := range tags {
 		if len(v) < 2 {
@@ -97,9 +100,9 @@ func (tags Tags) ContainsAny(tagName string, values []string) bool {
 	return false
 }
 
-// MarshalTo appends the JSON encoded byte of Tags as [][]string to dst.
-// String escaping is as described in RFC8259.
-func (tags Tags) marshalTo(dst []byte) []byte {
+// MarshalTo appends the JSON encoded byte of Tags as [][]string to dst. String
+// escaping is as described in RFC8259.
+func (tags Tags) MarshalTo(dst []byte) []byte {
 	dst = append(dst, '[')
 	for i, tag := range tags {
 		if i > 0 {

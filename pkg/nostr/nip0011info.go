@@ -26,7 +26,6 @@ func (info *RelayInfo) AddSupportedNIP(number int) {
 	if exists {
 		return
 	}
-
 	info.SupportedNIPs = append(info.SupportedNIPs, -1)
 	copy(info.SupportedNIPs[idx+1:], info.SupportedNIPs[idx:])
 	info.SupportedNIPs[idx] = number

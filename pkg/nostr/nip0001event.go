@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"github.com/mleku/replicatr/pkg/jsontext"
 
 	"github.com/mailru/easyjson"
 	btcec "github.com/mleku/ec"
@@ -19,44 +20,10 @@ type Event struct {
 	Content   string    `json:"content"`
 	Sig       string    `json:"sig"`
 
-	// anything here will be mashed together with the main event object when serializing
+	// anything here will be mashed together with the main event object when
+	// serializing
 	extra map[string]any
 }
-
-const (
-	KindProfileMetadata          int = 0
-	KindTextNote                 int = 1
-	KindRecommendServer          int = 2
-	KindContactList              int = 3
-	KindEncryptedDirectMessage   int = 4
-	KindDeletion                 int = 5
-	KindRepost                   int = 6
-	KindReaction                 int = 7
-	KindChannelCreation          int = 40
-	KindChannelMetadata          int = 41
-	KindChannelMessage           int = 42
-	KindChannelHideMessage       int = 43
-	KindChannelMuteUser          int = 44
-	KindFileMetadata             int = 1063
-	KindZapRequest               int = 9734
-	KindZap                      int = 9735
-	KindMuteList                 int = 10000
-	KindPinList                  int = 10001
-	KindRelayListMetadata        int = 10002
-	KindNWCWalletInfo            int = 13194
-	KindClientAuthentication     int = 22242
-	KindNWCWalletRequest         int = 23194
-	KindNWCWalletResponse        int = 23195
-	KindNostrConnect             int = 24133
-	KindCategorizedPeopleList    int = 30000
-	KindCategorizedBookmarksList int = 30001
-	KindProfileBadges            int = 30008
-	KindBadgeDefinition          int = 30009
-	KindStallDefinition          int = 30017
-	KindProductDefinition        int = 30018
-	KindArticle                  int = 30023
-	KindApplicationSpecificData  int = 30078
-)
 
 // Event Stringer interface, just returns the raw JSON as a string.
 func (evt *Event) String() string {
@@ -70,9 +37,10 @@ func (evt *Event) GetID() string {
 	return hex.EncodeToString(h[:])
 }
 
-// Serialize outputs a byte array that can be hashed/signed to identify/authenticate.
-// JSON encoding as defined in RFC4627.
+// Serialize outputs a byte array that can be hashed/signed to
+// identify/authenticate. JSON encoding as defined in RFC4627.
 func (evt *Event) Serialize() []byte {
+
 	// the serialization process is just putting everything into a JSON array
 	// so the order is kept. See NIP-01
 	dst := make([]byte, 0)
@@ -88,20 +56,21 @@ func (evt *Event) Serialize() []byte {
 		))...)
 
 	// tags
-	dst = evt.Tags.marshalTo(dst)
+	dst = evt.Tags.MarshalTo(dst)
 	dst = append(dst, ',')
 
 	// content needs to be escaped in general as it is user generated.
-	dst = EscapeString(dst, evt.Content)
+	dst = append(dst, jsontext.EscapeJSONStringAndWrap(evt.Content)...)
 	dst = append(dst, ']')
 
 	return dst
 }
 
-// CheckSignature checks if the signature is valid for the id
-// (which is a hash of the serialized event content).
-// returns an error if the signature itself is invalid.
+// CheckSignature checks if the signature is valid for the id (which is a hash
+// of the serialized event content). returns an error if the signature itself is
+// invalid.
 func (evt *Event) CheckSignature() (bool, error) {
+
 	// read and check pubkey
 	pk, err := hex.DecodeString(evt.PubKey)
 	if err != nil {

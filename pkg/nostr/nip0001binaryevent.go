@@ -34,21 +34,30 @@ package nostr
 // no comma after the final item
 //
 // - string means a string contained between double quotes `"` and containing no
-// other double quotes within it.
+// other double quotes within it. Special characters are handled as per RFC8259
+// section 7, and should be processed from raw (ASCII/UTF-8) strings using
+// jsontext.EscapeJSONStringAndWrap.
 type BinaryEvent struct {
+
 	// ID is 32-bytes lowercase hex-encoded sha256 of the serialized event data
 	ID [32]byte `json:"id"`
+
 	// PubKey is a 32-bytes lowercase hex-encoded public key of the event
 	// creator
 	PubKey [32]byte `json:"pubkey"`
+
 	// CreatedAt is unix timestamp in seconds
 	CreatedAt Timestamp `json:"created_at"`
+
 	// Kind is a 16 bit integer, 0-65535
 	Kind uint16 `json:"kind"`
+
 	// Tags are a set of tag identifiers to classify the event
 	Tags Tags `json:"tags"`
+
 	// Content is an arbitrary string containing the body of the event
 	Content string `json:"content"`
+
 	// Signature is the BIP 340 Schnorr signature on the ID
 	Sig [64]byte `json:"sig"`
 }
