@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/mleku/replicatr/pkg/jsontext"
+	"github.com/mleku/replicatr/pkg/nostr/kind"
 
 	"github.com/mailru/easyjson"
 	btcec "github.com/mleku/ec"
@@ -25,7 +26,7 @@ type Event struct {
 	CreatedAt Timestamp `json:"created_at"`
 
 	// Kind is the nostr protocol code for the type of event. See kind.T
-	Kind int `json:"kind"`
+	Kind kind.T `json:"kind"`
 
 	// Tags are a list of tags, which are a list of strings usually structured
 	// as a 3 layer scheme indicating specific features of an event.
