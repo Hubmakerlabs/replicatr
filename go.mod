@@ -2,6 +2,8 @@ module github.com/mleku/replicatr
 
 go 1.21
 
+toolchain go1.21.4
+
 require (
 	github.com/mailru/easyjson v0.7.7
 	github.com/mleku/ec v1.0.2

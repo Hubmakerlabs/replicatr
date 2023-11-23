@@ -9,12 +9,6 @@ func TestEscapeJSONStringAndWrap(t *testing.T) {
 		GenerateStringWithAllASCII())
 	escapeJSONStringAndWrapVersion :=
 		EscapeJSONStringAndWrap(GenerateStringWithAllASCII())
-	// t.Logf("\nold: %d %s\nnew %d %s\n",
-	// 	len(escapeStringVersion),
-	// 	escapeStringVersion,
-	// 	len(escapeJSONStringAndWrapVersion),
-	// 	escapeJSONStringAndWrapVersion,
-	// )
 	if len(escapeJSONStringAndWrapVersion) != len(escapeStringVersion) {
 		t.Logf("escapeString version %d chars, "+
 			"escapeJSONStringAndWrap version %d chars\n",
