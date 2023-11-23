@@ -12,13 +12,14 @@ import (
 	"github.com/mleku/ec/schnorr"
 )
 
-// Event is the primary datatype of nostr.
+// Event is the primary datatype of nostr. This is the form of the structure
+// that defines its JSON string based format.
 type Event struct {
 
 	// ID is the SHA256 hash of the canonical encoding of the event
 	ID string `json:"id"`
 
-	// PubKey is the public key of the event creator
+	// PubKey is the public key of the event creator in *hexadecimal* format
 	PubKey string `json:"pubkey"`
 
 	// CreatedAt is the UNIX timestamp of the event according to the event
