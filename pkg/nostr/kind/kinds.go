@@ -27,6 +27,7 @@ const (
 	ChannelHideMessage       T = 43
 	ChannelMuteUser          T = 44
 	FileMetadata             T = 1063
+	MemoryHole               T = 1984
 	ZapRequest               T = 9734
 	Zap                      T = 9735
 	MuteList                 T = 10000
