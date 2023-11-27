@@ -1,12 +1,10 @@
-module github.com/mleku/replicatr
+module mleku.online/git/replicatr
 
-go 1.21
-
-toolchain go1.21.4
+go 1.21.4
 
 require (
 	github.com/mailru/easyjson v0.7.7
-	github.com/mleku/ec v1.0.2
+	mleku.online/git/ec v1.0.3
 )
 
 require (

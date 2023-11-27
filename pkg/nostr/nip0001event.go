@@ -4,12 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	"github.com/mleku/replicatr/pkg/jsontext"
-	"github.com/mleku/replicatr/pkg/nostr/kind"
+	"mleku.online/git/replicatr/pkg/jsontext"
+	"mleku.online/git/replicatr/pkg/nostr/kind"
 
 	"github.com/mailru/easyjson"
-	btcec "github.com/mleku/ec"
-	"github.com/mleku/ec/schnorr"
+	btcec "mleku.online/git/ec"
+	"mleku.online/git/ec/schnorr"
 )
 
 // Event is the primary datatype of nostr. This is the form of the structure

@@ -1,7 +1,7 @@
 package nostr
 
 import (
-	"github.com/mleku/replicatr/pkg/jsontext"
+	"mleku.online/git/replicatr/pkg/jsontext"
 	"strings"
 )
 

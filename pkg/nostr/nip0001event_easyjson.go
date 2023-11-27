@@ -4,7 +4,7 @@ package nostr
 
 import (
 	json "encoding/json"
-	"github.com/mleku/replicatr/pkg/nostr/kind"
+	"mleku.online/git/replicatr/pkg/nostr/kind"
 
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
