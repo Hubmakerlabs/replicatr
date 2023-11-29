@@ -1,13 +1,13 @@
 package nostr
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"mleku.online/git/replicatr/pkg/jsontext"
 	"mleku.online/git/replicatr/pkg/nostr/kind"
 
 	"github.com/mailru/easyjson"
+	"github.com/minio/sha256-simd"
 	btcec "mleku.online/git/ec"
 	"mleku.online/git/ec/schnorr"
 )
