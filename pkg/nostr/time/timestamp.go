@@ -1,18 +1,18 @@
-package nostr
+package time
 
 import "time"
 
-// Timestamp is a convenience type for UNIX 64 bit timestamps of 1 second
+// Stamp is a convenience type for UNIX 64 bit timestamps of 1 second
 // precision.
-type Timestamp int64
+type Stamp int64
 
 // Now returns the current UNIX timestamp of the current second.
-func Now() Timestamp {
-	return Timestamp(time.Now().Unix())
+func Now() Stamp {
+	return Stamp(time.Now().Unix())
 }
 
 // Time converts a time.Time value into a canonical UNIX 64 bit 1 second
 // precision timestamp.
-func (t Timestamp) Time() time.Time {
+func (t Stamp) Time() time.Time {
 	return time.Unix(int64(t), 0)
 }

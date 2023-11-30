@@ -1,4 +1,9 @@
-package nostr
+package nip1
+
+import (
+	"mleku.online/git/replicatr/pkg/nostr/tags"
+	"mleku.online/git/replicatr/pkg/nostr/time"
+)
 
 // BinaryEvent is the primary message type of the nostr protocol, with relevant
 // fields encoded as their byte slice form.
@@ -47,13 +52,13 @@ type BinaryEvent struct {
 	PubKey [32]byte `json:"pubkey"`
 
 	// CreatedAt is unix timestamp in seconds
-	CreatedAt Timestamp `json:"created_at"`
+	CreatedAt time.Stamp `json:"created_at"`
 
 	// Kind is a 16 bit integer, 0-65535
 	Kind uint16 `json:"kind"`
 
 	// Tags are a set of tag identifiers to classify the event
-	Tags Tags `json:"tags"`
+	Tags tags.T `json:"tags"`
 
 	// Content is an arbitrary string containing the body of the event
 	Content string `json:"content"`

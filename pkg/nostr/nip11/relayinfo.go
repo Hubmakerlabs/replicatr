@@ -1,4 +1,6 @@
-package nostr
+package nip11
+
+import "mleku.online/git/replicatr/pkg/nostr/number"
 
 // RelayInfo provides the information for a relay on the network as regards to
 // versions, NIP support, contact, policies, and payment requirements.
@@ -7,7 +9,7 @@ type RelayInfo struct {
 	Description    string       `json:"description"`
 	PubKey         string       `json:"pubkey"`
 	Contact        string       `json:"contact"`
-	SupportedNIPs  NList        `json:"supported_nips"`
+	SupportedNIPs  number.List  `json:"supported_nips"`
 	Software       string       `json:"software"`
 	Version        string       `json:"version"`
 	Limitation     *RelayLimits `json:"limitation,omitempty"`
@@ -21,14 +23,14 @@ type RelayInfo struct {
 }
 
 // AddSupportedNIP appends a supported NIP number to a RelayInfo.
-func (info *RelayInfo) AddSupportedNIP(number int) {
-	idx, exists := info.SupportedNIPs.HasNumber(number)
+func (ri *RelayInfo) AddSupportedNIP(number int) {
+	idx, exists := ri.SupportedNIPs.HasNumber(number)
 	if exists {
 		return
 	}
-	info.SupportedNIPs = append(info.SupportedNIPs, -1)
-	copy(info.SupportedNIPs[idx+1:], info.SupportedNIPs[idx:])
-	info.SupportedNIPs[idx] = number
+	ri.SupportedNIPs = append(ri.SupportedNIPs, -1)
+	copy(ri.SupportedNIPs[idx+1:], ri.SupportedNIPs[idx:])
+	ri.SupportedNIPs[idx] = number
 }
 
 // RelayLimits specifies the various restrictions and limitations that apply to

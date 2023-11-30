@@ -1,15 +1,24 @@
-package nostr
+package nip1
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	secp256k1 "mleku.online/git/ec/secp"
+	log2 "mleku.online/git/log"
 	"mleku.online/git/replicatr/pkg/jsontext"
 	"mleku.online/git/replicatr/pkg/nostr/kind"
+	"mleku.online/git/replicatr/pkg/nostr/tags"
+	"mleku.online/git/replicatr/pkg/nostr/time"
 
-	"github.com/mailru/easyjson"
 	"github.com/minio/sha256-simd"
-	btcec "mleku.online/git/ec"
+	ec "mleku.online/git/ec"
 	"mleku.online/git/ec/schnorr"
+)
+
+var (
+	log   = log2.GetLogger()
+	fails = log.E.Chk
 )
 
 // Event is the primary datatype of nostr. This is the form of the structure
@@ -24,14 +33,14 @@ type Event struct {
 
 	// CreatedAt is the UNIX timestamp of the event according to the event
 	// creator (never trust a timestamp!)
-	CreatedAt Timestamp `json:"created_at"`
+	CreatedAt time.Stamp `json:"created_at"`
 
 	// Kind is the nostr protocol code for the type of event. See kind.T
 	Kind kind.T `json:"kind"`
 
 	// Tags are a list of tags, which are a list of strings usually structured
 	// as a 3 layer scheme indicating specific features of an event.
-	Tags Tags `json:"tags"`
+	Tags tags.T `json:"tags"`
 
 	// Content is an arbitrary string that can contain anything, but usually
 	// conforming to a specification relating to the Kind and the Tags.
@@ -40,48 +49,45 @@ type Event struct {
 	// Sig is the signature on the ID hash that validates as coming from the
 	// Pubkey.
 	Sig string `json:"sig"`
-
-	// anything here will be mashed together with the main event object when
-	// serializing (todo WHO THE FUCK WROTE THIS COMMENT?)
-	extra map[string]any
 }
 
 // Event Stringer interface, just returns the raw JSON as a string.
-func (evt *Event) String() string {
-	j, _ := easyjson.Marshal(evt)
-	return string(j)
+func (ev *Event) String() (s string) {
+	if j, e := json.Marshal(ev); !fails(e) {
+		s = string(j)
+	}
+	return
 }
 
 // GetID serializes and returns the event ID as a string.
-func (evt *Event) GetID() string {
-	h := sha256.Sum256(evt.Serialize())
+func (ev *Event) GetID() string {
+	h := sha256.Sum256(ev.Serialize())
 	return hex.EncodeToString(h[:])
 }
 
 // Serialize outputs a byte array that can be hashed/signed to
 // identify/authenticate. JSON encoding as defined in RFC4627.
-func (evt *Event) Serialize() []byte {
+func (ev *Event) Serialize() []byte {
 
-	// the serialization process is just putting everything into a JSON array
-	// so the order is kept. See NIP-01
+	// the serialization process is just putting everything into a JSON array so
+	// the order is kept. See NIP-01
 	dst := make([]byte, 0)
 
-	// the header portion is easy to serialize
-	// [0,"pubkey",created_at,kind,[
+	// the header portion is easy to serialize [0,"pubkey",created_at,kind,[
 	dst = append(dst, []byte(
 		fmt.Sprintf(
 			"[0,\"%s\",%d,%d,",
-			evt.PubKey,
-			evt.CreatedAt,
-			evt.Kind,
+			ev.PubKey,
+			ev.CreatedAt,
+			ev.Kind,
 		))...)
 
 	// tags
-	dst = evt.Tags.MarshalTo(dst)
+	dst = ev.Tags.MarshalTo(dst)
 	dst = append(dst, ',')
 
 	// content needs to be escaped in general as it is user generated.
-	dst = append(dst, jsontext.EscapeJSONStringAndWrap(evt.Content)...)
+	dst = append(dst, jsontext.EscapeJSONStringAndWrap(ev.Content)...)
 	dst = append(dst, ']')
 
 	return dst
@@ -90,62 +96,66 @@ func (evt *Event) Serialize() []byte {
 // CheckSignature checks if the signature is valid for the id (which is a hash
 // of the serialized event content). returns an error if the signature itself is
 // invalid.
-func (evt *Event) CheckSignature() (bool, error) {
+func (ev *Event) CheckSignature() (valid bool, e error) {
 
 	// read and check pubkey
-	pk, err := hex.DecodeString(evt.PubKey)
-	if err != nil {
+	var pkBytes []byte
+	if pkBytes, e = hex.DecodeString(ev.PubKey); fails(e) {
 		return false, fmt.Errorf("event pubkey '%s' is invalid hex: %w",
-			evt.PubKey, err)
+			ev.PubKey, e)
 	}
 
-	pubkey, err := schnorr.ParsePubKey(pk)
-	if err != nil {
+	var pk *secp256k1.PublicKey
+	if pk, e = schnorr.ParsePubKey(pkBytes); e != nil {
 		return false, fmt.Errorf("event has invalid pubkey '%s': %w",
-			evt.PubKey, err)
+			ev.PubKey, e)
 	}
 
 	// read signature
-	s, err := hex.DecodeString(evt.Sig)
-	if err != nil {
-		return false, fmt.Errorf("signature '%s' is invalid hex: %w", evt.Sig,
-			err)
+	var sigBytes []byte
+	if sigBytes, e = hex.DecodeString(ev.Sig); e != nil {
+		return false, fmt.Errorf("signature '%s' is invalid hex: %w",
+			ev.Sig, e)
 	}
-	sig, err := schnorr.ParseSignature(s)
-	if err != nil {
-		return false, fmt.Errorf("failed to parse signature: %w", err)
+	var sig *schnorr.Signature
+	sig, e = schnorr.ParseSignature(sigBytes)
+	if e != nil {
+		return false, fmt.Errorf("failed to parse signature: %w", e)
 	}
 
 	// check signature
-	hash := sha256.Sum256(evt.Serialize())
-	return sig.Verify(hash[:], pubkey), nil
+	hash := sha256.Sum256(ev.Serialize())
+	return sig.Verify(hash[:], pk), nil
 }
 
 // Sign signs an event with a given SecretKey.
-func (evt *Event) Sign(secretKey string,
-	signOpts ...schnorr.SignOption) error {
-	s, err := hex.DecodeString(secretKey)
-	if err != nil {
+func (ev *Event) Sign(skStr string,
+	signOpts ...schnorr.SignOption) (e error) {
+
+	var skBytes []byte
+	skBytes, e = hex.DecodeString(skStr)
+	if e != nil {
 		return fmt.Errorf("sign called with invalid secret key '%s': %w",
-			secretKey, err)
+			skStr, e)
 	}
 
-	if evt.Tags == nil {
-		evt.Tags = make(Tags, 0)
+	if ev.Tags == nil {
+		ev.Tags = make(tags.T, 0)
 	}
 
-	sk, pk := btcec.SecKeyFromBytes(s)
-	pkBytes := pk.SerializeCompressed()
-	evt.PubKey = hex.EncodeToString(pkBytes[1:])
+	sk, pk := ec.SecKeyFromBytes(skBytes)
+	pkBytes := schnorr.SerializePubKey(pk)
+	ev.PubKey = hex.EncodeToString(pkBytes[1:])
 
-	h := sha256.Sum256(evt.Serialize())
-	sig, err := schnorr.Sign(sk, h[:], signOpts...)
-	if err != nil {
-		return err
+	h := sha256.Sum256(ev.Serialize())
+	var sig *schnorr.Signature
+	sig, e = schnorr.Sign(sk, h[:], signOpts...)
+	if e != nil {
+		return e
 	}
 
-	evt.ID = hex.EncodeToString(h[:])
-	evt.Sig = hex.EncodeToString(sig.Serialize())
+	ev.ID = hex.EncodeToString(h[:])
+	ev.Sig = hex.EncodeToString(sig.Serialize())
 
 	return nil
 }

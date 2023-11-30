@@ -1,78 +1,79 @@
-package nostr
+package tag
 
 import (
 	"mleku.online/git/replicatr/pkg/jsontext"
+	"mleku.online/git/replicatr/pkg/nostr/normalize"
 	"strings"
 )
 
 // The tag position meanings so they are clear when reading.
 const (
-	TagKey = iota
-	TagValue
-	TagRelay
+	Key = iota
+	Value
+	Relay
 )
 
-// Tag marker strings for e (reference) tags.
+// T marker strings for e (reference) tags.
 const (
-	TagMarkerReply   = "reply"
-	TagMarkerRoot    = "root"
-	TagMarkerMention = "mention"
+	MarkerReply   = "reply"
+	MarkerRoot    = "root"
+	MarkerMention = "mention"
 )
 
-// Tag is a list of strings with a literal ordering.
+// T is a list of strings with a literal ordering.
 //
 // Not a set, there can be repeating elements.
-type Tag []string
+type T []string
 
 // StartsWith checks a tag has the same initial set of elements.
 //
 // The last element is treated specially in that it is considered to match if
 // the candidate has the same initial substring as its corresponding element.
-func (tag Tag) StartsWith(prefix []string) bool {
+func (t T) StartsWith(prefix []string) bool {
 	prefixLen := len(prefix)
 
-	if prefixLen > len(tag) {
+	if prefixLen > len(t) {
 		return false
 	}
 	// check initial elements for equality
 	for i := 0; i < prefixLen-1; i++ {
-		if prefix[i] != tag[i] {
+		if prefix[i] != t[i] {
 			return false
 		}
 	}
 	// check last element just for a prefix
-	return strings.HasPrefix(tag[prefixLen-1], prefix[prefixLen-1])
+	return strings.HasPrefix(t[prefixLen-1], prefix[prefixLen-1])
 }
 
 // Key returns the first element of the tags.
-func (tag Tag) Key() string {
-	if len(tag) > TagKey {
-		return tag[TagKey]
+func (t T) Key() string {
+	if len(t) > Key {
+		return t[Key]
 	}
 	return ""
 }
 
 // Value returns the second element of the tag.
-func (tag Tag) Value() string {
-	if len(tag) > TagValue {
-		return tag[TagValue]
+func (t T) Value() string {
+	if len(t) > Value {
+		return t[Value]
 	}
 	return ""
 }
 
 // Relay returns the third element of the tag.
-func (tag Tag) Relay() string {
-	if (tag.Key() == "e" || tag.Key() == "p") && len(tag) > TagRelay {
-		return NormalizeURL(tag[TagRelay])
+func (t T) Relay() string {
+	if (t.Key() == "e" || t.Key() == "p") && len(t) > Relay {
+		return normalize.URL(t[Relay])
 	}
 	return ""
 }
 
-// Marshal Tag. Used for Serialization so string escaping should be as in
+// MarshalTo T. Used for Serialization so string escaping should be as in
 // RFC8259.
-func (tag Tag) marshalTo(dst []byte) []byte {
+func (t T) MarshalTo(dst []byte) []byte {
 	dst = append(dst, '[')
-	for i, s := range tag {
+	for i, s := range t {
 		if i > 0 {
 			dst = append(dst, ',')
 		}
