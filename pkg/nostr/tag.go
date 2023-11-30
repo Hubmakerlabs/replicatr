@@ -12,6 +12,13 @@ const (
 	TagRelay
 )
 
+// Tag marker strings for e (reference) tags.
+const (
+	TagMarkerReply   = "reply"
+	TagMarkerRoot    = "root"
+	TagMarkerMention = "mention"
+)
+
 // Tag is a list of strings with a literal ordering.
 //
 // Not a set, there can be repeating elements.
