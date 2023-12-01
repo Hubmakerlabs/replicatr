@@ -8,8 +8,14 @@ import (
 	"strings"
 )
 
-// URL normalizes the url and replaces http://, https:// schemes by
-// ws://, wss://.
+// URL normalizes the URL
+//
+// - Adds wss:// to addresses without a port, or with 443 that have no protocol
+// prefix
+//
+// - Adds ws:// to addresses with any other port
+//
+// - Converts http/s to ws/s
 func URL(u string) string {
 	if u == "" {
 		return ""
@@ -20,7 +26,13 @@ func URL(u string) string {
 	// if address has a port number, we can probably assume it is insecure
 	// websocket as most public or production relays have a domain name and a
 	// well known port 80 or 443 and thus no port number.
-	if strings.Contains(u, ":") {
+	//
+	// if a protocol prefix is present, we assume it is already complete. Converting http/s to websocket equivalent will be done later anyway.
+	if strings.Contains(u, ":") &&
+		!(strings.HasPrefix(u, "http://") ||
+			strings.HasPrefix(u, "https://") ||
+			strings.HasPrefix(u, "ws://") ||
+			strings.HasPrefix(u, "wss://")) {
 		split := strings.Split(u, ":")
 		if len(split) != 2 {
 			_, _ = fmt.Fprintf(os.Stderr,
@@ -39,10 +51,16 @@ func URL(u string) string {
 		}
 		if port > 65535 {
 			_, _ = fmt.Fprintf(os.Stderr,
-				"Port on address %d: greater than maximum 65535%s\n", port)
+				"Port on address %d: greater than maximum 65535\n", port)
 			return ""
 		}
-		u = "ws://" + u
+		// if the port is explicitly set to 443 we assume it is wss:// and drop
+		// the port.
+		if port == 443 {
+			u = "wss://" + split[0]
+		} else {
+			u = "ws://" + u
+		}
 	}
 
 	// if prefix isn't specified as http/s or websocket, assume secure
