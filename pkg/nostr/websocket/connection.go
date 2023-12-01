@@ -125,31 +125,6 @@ func (c *Conn) WriteMessage(data []byte) error {
 	return nil
 }
 
-// WriteMessage1 dispatches bytes to the websocket Conn.
-func (c *Conn) WriteMessage1(data []byte) (e error) {
-
-	dataReader := bytes.NewReader(data)
-
-	if c.msgStateW.IsCompressed() && c.enableCompression {
-
-		c.flateWriter.Reset(c.writer)
-
-		if _, e = io.Copy(c.flateWriter, dataReader); e != nil {
-			return fmt.Errorf("failed to write message: %w", e)
-
-		} else if e = c.flateWriter.Close(); e != nil {
-			return fmt.Errorf("failed to close flate writer: %w", e)
-		}
-
-	} else if _, e = io.Copy(c.writer, dataReader); e != nil {
-		return fmt.Errorf("failed to write message: %w", e)
-
-	} else if e = c.writer.Flush(); e != nil {
-		return fmt.Errorf("failed to flush writer: %w", e)
-	}
-	return
-}
-
 // ReadMessage returns the next message that arrives on the Conn.
 func (c *Conn) ReadMessage(ctx context.Context,
 	buf io.Writer) (e error) {
