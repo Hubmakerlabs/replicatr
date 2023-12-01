@@ -1,3 +1,6 @@
+// Package jsontext implements an RFC8259 compliant string escaping with a
+// pre-calculation stage that eliminates the risk of multiple allocations for
+// long inputs.
 package jsontext
 
 // The character constants are used as their names. IDEs with inlays expanding

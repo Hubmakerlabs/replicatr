@@ -1,8 +1,15 @@
+// Package array implements an interface slice data structure that produces JSON
+// as its string/byte string output.
+//
+// Note that strings found in the object are automatically escaped as per
+// RFC8259 with a function that avoids more than one memory allocation for the
+// buffer rewrite.
 package array
 
 import (
 	"bytes"
 	"fmt"
+	"mleku.online/git/replicatr/pkg/jsontext"
 	"time"
 )
 
@@ -25,7 +32,7 @@ func (t T) Buffer() *bytes.Buffer {
 	var ts time.Time
 	for i := range t {
 		if str, ok = t[i].(string); ok {
-			_, _ = fmt.Fprint(buf, "\"", str, "\"")
+			buf.Write(jsontext.EscapeJSONStringAndWrap(str))
 		} else if ts, ok = t[i].(time.Time); ok {
 			_, _ = fmt.Fprint(buf, ts.Unix())
 		} else {

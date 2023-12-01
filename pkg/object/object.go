@@ -1,8 +1,22 @@
+// Package object implements an ordered key/value data structure for use with
+// JSON documents that must be strictly ordered in order to create a consistent
+// blob of data in canonical order for creating verifiable signatures while
+// delivering the data over the wire or storing it with its signature and object
+// hash also present, as is used for nostr events.
+//
+// Rather than implementing the json.Marshal and json.Unmarshal, marshaling data
+// must be done by converting the struct explicitly to a string key/interface
+// value slice. See object_test.go for an example of such a function.
+//
+// Note that strings found in the object are automatically escaped as per
+// RFC8259 with a function that avoids more than one memory allocation for the
+// buffer rewrite.
 package object
 
 import (
 	"bytes"
 	"fmt"
+	"mleku.online/git/replicatr/pkg/jsontext"
 	"time"
 )
 
@@ -31,7 +45,7 @@ func (t T) Buffer() *bytes.Buffer {
 	for i := range t {
 		_, _ = fmt.Fprint(buf, "\"", t[i].Key, "\":")
 		if str, ok = t[i].Value.(string); ok {
-			_, _ = fmt.Fprint(buf, "\"", str, "\"")
+			buf.Write(jsontext.EscapeJSONStringAndWrap(str))
 		} else if ts, ok = t[i].Value.(time.Time); ok {
 			_, _ = fmt.Fprint(buf, ts.Unix())
 		} else {

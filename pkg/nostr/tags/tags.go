@@ -1,8 +1,10 @@
 package tags
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	t "mleku.online/git/replicatr/pkg/nostr/tag"
 )
 
@@ -113,4 +115,18 @@ func (t T) MarshalTo(dst []byte) []byte {
 	}
 	dst = append(dst, ']')
 	return dst
+}
+
+func (t T) String() string {
+	buf := new(bytes.Buffer)
+	buf.WriteByte('[')
+	last := len(t) - 1
+	for i := range t {
+		_, _ = fmt.Fprint(buf, t[i])
+		if i < last {
+			buf.WriteByte(',')
+		}
+	}
+	buf.WriteByte(']')
+	return buf.String()
 }

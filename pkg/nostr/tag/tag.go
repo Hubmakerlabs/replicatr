@@ -1,6 +1,8 @@
 package tag
 
 import (
+	"bytes"
+	"fmt"
 	"mleku.online/git/replicatr/pkg/jsontext"
 	"mleku.online/git/replicatr/pkg/nostr/normalize"
 	"strings"
@@ -81,4 +83,20 @@ func (t T) MarshalTo(dst []byte) []byte {
 	}
 	dst = append(dst, ']')
 	return dst
+}
+
+func (t T) String() string {
+	buf := new(bytes.Buffer)
+	buf.WriteByte('[')
+	last := len(t) - 1
+	for i := range t {
+		buf.WriteByte('"')
+		_, _ = fmt.Fprint(buf, t[i])
+		buf.WriteByte('"')
+		if i < last {
+			buf.WriteByte(',')
+		}
+	}
+	buf.WriteByte(']')
+	return buf.String()
 }

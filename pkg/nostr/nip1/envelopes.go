@@ -1,7 +1,7 @@
 package nip1
 
 type EventEnvelope struct {
-	SubscriptionID *string
+	SubscriptionID string
 	Event
 }
 type ReqEnvelope struct {
