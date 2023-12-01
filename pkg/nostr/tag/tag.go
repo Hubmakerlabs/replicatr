@@ -3,8 +3,8 @@ package tag
 import (
 	"bytes"
 	"fmt"
-	"mleku.online/git/replicatr/pkg/jsontext"
 	"mleku.online/git/replicatr/pkg/nostr/normalize"
+	"mleku.online/git/replicatr/pkg/wire/text"
 	"strings"
 )
 
@@ -79,7 +79,7 @@ func (t T) MarshalTo(dst []byte) []byte {
 		if i > 0 {
 			dst = append(dst, ',')
 		}
-		dst = append(dst, jsontext.EscapeJSONStringAndWrap(s)...)
+		dst = append(dst, text.EscapeJSONStringAndWrap(s)...)
 	}
 	dst = append(dst, ']')
 	return dst

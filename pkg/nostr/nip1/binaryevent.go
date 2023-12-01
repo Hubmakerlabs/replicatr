@@ -41,7 +41,7 @@ import (
 // - string means a string contained between double quotes `"` and containing no
 // other double quotes within it. Special characters are handled as per RFC8259
 // section 7, and should be processed from raw (ASCII/UTF-8) strings using
-// jsontext.EscapeJSONStringAndWrap.
+// text.EscapeJSONStringAndWrap.
 type BinaryEvent struct {
 
 	// ID is 32-bytes lowercase hex-encoded sha256 of the serialized event data

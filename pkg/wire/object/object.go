@@ -16,7 +16,7 @@ package object
 import (
 	"bytes"
 	"fmt"
-	"mleku.online/git/replicatr/pkg/jsontext"
+	"mleku.online/git/replicatr/pkg/wire/text"
 	"time"
 )
 
@@ -45,7 +45,7 @@ func (t T) Buffer() *bytes.Buffer {
 	for i := range t {
 		_, _ = fmt.Fprint(buf, "\"", t[i].Key, "\":")
 		if str, ok = t[i].Value.(string); ok {
-			buf.Write(jsontext.EscapeJSONStringAndWrap(str))
+			buf.Write(text.EscapeJSONStringAndWrap(str))
 		} else if ts, ok = t[i].Value.(time.Time); ok {
 			_, _ = fmt.Fprint(buf, ts.Unix())
 		} else {

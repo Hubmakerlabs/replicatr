@@ -9,7 +9,7 @@ package array
 import (
 	"bytes"
 	"fmt"
-	"mleku.online/git/replicatr/pkg/jsontext"
+	"mleku.online/git/replicatr/pkg/wire/text"
 	"time"
 )
 
@@ -32,7 +32,7 @@ func (t T) Buffer() *bytes.Buffer {
 	var ts time.Time
 	for i := range t {
 		if str, ok = t[i].(string); ok {
-			buf.Write(jsontext.EscapeJSONStringAndWrap(str))
+			buf.Write(text.EscapeJSONStringAndWrap(str))
 		} else if ts, ok = t[i].(time.Time); ok {
 			_, _ = fmt.Fprint(buf, ts.Unix())
 		} else {

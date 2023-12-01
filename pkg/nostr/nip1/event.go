@@ -6,10 +6,11 @@ import (
 	"fmt"
 	secp256k1 "mleku.online/git/ec/secp"
 	log2 "mleku.online/git/log"
-	"mleku.online/git/replicatr/pkg/jsontext"
 	"mleku.online/git/replicatr/pkg/nostr/kind"
 	"mleku.online/git/replicatr/pkg/nostr/tags"
 	"mleku.online/git/replicatr/pkg/nostr/timestamp"
+	"mleku.online/git/replicatr/pkg/wire/object"
+	"mleku.online/git/replicatr/pkg/wire/text"
 
 	"github.com/minio/sha256-simd"
 	ec "mleku.online/git/ec"
@@ -51,6 +52,18 @@ type Event struct {
 	Sig string `json:"sig"`
 }
 
+func (ev *Event) ToObject() (o object.T) {
+	return object.T{
+		{"id", ev.ID},
+		{"pubkey", ev.PubKey},
+		{"created_at", ev.CreatedAt},
+		{"kind", ev.Kind},
+		{"tags", ev.Tags},
+		{"content", ev.Content},
+		{"sig", ev.Sig},
+	}
+}
+
 // Event Stringer interface, just returns the raw JSON as a string.
 func (ev *Event) String() (s string) {
 	if j, e := json.Marshal(ev); !fails(e) {
@@ -87,7 +100,7 @@ func (ev *Event) Serialize() []byte {
 	dst = append(dst, ',')
 
 	// content needs to be escaped in general as it is user generated.
-	dst = append(dst, jsontext.EscapeJSONStringAndWrap(ev.Content)...)
+	dst = append(dst, text.EscapeJSONStringAndWrap(ev.Content)...)
 	dst = append(dst, ']')
 
 	return dst

@@ -1,7 +1,7 @@
-// Package jsontext implements an RFC8259 compliant string escaping with a
+// Package text implements an RFC8259 compliant string escaping with a
 // pre-calculation stage that eliminates the risk of multiple allocations for
 // long inputs.
-package jsontext
+package text
 
 // The character constants are used as their names. IDEs with inlays expanding
 // the values will demonstrate the equivalence of these with the same decimal

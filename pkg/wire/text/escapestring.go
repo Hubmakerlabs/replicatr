@@ -1,4 +1,4 @@
-package jsontext
+package text
 
 // EscapeString for JSON encoding according to RFC8259.
 //

@@ -1,4 +1,4 @@
-package jsontext
+package text
 
 import "testing"
 

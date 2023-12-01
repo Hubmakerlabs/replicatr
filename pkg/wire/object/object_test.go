@@ -2,10 +2,10 @@ package object
 
 import (
 	"encoding/json"
-	"mleku.online/git/replicatr/pkg/array"
 	"mleku.online/git/replicatr/pkg/nostr/kind"
 	"mleku.online/git/replicatr/pkg/nostr/tags"
 	"mleku.online/git/replicatr/pkg/nostr/timestamp"
+	"mleku.online/git/replicatr/pkg/wire/array"
 	"testing"
 	"time"
 )
