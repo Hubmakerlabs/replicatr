@@ -1,7 +1,10 @@
 package normalize
 
 import (
+	"fmt"
 	"net/url"
+	"os"
+	"strconv"
 	"strings"
 )
 
@@ -13,6 +16,35 @@ func URL(u string) string {
 	}
 	u = strings.TrimSpace(u)
 	u = strings.ToLower(u)
+
+	// if address has a port number, we can probably assume it is insecure
+	// websocket as most public or production relays have a domain name and a
+	// well known port 80 or 443 and thus no port number.
+	if strings.Contains(u, ":") {
+		split := strings.Split(u, ":")
+		if len(split) != 2 {
+			_, _ = fmt.Fprintf(os.Stderr,
+				"Error: more than one ':' in URL: '%s'\n", u)
+			// this is a malformed URL if it has more than one ":", return empty
+			// since this function does not return an error explicitly.
+			return ""
+		}
+
+		port, e := strconv.ParseInt(u, 10, 64)
+		if e != nil {
+			_, _ = fmt.Fprintf(os.Stderr,
+				"Error normalizing URL '%s': %s\n", u, e)
+			// again, without an error we must return nil
+			return ""
+		}
+		if port > 65535 {
+			_, _ = fmt.Fprintf(os.Stderr,
+				"Port on address %d: greater than maximum 65535%s\n", port)
+			return ""
+		}
+		u = "ws://" + u
+	}
+
 	// if prefix isn't specified as http/s or websocket, assume secure
 	// websocket and add wss prefix (this is the most common).
 	if !(strings.HasPrefix(u, "http://") ||
