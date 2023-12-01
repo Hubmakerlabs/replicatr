@@ -42,7 +42,7 @@ func URL(u string) string {
 			return ""
 		}
 
-		port, e := strconv.ParseInt(u, 10, 64)
+		port, e := strconv.ParseInt(split[1], 10, 64)
 		if e != nil {
 			_, _ = fmt.Fprintf(os.Stderr,
 				"Error normalizing URL '%s': %s\n", u, e)
