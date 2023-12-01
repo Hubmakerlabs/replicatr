@@ -1,4 +1,4 @@
-package nostr
+package websocket
 
 import (
 	"bytes"
@@ -16,8 +16,8 @@ import (
 	"github.com/gobwas/ws/wsutil"
 )
 
-// WebsocketConn is a nostr websocket connection.
-type WebsocketConn struct {
+// Conn is a nostr websocket connection.
+type Conn struct {
 	conn              net.Conn
 	enableCompression bool
 	controlHandler    wsutil.FrameHandlerFunc
@@ -30,12 +30,12 @@ type WebsocketConn struct {
 	error
 }
 
-// NewWebsocket makes a new WebsocketConn connected to the provided url using
+// New makes a new Conn connected to the provided url using
 // teh provided http.Header.
-func NewWebsocket(ctx context.Context, url string,
-	reqHdr http.Header) (c *WebsocketConn, e error) {
+func New(ctx context.Context, url string,
+	reqHdr http.Header) (c *Conn, e error) {
 
-	c = &WebsocketConn{}
+	c = &Conn{}
 
 	dialer := ws.Dialer{
 		Header: ws.HandshakeHeaderHTTP(reqHdr),
@@ -103,8 +103,8 @@ func NewWebsocket(ctx context.Context, url string,
 	return
 }
 
-// WriteMessage dispatches bytes to the websocket WebsocketConn.
-func (c *WebsocketConn) WriteMessage(data []byte) (e error) {
+// WriteMessage dispatches bytes to the websocket Conn.
+func (c *Conn) WriteMessage(data []byte) (e error) {
 
 	dataReader := bytes.NewReader(data)
 
@@ -128,8 +128,8 @@ func (c *WebsocketConn) WriteMessage(data []byte) (e error) {
 	return
 }
 
-// ReadMessage returns the next message that arrives on the WebsocketConn.
-func (c *WebsocketConn) ReadMessage(ctx context.Context,
+// ReadMessage returns the next message that arrives on the Conn.
+func (c *Conn) ReadMessage(ctx context.Context,
 	buf io.Writer) (e error) {
 
 	for {
@@ -180,9 +180,9 @@ func (c *WebsocketConn) ReadMessage(ctx context.Context,
 	return nil
 }
 
-func (c *WebsocketConn) Close() error { return c.conn.Close() }
+func (c *Conn) Close() error { return c.conn.Close() }
 
 // Check returns the internal error state. If it returns true, the text of the
 // error can be accessed with the Error() method because the `error` is
 // embedded.
-func (c *WebsocketConn) Check() bool { return c.error != nil }
+func (c *Conn) Check() bool { return c.error != nil }
