@@ -9,7 +9,7 @@ import (
 	"mleku.online/git/replicatr/pkg/jsontext"
 	"mleku.online/git/replicatr/pkg/nostr/kind"
 	"mleku.online/git/replicatr/pkg/nostr/tags"
-	"mleku.online/git/replicatr/pkg/nostr/time"
+	"mleku.online/git/replicatr/pkg/nostr/timestamp"
 
 	"github.com/minio/sha256-simd"
 	ec "mleku.online/git/ec"
@@ -33,7 +33,7 @@ type Event struct {
 
 	// CreatedAt is the UNIX timestamp of the event according to the event
 	// creator (never trust a timestamp!)
-	CreatedAt time.Stamp `json:"created_at"`
+	CreatedAt timestamp.T `json:"created_at"`
 
 	// Kind is the nostr protocol code for the type of event. See kind.T
 	Kind kind.T `json:"kind"`

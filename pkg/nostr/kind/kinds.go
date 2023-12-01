@@ -11,7 +11,7 @@ type T int
 // excessive in length, impeding readability. Repeating 'nostr' in these
 // constant names is redundant as they are only used in this context, and
 // creating a special type for them makes this implicit and enforced by the
-// compiler at compile time.
+// compiler at compile timestamp.
 const (
 	ProfileMetadata          T = 0
 	TextNote                 T = 1

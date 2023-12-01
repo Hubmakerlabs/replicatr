@@ -2,7 +2,7 @@ package nip1
 
 import (
 	"mleku.online/git/replicatr/pkg/nostr/tags"
-	"mleku.online/git/replicatr/pkg/nostr/time"
+	"mleku.online/git/replicatr/pkg/nostr/timestamp"
 )
 
 // BinaryEvent is the primary message type of the nostr protocol, with relevant
@@ -52,7 +52,7 @@ type BinaryEvent struct {
 	PubKey [32]byte `json:"pubkey"`
 
 	// CreatedAt is unix timestamp in seconds
-	CreatedAt time.Stamp `json:"created_at"`
+	CreatedAt timestamp.T `json:"created_at"`
 
 	// Kind is a 16 bit integer, 0-65535
 	Kind uint16 `json:"kind"`
