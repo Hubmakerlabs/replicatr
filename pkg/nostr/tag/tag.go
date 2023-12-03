@@ -100,3 +100,35 @@ func (t T) String() string {
 	buf.WriteByte(']')
 	return buf.String()
 }
+
+// Clone makes a new tag.T with the same members.
+func (t T) Clone() (c T) {
+	c = make(T, len(t))
+	for i := range t {
+		c[i] = t[i]
+	}
+	return
+}
+
+// Contains returns true if the provided element is found in the tag slice.
+func (t T) Contains(s string) bool {
+	for i := range t {
+		if t[i] == s {
+			return true
+		}
+	}
+	return false
+}
+
+// Equals checks that the provided tag list matches.
+func (t T) Equals(t1 T) bool {
+	if len(t) != len(t1) {
+		return false
+	}
+	for i := range t {
+		if t[i] != t1[i] {
+			return false
+		}
+	}
+	return true
+}
