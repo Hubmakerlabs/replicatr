@@ -2,31 +2,128 @@ package nip1
 
 import (
 	"encoding/json"
-	"golang.org/x/exp/constraints"
-	"golang.org/x/exp/slices"
+	"fmt"
 	"mleku.online/git/replicatr/pkg/nostr/kind"
+	"mleku.online/git/replicatr/pkg/nostr/tag"
 	"mleku.online/git/replicatr/pkg/nostr/timestamp"
+	"mleku.online/git/replicatr/pkg/wire/array"
+	"mleku.online/git/replicatr/pkg/wire/object"
+	"sort"
 )
 
 type Filters []Filter
 
+func (eff Filters) ToArray() (a array.T) {
+	for i := range eff {
+		a = append(a, eff[i].ToObject())
+	}
+	return
+}
+
+// Filter is a query where one or all elements can be filled in.
+//
+// Most of it is normal stuff but the Tags are a special case because the Go
+// encode/json will not do what the specification requires, which is to unwrap
+// the tag as fields.
+//
+//	Tags: {K1: val1, K2: val2)
+//
+// must be changed to
+//
+//	K1: val1
+//	K2: val2
+//
+// For this reason in the original nbd-wdf/go-nostr special handling is created
+// using the easyjson library that allows this '-' json tag to indicate to
+// promote the key/value pairs inside to the same level of the object and not
+// bundled inside another key.
+//
+// Because we have a native key/value type designed for ordered object JSON
+// serialization we just give it special treatment in the ToObject function.
+//
+// The json tags are not here because they are worthless for unmarshalling and
+// unnecessary for marshaling. They appear in the ToObject because all of them
+// are optional fields.
+//
+// For the simplified handling of unmarshaling this JSON abomination this struct
+// is redefined so that the Tags fields are elaborated concretely and then the
+// populated tags are put into the map as they are expected to be.
 type Filter struct {
-	IDs     []string     `json:"ids,omitempty"`
-	Kinds   []kind.T     `json:"kinds,omitempty"`
-	Authors []string     `json:"authors,omitempty"`
-	Tags    TagMap       `json:"-,omitempty"`
-	Since   *timestamp.T `json:"since,omitempty"`
-	Until   *timestamp.T `json:"until,omitempty"`
-	Limit   int          `json:"limit,omitempty"`
-	Search  string       `json:"search,omitempty"`
+	IDs     tag.T         `json:"ids,omitempty"`
+	Kinds   kind.Array    `json:"kinds,omitempty"`
+	Authors tag.T         `json:"authors,omitempty"`
+	Tags    TagMap        `json:"-,omitempty"`
+	Since   *timestamp.Tp `json:"since,omitempty"`
+	Until   *timestamp.Tp `json:"until,omitempty"`
+	Limit   int           `json:"limit,omitempty"`
+	Search  string        `json:"search,omitempty"`
 }
 
-type TagMap map[string][]string
-
-func (eff Filters) String() string {
-	j, _ := json.Marshal(eff)
-	return string(j)
+func (f *Filter) ToObject() (o object.T) {
+	o = object.T{
+		{"ids,omitempty", f.IDs},
+		{"kinds,omitempty", f.Kinds.ToArray()},
+		{"authors,omitempty", f.Authors},
+	}
+	// these tags are not grouped under a top level key but unfolded into the
+	// object, promoted to the same level as their enclosing map. Go doesn't
+	// have a native "collection" type like this, but our object.T does the same
+	// thing for encoding. This does also mean for this type a hand written
+	// decoder will need to be written to identify and pack the keys.
+	//
+	// In addition, due to the nondeterministic map iteration of Go, we make a
+	// temp slice and sort it.
+	var tmp object.T
+	for i := range f.Tags {
+		tmp = append(tmp, object.KV{Key: i, Value: f.Tags[i]})
+	}
+	sort.Sort(tmp)
+	o = append(o, tmp...)
+	o = append(o, object.T{
+		{"since,omitempty", f.Since},
+		{"until,omitempty", f.Until},
+		{"limit,omitempty", f.Limit},
+	}...)
+	if f.Search != "" {
+		o = append(o, object.KV{"search,omitempty", f.Search})
+	}
+	return
 }
+
+func (f *Filter) MarshalJSON() (b []byte, e error) {
+	return f.ToObject().Bytes(), nil
+}
+
+// UnmarshalJSON correctly unpacks a JSON encoded Filter rolling up the Tags as
+// they should be.
+func (f *Filter) UnmarshalJSON(b []byte) (e error) {
+	if f == nil {
+		return fmt.Errorf("cannot unmarshal into nil Filter")
+	}
+	uf := &UnmarshalingFilter{}
+	if e = json.Unmarshal(b, uf); fails(e) {
+		return
+	}
+	if e = CopyUnmarshalFilterToFilter(uf, f); fails(e) {
+		return
+	}
+	return
+}
+
+type TagMap map[string]tag.T
+
+func (t TagMap) Clone() (t1 TagMap) {
+	if t == nil {
+		return
+	}
+	t1 = make(TagMap)
+	for i := range t {
+		t1[i] = t[i]
+	}
+	return
+}
+
+func (eff Filters) String() string { return eff.ToArray().String() }
 
 func (eff Filters) Match(event *Event) bool {
 	for _, filter := range eff {
@@ -37,61 +134,40 @@ func (eff Filters) Match(event *Event) bool {
 	return false
 }
 
-func (ef Filter) String() string {
-	j, _ := json.Marshal(ef)
+func (f *Filter) String() string {
+	j, _ := json.Marshal(f)
 	return string(j)
 }
 
-func (ef Filter) Matches(event *Event) bool {
+func (f *Filter) Matches(event *Event) bool {
 	if event == nil {
 		return false
 	}
 
-	if ef.IDs != nil && !slices.Contains(ef.IDs, event.ID) {
+	if f.IDs != nil && !f.IDs.Contains(event.ID.String()) {
 		return false
 	}
 
-	if ef.Kinds != nil && !slices.Contains(ef.Kinds, event.Kind) {
+	if f.Kinds != nil && !f.Kinds.Contains(event.Kind) {
 		return false
 	}
 
-	if ef.Authors != nil && !slices.Contains(ef.Authors, event.PubKey) {
+	if f.Authors != nil && !f.Authors.Contains(event.PubKey) {
 		return false
 	}
 
-	for f, v := range ef.Tags {
+	for f, v := range f.Tags {
 		if v != nil && !event.Tags.ContainsAny(f, v) {
 			return false
 		}
 	}
 
-	if ef.Since != nil && event.CreatedAt < *ef.Since {
+	if f.Since != nil && event.CreatedAt < timestamp.T(*f.Since) {
 		return false
 	}
 
-	if ef.Until != nil && event.CreatedAt > *ef.Until {
+	if f.Until != nil && event.CreatedAt > timestamp.T(*f.Until) {
 		return false
-	}
-
-	return true
-}
-
-func similar[E constraints.Ordered](as, bs []E) bool {
-	if len(as) != len(bs) {
-		return false
-	}
-
-	for _, a := range as {
-		for _, b := range bs {
-			if b == a {
-				goto next
-			}
-		}
-		// didn't find a B that corresponded to the current A
-		return false
-
-	next:
-		continue
 	}
 
 	return true
@@ -107,73 +183,39 @@ func arePointerValuesEqual[V comparable](a *V, b *V) bool {
 	return false
 }
 
-func FilterEqual(a Filter, b Filter) bool {
-	if !similar(a.Kinds, b.Kinds) {
+func FilterEqual(a, b *Filter) bool {
+	// switch is a convenient way to bundle a long list of tests like this:
+	switch {
+	case !a.Kinds.Equals(b.Kinds),
+		!a.IDs.Equals(b.IDs),
+		!a.Authors.Equals(b.Authors),
+		len(a.Tags) != len(b.Tags),
+		!arePointerValuesEqual(a.Since, b.Since),
+		!arePointerValuesEqual(a.Until, b.Until),
+		a.Search != b.Search:
+
 		return false
 	}
-
-	if !similar(a.IDs, b.IDs) {
-		return false
-	}
-
-	if !similar(a.Authors, b.Authors) {
-		return false
-	}
-
-	if len(a.Tags) != len(b.Tags) {
-		return false
-	}
-
 	for f, av := range a.Tags {
 		if bv, ok := b.Tags[f]; !ok {
 			return false
-		} else {
-			if !similar(av, bv) {
-				return false
-			}
+		} else if !av.Equals(bv) {
+			return false
 		}
 	}
-
-	if !arePointerValuesEqual(a.Since, b.Since) {
-		return false
-	}
-
-	if !arePointerValuesEqual(a.Until, b.Until) {
-		return false
-	}
-
-	if a.Search != b.Search {
-		return false
-	}
-
 	return true
 }
 
-func (ef Filter) Clone() Filter {
-	clone := Filter{
-		IDs:     slices.Clone(ef.IDs),
-		Authors: slices.Clone(ef.Authors),
-		Kinds:   slices.Clone(ef.Kinds),
-		Limit:   ef.Limit,
-		Search:  ef.Search,
+func (f *Filter) Clone() (clone *Filter) {
+	clone = &Filter{
+		IDs:     f.IDs.Clone(),
+		Authors: f.Authors.Clone(),
+		Kinds:   f.Kinds.Clone(),
+		Limit:   f.Limit,
+		Search:  f.Search,
+		Tags:    f.Tags.Clone(),
+		Since:   f.Since.Clone(),
+		Until:   f.Until.Clone(),
 	}
-
-	if ef.Tags != nil {
-		clone.Tags = make(TagMap, len(ef.Tags))
-		for k, v := range ef.Tags {
-			clone.Tags[k] = slices.Clone(v)
-		}
-	}
-
-	if ef.Since != nil {
-		since := *ef.Since
-		clone.Since = &since
-	}
-
-	if ef.Until != nil {
-		until := *ef.Until
-		clone.Until = &until
-	}
-
-	return clone
+	return
 }
