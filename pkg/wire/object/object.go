@@ -17,8 +17,23 @@ import (
 	"bytes"
 	"fmt"
 	"mleku.online/git/replicatr/pkg/wire/text"
+	"reflect"
+	"strings"
 	"time"
 )
+
+// Objector is an interface for types that can be converted to object.T - a
+// key-value type that can be summarised as
+//
+//	[]struct{Key string, Value interface{}}
+//
+// and allows non-set-like repetition and non-set-like canonical ordering.
+//
+// These are often called also "collection" in other languages but they are a
+// frankenstein in implementation just like this here code demonstrates.
+type Objector interface {
+	ToObject() T
+}
 
 type KV struct {
 	Key   string
@@ -43,9 +58,49 @@ func (t T) Buffer() *bytes.Buffer {
 	var str string
 	var ts time.Time
 	for i := range t {
-		_, _ = fmt.Fprint(buf, "\"", t[i].Key, "\":")
+		// keys can have `.omitempty` after them and if present, the field is
+		// omitted if it is a zero or nil value.
+		var omitempty bool
+		k := strings.Split(t[i].Key, ",")
+		key := k[0]
+		if len(k) > 1 {
+			if k[1] == "omitempty" {
+				omitempty = true
+			}
+		}
+		v := t[i].Value
+		// if tag of object includes omitempty and the value matches the zero of
+		// the type, don't add it to the output.
+		if omitempty {
+			// check for nil
+			if v == nil {
+				continue
+			}
+			switch reflect.TypeOf(v).Kind() {
+			case reflect.Ptr,
+				reflect.Map,
+				reflect.Array,
+				reflect.Chan,
+				reflect.Slice:
+
+				if reflect.ValueOf(v).IsNil() {
+					continue
+				}
+			default:
+			}
+			// check for zero
+			if reflect.DeepEqual(reflect.Zero(reflect.TypeOf(t[i])), t[i]) {
+				continue
+			}
+		}
+
+		// add the key
+		_, _ = fmt.Fprint(buf, "\"", key, "\":")
+		// add the value
 		if str, ok = t[i].Value.(string); ok {
 			buf.Write(text.EscapeJSONStringAndWrap(str))
+		} else if reflect.TypeOf(t[i].Value).Kind() == reflect.String {
+			buf.Write(text.EscapeJSONStringAndWrap(reflect.ValueOf(t[i].Value).String()))
 		} else if ts, ok = t[i].Value.(time.Time); ok {
 			_, _ = fmt.Fprint(buf, ts.Unix())
 		} else {
@@ -58,3 +113,9 @@ func (t T) Buffer() *bytes.Buffer {
 	_, _ = fmt.Fprint(buf, "}")
 	return buf
 }
+
+// sort.Interface implementation
+
+func (t T) Len() int           { return len(t) }
+func (t T) Less(i, j int) bool { return t[i].Key < t[j].Key }
+func (t T) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
