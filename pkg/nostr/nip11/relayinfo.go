@@ -1,6 +1,9 @@
 package nip11
 
-import "mleku.online/git/replicatr/pkg/nostr/number"
+import (
+	"mleku.online/git/replicatr/pkg/nostr/number"
+	"mleku.online/git/replicatr/pkg/wire/object"
+)
 
 // RelayInfo provides the information for a relay on the network as regards to
 // versions, NIP support, contact, policies, and payment requirements.
@@ -20,6 +23,26 @@ type RelayInfo struct {
 	PaymentsURL    string       `json:"payments_url,omitempty"`
 	Fees           *RelayFees   `json:"fees,omitempty"`
 	Icon           string       `json:"icon"`
+}
+
+func (ri *RelayInfo) ToObject() (o object.T) {
+	return object.T{
+		{"name", ri.Name},
+		{"description", ri.Description},
+		{"pubkey", ri.PubKey},
+		{"contact", ri.Contact},
+		{"supported_nips", ri.SupportedNIPs},
+		{"software", ri.Software},
+		{"version", ri.Version},
+		{"limitation", ri.Limitation},
+		{"relay_countries", ri.RelayCountries},
+		{"language_tags", ri.LanguageTags},
+		{"tags", ri.Tags},
+		{"posting_policy", ri.PostingPolicy},
+		{"payments_url", ri.PaymentsURL},
+		{"fees", ri.Fees},
+		{"icon", ri.Icon},
+	}
 }
 
 // AddSupportedNIP appends a supported NIP number to a RelayInfo.
@@ -47,6 +70,22 @@ type RelayLimits struct {
 	AuthRequired     bool `json:"auth_required"`
 	PaymentRequired  bool `json:"payment_required"`
 	RestrictedWrites bool `json:"restricted_writes"`
+}
+
+func (ri *RelayLimits) ToObject() (o object.T) {
+	return object.T{
+		{"max_message_length,omitempty", ri.MaxMessageLength},
+		{"max_subscriptions,omitempty", ri.MaxSubscriptions},
+		{"max_filters,omitempty", ri.MaxFilters},
+		{"max_limit,omitempty", ri.MaxLimit},
+		{"max_subid_length,omitempty", ri.MaxSubidLength},
+		{"max_event_tags,omitempty", ri.MaxEventTags},
+		{"max_content_length,omitempty", ri.MaxContentLength},
+		{"min_pow_difficulty,omitempty", ri.MinPowDifficulty},
+		{"auth_required", ri.AuthRequired},
+		{"payment_required", ri.PaymentRequired},
+		{"restricted_writes", ri.RestrictedWrites},
+	}
 }
 
 // RelayFees defines the fee structure used for a paid relay.
