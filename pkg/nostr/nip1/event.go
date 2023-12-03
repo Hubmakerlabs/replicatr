@@ -1,25 +1,14 @@
 package nip1
 
 import (
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
+	"mleku.online/git/ec/schnorr"
 	secp256k1 "mleku.online/git/ec/secp"
-	log2 "mleku.online/git/log"
 	"mleku.online/git/replicatr/pkg/nostr/kind"
 	"mleku.online/git/replicatr/pkg/nostr/tags"
 	"mleku.online/git/replicatr/pkg/nostr/timestamp"
+	"mleku.online/git/replicatr/pkg/wire/array"
 	"mleku.online/git/replicatr/pkg/wire/object"
-	"mleku.online/git/replicatr/pkg/wire/text"
-
-	"github.com/minio/sha256-simd"
-	ec "mleku.online/git/ec"
-	"mleku.online/git/ec/schnorr"
-)
-
-var (
-	log   = log2.GetLogger()
-	fails = log.E.Chk
 )
 
 // Event is the primary datatype of nostr. This is the form of the structure
@@ -27,7 +16,7 @@ var (
 type Event struct {
 
 	// ID is the SHA256 hash of the canonical encoding of the event
-	ID string `json:"id"`
+	ID EventID `json:"id"`
 
 	// PubKey is the public key of the event creator in *hexadecimal* format
 	PubKey string `json:"pubkey"`
@@ -64,111 +53,92 @@ func (ev *Event) ToObject() (o object.T) {
 	}
 }
 
-// Event Stringer interface, just returns the raw JSON as a string.
-func (ev *Event) String() (s string) {
-	if j, e := json.Marshal(ev); !fails(e) {
-		s = string(j)
-	}
-	return
+func (ev *Event) MarshalJSON() (bytes []byte, e error) {
+	b := ev.ToObject().Bytes()
+	return b, nil
 }
 
-// GetID serializes and returns the event ID as a string.
-func (ev *Event) GetID() string {
-	h := sha256.Sum256(ev.Serialize())
-	return hex.EncodeToString(h[:])
+// ToCanonical returns a structure that provides a byte stringer that generates
+// the canonical form used to generate the ID hash that can be signed.
+func (ev *Event) ToCanonical() (o array.T) {
+	return array.T{0, ev.PubKey, ev.CreatedAt, ev.Kind, ev.Tags, ev.Content}
 }
 
-// Serialize outputs a byte array that can be hashed/signed to
-// identify/authenticate. JSON encoding as defined in RFC4627.
-func (ev *Event) Serialize() []byte {
+// GetIDBytes returns the raw SHA256 hash of the canonical form of an Event.
+func (ev *Event) GetIDBytes() []byte { return Hash(ev.ToCanonical().Bytes()) }
 
-	// the serialization process is just putting everything into a JSON array so
-	// the order is kept. See NIP-01
-	dst := make([]byte, 0)
-
-	// the header portion is easy to serialize [0,"pubkey",created_at,kind,[
-	dst = append(dst, []byte(
-		fmt.Sprintf(
-			"[0,\"%s\",%d,%d,",
-			ev.PubKey,
-			ev.CreatedAt,
-			ev.Kind,
-		))...)
-
-	// tags
-	dst = ev.Tags.MarshalTo(dst)
-	dst = append(dst, ',')
-
-	// content needs to be escaped in general as it is user generated.
-	dst = append(dst, text.EscapeJSONStringAndWrap(ev.Content)...)
-	dst = append(dst, ']')
-
-	return dst
-}
+// GetID serializes and returns the event ID as a hexadecimal string.
+func (ev *Event) GetID() string { return encodeToHex(ev.GetIDBytes()) }
 
 // CheckSignature checks if the signature is valid for the id (which is a hash
 // of the serialized event content). returns an error if the signature itself is
 // invalid.
 func (ev *Event) CheckSignature() (valid bool, e error) {
 
-	// read and check pubkey
+	// decode pubkey hex to bytes.
 	var pkBytes []byte
-	if pkBytes, e = hex.DecodeString(ev.PubKey); fails(e) {
-		return false, fmt.Errorf("event pubkey '%s' is invalid hex: %w",
-			ev.PubKey, e)
+	if pkBytes, e = hexDecode(ev.PubKey); fails(e) {
+		e = fmt.Errorf("event pubkey '%s' is invalid hex: %w", ev.PubKey, e)
+		return
 	}
 
+	// parse pubkey bytes.
 	var pk *secp256k1.PublicKey
-	if pk, e = schnorr.ParsePubKey(pkBytes); e != nil {
-		return false, fmt.Errorf("event has invalid pubkey '%s': %w",
-			ev.PubKey, e)
+	if pk, e = schnorr.ParsePubKey(pkBytes); fails(e) {
+		e = fmt.Errorf("event has invalid pubkey '%s': %w", ev.PubKey, e)
+		return
 	}
 
-	// read signature
+	// decode signature hex to bytes.
 	var sigBytes []byte
-	if sigBytes, e = hex.DecodeString(ev.Sig); e != nil {
-		return false, fmt.Errorf("signature '%s' is invalid hex: %w",
-			ev.Sig, e)
-	}
-	var sig *schnorr.Signature
-	sig, e = schnorr.ParseSignature(sigBytes)
-	if e != nil {
-		return false, fmt.Errorf("failed to parse signature: %w", e)
+	if sigBytes, e = hexDecode(ev.Sig); fails(e) {
+		e = fmt.Errorf("signature '%s' is invalid hex: %w", ev.Sig, e)
+		return
 	}
 
-	// check signature
-	hash := sha256.Sum256(ev.Serialize())
-	return sig.Verify(hash[:], pk), nil
+	// parse signature bytes.
+	var sig *schnorr.Signature
+	if sig, e = schnorr.ParseSignature(sigBytes); fails(e) {
+		e = fmt.Errorf("failed to parse signature: %w", e)
+		return
+	}
+
+	// check signature.
+	valid = sig.Verify(ev.GetIDBytes(), pk)
+	return
 }
 
-// Sign signs an event with a given SecretKey.
-func (ev *Event) Sign(skStr string,
-	signOpts ...schnorr.SignOption) (e error) {
+// Sign signs an event with a given Secret Key.
+func (ev *Event) Sign(skStr string, so ...schnorr.SignOption) (e error) {
 
+	// secret key hex must be 64 characters.
+	if len(skStr) != 64 {
+		return fmt.Errorf("invalid secret key length, 64 required, got %d: %s",
+			len(skStr), skStr)
+	}
+
+	// decode secret key hex to bytes
 	var skBytes []byte
-	skBytes, e = hex.DecodeString(skStr)
-	if e != nil {
+	if skBytes, e = hexDecode(skStr); fails(e) {
 		return fmt.Errorf("sign called with invalid secret key '%s': %w",
 			skStr, e)
 	}
 
-	if ev.Tags == nil {
-		ev.Tags = make(tags.T, 0)
-	}
+	// parse bytes to get secret key (size checks have been done).
+	sk := secp256k1.SecKeyFromBytes(skBytes)
 
-	sk, pk := ec.SecKeyFromBytes(skBytes)
-	pkBytes := schnorr.SerializePubKey(pk)
-	ev.PubKey = hex.EncodeToString(pkBytes[1:])
-
-	h := sha256.Sum256(ev.Serialize())
+	// sign the event.
 	var sig *schnorr.Signature
-	sig, e = schnorr.Sign(sk, h[:], signOpts...)
-	if e != nil {
+	id := ev.GetIDBytes()
+	if sig, e = schnorr.Sign(sk, id, so...); fails(e) {
 		return e
 	}
 
-	ev.ID = hex.EncodeToString(h[:])
-	ev.Sig = hex.EncodeToString(sig.Serialize())
+	// we know ID is good so just coerce type.
+	ev.ID = EventID(encodeToHex(id))
 
+	// we know secret key is good so we can generate the public key.
+	ev.PubKey = encodeToHex(schnorr.SerializePubKey(sk.PubKey()))
+	ev.Sig = encodeToHex(sig.Serialize())
 	return nil
 }
