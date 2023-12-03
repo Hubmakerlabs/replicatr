@@ -9,9 +9,17 @@ package array
 import (
 	"bytes"
 	"fmt"
+	"mleku.online/git/replicatr/pkg/wire/object"
 	"mleku.online/git/replicatr/pkg/wire/text"
+	"reflect"
 	"time"
 )
+
+// Arrayer is an interface for a type that can return an array.T - or in other
+// words []interface{} made into concrete.
+type Arrayer interface {
+	ToArray() T
+}
 
 type T []interface{}
 
@@ -30,11 +38,16 @@ func (t T) Buffer() *bytes.Buffer {
 	var ok bool
 	var str string
 	var ts time.Time
+	var o object.T
 	for i := range t {
 		if str, ok = t[i].(string); ok {
 			buf.Write(text.EscapeJSONStringAndWrap(str))
+		} else if reflect.TypeOf(t[i]).Kind() == reflect.String {
+			buf.Write(text.EscapeJSONStringAndWrap(reflect.ValueOf(t[i]).String()))
 		} else if ts, ok = t[i].(time.Time); ok {
 			_, _ = fmt.Fprint(buf, ts.Unix())
+		} else if o, ok = t[i].(object.T); ok {
+			buf.Write(o.Buffer().Bytes())
 		} else {
 			_, _ = fmt.Fprint(buf, t[i])
 		}
