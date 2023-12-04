@@ -5,19 +5,20 @@ import (
 	"fmt"
 	"io"
 	"mleku.online/git/replicatr/pkg/wire/array"
+	"reflect"
 )
 
 type Label = byte
 
 // Label enums for compact identification of the label.
 const (
-	LabelNil Label = iota
-	LabelEvent
-	LabelOK
-	LabelNotice
-	LabelEOSE
-	LabelClose
-	LabelReq
+	LNil Label = iota
+	LEvent
+	LOK
+	LNotice
+	LEOSE
+	LClose
+	LReq
 )
 
 // Labels is the nip1 envelope labels, matching the above enums.
@@ -30,6 +31,18 @@ var Labels = [][]byte{
 	[]byte("CLOSE"),
 	[]byte("REQ"),
 }
+
+// With these, labels have easy short names for the strings, as well as neat
+// consistent 1 byte enum version. Having all 3 versions also makes writing the
+// recogniser easier.
+var (
+	EVENT  = string(Labels[LEvent])
+	OK     = string(Labels[LOK])
+	REQ    = string(Labels[LReq])
+	NOTICE = string(Labels[LNotice])
+	EOSE   = string(Labels[LEOSE])
+	CLOSE  = string(Labels[LClose])
+)
 
 // The Enveloper interface.
 //
@@ -110,7 +123,7 @@ matched:
 		}
 	}
 	// if there was no match we still have zero.
-	if match == LabelNil {
+	if match == LNil {
 		// no match
 		e = fmt.Errorf("label '%s' not recognised as nip1 envelope label",
 			string(candidate))
@@ -121,25 +134,25 @@ matched:
 	}
 	// We know what to expect now, the next thing to do is pass forward to the specific envelope unmarshaler.
 	switch match {
-	case LabelEvent:
+	case LEvent:
 		env = &EventEnvelope{}
 		e = env.Unmarshal(buf)
-	case LabelOK:
+	case LOK:
 		env = &OKEnvelope{}
 		e = env.Unmarshal(buf)
-	case LabelNotice:
+	case LNotice:
 		var ne NoticeEnvelope
 		env = &ne
 		e = env.Unmarshal(buf)
-	case LabelEOSE:
+	case LEOSE:
 		var eose EOSEEnvelope
 		env = &eose
 		e = env.Unmarshal(buf)
-	case LabelClose:
+	case LClose:
 		var c CloseEnvelope
 		env = &c
 		e = env.Unmarshal(buf)
-	case LabelReq:
+	case LReq:
 		env = &ReqEnvelope{}
 		e = env.Unmarshal(buf)
 	default:
@@ -148,7 +161,7 @@ matched:
 	return
 }
 
-// EventEnvelope is the wrapper expected by a relay around a new event.
+// EventEnvelope is the wrapper expected by a relay around an event.
 type EventEnvelope struct {
 
 	// The SubscriptionID field is optional, and may at most contain 64 characters,
@@ -156,7 +169,7 @@ type EventEnvelope struct {
 	SubscriptionID SubscriptionID
 
 	// The Event is here a pointer because it should not be copied unnecessarily.
-	Event Event
+	Event *Event
 }
 
 // NewEventEnvelope builds an EventEnvelope from a provided SubscriptionID
@@ -171,12 +184,12 @@ func NewEventEnvelope(si string, ev *Event) (ee *EventEnvelope, e error) {
 		e = fmt.Errorf("cannot make event envelope with nil event")
 		return
 	}
-	return &EventEnvelope{SubscriptionID: sid, Event: *ev}, nil
+	return &EventEnvelope{SubscriptionID: sid, Event: ev}, nil
 }
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.Labels[Label]
-func (ee *EventEnvelope) Label() (l Label) { return LabelEvent }
+func (ee *EventEnvelope) Label() (l Label) { return LEvent }
 
 // ToArray converts an EventEnvelope to a form that has a JSON formatted String
 // and Bytes function (array.T). To get the encoded form, invoke either of these
@@ -185,7 +198,7 @@ func (ee *EventEnvelope) ToArray() (a array.T) {
 
 	// Event envelope has max 3 fields
 	a = make(array.T, 0, 3)
-	a = append(a, LabelEvent)
+	a = append(a, EVENT)
 	if ee.SubscriptionID.IsValid() {
 		a = append(a, ee.SubscriptionID)
 	}
@@ -203,17 +216,17 @@ func (ee *EventEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
 	if ee == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-
+	log.I.Ln(reflect.TypeOf(ee))
 	return
 }
 
 const (
-	RejectReasonPOW         = "pow"
-	RejectReasonDuplicate   = "duplicate"
-	RejectReasonBlocked     = "blocked"
-	RejectReasonRateLimited = "rate-limited"
-	RejectReasonInvalid     = "invalid"
-	RejectReasonError       = "error"
+	OKPOW         = "pow"
+	OKDuplicate   = "duplicate"
+	OKBlocked     = "blocked"
+	OKRateLimited = "rate-limited"
+	OKInvalid     = "invalid"
+	OKError       = "error"
 )
 
 // OKEnvelope is a relay message sent in response to an EventEnvelope to
@@ -229,7 +242,7 @@ type OKEnvelope struct {
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.Labels[Label]
-func (ee *OKEnvelope) Label() (l Label) { return LabelOK }
+func (E *OKEnvelope) Label() (l Label) { return LOK }
 
 func NewOKEnvelope(eventID string, ok bool, reason string) (o *OKEnvelope,
 	e error) {
@@ -248,21 +261,21 @@ func NewOKEnvelope(eventID string, ok bool, reason string) (o *OKEnvelope,
 // ToArray converts an OKEnvelope to a form that has a JSON formatted String
 // and Bytes function (array.T). To get the encoded form, invoke either of these
 // methods on the returned value.
-func (ee *OKEnvelope) ToArray() (a array.T) {
-	return array.T{LabelOK, ee.EventID, ee.OK, ee.Reason}
+func (E *OKEnvelope) ToArray() (a array.T) {
+	return array.T{OK, E.EventID, E.OK, E.Reason}
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (ee *OKEnvelope) MarshalJSON() (bytes []byte, e error) {
-	return ee.ToArray().Bytes(), nil
+func (E *OKEnvelope) MarshalJSON() (bytes []byte, e error) {
+	return E.ToArray().Bytes(), nil
 }
 
 // Unmarshal the envelope.
-func (ee *OKEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
-	if ee == nil {
+func (E *OKEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-
+	log.I.Ln(reflect.TypeOf(E))
 	return
 }
 
@@ -274,99 +287,109 @@ type ReqEnvelope struct {
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.Labels[Label]
-func (ee *ReqEnvelope) Label() (l Label) { return LabelReq }
+func (E *ReqEnvelope) Label() (l Label) { return LReq }
+
+func (E *ReqEnvelope) ToArray() array.T {
+	return array.T{REQ, E.SubscriptionID, E.Filters}
+}
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (ee *ReqEnvelope) MarshalJSON() (bytes []byte, e error) {
-	return ee.ToArray().Bytes(), nil
+func (E *ReqEnvelope) MarshalJSON() (bytes []byte, e error) {
+	return E.ToArray().Bytes(), nil
+
 }
 
 // Unmarshal the envelope.
-func (ee *ReqEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
-	if ee == nil {
+func (E *ReqEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-
+	log.I.Ln(reflect.TypeOf(E))
 	return
 }
 
 // NoticeEnvelope is a relay message intended to be shown to users in a nostr
 // client interface.
-type NoticeEnvelope string
+type NoticeEnvelope struct {
+	string
+}
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.Labels[Label]
-func (ee *NoticeEnvelope) Label() (l Label) { return LabelNotice }
+func (E *NoticeEnvelope) Label() (l Label) { return LNotice }
 
-func (ne NoticeEnvelope) ToArray() (a array.T) {
-	a = array.T{LabelNotice, ne}
-	return
+func (E *NoticeEnvelope) ToArray() (a array.T) {
+	return array.T{NOTICE,
+		E.string}
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (ee *NoticeEnvelope) MarshalJSON() (bytes []byte, e error) {
-	return ee.ToArray().Bytes(), nil
+func (E *NoticeEnvelope) MarshalJSON() (bytes []byte, e error) {
+	return E.ToArray().Bytes(), nil
 }
 
 // Unmarshal the envelope.
-func (ee *NoticeEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
-	if ee == nil {
+func (E *NoticeEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-
+	log.I.Ln(reflect.TypeOf(E))
 	return
 }
 
 // EOSEEnvelope is a message that indicates that all cached events have been
 // delivered and thereafter events will be new and delivered in pubsub subscribe
 // fashion while the socket remains open.
-type EOSEEnvelope SubscriptionID
+type EOSEEnvelope struct {
+	SubscriptionID
+}
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.Labels[Label]
-func (ee *EOSEEnvelope) Label() (l Label) { return LabelEOSE }
+func (E *EOSEEnvelope) Label() (l Label) { return LEOSE }
 
-func (ee EOSEEnvelope) ToArray() (a array.T) {
-	a = array.T{LabelEOSE, ee}
+func (E *EOSEEnvelope) ToArray() (a array.T) {
+	a = array.T{EOSE, E.SubscriptionID}
 	return
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (ee *EOSEEnvelope) MarshalJSON() (bytes []byte, e error) {
-	return ee.ToArray().Bytes(), nil
+func (E *EOSEEnvelope) MarshalJSON() (bytes []byte, e error) {
+	return E.ToArray().Bytes(), nil
 }
 
 // Unmarshal the envelope.
-func (ee *EOSEEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
-	if ee == nil {
+func (E *EOSEEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-
+	log.I.Ln(reflect.TypeOf(E))
 	return
 }
 
 // CloseEnvelope is a wrapper for a signal to cancel a subscription.
-type CloseEnvelope SubscriptionID
+type CloseEnvelope struct {
+	SubscriptionID
+}
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.Labels[Label]
-func (ee *CloseEnvelope) Label() (l Label) { return LabelClose }
+func (E *CloseEnvelope) Label() (l Label) { return LClose }
 
-func (ee CloseEnvelope) ToArray() (a array.T) {
-	a = array.T{LabelClose, ee}
-	return
+func (E *CloseEnvelope) ToArray() (a array.T) {
+	return array.T{CLOSE, E.SubscriptionID}
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (ee *CloseEnvelope) MarshalJSON() (bytes []byte, e error) {
-	return ee.ToArray().Bytes(), nil
+func (E *CloseEnvelope) MarshalJSON() (bytes []byte, e error) {
+	return E.ToArray().Bytes(), nil
 }
 
 // Unmarshal the envelope.
-func (ee *CloseEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
-	if ee == nil {
+func (E *CloseEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-
+	log.I.Ln(reflect.TypeOf(E))
 	return
 }

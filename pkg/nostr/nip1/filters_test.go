@@ -9,45 +9,46 @@ import (
 	"time"
 )
 
+var filt = Filters{
+	{
+		IDs: tag.T{
+			"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
+			"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
+			"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
+			"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
+		},
+		Kinds: kind.Array{
+			kind.TextNote, kind.MemoryHole, kind.CategorizedBookmarksList,
+		},
+		Authors: []string{
+			"e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
+			"e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
+			"e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
+		},
+		Tags: TagMap{
+			"#e": {"one", "two", "three"},
+			"#p": {"one", "two", "three"},
+		},
+		Since:  timestamp.T(time.Now().Unix() - (60 * 60)).Ptr(),
+		Until:  timestamp.Now().Ptr(),
+		Limit:  10,
+		Search: "some search terms",
+	},
+	{
+		Kinds: []kind.T{
+			kind.TextNote, kind.MemoryHole, kind.CategorizedBookmarksList,
+		},
+		Tags: TagMap{
+			"#e": {"one", "two", "three"},
+			"#A": {"one", "two", "three"},
+			"#x": {"one", "two", "three"},
+			"#g": {"one", "two", "three"},
+		},
+		Until: timestamp.Now().Ptr(),
+	},
+}
+
 func TestFilterString(t *testing.T) {
-	filt := Filters{
-		{
-			IDs: tag.T{
-				"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
-				"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
-				"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
-				"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
-			},
-			Kinds: kind.Array{
-				kind.TextNote, kind.MemoryHole, kind.CategorizedBookmarksList,
-			},
-			Authors: []string{
-				"e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
-				"e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
-				"e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
-			},
-			Tags: TagMap{
-				"#e": {"one", "two", "three"},
-				"#p": {"one", "two", "three"},
-			},
-			Since:  timestamp.T(time.Now().Unix() - (60 * 60)).Ptr(),
-			Until:  timestamp.Now().Ptr(),
-			Limit:  10,
-			Search: "some search terms",
-		},
-		{
-			Kinds: []kind.T{
-				kind.TextNote, kind.MemoryHole, kind.CategorizedBookmarksList,
-			},
-			Tags: TagMap{
-				"#e": {"one", "two", "three"},
-				"#A": {"one", "two", "three"},
-				"#x": {"one", "two", "three"},
-				"#g": {"one", "two", "three"},
-			},
-			Until: timestamp.Now().Ptr(),
-		},
-	}
 	// check that array stringer and json.Marshal produce identical outputs
 	a := filt.ToArray().Bytes()
 	b, e := json.Marshal(filt)
