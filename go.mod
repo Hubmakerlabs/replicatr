@@ -1,14 +1,14 @@
 module mleku.online/git/replicatr
 
-go 1.21.4
+go 1.21.5
 
 require (
 	github.com/gobwas/httphead v0.1.0
 	github.com/gobwas/ws v1.3.1
 	github.com/minio/sha256-simd v1.0.1
-	golang.org/x/exp v0.0.0-20231127185646-65229373498e
 	mleku.online/git/ec v1.0.3
-	mleku.online/git/log v1.0.5
+	mleku.online/git/log v1.0.7
+	mleku.online/git/mangle v1.0.4
 )
 
 require (

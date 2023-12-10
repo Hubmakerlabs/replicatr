@@ -64,6 +64,20 @@ const (
 // prompt Go to interpret the string as UTF-8 and potentially return a different
 // result, this occurs on the series of characters 0-255 at a certain point due
 // to UTF-8 encoding rules.
+//
+// One last thing to note. The stdlib function `json.Marshal` automatically runs a HTML escape processing which turns some valid characters, namely:
+//
+//	String values encode as JSON strings coerced to valid UTF-8, replacing
+//	invalid bytes with the Unicode replacement rune. So that the JSON will be
+//	safe to embed inside HTML <script> tags, the string is encoded using
+//	HTMLEscape, which replaces "<", ">", "&", U+2028, and U+2029 are escaped to
+//	"\u003c","\u003e", "\u0026", "\u2028", and "\u2029". This replacement can be
+//	disabled when using an Encoder, by calling SetEscapeHTML(false).
+//
+// And so the assumption this code here makes is that backslashes need to be
+// escaped, needs to have special handling to not escape the escaped, in order
+// to allow custom JSON marshalers to not keep adding backslashes to valid UTF-8
+// entities.
 func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 	// first calculate the extra bytes required for the given string
 	length := len(s) + 2
@@ -101,8 +115,6 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 		switch {
 		case c == QuotationMark:
 			escaped = append(escaped, []byte{ReverseSolidus, QuotationMark}...)
-		case c == ReverseSolidus:
-			escaped = append(escaped, []byte{ReverseSolidus, ReverseSolidus}...)
 		case c >= Space:
 			escaped = append(escaped, c)
 		case c == Backspace:
@@ -123,6 +135,41 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 		case c == CarriageReturn:
 			escaped = append(escaped,
 				[]byte{ReverseSolidus, 'r'}...)
+		case c == ReverseSolidus:
+			var notEscaped bool
+			if i < len(s)-1 {
+				// look ahead to see if this is a escape:
+			escapeCheck:
+				switch s[i+1] {
+				case 'u', 'U':
+					// Let's just be extra careful and make sure the 2 next
+					// chars are hex. If more are hex it doesn't matter. Really,
+					// just the u/U is all that matters, but since it's not
+					// valid escape code probably better to escape the `\` since
+					// it's not properly speaking a unicode escape.
+					if i < len(s)-5 {
+						for x := 2; x < 4; x++ {
+							switch s[i+x] {
+							case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F':
+							default:
+								// if the first or second after the u/U are not hex,
+								// it's not a unicode escape and we will double the `\`.
+								notEscaped = true
+							}
+							if notEscaped {
+								break escapeCheck
+							}
+						}
+					}
+				case '0', '1', '2', '3', '4', '5', '6', '7':
+				default:
+					notEscaped = true
+				}
+				if !notEscaped {
+					escaped = append(escaped,
+						[]byte{ReverseSolidus, ReverseSolidus}...)
+				}
+			}
 		case c < 0x10:
 			escaped = append(escaped,
 				[]byte{ReverseSolidus, 'u', '0', '0', '0', 0x57 + byte(c)}...)

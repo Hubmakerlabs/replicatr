@@ -2,10 +2,12 @@ package nip1
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mleku.online/git/replicatr/pkg/wire/array"
 	"reflect"
+	"sort"
 )
 
 type Label = byte
@@ -44,6 +46,20 @@ var (
 	CLOSE  = string(Labels[LClose])
 )
 
+func GetLabel(s string) (l Label) {
+	for i := range Labels {
+		if i == 0 {
+			// skip the nil value
+			continue
+		}
+		if string(Labels[i]) == s {
+			return Label(i)
+		}
+	}
+	//
+	return
+}
+
 // The Enveloper interface.
 //
 // Note that the Unmarshal function is not UnmarshalJSON for a specific reason -
@@ -64,6 +80,76 @@ type Enveloper interface {
 
 	// Unmarshal the envelope.
 	Unmarshal(buf *bytes.Buffer) (e error)
+
+	array.Arrayer
+}
+
+func GetEnvelope(env Enveloper) (
+	event *EventEnvelope,
+	oK *OKEnvelope,
+	notice *NoticeEnvelope,
+	eOSE *EOSEEnvelope,
+	close *CloseEnvelope,
+	req *ReqEnvelope,
+	e error,
+) {
+	ea := env.ToArray()
+	// if the envelope array is empty or nil there's nothing to return.
+	if len(ea) < 1 {
+		e = fmt.Errorf("envelope array is nil or contains nothing")
+		return
+	}
+	var label string
+	var ok bool
+	if label, ok = ea[0].(string); !ok {
+		// if the first field was not a string there's nothing to return.
+		e = fmt.Errorf("first field of envelope array is not a sentinel" +
+			" string label")
+		return
+	}
+	envType := GetLabel(label)
+	switch envType {
+	case LNil:
+		// this must not be a nip1 label
+		e = fmt.Errorf("no NIP-01 envelope label matched")
+		return
+	case LEvent:
+		event = &EventEnvelope{}
+		switch {
+		case len(ea) < 2:
+			// The envelope is empty save for its label.
+			e = fmt.Errorf("event envelope has label but no content")
+			return
+		case len(ea) > 3:
+			// if there is two additional fields, the first will be a
+			// subscription ID
+			if event.SubscriptionID, ok = ea[1].(SubscriptionID); !ok {
+				e = fmt.Errorf("event envelope second field of 3 is not " +
+					"expected subscription ID")
+				return
+			}
+			fallthrough
+		case len(ea) >= 2:
+			// the last field should be an Event
+			if event.Event, ok = ea[len(ea)-1].(*Event); !ok {
+				e = fmt.Errorf("last field of envelope (%d) is not the expected Event type",
+					len(ea)-1)
+				return
+			}
+		}
+		return
+	case LOK:
+		return
+	case LNotice:
+		return
+	case LEOSE:
+		return
+	case LClose:
+		return
+	case LReq:
+		return
+	}
+	return
 }
 
 func ReadUntilChar(buf *bytes.Buffer, c byte) (e error) {
@@ -141,16 +227,13 @@ matched:
 		env = &OKEnvelope{}
 		e = env.Unmarshal(buf)
 	case LNotice:
-		var ne NoticeEnvelope
-		env = &ne
+		env = &NoticeEnvelope{}
 		e = env.Unmarshal(buf)
 	case LEOSE:
-		var eose EOSEEnvelope
-		env = &eose
+		env = &EOSEEnvelope{}
 		e = env.Unmarshal(buf)
 	case LClose:
-		var c CloseEnvelope
-		env = &c
+		env = &CloseEnvelope{}
 		e = env.Unmarshal(buf)
 	case LReq:
 		env = &ReqEnvelope{}
@@ -189,39 +272,84 @@ func NewEventEnvelope(si string, ev *Event) (ee *EventEnvelope, e error) {
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.Labels[Label]
-func (ee *EventEnvelope) Label() (l Label) { return LEvent }
+func (E *EventEnvelope) Label() (l Label) { return LEvent }
 
 // ToArray converts an EventEnvelope to a form that has a JSON formatted String
 // and Bytes function (array.T). To get the encoded form, invoke either of these
 // methods on the returned value.
-func (ee *EventEnvelope) ToArray() (a array.T) {
+func (E *EventEnvelope) ToArray() (a array.T) {
 
 	// Event envelope has max 3 fields
 	a = make(array.T, 0, 3)
 	a = append(a, EVENT)
-	if ee.SubscriptionID.IsValid() {
-		a = append(a, ee.SubscriptionID)
+	if E.SubscriptionID.IsValid() {
+		a = append(a, E.SubscriptionID)
 	}
-	a = append(a, ee.Event.ToObject())
+	a = append(a, E.Event.ToObject())
 	return
 }
 
+func (E *EventEnvelope) String() (s string) {
+	return E.ToArray().String()
+}
+
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (ee *EventEnvelope) MarshalJSON() (bytes []byte, e error) {
-	return ee.ToArray().Bytes(), nil
+func (E *EventEnvelope) MarshalJSON() (bytes []byte, e error) {
+	return E.ToArray().Bytes(), nil
 }
 
 // Unmarshal the envelope.
-func (ee *EventEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
-	if ee == nil {
+func (E *EventEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-	log.I.Ln(reflect.TypeOf(ee))
+	// Next, find the comma after the label
+	if e = ReadUntilChar(buf, ','); e != nil {
+		return
+	}
+	// Next character we find will be open quotes for the subscription ID.
+	if e = ReadUntilChar(buf, '"'); e != nil {
+		return
+	}
+	var sid []byte
+	// read the string
+	if sid, e = buf.ReadBytes('"'); fails(e) {
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+	}
+	E.SubscriptionID = SubscriptionID(sid[:len(sid)-1])
+	// Next, find the comma after the subscription ID
+	if e = ReadUntilChar(buf, ','); e != nil {
+		return fmt.Errorf("event not found in event envelope")
+	}
+	// find the opening brace of the event object.
+	if e = ReadUntilChar(buf, '{'); e != nil {
+		return fmt.Errorf("event not found in event envelope")
+	}
+	if e = buf.UnreadByte(); fails(e) {
+		return fmt.Errorf("failed to get opening brace of event")
+	}
+	// now we should have an event object next. It has no embedded object so it
+	// should end with a close brace.
+	var eventObj []byte
+	if eventObj, e = buf.ReadBytes('}'); fails(e) {
+		return
+	}
+	// allocate an event to unmarshal into
+	E.Event = &Event{}
+	if e = json.Unmarshal(eventObj, E.Event); fails(e) {
+		log.D.S(string(eventObj))
+		return
+	}
+	// technically we maybe should read ahead further to make sure the JSON closes correctly.
+	if e = ReadUntilChar(buf, ']'); e != nil {
+		return fmt.Errorf("malformed JSON, no closing bracket on array")
+	}
+	// whatever remains doesn't matter as the envelope has fully unmarshaled.
 	return
 }
 
 const (
-	OKPOW         = "pow"
+	OKPoW         = "pow"
 	OKDuplicate   = "duplicate"
 	OKBlocked     = "blocked"
 	OKRateLimited = "rate-limited"
@@ -240,10 +368,6 @@ type OKEnvelope struct {
 	Reason  string
 }
 
-// Label returns the label enum/type of the envelope. The relevant bytes could
-// be retrieved using nip1.Labels[Label]
-func (E *OKEnvelope) Label() (l Label) { return LOK }
-
 func NewOKEnvelope(eventID string, ok bool, reason string) (o *OKEnvelope,
 	e error) {
 	var ei EventID
@@ -258,6 +382,10 @@ func NewOKEnvelope(eventID string, ok bool, reason string) (o *OKEnvelope,
 	return
 }
 
+// Label returns the label enum/type of the envelope. The relevant bytes could
+// be retrieved using nip1.Labels[Label]
+func (E *OKEnvelope) Label() (l Label) { return LOK }
+
 // ToArray converts an OKEnvelope to a form that has a JSON formatted String
 // and Bytes function (array.T). To get the encoded form, invoke either of these
 // methods on the returned value.
@@ -265,17 +393,115 @@ func (E *OKEnvelope) ToArray() (a array.T) {
 	return array.T{OK, E.EventID, E.OK, E.Reason}
 }
 
+func (E *OKEnvelope) String() (s string) {
+	return E.ToArray().String()
+}
+
 // MarshalJSON returns the JSON encoded form of the envelope.
 func (E *OKEnvelope) MarshalJSON() (bytes []byte, e error) {
 	return E.ToArray().Bytes(), nil
 }
+
+const (
+	Btrue     = "true"
+	BtrueLen  = len(Btrue)
+	Bfalse    = "false"
+	BfalseLen = len(Bfalse)
+)
 
 // Unmarshal the envelope.
 func (E *OKEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-	log.I.Ln(reflect.TypeOf(E))
+	// Next, find the comma after the label
+	if e = ReadUntilChar(buf, ','); e != nil {
+		return
+	}
+	// next comes an event ID
+	if e = ReadUntilChar(buf, '"'); e != nil {
+		return
+	}
+	var eventID []byte
+	if eventID, e = buf.ReadBytes('"'); fails(e) {
+		return fmt.Errorf("did not find event ID value in ok envelope")
+	}
+	// check event is a valid length
+	if len(eventID) != 65 {
+		return fmt.Errorf("event ID in ok envelope invalid length: %d '%s'",
+			len(eventID)-1, string(eventID))
+	}
+	eventID = eventID[:len(eventID)]
+	// check that it's actually hexadecimal
+	const hexChars = "0123456789abcdefABCDEF"
+	tmp := make([]byte, 64)
+	copy(tmp, eventID)
+	// this sort is backwards because invalid characters are more likely after
+	// the set of hex numbers than before, and the error will be found sooner
+	// and shorten the iteration below.
+	sort.Slice(tmp, func(i, j int) bool { return tmp[i] > tmp[j] })
+next:
+	for j := range tmp {
+		inSet := false
+		for i := range hexChars {
+			if hexChars[i] == tmp[j] {
+				inSet = true
+				continue next
+			}
+		}
+		// if a character in tmp didn't match by the end of hexChars we found an invalid character.
+		if !inSet {
+			return fmt.Errorf("found non-hex character in event ID: '%s'",
+				string(eventID))
+		}
+	}
+	E.EventID = EventID(eventID[:len(eventID)-1])
+	// next another comma
+	if e = ReadUntilChar(buf, ','); e != nil {
+		return
+	}
+	// next comes a boolean value
+	var isOK []byte
+	if isOK, e = buf.ReadBytes(','); fails(e) {
+		return fmt.Errorf("did not find OK value in ok envelope")
+	}
+	isOK = isOK[:len(isOK)-1]
+	// determine the value encoded
+	l := len(isOK)
+	var isBool bool
+maybeOK:
+	switch {
+	case l == BtrueLen:
+		for i := range isOK {
+			if isOK[i] != Btrue[i] {
+				break maybeOK
+			}
+		}
+		E.OK = true
+		isBool = true
+	case l == BfalseLen:
+		for i := range isOK {
+			if isOK[i] != Bfalse[i] {
+				break maybeOK
+			}
+		}
+		isBool = true
+	}
+	if !isBool {
+		return fmt.Errorf("unexpected string in ok envelope OK field '%s'",
+			string(isOK))
+	}
+	// Next must be a string, which can be empty, but must be at minimum a pair
+	// of quotes.
+	if e = ReadUntilChar(buf, '"'); e != nil {
+		return
+	}
+	var reason []byte
+	if reason, e = buf.ReadBytes('"'); fails(e) {
+		return fmt.Errorf("did not find reason value in ok envelope")
+	}
+	E.Reason = string(reason[:len(reason)-1])
+	log.D.Ln(E, "\n", buf.String())
 	return
 }
 
@@ -292,11 +518,13 @@ func (E *ReqEnvelope) Label() (l Label) { return LReq }
 func (E *ReqEnvelope) ToArray() array.T {
 	return array.T{REQ, E.SubscriptionID, E.Filters}
 }
+func (E *ReqEnvelope) String() (s string) {
+	return E.ToArray().String()
+}
 
 // MarshalJSON returns the JSON encoded form of the envelope.
 func (E *ReqEnvelope) MarshalJSON() (bytes []byte, e error) {
 	return E.ToArray().Bytes(), nil
-
 }
 
 // Unmarshal the envelope.
@@ -304,7 +532,21 @@ func (E *ReqEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-	log.I.Ln(reflect.TypeOf(E))
+	// Next, find the comma after the label
+	if e = ReadUntilChar(buf, ','); e != nil {
+		return
+	}
+	// Next character we find will be open quotes for the subscription ID.
+	if e = ReadUntilChar(buf, '"'); e != nil {
+		return
+	}
+	var sid []byte
+	// read the string
+	if sid, e = buf.ReadBytes('"'); fails(e) {
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+	}
+	E.SubscriptionID = SubscriptionID(sid[:len(sid)-1])
+
 	return
 }
 
@@ -321,6 +563,9 @@ func (E *NoticeEnvelope) Label() (l Label) { return LNotice }
 func (E *NoticeEnvelope) ToArray() (a array.T) {
 	return array.T{NOTICE,
 		E.string}
+}
+func (E *NoticeEnvelope) String() (s string) {
+	return E.ToArray().String()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
@@ -353,6 +598,10 @@ func (E *EOSEEnvelope) ToArray() (a array.T) {
 	return
 }
 
+func (E *EOSEEnvelope) String() (s string) {
+	return E.ToArray().String()
+}
+
 // MarshalJSON returns the JSON encoded form of the envelope.
 func (E *EOSEEnvelope) MarshalJSON() (bytes []byte, e error) {
 	return E.ToArray().Bytes(), nil
@@ -378,6 +627,10 @@ func (E *CloseEnvelope) Label() (l Label) { return LClose }
 
 func (E *CloseEnvelope) ToArray() (a array.T) {
 	return array.T{CLOSE, E.SubscriptionID}
+}
+
+func (E *CloseEnvelope) String() (s string) {
+	return E.ToArray().String()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.

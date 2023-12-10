@@ -3,14 +3,17 @@ package nip1
 import (
 	"bytes"
 	"encoding/json"
+	log2 "mleku.online/git/log"
 	"testing"
 )
 
-func TestEventEnvelope(t *testing.T) {
+func TestEnveloper(t *testing.T) {
+	log2.SetLogLevel(log2.Debug)
 	const sub = "subscription000001"
 	envs := []Enveloper{
 		&EventEnvelope{sub, events[0]},
-		&OKEnvelope{events[0].ID, true, OKPOW + ": 25>24"},
+		&EventEnvelope{"", events[0]},
+		&OKEnvelope{events[0].ID, true, OKPoW + ": 25>24"},
 		&ReqEnvelope{sub, filt},
 		&NoticeEnvelope{"this notice has been noticed"},
 		&EOSEEnvelope{sub},
@@ -21,13 +24,19 @@ func TestEventEnvelope(t *testing.T) {
 	for i := range envs {
 		b, e = json.Marshal(envs[i])
 		if e != nil {
-			t.Fatal(e)
+			log.F.Ln(e)
+			t.FailNow()
 		}
-		t.Log(string(b))
+		log.D.Ln("marshal  ", string(b))
 		var env Enveloper
 		var label []byte
 		var buf *bytes.Buffer
 		env, label, buf, e = ProcessEnvelope(b)
+		if e != nil {
+			log.F.Ln(e)
+			t.FailNow()
+		}
+		log.D.Ln("unmarshal", env.ToArray().String())
 		_ = env
 		_ = label
 		_ = buf

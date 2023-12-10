@@ -11,7 +11,7 @@ import (
 
 var (
 	log                    = log2.GetLogger()
-	fails                  = log.E.Chk
+	fails                  = log.D.Chk
 	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
@@ -36,14 +36,14 @@ func NewSubscriptionID(s string) (SubscriptionID, error) {
 		return si, nil
 	} else {
 		// remove invalid return value
-		return "",
+		return si[:0],
 			errors.New("invalid subscription ID - either < 0 or > 64 char length")
 	}
 }
 
 // IsValid returns true if the subscription id is between 1 and 64 characters.
 // Invalid means too long or not present.
-func (si SubscriptionID) IsValid() bool { return len(si) > 0 && len(si) <= 64 }
+func (si SubscriptionID) IsValid() bool { return len(si) <= 64 }
 
 // EventID is the SHA256 hash in hexadecimal of the canonical form of an event
 // as produced by the output of Event.ToCanonical().Bytes().
@@ -64,7 +64,7 @@ func NewEventID(s string) (ei EventID, e error) {
 	if e = ei.Validate(); fails(e) {
 
 		// clear the result since it failed.
-		ei = ""
+		ei = ei[:0]
 		return
 	}
 	return
