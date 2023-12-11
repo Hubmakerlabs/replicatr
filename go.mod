@@ -8,7 +8,7 @@ require (
 	github.com/minio/sha256-simd v1.0.1
 	mleku.online/git/ec v1.0.3
 	mleku.online/git/log v1.0.7
-	mleku.online/git/mangle v1.0.4
+	mleku.online/git/mangle v1.0.8
 )
 
 require (

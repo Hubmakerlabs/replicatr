@@ -108,7 +108,7 @@ func (ev *Event) CheckSignature() (valid bool, e error) {
 	return
 }
 
-// Sign signs an event with a given Secret Key.
+// Sign signs an event with a given Secret Key encoded in hexadecimal.
 func (ev *Event) Sign(skStr string, so ...schnorr.SignOption) (e error) {
 
 	// secret key hex must be 64 characters.
@@ -126,6 +126,13 @@ func (ev *Event) Sign(skStr string, so ...schnorr.SignOption) (e error) {
 
 	// parse bytes to get secret key (size checks have been done).
 	sk := secp256k1.SecKeyFromBytes(skBytes)
+
+	return ev.SignWithSecKey(sk, so...)
+}
+
+// SignWithSecKey signs an event with a given *secp256xk1.SecretKey.
+func (ev *Event) SignWithSecKey(sk *secp256k1.SecretKey,
+	so ...schnorr.SignOption) (e error) {
 
 	// sign the event.
 	var sig *schnorr.Signature

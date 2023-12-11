@@ -2,6 +2,7 @@ package nip1
 
 import (
 	"encoding/json"
+	secp256k1 "mleku.online/git/ec/secp"
 	"mleku.online/git/replicatr/pkg/nostr/kind"
 	"mleku.online/git/replicatr/pkg/nostr/tag"
 	"mleku.online/git/replicatr/pkg/nostr/tags"
@@ -23,6 +24,46 @@ var events = []*Event{
 		Sig: "ed08d2dd5b0f7b6a3cdc74643d4adee3158ddede9cc848e8cd97630c097001ac" +
 			"c2d052d2d3ec2b7ac4708b2314b797106d1b3c107322e61b5e5cc2116e099b79",
 	},
+}
+
+const (
+	TestSecBech32 = "nsec1z7tlduw3qkf4fz6kdw3jaq2h02jtexgwkrck244l3p834a930sjsh8t89c"
+	TestPubBech32 = "npub1flds0h62dqlra6dj48g30cqmlcj534lgcr2vk4kh06wzxzgu8lpss5kaa2"
+	TestSecHex    = "1797f6f1d10593548b566ba32e81577aa4bc990eb0f16556bf884f1af4b17c25"
+	TestPubHex    = "4fdb07df4a683e3ee9b2a9d117e01bfe2548d7e8c0d4cb56d77e9c23091c3fc3"
+)
+
+func GetTestKeyPair() (sec *secp256k1.SecretKey,
+	pub *secp256k1.PublicKey) {
+	b, _ := hexDecode(TestSecHex)
+	sec = secp256k1.SecKeyFromBytes(b)
+	pub = sec.PubKey()
+	return
+}
+
+var (
+	TestEventContent = []string{
+		`This event contains { braces } and [ brackets ] that must be properly 
+handled, as well as a line break, a dangling space and a 
+	tab.`,
+	}
+)
+
+func TestGenerateEvent(t *testing.T) {
+	var e error
+	sec, pub := GetTestKeyPair()
+	for i := range TestEventContent {
+		ev := &Event{
+			CreatedAt: timestamp.Now(),
+			Kind:      kind.TextNote,
+			Content:   TestEventContent[i],
+		}
+		if e = ev.SignWithSecKey(sec); fails(e) {
+			t.FailNow()
+		}
+		_ = pub // todo maybe check sign used this?
+		t.Log("\n", ev.ToObject().String())
+	}
 }
 
 func TestEventSerialization(t *testing.T) {

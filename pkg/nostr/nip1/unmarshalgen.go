@@ -3,13 +3,12 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 )
 
 func main() {
-	f := new(bytes.Buffer)
+	f := new(mangle.Buffer)
 	fmt.Fprint(f, `package nip1
 
 //go:generate go run unmarshalgen.go

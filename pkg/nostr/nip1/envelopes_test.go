@@ -1,9 +1,9 @@
 package nip1
 
 import (
-	"bytes"
 	"encoding/json"
 	log2 "mleku.online/git/log"
+	"mleku.online/git/mangle"
 	"testing"
 )
 
@@ -30,7 +30,7 @@ func TestEnveloper(t *testing.T) {
 		log.D.Ln("marshal  ", string(b))
 		var env Enveloper
 		var label []byte
-		var buf *bytes.Buffer
+		var buf *mangle.Buffer
 		env, label, buf, e = ProcessEnvelope(b)
 		if e != nil {
 			log.F.Ln(e)

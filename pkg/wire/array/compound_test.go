@@ -2,17 +2,16 @@ package array
 
 import (
 	"encoding/json"
-	"mleku.online/git/replicatr/pkg/wire/array"
 	"mleku.online/git/replicatr/pkg/wire/object"
 	"testing"
 	"time"
 )
 
-var literal = object.T{
+var literal2 = object.T{
 	{"1", "aoeu"},
 	{"3", time.Now()},
 	{"sorta normal", 0.333},
-	{"array_with_object_inside", array.T{
+	{"array_with_object_inside", T{
 		"1",
 		"aoeu",
 		"3",
@@ -34,7 +33,7 @@ var literalAsMapStringInterface = map[string]interface{}{
 	"1":            "aoeu",
 	"3":            time.Now(),
 	"sorta normal": 0.333,
-	"array_with_object_inside": array.T{
+	"array_with_object_inside": T{
 		"1",
 		"aoeu",
 		"3",
@@ -52,7 +51,7 @@ var literalAsMapStringInterface = map[string]interface{}{
 	},
 }
 
-func TestObject(t *testing.T) {
+func TestObject2(t *testing.T) {
 
 	// This demonstrates the mutual embedding of array.T and object.T with
 	// object.T's order respecting properties.
@@ -64,12 +63,12 @@ func TestObject(t *testing.T) {
 		t.Fatal(e)
 	}
 	t.Log(string(b)) // how this looks using the encoding/json map[string]interface{} convention
-	b, e = json.Marshal(literal)
+	b, e = json.Marshal(literal2)
 	if e != nil {
 		t.Fatal(e)
 	}
 	t.Log(string(b)) // just to show the underlying structure that makes K/V pairs as mangled by encoding/json.
 
 	// this version preserves ordering in the object.T parts where the map[string]interface{} ordering is lost.
-	t.Log(literal)
+	t.Log(literal2)
 }

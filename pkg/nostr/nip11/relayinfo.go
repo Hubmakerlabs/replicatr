@@ -7,6 +7,8 @@ import (
 
 // RelayInfo provides the information for a relay on the network as regards to
 // versions, NIP support, contact, policies, and payment requirements.
+//
+// todo: change the string slices into tag type
 type RelayInfo struct {
 	Name           string       `json:"name"`
 	Description    string       `json:"description"`

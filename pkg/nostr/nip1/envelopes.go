@@ -1,10 +1,9 @@
 package nip1
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
+	"mleku.online/git/mangle"
 	"mleku.online/git/replicatr/pkg/wire/array"
 	"reflect"
 	"sort"
@@ -67,8 +66,6 @@ func GetLabel(s string) (l Label) {
 // type because it must by definition have a sentinel field which in the case of
 // nostr is the Label. Objects have a defined collection of recognised labels
 // and with omitempty marking the mandatory ones, acting as a "kind" of sentinel.
-// Javascript is not a serious language and ECMA are not real engineers, and the
-// "ninjas" who use javascript are generally ignorant of basic principles of CS.
 type Enveloper interface {
 
 	// Label returns the label enum/type of the envelope. The relevant bytes could
@@ -79,89 +76,9 @@ type Enveloper interface {
 	MarshalJSON() (bytes []byte, e error)
 
 	// Unmarshal the envelope.
-	Unmarshal(buf *bytes.Buffer) (e error)
+	Unmarshal(buf *mangle.Buffer) (e error)
 
 	array.Arrayer
-}
-
-func GetEnvelope(env Enveloper) (
-	event *EventEnvelope,
-	oK *OKEnvelope,
-	notice *NoticeEnvelope,
-	eOSE *EOSEEnvelope,
-	close *CloseEnvelope,
-	req *ReqEnvelope,
-	e error,
-) {
-	ea := env.ToArray()
-	// if the envelope array is empty or nil there's nothing to return.
-	if len(ea) < 1 {
-		e = fmt.Errorf("envelope array is nil or contains nothing")
-		return
-	}
-	var label string
-	var ok bool
-	if label, ok = ea[0].(string); !ok {
-		// if the first field was not a string there's nothing to return.
-		e = fmt.Errorf("first field of envelope array is not a sentinel" +
-			" string label")
-		return
-	}
-	envType := GetLabel(label)
-	switch envType {
-	case LNil:
-		// this must not be a nip1 label
-		e = fmt.Errorf("no NIP-01 envelope label matched")
-		return
-	case LEvent:
-		event = &EventEnvelope{}
-		switch {
-		case len(ea) < 2:
-			// The envelope is empty save for its label.
-			e = fmt.Errorf("event envelope has label but no content")
-			return
-		case len(ea) > 3:
-			// if there is two additional fields, the first will be a
-			// subscription ID
-			if event.SubscriptionID, ok = ea[1].(SubscriptionID); !ok {
-				e = fmt.Errorf("event envelope second field of 3 is not " +
-					"expected subscription ID")
-				return
-			}
-			fallthrough
-		case len(ea) >= 2:
-			// the last field should be an Event
-			if event.Event, ok = ea[len(ea)-1].(*Event); !ok {
-				e = fmt.Errorf("last field of envelope (%d) is not the expected Event type",
-					len(ea)-1)
-				return
-			}
-		}
-		return
-	case LOK:
-		return
-	case LNotice:
-		return
-	case LEOSE:
-		return
-	case LClose:
-		return
-	case LReq:
-		return
-	}
-	return
-}
-
-func ReadUntilChar(buf *bytes.Buffer, c byte) (e error) {
-	var b byte
-	for {
-		if b, e = buf.ReadByte(); e == io.EOF {
-			return
-		}
-		if b == c {
-			return
-		}
-	}
 }
 
 // ProcessEnvelope scans a message and if it finds a correctly formed Envelope it
@@ -170,25 +87,23 @@ func ReadUntilChar(buf *bytes.Buffer, c byte) (e error) {
 // If it fails, it also returns the label bytes found and the buffer, which will
 // have the cursor at the next byte after the quote delimiter of the Label,
 // ready for some other envelope outside of nip-01 to decode.
-func ProcessEnvelope(b []byte) (env Enveloper, label []byte, buf *bytes.Buffer,
+func ProcessEnvelope(b []byte) (env Enveloper, label []byte, buf *mangle.Buffer,
 	e error) {
 	// The bytes must be valid JSON but we can't assume they are free of
 	// whitespace... So we will use some tools.
-	buf = bytes.NewBuffer(b)
+	buf = mangle.New(b)
 	// First there must be an opening bracket.
-	if e = ReadUntilChar(buf, '['); e != nil {
+	if e = buf.ScanThrough('['); e != nil {
 		return
 	}
 	// Then a quote.
-	if e = ReadUntilChar(buf, '"'); e != nil {
+	if e = buf.ScanThrough('"'); e != nil {
 		return
 	}
 	var candidate []byte
-	if candidate, e = buf.ReadBytes('"'); e != nil {
+	if candidate, e = buf.ReadUntil('"'); e != nil {
 		return
 	}
-	// trim off the quote character.
-	candidate = candidate[:len(candidate)-1]
 	var differs bool
 	var match Label
 matched:
@@ -299,49 +214,49 @@ func (E *EventEnvelope) MarshalJSON() (bytes []byte, e error) {
 }
 
 // Unmarshal the envelope.
-func (E *EventEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+func (E *EventEnvelope) Unmarshal(buf *mangle.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label
-	if e = ReadUntilChar(buf, ','); e != nil {
+	if e = buf.ScanUntil(','); e != nil {
 		return
 	}
 	// Next character we find will be open quotes for the subscription ID.
-	if e = ReadUntilChar(buf, '"'); e != nil {
+	if e = buf.ScanThrough('"'); e != nil {
 		return
 	}
 	var sid []byte
 	// read the string
-	if sid, e = buf.ReadBytes('"'); fails(e) {
+	if sid, e = buf.ReadUntil('"'); fails(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
-	E.SubscriptionID = SubscriptionID(sid[:len(sid)-1])
+	E.SubscriptionID = SubscriptionID(sid[:])
 	// Next, find the comma after the subscription ID
-	if e = ReadUntilChar(buf, ','); e != nil {
+	if e = buf.ScanUntil(','); e != nil {
 		return fmt.Errorf("event not found in event envelope")
 	}
 	// find the opening brace of the event object.
-	if e = ReadUntilChar(buf, '{'); e != nil {
+	if e = buf.ScanUntil('{'); e != nil {
 		return fmt.Errorf("event not found in event envelope")
-	}
-	if e = buf.UnreadByte(); fails(e) {
-		return fmt.Errorf("failed to get opening brace of event")
 	}
 	// now we should have an event object next. It has no embedded object so it
 	// should end with a close brace.
 	var eventObj []byte
-	if eventObj, e = buf.ReadBytes('}'); fails(e) {
+	if eventObj, e = buf.ReadThrough('}'); fails(e) {
 		return
 	}
+	// TODO: Handle } inside the Content field. Tags also maybe.
+
 	// allocate an event to unmarshal into
 	E.Event = &Event{}
 	if e = json.Unmarshal(eventObj, E.Event); fails(e) {
 		log.D.S(string(eventObj))
 		return
 	}
-	// technically we maybe should read ahead further to make sure the JSON closes correctly.
-	if e = ReadUntilChar(buf, ']'); e != nil {
+	// technically we maybe should read ahead further to make sure the JSON
+	// closes correctly.
+	if e = buf.ScanUntil(']'); e != nil {
 		return fmt.Errorf("malformed JSON, no closing bracket on array")
 	}
 	// whatever remains doesn't matter as the envelope has fully unmarshaled.
@@ -410,24 +325,24 @@ const (
 )
 
 // Unmarshal the envelope.
-func (E *OKEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+func (E *OKEnvelope) Unmarshal(buf *mangle.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label
-	if e = ReadUntilChar(buf, ','); e != nil {
+	if e = buf.ScanThrough(','); e != nil {
 		return
 	}
 	// next comes an event ID
-	if e = ReadUntilChar(buf, '"'); e != nil {
+	if e = buf.ScanThrough('"'); e != nil {
 		return
 	}
 	var eventID []byte
-	if eventID, e = buf.ReadBytes('"'); fails(e) {
+	if eventID, e = buf.ReadUntil('"'); fails(e) {
 		return fmt.Errorf("did not find event ID value in ok envelope")
 	}
 	// check event is a valid length
-	if len(eventID) != 65 {
+	if len(eventID) != 64 {
 		return fmt.Errorf("event ID in ok envelope invalid length: %d '%s'",
 			len(eventID)-1, string(eventID))
 	}
@@ -457,12 +372,12 @@ next:
 	}
 	E.EventID = EventID(eventID[:len(eventID)-1])
 	// next another comma
-	if e = ReadUntilChar(buf, ','); e != nil {
+	if e = buf.ScanThrough(','); e != nil {
 		return
 	}
 	// next comes a boolean value
 	var isOK []byte
-	if isOK, e = buf.ReadBytes(','); fails(e) {
+	if isOK, e = buf.ReadUntil(','); fails(e) {
 		return fmt.Errorf("did not find OK value in ok envelope")
 	}
 	isOK = isOK[:len(isOK)-1]
@@ -493,12 +408,16 @@ maybeOK:
 	}
 	// Next must be a string, which can be empty, but must be at minimum a pair
 	// of quotes.
-	if e = ReadUntilChar(buf, '"'); e != nil {
+	if e = buf.ScanThrough('"'); e != nil {
 		return
 	}
 	var reason []byte
-	if reason, e = buf.ReadBytes('"'); fails(e) {
+	if reason, e = buf.ReadUntil('"'); fails(e) {
 		return fmt.Errorf("did not find reason value in ok envelope")
+	}
+	// Scan for the proper envelope ending.
+	if e = buf.ScanThrough(']'); e != nil {
+		log.D.Ln("envelope unterminated but all fields found")
 	}
 	E.Reason = string(reason[:len(reason)-1])
 	log.D.Ln(E, "\n", buf.String())
@@ -528,16 +447,16 @@ func (E *ReqEnvelope) MarshalJSON() (bytes []byte, e error) {
 }
 
 // Unmarshal the envelope.
-func (E *ReqEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+func (E *ReqEnvelope) Unmarshal(buf *mangle.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label
-	if e = ReadUntilChar(buf, ','); e != nil {
+	if e = buf.ScanThrough(','); e != nil {
 		return
 	}
 	// Next character we find will be open quotes for the subscription ID.
-	if e = ReadUntilChar(buf, '"'); e != nil {
+	if e = buf.ScanThrough('"'); e != nil {
 		return
 	}
 	var sid []byte
@@ -574,7 +493,7 @@ func (E *NoticeEnvelope) MarshalJSON() (bytes []byte, e error) {
 }
 
 // Unmarshal the envelope.
-func (E *NoticeEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+func (E *NoticeEnvelope) Unmarshal(buf *mangle.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
@@ -608,7 +527,7 @@ func (E *EOSEEnvelope) MarshalJSON() (bytes []byte, e error) {
 }
 
 // Unmarshal the envelope.
-func (E *EOSEEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+func (E *EOSEEnvelope) Unmarshal(buf *mangle.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
@@ -639,7 +558,7 @@ func (E *CloseEnvelope) MarshalJSON() (bytes []byte, e error) {
 }
 
 // Unmarshal the envelope.
-func (E *CloseEnvelope) Unmarshal(buf *bytes.Buffer) (e error) {
+func (E *CloseEnvelope) Unmarshal(buf *mangle.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
