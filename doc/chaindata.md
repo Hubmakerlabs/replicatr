@@ -28,7 +28,11 @@ What we are aiming to achieve with `replicatr` is to put that part of the Nostr 
 
 The native encoding of Nostr is JSON, but this is only mandatory in data types that have canonical forms that are hashed and signed. In storage and on the wire, there can be other encodings such as BSON, MessagePack, Protobuf, CBOR, so long as the encoding can be turned into JSON for messaging relays that do not implement the alternative encodings.
 
-The following list is of the data types that will be stored on the IC, as a reference for those building the IC canister that will interface with the `replicatr` nostr relay:
+The following list is of the data types that will be stored on the IC, as a reference for those building the IC canister that will interface with the `replicatr` nostr relay.
+
+Events are selectively stored whole by the IC, based on the criteria of their size and the directions from which demand for them is likely to come. Profile data and community and chat events that do not have their own body of content, or if they are wrapped inside another event, this can be identified by the kind number of the event.
+
+Events that are not stored on the IC only have the ID, timestamp, pubkey of the author (compactly stored as a fingerprint alongside an index) and depending on the kind, maybe the tags. The content and signature are elided as they are not useful to the filter requests. The relays that have copies of the full event are noted alongside these details, and these relays will then be queried for the full content to enable such things as full text searches or delivering the event to a client.
 
 ### Event
 
@@ -180,5 +184,83 @@ This does not include chat text posts, only events that modify the channels and 
 
 Lists are lists of things for various purposes, such as mute lists, follows, blocked relays, preferred relays, bookmarks, communities, and so on.. These are long lived and should be widely accessible, similar to the other event types, and thus also fit the requirements for IC stored events.
 
-These event types are primarily encoded in tags, so the same principles apply - the IC has already validated 
+These event types are primarily encoded in tags, so the same principles apply - the IC data is only sent to it by authorized relays so the bulky signatures can largely be omitted as they aren't searchable anyway.
+
+#### Communities
+
+These are membership-oriented groups where there are whitelisted members, blacklisted (banned) members, moderators, community metadata, and a collection of events tied to the community, and post moderation. These are examples of the several data types that appear in this type of event.
+
+##### Community Creation
+
+```json
+{
+  "created_at": <Unix timestamp in seconds>,
+  "kind": 34550,
+  "tags": [
+    ["d", "<community-d-identifier>"],
+    ["description", "<Community description>"],
+    ["image", "<Community image url>", "<Width>x<Height>"],
+
+    //.. other tags relevant to defining the community
+
+    // moderators
+    ["p", "<32-bytes hex of a pubkey1>", "<optional recommended relay URL>", "moderator"],
+    ["p", "<32-bytes hex of a pubkey2>", "<optional recommended relay URL>", "moderator"],
+    ["p", "<32-bytes hex of a pubkey3>", "<optional recommended relay URL>", "moderator"],
+
+    // relays used by the community (w/optional marker)
+    ["relay", "<relay hosting author kind 0>", "author"],
+    ["relay", "<relay where to send and receive requests>", "requests"],
+    ["relay", "<relay where to send and receive approvals>", "approvals"],
+    ["relay", "<relay where to post requests to and fetch approvals from>"]
+  ],
+  ...
+}
+```
+
+##### Post Request
+
+```json
+{
+  "kind": 1,
+  "tags": [
+    ["a", "34550:<community event author pubkey>:<community-d-identifier>", "<optional-relay-url>"],
+  ],
+  "content": "hello world",
+  ...
+}
+```
+
+#### Post Approval
+
+```json
+{
+  "pubkey": "<32-bytes lowercase hex-encoded public key of the event creator>",
+  "kind": 4550,
+  "tags": [
+    ["a", "34550:<event-author-pubkey>:<community-d-identifier>", "<optional-relay-url>"],
+    ["e", "<post-id>", "<optional-relay-url>"],
+    ["p", "<port-author-pubkey>", "<optional-relay-url>"],
+    ["k", "<post-request-kind>"]
+  ],
+  "content": "<the full approved event, JSON-encoded>",
+  ...
+}
+```
+
+#### Filtering for Approved Posts
+
+```json
+[
+  "REQ",
+  "_",
+  {
+    "authors": ["<owner-pubkey>", "<moderator1-pubkey>", "<moderator2-pubkey>", "<moderator3-pubkey>", ...],
+    "kinds": [4550],
+    "#a": ["34550:<Community event author pubkey>:<d-identifier of the community>"],
+  }
+]
+```
+
+
 
