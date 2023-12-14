@@ -1,16 +1,27 @@
-package nip1
+package nip1_test
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"math/rand"
 	secp256k1 "mleku.online/git/ec/secp"
+	log2 "mleku.online/git/log"
 	"mleku.online/git/replicatr/pkg/nostr/kind"
+	"mleku.online/git/replicatr/pkg/nostr/nip1"
 	"mleku.online/git/replicatr/pkg/nostr/tag"
 	"mleku.online/git/replicatr/pkg/nostr/tags"
 	"mleku.online/git/replicatr/pkg/nostr/timestamp"
 	"testing"
 )
 
-var events = []*Event{
+var (
+	log                    = log2.GetLogger()
+	fails                  = log.D.Chk
+	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
+)
+
+var events = []*nip1.Event{
 	{
 		ID:        "92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
 		PubKey:    "e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
@@ -49,20 +60,46 @@ handled, as well as a line break, a dangling space and a
 	}
 )
 
+func GenTextNote(sk *secp256k1.SecretKey, replyID,
+	relayURL string) (note string, e error) {
+
+	// pick random quote to use in content field of event
+	src := rand.Intn(len(quotes))
+	q := rand.Intn(len(quotes[src].Paragraphs))
+	quoteText := fmt.Sprintf("\"%s\" - %s",
+		quotes[src].Paragraphs[q],
+		quotes[src].Source)
+	var t tags.T
+	tagMarker := tag.MarkerRoot
+	if replyID != "" {
+		tagMarker = tag.MarkerReply
+	}
+	t = tags.T{{"e", replyID, relayURL, tagMarker}}
+	ev := &nip1.Event{
+		CreatedAt: timestamp.Now(),
+		Kind:      kind.TextNote,
+		Tags:      t,
+		Content:   quoteText,
+	}
+	if e = ev.SignWithSecKey(sk); fails(e) {
+		return
+	}
+	note = ev.ToObject().String()
+	return
+}
+
 func TestGenerateEvent(t *testing.T) {
+	log2.SetLogLevel(log2.Debug)
 	var e error
+	var note, noteID, relayURL string
 	sec, pub := GetTestKeyPair()
-	for i := range TestEventContent {
-		ev := &Event{
-			CreatedAt: timestamp.Now(),
-			Kind:      kind.TextNote,
-			Content:   TestEventContent[i],
-		}
-		if e = ev.SignWithSecKey(sec); fails(e) {
+	_ = pub
+	for i := 0; i < 10; i++ {
+		if note, e = GenTextNote(sec, noteID, relayURL); fails(e) {
+			t.Error(e)
 			t.FailNow()
 		}
-		_ = pub // todo maybe check sign used this?
-		t.Log("\n", ev.ToObject().String())
+		log.D.Ln(note)
 	}
 }
 
@@ -74,7 +111,7 @@ func TestEventSerialization(t *testing.T) {
 
 		b, e = json.Marshal(evt)
 		t.Log(string(b))
-		var re Event
+		var re nip1.Event
 		if e = json.Unmarshal(b, &re); e != nil {
 			t.Log(string(b))
 			t.Error("failed to re parse event just serialized", e)

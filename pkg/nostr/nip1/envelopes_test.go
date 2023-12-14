@@ -1,23 +1,25 @@
-package nip1
+package nip1_test
 
 import (
 	"encoding/json"
 	log2 "mleku.online/git/log"
 	"mleku.online/git/mangle"
+	"mleku.online/git/replicatr/pkg/nostr/nip1"
 	"testing"
 )
 
 func TestEnveloper(t *testing.T) {
 	log2.SetLogLevel(log2.Debug)
 	const sub = "subscription000001"
-	envs := []Enveloper{
-		&EventEnvelope{sub, events[0]},
-		&EventEnvelope{"", events[0]},
-		&OKEnvelope{events[0].ID, true, OKPoW + ": 25>24"},
-		&ReqEnvelope{sub, filt},
-		&NoticeEnvelope{"this notice has been noticed"},
-		&EOSEEnvelope{sub},
-		&CloseEnvelope{sub},
+	envs := []nip1.Enveloper{
+		&nip1.EventEnvelope{SubscriptionID: sub, Event: events[0]},
+		&nip1.EventEnvelope{Event: events[0]},
+		&nip1.OKEnvelope{EventID: events[0].ID, OK: true,
+			Reason: nip1.OKPoW + ": 25>24"},
+		&nip1.ReqEnvelope{SubscriptionID: sub, Filters: filt},
+		&nip1.NoticeEnvelope{Text: "this notice has been noticed"},
+		&nip1.EOSEEnvelope{SubscriptionID: sub},
+		&nip1.CloseEnvelope{SubscriptionID: sub},
 	}
 	var e error
 	var b []byte
@@ -28,10 +30,10 @@ func TestEnveloper(t *testing.T) {
 			t.FailNow()
 		}
 		log.D.Ln("marshal  ", string(b))
-		var env Enveloper
+		var env nip1.Enveloper
 		var label []byte
 		var buf *mangle.Buffer
-		env, label, buf, e = ProcessEnvelope(b)
+		env, label, buf, e = nip1.ProcessEnvelope(b)
 		if e != nil {
 			log.F.Ln(e)
 			t.FailNow()
