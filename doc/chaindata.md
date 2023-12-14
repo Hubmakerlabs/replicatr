@@ -24,7 +24,11 @@ What we are aiming to achieve with `replicatr` is to put that part of the Nostr 
 
 *By using a blockchain for this type of data, we improve the performance of the relays that use it, as well as build a bridge from the blockchain world to the Nostr world that gives you the best of both worlds.*
 
-## Data Types and Queries
+## API Calls
+
+todo
+
+## Data Types
 
 The native encoding of Nostr is JSON, but this is only mandatory in data types that have canonical forms that are hashed and signed. In storage and on the wire, there can be other encodings such as BSON, MessagePack, Protobuf, CBOR, so long as the encoding can be turned into JSON for messaging relays that do not implement the alternative encodings.
 
