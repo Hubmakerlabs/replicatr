@@ -472,7 +472,7 @@ func (E *ReqEnvelope) Unmarshal(buf *mangle.Buffer) (e error) {
 // NoticeEnvelope is a relay message intended to be shown to users in a nostr
 // client interface.
 type NoticeEnvelope struct {
-	string
+	Text string
 }
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
@@ -481,7 +481,7 @@ func (E *NoticeEnvelope) Label() (l Label) { return LNotice }
 
 func (E *NoticeEnvelope) ToArray() (a array.T) {
 	return array.T{NOTICE,
-		E.string}
+		E.Text}
 }
 func (E *NoticeEnvelope) String() (s string) {
 	return E.ToArray().String()

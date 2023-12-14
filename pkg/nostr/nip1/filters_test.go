@@ -1,15 +1,16 @@
-package nip1
+package nip1_test
 
 import (
 	"encoding/json"
 	"mleku.online/git/replicatr/pkg/nostr/kind"
+	"mleku.online/git/replicatr/pkg/nostr/nip1"
 	"mleku.online/git/replicatr/pkg/nostr/tag"
 	"mleku.online/git/replicatr/pkg/nostr/timestamp"
 	"testing"
 	"time"
 )
 
-var filt = Filters{
+var filt = nip1.Filters{
 	{
 		IDs: tag.T{
 			"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
@@ -25,7 +26,7 @@ var filt = Filters{
 			"e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
 			"e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
 		},
-		Tags: TagMap{
+		Tags: nip1.TagMap{
 			"#e": {"one", "two", "three"},
 			"#p": {"one", "two", "three"},
 		},
@@ -38,7 +39,7 @@ var filt = Filters{
 		Kinds: []kind.T{
 			kind.TextNote, kind.MemoryHole, kind.CategorizedBookmarksList,
 		},
-		Tags: TagMap{
+		Tags: nip1.TagMap{
 			"#e": {"one", "two", "three"},
 			"#A": {"one", "two", "three"},
 			"#x": {"one", "two", "three"},
@@ -67,7 +68,7 @@ func TestFilterString(t *testing.T) {
 	// check that unmarshalling this back to the runtime form produces
 	// completely equal data.
 
-	var thing Filters
+	var thing nip1.Filters
 	if e = json.Unmarshal(b, &thing); e != nil {
 		t.Fatalf("error: %s", e.Error())
 	}
