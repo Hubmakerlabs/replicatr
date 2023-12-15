@@ -2,13 +2,13 @@ package nip1
 
 import (
 	"fmt"
+	"github.com/mleku/replicatr/pkg/nostr/kind"
+	"github.com/mleku/replicatr/pkg/nostr/tags"
+	"github.com/mleku/replicatr/pkg/nostr/timestamp"
+	"github.com/mleku/replicatr/pkg/wire/array"
+	"github.com/mleku/replicatr/pkg/wire/object"
 	"mleku.online/git/ec/schnorr"
 	secp256k1 "mleku.online/git/ec/secp"
-	"mleku.online/git/replicatr/pkg/nostr/kind"
-	"mleku.online/git/replicatr/pkg/nostr/tags"
-	"mleku.online/git/replicatr/pkg/nostr/timestamp"
-	"mleku.online/git/replicatr/pkg/wire/array"
-	"mleku.online/git/replicatr/pkg/wire/object"
 )
 
 // Event is the primary datatype of nostr. This is the form of the structure

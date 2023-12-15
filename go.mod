@@ -1,4 +1,4 @@
-module mleku.online/git/replicatr
+module github.com/mleku/replicatr
 
 go 1.21.5
 
@@ -8,7 +8,6 @@ require (
 	github.com/minio/sha256-simd v1.0.1
 	mleku.online/git/ec v1.0.3
 	mleku.online/git/log v1.0.7
-	mleku.online/git/mangle v1.0.8
 )
 
 require (

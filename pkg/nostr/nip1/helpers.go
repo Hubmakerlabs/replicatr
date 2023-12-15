@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/minio/sha256-simd"
+	"github.com/mleku/replicatr/pkg/wire/text"
 	log2 "mleku.online/git/log"
-	"mleku.online/git/replicatr/pkg/wire/text"
 )
 
 var (

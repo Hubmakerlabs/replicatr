@@ -3,8 +3,8 @@ package tag
 import (
 	"bytes"
 	"fmt"
-	"mleku.online/git/replicatr/pkg/nostr/normalize"
-	"mleku.online/git/replicatr/pkg/wire/text"
+	"github.com/mleku/replicatr/pkg/nostr/normalize"
+	"github.com/mleku/replicatr/pkg/wire/text"
 	"strings"
 )
 

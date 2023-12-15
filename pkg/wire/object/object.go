@@ -16,7 +16,7 @@ package object
 import (
 	"bytes"
 	"fmt"
-	"mleku.online/git/replicatr/pkg/wire/text"
+	"github.com/mleku/replicatr/pkg/wire/text"
 	"reflect"
 	"strings"
 	"time"
@@ -39,6 +39,8 @@ type KV struct {
 	Key   string
 	Value interface{}
 }
+
+func NewKV(k string, v interface{}) KV { return KV{Key: k, Value: v} }
 
 type T []KV
 

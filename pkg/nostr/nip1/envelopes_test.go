@@ -2,9 +2,9 @@ package nip1_test
 
 import (
 	"encoding/json"
+	"github.com/mleku/replicatr/pkg/mangle"
+	"github.com/mleku/replicatr/pkg/nostr/nip1"
 	log2 "mleku.online/git/log"
-	"mleku.online/git/mangle"
-	"mleku.online/git/replicatr/pkg/nostr/nip1"
 	"testing"
 )
 
