@@ -16,6 +16,8 @@ Messaging patterns are fundamental to how distributed systems are constructed. I
 
 As such, there is some overlap that you can see in the second clause of the nostr point. Blockchains have also been referred to as ["replicated state machines"](https://en.wikipedia.org/wiki/State_machine_replication) meaning that their primary purpose and messaging pattern is specifically designed to make reading from any node in the network produce the same data, within a narrow time window called finality (consistency).
 
+### Blockchains, Publish Subscribe and Disk Storage Analogy
+
 Thus, similar to flash storage, the writing is expensive, and the reading is cheap. Writing is slow, reading is fast. In the disk storage analogy, spinning disks have an equal time between reading and writing, their weakness is seeking the data, because of the mechanical data reader.
 
 This analogy holds pretty well to compare blockchain synchronisation versus publish/subscribe data distribution as can be seen as a contrast between Internet Computer Protocol and Nostr. On Nostr, data is not replicated completely, because this is impractical in terms of data volume and message complexity, and unnecessary because demand for content is widely varying across the userbase.
@@ -28,15 +30,62 @@ What we are aiming to achieve with `replicatr` is to put that part of the Nostr 
 
 ## API Calls
 
+For the most part, as with the disk storage analogy, most of what we implement is simply asking for data, and publishing data.
 
+For these, there is the standard Nostr messages, the Event Envelope, for publication, and the Request Envelope, which contains a collection of matching criteria for a search. 
 
-## Data Types
+### Publishing Events
+
+In the initial implementation we strictly assign a list of event types that are stored in complete form on the IC, these are events that have small size and wide demand, and those that it only stores metadata about, as a means to accelerating the location of relays holding the referred to events.
+
+The data that is most likely to be required for simply locating the full content and signed versions is the post ID (hash), the datestamp on the event, and the kind of event. Some event types we may also want to store some or all of the tags found on the event tags, if the data is relatively small, easily compressed or turned into internal database references instead of full sized nostr network event identites.
+
+### Retrieving Events
+
+The criteria are embedded in a data structure called a Filter, of which all fields are optional and can be combined freely:
+
+#### Filters
+
+Filters are a message type that appears inside a REQ envelope. The exact form to use for IC canister requests may differ from this because many of the events that IC will handle are replaceable type events that only the newest one is kept. The majority of the rest of the data only keeps reference information such as ID, pubkey, timestamp, and lists of relays known to have this data. The search field is probably irrelevant as it is for searching for matches in content. Possibly in the future there may be keyword indexes that allow some of this location to be stored on the IC.
+
+```json
+{
+  "ids": [<a list of event ids>, ...],
+  "authors": [<lowercase pubkey, the pubkey of an event must be one of these>, ...],
+  "kinds": [<kind (event type) number>, ...]
+  "#<single-letter (a-zA-Z)>": [<tags, for #e — a list of event ids, for #p — a list of event pubkeys etc>, ...],
+  "since": <an integer unix timestamp in seconds, events must be newer than this to pass>,
+  "until": <an integer unix timestamp in seconds, events must be older than this to pass>,
+  "limit": <maximum number of events relays SHOULD return in the initial query>,
+  "search": "search string"
+}
+```
+
+### Authentication and Permissions
+
+The main and specific types of API calls needed to integrate with IC are authentication. In order to control unbounded traffic (spam) from occurring, IC canisters have a list of keys with the permissions to read and write data to the IC and have requests fulfilled (including simple data fetches).
+
+In general, relays must have read and write access, and external, web3 apps that interface with the IC canister will have at least read access, but may have write access as well. This is entirely dependent on the design of the applications, but in principle, there can be the use of the IC as a conduit through which web3 apps, that may be running on other canisters, or even other chains over network bridging interfaces, can add data that can propagate to the relays and enter the Nostr network. For the most part this would be web3 nostr clients.
+
+Thus, the depth of the functionality of the IC canister must be extensible to eventually encompass full processing of at least Event and Request Envelopes, but the IC/Web3 side of the API is more of a concern for dApp developers as opposed to Nostr clients, which are our focus as the main input/output path for events and searches.
+
+Nostr implementations largely don't have a focus on optimizing data distribution for more than simple text events, but adding blockchain back end connectivity for propagating suitable types of data is a step in this direction towards making the network more heteregenous and relays more purpose-built.
+
+### Search Optimization - Merkle Trees and Bloom Filters
+
+For improving the ability to find data, various indexing and cataloging strategies can be used. Merkle Trees, Merkle Directed Acyclic Graphs, and other similar structures can be generated and used to speed up seek time.
+
+In addition, for events tied to single pubkeys, we can generate Bloom Filters, which are a probabalistic data structure that can quickly determine if a candidate event identity, for instance, is associated with a public key, and by this create compact recognisers that can quickly check from a request whether an event's references connect to a user, such as thread replies.
+
+## Data Types Suited to Blockchain Databases
 
 The native encoding of Nostr is JSON, but this is only mandatory in data types that have canonical forms that are hashed and signed. In storage and on the wire, there can be other encodings such as BSON, MessagePack, Protobuf, CBOR, so long as the encoding can be turned into JSON for messaging relays that do not implement the alternative encodings.
 
 The following list is of the data types that will be stored on the IC, as a reference for those building the IC canister that will interface with the `replicatr` nostr relay.
 
 Events are selectively stored whole by the IC, based on the criteria of their size and the directions from which demand for them is likely to come. Profile data and community and chat events that do not have their own body of content, or if they are wrapped inside another event, this can be identified by the kind number of the event.
+
+Conversely, messages that the relay can rely on to be stored on the IC are not kept in the longer term storage area but in the smaller cache buffer where data that did not originate from events published to the relay, or are the concern of the IC, are stored and eventually evicted once their last access time is in the oldest segment of the cache.
 
 Events that are not stored on the IC only have the ID, timestamp, pubkey of the author (compactly stored as a fingerprint alongside an index) and depending on the kind, maybe the tags. The content and signature are elided as they are not useful to the filter requests. The relays that have copies of the full event are noted alongside these details, and these relays will then be queried for the full content to enable such things as full text searches or delivering the event to a client.
 
@@ -79,23 +128,6 @@ Tags are lists of lists of strings, usually starting with a field that is a sing
     ...
   ],
   ...
-}
-```
-
-### Filters
-
-Filters are a message type that appears inside a REQ envelope. The exact form to use for IC canister requests may differ from this because many of the events that IC will handle are replaceable type events that only the newest one is kept. The majority of the rest of the data only keeps reference information such as ID, pubkey, timestamp, and lists of relays known to have this data. The search field is probably irrelevant.
-
-```json
-{
-  "ids": [<a list of event ids>, ...],
-  "authors": [<lowercase pubkey, the pubkey of an event must be one of these>, ...],
-  "kinds": [<kind (event type) number>, ...]
-  "#<single-letter (a-zA-Z)>": [<tags, for #e — a list of event ids, for #p — a list of event pubkeys etc>, ...],
-  "since": <an integer unix timestamp in seconds, events must be newer than this to pass>,
-  "until": <an integer unix timestamp in seconds, events must be older than this to pass>,
-  "limit": <maximum number of events relays SHOULD return in the initial query>,
-  "search": "search string"
 }
 ```
 
