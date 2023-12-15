@@ -1,8 +1,8 @@
 package text
 
 import (
+	"github.com/mleku/replicatr/pkg/mangle"
 	log2 "mleku.online/git/log"
-	"mleku.online/git/mangle"
 )
 
 var (

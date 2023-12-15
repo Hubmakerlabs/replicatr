@@ -3,8 +3,8 @@ package nip1
 import (
 	"encoding/json"
 	"fmt"
-	"mleku.online/git/mangle"
-	"mleku.online/git/replicatr/pkg/wire/array"
+	"github.com/mleku/replicatr/pkg/mangle"
+	"github.com/mleku/replicatr/pkg/wire/array"
 	"reflect"
 	"sort"
 )

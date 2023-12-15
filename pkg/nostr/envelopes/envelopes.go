@@ -2,7 +2,7 @@
 // wrappers) that aren't specified in NIP-1
 package envelopes
 
-import "mleku.online/git/replicatr/pkg/nostr/nip1"
+import "github.com/mleku/replicatr/pkg/nostr/nip1"
 
 const (
 	LabelCount = "COUNT"

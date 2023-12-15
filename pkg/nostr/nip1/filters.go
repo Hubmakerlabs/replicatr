@@ -3,11 +3,11 @@ package nip1
 import (
 	"encoding/json"
 	"fmt"
-	"mleku.online/git/replicatr/pkg/nostr/kind"
-	"mleku.online/git/replicatr/pkg/nostr/tag"
-	"mleku.online/git/replicatr/pkg/nostr/timestamp"
-	"mleku.online/git/replicatr/pkg/wire/array"
-	"mleku.online/git/replicatr/pkg/wire/object"
+	"github.com/mleku/replicatr/pkg/nostr/kind"
+	"github.com/mleku/replicatr/pkg/nostr/tag"
+	"github.com/mleku/replicatr/pkg/nostr/timestamp"
+	"github.com/mleku/replicatr/pkg/wire/array"
+	"github.com/mleku/replicatr/pkg/wire/object"
 	"sort"
 )
 
@@ -85,7 +85,7 @@ func (f *Filter) ToObject() (o object.T) {
 		{"limit,omitempty", f.Limit},
 	}...)
 	if f.Search != "" {
-		o = append(o, object.KV{"search,omitempty", f.Search})
+		o = append(o, object.NewKV("search,omitempty", f.Search))
 	}
 	return
 }

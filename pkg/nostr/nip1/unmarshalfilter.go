@@ -4,9 +4,9 @@ package nip1
 
 import (
 	"fmt"
-	"mleku.online/git/replicatr/pkg/nostr/kind"
-	"mleku.online/git/replicatr/pkg/nostr/tag"
-	"mleku.online/git/replicatr/pkg/nostr/timestamp"
+	"github.com/mleku/replicatr/pkg/nostr/kind"
+	"github.com/mleku/replicatr/pkg/nostr/tag"
+	"github.com/mleku/replicatr/pkg/nostr/timestamp"
 )
 
 type UnmarshalingFilter struct {

@@ -2,7 +2,7 @@ package array
 
 import (
 	"encoding/json"
-	"mleku.online/git/replicatr/pkg/wire/object"
+	"github.com/mleku/replicatr/pkg/wire/object"
 	"testing"
 	"time"
 )
