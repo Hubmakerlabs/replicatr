@@ -20,13 +20,15 @@ Thus, similar to flash storage, the writing is expensive, and the reading is che
 
 This analogy holds pretty well to compare blockchain synchronisation versus publish/subscribe data distribution as can be seen as a contrast between Internet Computer Protocol and Nostr. On Nostr, data is not replicated completely, because this is impractical in terms of data volume and message complexity, and unnecessary because demand for content is widely varying across the userbase.
 
+Very likely, optimization strategies for data locality that work on spinning disks can be transposed to create optimistic early propagation patterns for data that tend to fill the caches where their likely highest locality exists, similar in the linear sense of seek time but different in that it's 2 dimensional and not necessarily geographical but based on user association with relays. Using a blockchain like IC is an easy optimization for data that inherently has the broadest demand distribution.
+
 What we are aiming to achieve with `replicatr` is to put that part of the Nostr data set that needs to be widely replicated and doesn't have a high volume of changes, or doesn't require updating of old data (append only) onto a blockchain so that relays connected to the same blockchain back end do not have to specifically request this data from each other anymore, and it is frequently requested, **it constitutes one of the biggest bottlenecks of the protocol.**
 
 *By using a blockchain for this type of data, we improve the performance of the relays that use it, as well as build a bridge from the blockchain world to the Nostr world that gives you the best of both worlds.*
 
 ## API Calls
 
-todo
+
 
 ## Data Types
 
@@ -184,13 +186,13 @@ This does not include chat text posts, only events that modify the channels and 
 }
 ```
 
-#### Lists and Sets
+### Lists and Sets
 
 Lists are lists of things for various purposes, such as mute lists, follows, blocked relays, preferred relays, bookmarks, communities, and so on.. These are long lived and should be widely accessible, similar to the other event types, and thus also fit the requirements for IC stored events.
 
 These event types are primarily encoded in tags, so the same principles apply - the IC data is only sent to it by authorized relays so the bulky signatures can largely be omitted as they aren't searchable anyway.
 
-#### Communities
+### Communities
 
 These are membership-oriented groups where there are whitelisted members, blacklisted (banned) members, moderators, community metadata, and a collection of events tied to the community, and post moderation. These are examples of the several data types that appear in this type of event.
 
