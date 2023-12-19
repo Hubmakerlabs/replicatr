@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	t "github.com/mleku/replicatr/pkg/nostr/tag"
+	t "github.com/nostric/replicatr/pkg/nostr/tag"
 )
 
 // T is a list of T - which are lists of string elements with ordering and

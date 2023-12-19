@@ -2,10 +2,10 @@ package nip1_test
 
 import (
 	"encoding/json"
-	"github.com/mleku/replicatr/pkg/nostr/kind"
-	"github.com/mleku/replicatr/pkg/nostr/nip1"
-	"github.com/mleku/replicatr/pkg/nostr/tag"
-	"github.com/mleku/replicatr/pkg/nostr/timestamp"
+	"github.com/nostric/replicatr/pkg/nostr/kind"
+	"github.com/nostric/replicatr/pkg/nostr/nip1"
+	"github.com/nostric/replicatr/pkg/nostr/tag"
+	"github.com/nostric/replicatr/pkg/nostr/timestamp"
 	"testing"
 	"time"
 )

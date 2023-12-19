@@ -1,6 +1,6 @@
 package kind
 
-import "github.com/mleku/replicatr/pkg/wire/array"
+import "github.com/nostric/replicatr/pkg/wire/array"
 
 // T - which will be externally referenced as kind.T is the event type in the
 // nostr protocol, the use of the capital T signifying type, consistent with Go

@@ -1,4 +1,4 @@
-module github.com/mleku/replicatr
+module github.com/nostric/replicatr
 
 go 1.21.5
 

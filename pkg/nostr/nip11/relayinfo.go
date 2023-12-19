@@ -1,8 +1,8 @@
 package nip11
 
 import (
-	"github.com/mleku/replicatr/pkg/nostr/number"
-	"github.com/mleku/replicatr/pkg/wire/object"
+	"github.com/nostric/replicatr/pkg/nostr/number"
+	"github.com/nostric/replicatr/pkg/wire/object"
 )
 
 // RelayInfo provides the information for a relay on the network as regards to
