@@ -11,4 +11,4 @@ nostr [NIP (nostr implementation possibilities) specification](https://github.co
 
 It will use a [badger](https://github.com/dgraph-io/badger)
 data store, interface with
-the [internet computer](https://internetcomputer.org/) interface for often read less often written event types (all except ephemeral, private and bulky data content).
+the [internet computer](https://internetcomputer.org/) for all event types except ephemeral, private and bulky data content.
