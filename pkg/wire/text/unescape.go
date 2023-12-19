@@ -1,7 +1,7 @@
 package text
 
 import (
-	"github.com/mleku/replicatr/pkg/mangle"
+	"github.com/nostric/replicatr/pkg/mangle"
 	log2 "mleku.online/git/log"
 )
 

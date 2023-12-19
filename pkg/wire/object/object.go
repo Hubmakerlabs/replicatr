@@ -16,7 +16,7 @@ package object
 import (
 	"bytes"
 	"fmt"
-	"github.com/mleku/replicatr/pkg/wire/text"
+	"github.com/nostric/replicatr/pkg/wire/text"
 	"reflect"
 	"strings"
 	"time"

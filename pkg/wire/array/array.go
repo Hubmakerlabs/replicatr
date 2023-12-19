@@ -9,8 +9,8 @@ package array
 import (
 	"bytes"
 	"fmt"
-	"github.com/mleku/replicatr/pkg/wire/object"
-	"github.com/mleku/replicatr/pkg/wire/text"
+	"github.com/nostric/replicatr/pkg/wire/object"
+	"github.com/nostric/replicatr/pkg/wire/text"
 	"reflect"
 	"time"
 )
