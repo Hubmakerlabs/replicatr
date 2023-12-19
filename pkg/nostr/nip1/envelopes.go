@@ -380,7 +380,7 @@ next:
 	if isOK, e = buf.ReadUntil(','); fails(e) {
 		return fmt.Errorf("did not find OK value in ok envelope")
 	}
-	isOK = isOK[:len(isOK)-1]
+	isOK = isOK[:len(isOK)]
 	// determine the value encoded
 	l := len(isOK)
 	var isBool bool

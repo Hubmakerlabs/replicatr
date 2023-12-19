@@ -54,71 +54,91 @@ func (b *Buffer) Write(bb byte) (e error) {
 //
 // When this function returns an error, the state of the buffer is unchanged
 // from prior to the invocation.
+//
+// If the character is not `"` then any match within a pair of unescaped `"` is
+// ignored. The closing `"` is not counted if it is escaped with a \.
+//
+// If the character is `"` then any `"` with a `\` before it is ignored (and
+// included in the returned slice).
 func (b *Buffer) ReadUntil(c byte) (bb []byte, e error) {
-	bLen := len(b.Buf)
-	for i := b.Pos; i < bLen; i++ {
-		if b.Buf[i] == c {
-			bb = b.Buf[b.Pos:i]
-			// better to set the Pos at the end rather than waste any time
-			// mutating two variables when one is enough.
-			b.Pos = i
-			return
-		}
-	}
-	// If we got to the end without a match, set the Pos to the end.
-	b.Pos = bLen
-	return nil, io.EOF
+	return b.Scan(c, false, true)
 }
 
 // ReadThrough is the same as ReadUntil except it returns a slice *including*
 // the character being sought.
 func (b *Buffer) ReadThrough(c byte) (bb []byte, e error) {
+	return b.Scan(c, true, true)
+}
+
+// ScanUntil does the same as ReadUntil except it doesn't slice what it passed
+// over.
+func (b *Buffer) ScanUntil(c byte) (e error) {
+	_, e = b.Scan(c, false, false)
+	return
+}
+
+// ScanThrough does the same as ScanUntil except it returns the next index
+// *after* the found item.
+func (b *Buffer) ScanThrough(c byte) (e error) {
+	_, e = b.Scan(c, true, false)
+	return
+}
+
+// Scan is the utility back end that does all the scan/read functionality
+func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
 	bLen := len(b.Buf)
+	var inQuotes bool
+	quotes := c == '"'
 	for i := b.Pos; i < bLen; i++ {
+		if !quotes {
+			// inQuotes condition only occurs if we aren't searching for a
+			// closed quote.
+			if !inQuotes {
+				// quotes outside of quotes in JSON start quotes, we are not
+				// scanning for matches inside quotes.
+				if b.Buf[i] == '"' {
+					inQuotes = true
+					continue
+				}
+			} else {
+				// if we are inside quotes, close them if not escaped.
+				if b.Buf[i] == '"' {
+					if i > 0 {
+						if b.Buf[i] == '\\' {
+							continue
+						}
+					}
+					inQuotes = false
+					continue
+				}
+			}
+		}
 		if b.Buf[i] == c {
-			end := i + 1
-			bb = b.Buf[b.Pos:end]
+			// if we are scanning for inside quotes, match everything except
+			// escaped quotes.
+			if quotes && i > 0 {
+				// quotes with a preceding backslash are ignored
+				if b.Buf[i] == '\\' {
+					continue
+				}
+			}
+			end := i
+			if through {
+				end++
+			}
+			if slice {
+				subSlice = b.Buf[b.Pos:end]
+			}
+			// better to set the Pos at the end rather than waste any time
+			// mutating two variables when one is enough.
 			b.Pos = end
 			return
 		}
 	}
 	// If we got to the end without a match, set the Pos to the end.
 	b.Pos = bLen
-	return nil, io.EOF
-}
-
-// ScanUntil does the same as ReadUntil except it doesn't slice what it passed
-// over.
-func (b *Buffer) ScanUntil(c byte) (e error) {
-	bLen := len(b.Buf)
-	for i := b.Pos; i < bLen; i++ {
-		if b.Buf[i] == c {
-			// better to set the Pos at the end rather than waste any time
-			// mutating two variables when one is enough.
-			b.Pos = i
-			return
-		}
-	}
-	// If we got to the end without a match, set the Pos to the end.
-	b.Pos = bLen
-	return io.EOF
-}
-
-// ScanThrough does the same as ScanUntil except it returns the next index
-// *after* the found item.
-func (b *Buffer) ScanThrough(c byte) (e error) {
-	bLen := len(b.Buf)
-	for i := b.Pos; i < bLen; i++ {
-		if b.Buf[i] == c {
-			// better to set the Pos at the end rather than waste any time
-			// mutating two variables when one is enough.
-			b.Pos = i + 1
-			return
-		}
-	}
-	// If we got to the end without a match, set the Pos to the end.
-	b.Pos = bLen
-	return io.EOF
+	e = io.EOF
+	return
 }
 
 // Tail returns the buffer starting from the current Pos position.
