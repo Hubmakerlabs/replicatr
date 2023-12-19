@@ -9,7 +9,6 @@ modular, and extensible reference implementation of the `nostr` protocol as
 described in the
 nostr [NIP (nostr implementation possibilities) specification](https://github.com/nostr-protocol/nips).
 
-In its initial form it will use a [badger](https://github.com/dgraph-io/badger)
+It will use a [badger](https://github.com/dgraph-io/badger)
 data store, interface with
-the [internet computer](https://internetcomputer.org/) database for out-of-band
-replication and potentially ICP based relay subscription payments.
+the [internet computer](https://internetcomputer.org/) interface for often read less often written event types (all except ephemeral, private and bulky data content).
