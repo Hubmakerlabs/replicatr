@@ -42,7 +42,7 @@ func (E *NoticeEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	if e = buf.ScanUntil(','); e != nil {
 		return
 	}
-	// Next character we find will be open quotes for the subscription ID.
+	// Next character we find will be open quotes for the notice text.
 	if e = buf.ScanThrough('"'); e != nil {
 		return
 	}
