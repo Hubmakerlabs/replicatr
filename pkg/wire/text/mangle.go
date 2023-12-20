@@ -5,7 +5,10 @@
 
 package text
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 type Buffer struct {
 	Pos int
@@ -114,7 +117,6 @@ func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
 			}
 		}
 		if b.Buf[i] == c {
-			// log.D.F("match '%s' '%s'", string(c), string(b.Buf[i:]))
 			// if we are scanning for inside quotes, match everything except
 			// escaped quotes.
 			if quotes && i > 0 {
@@ -141,6 +143,55 @@ func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
 	}
 	// If we got to the end without a match, set the Pos to the end.
 	b.Pos = bLen
+	e = io.EOF
+	return
+}
+
+// ReadEnclosed scans quickly while keeping count of open and close brackets []
+// or braces {} and returns the byte sub-slice starting with a bracket and
+// ending with the same depth bracket. Selects the counted characters based on the first.
+//
+// Ignores anything within quotes.
+//
+// Useful for quickly finding a potentially valid array or object in JSON.
+func (b *Buffer) ReadEnclosed() (bb []byte, e error) {
+	c := b.Buf[b.Pos]
+	bracketed := c == byte('[')
+	braced := c == '{'
+	if !bracketed && !braced {
+		e = fmt.Errorf("cursor of buffer not on open brace or bracket. found: '%s'",
+			string(c))
+		return
+	}
+	var opener, closer byte
+	opener, closer = '[', ']'
+	if braced {
+		opener, closer = '{', '}'
+	}
+	var depth int
+	var inQuotes bool
+	for i := b.Pos; i < len(b.Buf); i++ {
+		switch b.Buf[i] {
+		case '"':
+			if inQuotes {
+				inQuotes = false
+			} else {
+				inQuotes = true
+			}
+		case opener:
+			if !inQuotes {
+				depth++
+			}
+		case closer:
+			if !inQuotes {
+				depth--
+			}
+		}
+		if depth == 0 {
+			bb = b.Buf[b.Pos : i+1]
+			return
+		}
+	}
 	e = io.EOF
 	return
 }

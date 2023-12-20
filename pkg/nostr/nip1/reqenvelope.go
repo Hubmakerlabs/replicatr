@@ -57,10 +57,9 @@ func (E *ReqEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	// should end with a close brace. This slice will be wrapped in braces and
 	// contain paired brackets, braces and quotes.
 	var filterArray []byte
-	if filterArray, e = buf.ReadThrough(']'); fails(e) {
+	if filterArray, e = buf.ReadEnclosed(); fails(e) {
 		return
 	}
-	log.D.Ln(string(filterArray))
 	if e = json.Unmarshal(filterArray, &E.Filters); fails(e) {
 		return
 	}

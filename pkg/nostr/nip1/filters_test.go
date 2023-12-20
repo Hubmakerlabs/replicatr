@@ -33,7 +33,7 @@ var filt = nip1.Filters{
 		Since:  timestamp.T(time.Now().Unix() - (60 * 60)).Ptr(),
 		Until:  timestamp.Now().Ptr(),
 		Limit:  10,
-		Search: "some search terms}",
+		Search: "some search] terms} with bogus ]brrackets and }braces",
 	},
 	{
 		Kinds: []kind.T{
