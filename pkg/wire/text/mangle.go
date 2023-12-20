@@ -3,7 +3,7 @@
 // mangle.
 //
 
-package mangle
+package text
 
 import "io"
 
@@ -114,12 +114,16 @@ func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
 			}
 		}
 		if b.Buf[i] == c {
+			// log.D.F("match '%s' '%s'", string(c), string(b.Buf[i:]))
 			// if we are scanning for inside quotes, match everything except
 			// escaped quotes.
 			if quotes && i > 0 {
 				// quotes with a preceding backslash are ignored
-				if b.Buf[i] == '\\' {
-					continue
+				if b.Buf[i-1] == '\\' {
+					if i > 1 && b.Buf[i-2] != '\\' {
+						continue
+					} else {
+					}
 				}
 			}
 			end := i

@@ -79,6 +79,7 @@ const (
 // to allow custom JSON marshalers to not keep adding backslashes to valid UTF-8
 // entities.
 func EscapeJSONStringAndWrap(s string) (escaped []byte) {
+	log.D.F("escaping '%s'", s)
 	// first calculate the extra bytes required for the given string
 	length := len(s) + 2
 	for _, c := range s {
@@ -114,9 +115,8 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 		c := s[i]
 		switch {
 		case c == QuotationMark:
+			log.D.Ln("quote")
 			escaped = append(escaped, []byte{ReverseSolidus, QuotationMark}...)
-		case c >= Space:
-			escaped = append(escaped, c)
 		case c == Backspace:
 			escaped = append(escaped,
 				[]byte{ReverseSolidus, 'b'}...)
@@ -136,11 +136,17 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 			escaped = append(escaped,
 				[]byte{ReverseSolidus, 'r'}...)
 		case c == ReverseSolidus:
+			log.D.Ln("reverse solidus", s[i+1], ReverseSolidus)
 			var notEscaped bool
-			if i < len(s)-1 {
+			if i < len(s) {
 				// look ahead to see if this is a escape:
 			escapeCheck:
 				switch s[i+1] {
+				case Space:
+					escaped = append(escaped,
+						ReverseSolidus)
+					// []byte{ReverseSolidus, ReverseSolidus}...)
+					log.D.Ln("reverse solidus double")
 				case 'u', 'U':
 					// Let's just be extra careful and make sure the 2 next
 					// chars are hex. If more are hex it doesn't matter. Really,
@@ -166,8 +172,8 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 					notEscaped = true
 				}
 				if !notEscaped {
-					escaped = append(escaped,
-						[]byte{ReverseSolidus, ReverseSolidus}...)
+					escaped = append(escaped, ReverseSolidus)
+					// []byte{ReverseSolidus, ReverseSolidus}...)
 				}
 			}
 		case c < 0x10:
@@ -181,6 +187,12 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 			// be escaped with the 4 byte escape code here.
 			escaped = append(escaped,
 				[]byte{ReverseSolidus, 'u', '0', '0', '1', 0x47 + byte(c)}...)
+		case c >= Space:
+			escaped = append(escaped, c)
+		}
+		if i < len(s) {
+			log.D.F("'%s' >%s< '%s' -> '%s'", s[:i], string(c),
+				s[i+1:], string(escaped[1:]))
 		}
 	}
 	// add the final double quote character
