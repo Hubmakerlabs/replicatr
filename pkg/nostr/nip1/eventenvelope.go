@@ -98,7 +98,7 @@ func (E *EventEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	// should end with a close brace. This slice will be wrapped in braces and
 	// contain paired brackets, braces and quotes.
 	var eventObj []byte
-	if eventObj, e = buf.ReadThrough('}'); fails(e) {
+	if eventObj, e = buf.ReadEnclosed(); fails(e) {
 		return
 	}
 	// allocate an event to unmarshal into

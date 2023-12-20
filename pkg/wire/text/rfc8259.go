@@ -79,7 +79,7 @@ const (
 // to allow custom JSON marshalers to not keep adding backslashes to valid UTF-8
 // entities.
 func EscapeJSONStringAndWrap(s string) (escaped []byte) {
-	log.D.F("escaping '%s'", s)
+	// log.D.F("escaping '%s'", s)
 	// first calculate the extra bytes required for the given string
 	length := len(s) + 2
 	for _, c := range s {
@@ -115,7 +115,6 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 		c := s[i]
 		switch {
 		case c == QuotationMark:
-			log.D.Ln("quote")
 			escaped = append(escaped, []byte{ReverseSolidus, QuotationMark}...)
 		case c == Backspace:
 			escaped = append(escaped,
@@ -136,7 +135,6 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 			escaped = append(escaped,
 				[]byte{ReverseSolidus, 'r'}...)
 		case c == ReverseSolidus:
-			log.D.Ln("reverse solidus", s[i+1], ReverseSolidus)
 			var notEscaped bool
 			if i < len(s) {
 				// look ahead to see if this is a escape:
@@ -171,7 +169,6 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 				}
 				if !notEscaped {
 					escaped = append(escaped, ReverseSolidus)
-					// []byte{ReverseSolidus, ReverseSolidus}...)
 				}
 			}
 		case c < 0x10:
@@ -188,10 +185,8 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 		case c >= Space:
 			escaped = append(escaped, c)
 		}
-		if i < len(s) {
-			log.D.F("'%s' >%s< '%s' -> '%s'", s[:i], string(c),
-				s[i+1:], string(escaped[1:]))
-		}
+		// log.D.F("'%s' >%s< '%s' -> '%s'", s[:i], string(c),
+		// 	s[i+1:], string(escaped[1:]))
 	}
 	// add the final double quote character
 	escaped = append(escaped, QuotationMark)

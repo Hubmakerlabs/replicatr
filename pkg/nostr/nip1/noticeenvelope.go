@@ -27,7 +27,6 @@ func (E *NoticeEnvelope) String() (s string) {
 // MarshalJSON returns the JSON encoded form of the envelope.
 func (E *NoticeEnvelope) MarshalJSON() (bytes []byte, e error) {
 	bytes = E.ToArray().Bytes()
-	log.D.F("'%s'", string(bytes))
 	return
 }
 
@@ -52,6 +51,5 @@ func (E *NoticeEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	E.Text = string(noticeText[:])
-	log.D.Ln(E.Text)
 	return
 }
