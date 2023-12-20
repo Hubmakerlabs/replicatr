@@ -145,8 +145,6 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 				case Space:
 					escaped = append(escaped,
 						ReverseSolidus)
-					// []byte{ReverseSolidus, ReverseSolidus}...)
-					log.D.Ln("reverse solidus double")
 				case 'u', 'U':
 					// Let's just be extra careful and make sure the 2 next
 					// chars are hex. If more are hex it doesn't matter. Really,

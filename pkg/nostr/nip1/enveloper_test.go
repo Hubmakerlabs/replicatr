@@ -3,7 +3,6 @@ package nip1_test
 import (
 	"encoding/json"
 	"github.com/nostric/replicatr/pkg/nostr/nip1"
-	"github.com/nostric/replicatr/pkg/wire/text"
 	"testing"
 )
 
@@ -17,8 +16,8 @@ func TestEnveloper(t *testing.T) {
 			Reason: nip1.OKPoW + ": 25>24 \\ "},
 		// &nip1.ReqEnvelope{SubscriptionID: sub, Filters: filt},
 		&nip1.NoticeEnvelope{Text: "this notice has been noticed } \\\" ] "},
-		// &nip1.EOSEEnvelope{SubscriptionID: sub},
-		// &nip1.CloseEnvelope{SubscriptionID: sub},
+		&nip1.EOSEEnvelope{SubscriptionID: sub},
+		&nip1.CloseEnvelope{SubscriptionID: sub},
 	}
 	var e error
 	var b []byte
@@ -29,19 +28,23 @@ func TestEnveloper(t *testing.T) {
 			t.FailNow()
 		}
 		marshaled := string(b)
-		log.I.Ln("marshal  ", marshaled)
 		var env nip1.Enveloper
-		var label []byte
-		var buf *text.Buffer
-		env, label, buf, e = nip1.ProcessEnvelope(b)
+		// var label []byte
+		// var buf *text.Buffer
+		env, _, _, e = nip1.ProcessEnvelope(b)
 		if e != nil {
 			log.F.Ln(e)
 			t.FailNow()
 		}
-		// log.D.S(env)
-		log.I.Ln("unmarshal", env.ToArray().String())
-		_ = env
-		_ = label
-		_ = buf
+		unmarshaled := env.ToArray().String()
+		if marshaled != unmarshaled {
+			t.Log("marshal/unmarshal mangled.")
+			t.Log("got:     ", unmarshaled)
+			t.Log("expected:", marshaled)
+			t.FailNow()
+		}
+		// _ = env
+		// _ = label
+		// _ = buf
 	}
 }

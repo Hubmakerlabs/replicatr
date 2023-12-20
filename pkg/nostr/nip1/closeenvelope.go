@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/nostric/replicatr/pkg/wire/array"
 	"github.com/nostric/replicatr/pkg/wire/text"
-	"reflect"
 )
 
 // CloseEnvelope is a wrapper for a signal to cancel a subscription.
@@ -34,6 +33,21 @@ func (E *CloseEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-	log.I.Ln(reflect.TypeOf(E))
+	// Next, find the comma after the label (note we aren't checking that only
+	// whitespace intervenes because laziness, usually this is the very next
+	// character).
+	if e = buf.ScanUntil(','); e != nil {
+		return
+	}
+	// Next character we find will be open quotes for the subscription ID.
+	if e = buf.ScanThrough('"'); e != nil {
+		return
+	}
+	var sid []byte
+	// read the string
+	if sid, e = buf.ReadUntil('"'); fails(e) {
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+	}
+	E.SubscriptionID = SubscriptionID(sid[:])
 	return
 }
