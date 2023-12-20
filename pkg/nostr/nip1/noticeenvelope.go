@@ -1,0 +1,57 @@
+package nip1
+
+import (
+	"fmt"
+	"github.com/nostric/replicatr/pkg/wire/array"
+	"github.com/nostric/replicatr/pkg/wire/text"
+)
+
+// NoticeEnvelope is a relay message intended to be shown to users in a nostr
+// client interface.
+type NoticeEnvelope struct {
+	Text string
+}
+
+// Label returns the label enum/type of the envelope. The relevant bytes could
+// be retrieved using nip1.Labels[Label]
+func (E *NoticeEnvelope) Label() (l Label) { return LNotice }
+
+func (E *NoticeEnvelope) ToArray() (a array.T) {
+	return array.T{NOTICE, E.Text}
+}
+
+func (E *NoticeEnvelope) String() (s string) {
+	return E.ToArray().String()
+}
+
+// MarshalJSON returns the JSON encoded form of the envelope.
+func (E *NoticeEnvelope) MarshalJSON() (bytes []byte, e error) {
+	bytes = E.ToArray().Bytes()
+	log.D.F("'%s'", string(bytes))
+	return
+}
+
+// Unmarshal the envelope.
+func (E *NoticeEnvelope) Unmarshal(buf *text.Buffer) (e error) {
+	if E == nil {
+		return fmt.Errorf("cannot unmarshal to nil pointer")
+	}
+	// Next, find the comma after the label (note we aren't checking that only
+	// whitespace intervenes because laziness, usually this is the very next
+	// character).
+	if e = buf.ScanUntil(','); e != nil {
+		return
+	}
+	// Next character we find will be open quotes for the subscription ID.
+	if e = buf.ScanThrough('"'); e != nil {
+		return
+	}
+	var noticeText []byte
+	// read the string
+	if noticeText, e = buf.ReadUntil('"'); fails(e) {
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+	}
+	E.Text = string(noticeText[:])
+	log.D.Ln(E.Text)
+	return
+}

@@ -11,8 +11,14 @@ import (
 	"fmt"
 	"github.com/nostric/replicatr/pkg/wire/object"
 	"github.com/nostric/replicatr/pkg/wire/text"
+	log2 "mleku.online/git/log"
 	"reflect"
 	"time"
+)
+
+var (
+	log   = log2.GetLogger()
+	fails = log.D.Chk
 )
 
 // Arrayer is an interface for a type that can return an array.T - or in other

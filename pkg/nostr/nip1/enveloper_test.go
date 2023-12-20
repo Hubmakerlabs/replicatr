@@ -2,24 +2,23 @@ package nip1_test
 
 import (
 	"encoding/json"
-	"github.com/nostric/replicatr/pkg/mangle"
 	"github.com/nostric/replicatr/pkg/nostr/nip1"
-	log2 "mleku.online/git/log"
+	"github.com/nostric/replicatr/pkg/wire/text"
 	"testing"
 )
 
 func TestEnveloper(t *testing.T) {
-	log2.SetLogLevel(log2.Debug)
+	// log2.SetLogLevel(log2.Debug)
 	const sub = "subscription000001"
 	envs := []nip1.Enveloper{
 		&nip1.EventEnvelope{SubscriptionID: sub, Event: events[0]},
 		&nip1.EventEnvelope{Event: events[0]},
 		&nip1.OKEnvelope{EventID: events[0].ID, OK: true,
-			Reason: nip1.OKPoW + ": 25>24"},
-		&nip1.ReqEnvelope{SubscriptionID: sub, Filters: filt},
-		&nip1.NoticeEnvelope{Text: "this notice has been noticed"},
-		&nip1.EOSEEnvelope{SubscriptionID: sub},
-		&nip1.CloseEnvelope{SubscriptionID: sub},
+			Reason: nip1.OKPoW + ": 25>24 \\ "},
+		// &nip1.ReqEnvelope{SubscriptionID: sub, Filters: filt},
+		&nip1.NoticeEnvelope{Text: "this notice has been noticed } \\\" ] "},
+		// &nip1.EOSEEnvelope{SubscriptionID: sub},
+		// &nip1.CloseEnvelope{SubscriptionID: sub},
 	}
 	var e error
 	var b []byte
@@ -29,16 +28,18 @@ func TestEnveloper(t *testing.T) {
 			log.F.Ln(e)
 			t.FailNow()
 		}
-		log.D.Ln("marshal  ", string(b))
+		marshaled := string(b)
+		log.I.Ln("marshal  ", marshaled)
 		var env nip1.Enveloper
 		var label []byte
-		var buf *mangle.Buffer
+		var buf *text.Buffer
 		env, label, buf, e = nip1.ProcessEnvelope(b)
 		if e != nil {
 			log.F.Ln(e)
 			t.FailNow()
 		}
-		log.D.Ln("unmarshal", env.ToArray().String())
+		// log.D.S(env)
+		log.I.Ln("unmarshal", env.ToArray().String())
 		_ = env
 		_ = label
 		_ = buf
