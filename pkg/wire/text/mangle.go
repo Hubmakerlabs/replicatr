@@ -35,6 +35,7 @@ func (b *Buffer) Read() (bb byte, e error) {
 // Write a byte into the next index of the buffer or return io.EOF if there is
 // no space left.
 func (b *Buffer) Write(bb byte) (e error) {
+	// log.D.F("writing >%s<", string(bb))
 	if b.Pos < len(b.Buf) {
 		b.Buf[b.Pos] = bb
 		b.Pos++
@@ -90,9 +91,12 @@ func (b *Buffer) ScanThrough(c byte) (e error) {
 // Scan is the utility back end that does all the scan/read functionality
 func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
 	bLen := len(b.Buf)
+	// log.D.F("Scan for '%s': %d '%s'", string(c), bLen, string(b.Buf[b.Pos:]))
 	var inQuotes bool
 	quotes := c == '"'
 	for i := b.Pos; i < bLen; i++ {
+		// log.D.F("first: quotes: %v %d/%d '%s'", quotes, i, bLen,
+		// 	string(b.Buf[i]))
 		if !quotes {
 			// inQuotes condition only occurs if we aren't searching for a
 			// closed quote.
@@ -122,10 +126,7 @@ func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
 			if quotes && i > 0 {
 				// quotes with a preceding backslash are ignored
 				if b.Buf[i-1] == '\\' {
-					if i > 1 && b.Buf[i-2] != '\\' {
-						continue
-					} else {
-					}
+					continue
 				}
 			}
 			end := i
@@ -140,6 +141,9 @@ func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
 			b.Pos = end
 			return
 		}
+	}
+	if slice {
+		subSlice = b.Buf[b.Pos:]
 	}
 	// If we got to the end without a match, set the Pos to the end.
 	b.Pos = bLen
@@ -210,6 +214,7 @@ func (b *Buffer) WriteBytes(bb []byte) (e error) {
 	if len(bb) == 0 {
 		return
 	}
+	// log.D.F("writing '%s'", string(bb))
 	until := b.Pos + len(bb)
 	if until < len(b.Buf) {
 		copy(b.Buf[b.Pos:until], bb)

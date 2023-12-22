@@ -126,33 +126,47 @@ func UnescapeByteString(bs []byte) (o []byte) {
 	out := New(bs) // write side
 	var e error
 	var segment []byte
-	var b byte
+	var c byte
 next:
 	for {
 		// find the first escape character.
+		// start := in.Pos
 		if segment, e = in.ReadUntil('\\'); e != nil {
+			// log.D.F("'%s'", string(in.Buf[start:]))
+			if len(segment) > 0 {
+				if e = out.WriteBytes(segment); fails(e) {
+					break next
+				}
+			}
 			break next
 		}
+		// log.D.F("'%s'/'%s' '%s'",
+		// 	string(in.Buf[start:in.Pos]),
+		// 	segment,
+		// 	string(in.Buf[in.Pos:]),
+		// )
 		if len(segment) > 0 {
 			// write the segment to the out side
-			if e = out.WriteBytes(segment[:len(segment)-1]); fails(e) {
+			if e = out.WriteBytes(segment); fails(e) {
 				break next
 			}
 		}
+		// skip the backslash
 		in.Pos++
 		// get the next byte to check for a 'u'
-		if b, e = in.Read(); fails(e) {
+		if c, e = in.Read(); fails(e) {
 			break next
 		}
-		switch b {
+		// log.D.F("'%s'", string(c))
+		switch c {
 		case 'u':
 			// we are only handling 8 bit escapes so we must see 2 0s before two
 			// hex digits.
 			for i := 2; i < 4; i++ {
-				if b, e = in.Read(); fails(e) {
+				if c, e = in.Read(); fails(e) {
 					break next
 				}
-				if b != '0' {
+				if c != '0' {
 					// if it is not numbers after the `u`, just advance the
 					// cursor.
 					out.Pos += i
@@ -164,17 +178,17 @@ next:
 			// value.
 			var charByte byte
 			for i := 4; i < 6; i++ {
-				if b, e = in.Read(); fails(e) {
+				if c, e = in.Read(); fails(e) {
 					break next
 				}
-				switch b {
+				switch c {
 				case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a',
 					'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F':
 					// 4th char in escape is even, second is odd.
 					if i%2 == 0 {
-						charByte = FirstHexCharToValue(b)
+						charByte = FirstHexCharToValue(c)
 					} else {
-						charByte += SecondHexCharToValue(b)
+						charByte += SecondHexCharToValue(c)
 					}
 				default:
 					// if either of these two are not hex, advance cursor and
@@ -190,9 +204,42 @@ next:
 			if e = out.Write(charByte); fails(e) {
 				break next
 			}
+		default:
+			// log.D.F("not u escape '%s'", string(c))
+			writeChar := c
+			switch c {
+			case QuotationMark:
+				writeChar = QuotationMark
+			case 'b':
+				writeChar = Backspace
+			case 't':
+				writeChar = Tab
+			case ReverseSolidus:
+				writeChar = ReverseSolidus
+			case 'n':
+				writeChar = LineFeed
+			case 'f':
+				writeChar = FormFeed
+			case 'r':
+				writeChar = CarriageReturn
+			case ' ':
+				writeChar = Space
+			default:
+				log.D.F("UNESCAPE \\%s", string(c))
+			}
+			// we now have the character to write into the out buffer.
+			if e = out.Write(writeChar); fails(e) {
+				break next
+			}
+
+			// log.D.F("UNESCAPE '%s' '%s' '%s' -> '%s' '%s'", string(bs),
+			// 	string(in.Head()), string(in.Tail()),
+			// 	string(out.Head()), string(out.Tail()))
 		}
 	}
 	// when we get to here, the cursor marks the end of the unescaped string.
 	o = out.Head()
+	// truncate the original as well so it can't be mistakenly re-used
+	bs = o
 	return
 }

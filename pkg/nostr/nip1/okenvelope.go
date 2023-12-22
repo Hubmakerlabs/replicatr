@@ -49,6 +49,7 @@ func (E *OKEnvelope) Label() (l Label) { return LOK }
 // and Bytes function (array.T). To get the encoded form, invoke either of these
 // methods on the returned value.
 func (E *OKEnvelope) ToArray() (a array.T) {
+	log.D.F("'%s' %v '%s' ", E.EventID, E.OK, E.Reason)
 	return array.T{OK, E.EventID, E.OK, E.Reason}
 }
 
@@ -58,6 +59,7 @@ func (E *OKEnvelope) String() (s string) {
 
 // MarshalJSON returns the JSON encoded form of the envelope.
 func (E *OKEnvelope) MarshalJSON() (bytes []byte, e error) {
+	// log.D.F("ok envelope marshal")
 	return E.ToArray().Bytes(), nil
 }
 
@@ -70,6 +72,7 @@ const (
 
 // Unmarshal the envelope.
 func (E *OKEnvelope) Unmarshal(buf *text.Buffer) (e error) {
+	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
@@ -114,7 +117,7 @@ next:
 				string(eventID))
 		}
 	}
-	E.EventID = EventID(eventID[:len(eventID)])
+	E.EventID = EventID(eventID)
 	// next another comma
 	if e = buf.ScanThrough(','); e != nil {
 		return
@@ -163,6 +166,6 @@ maybeOK:
 	if e = buf.ScanThrough(']'); e != nil {
 		log.D.Ln("envelope unterminated but all fields found")
 	}
-	E.Reason = string(reason[:len(reason)])
+	E.Reason = string(text.UnescapeByteString(reason))
 	return
 }

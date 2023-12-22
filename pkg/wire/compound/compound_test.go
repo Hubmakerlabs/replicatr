@@ -1,7 +1,8 @@
-package array
+package compound
 
 import (
 	"encoding/json"
+	"github.com/nostric/replicatr/pkg/wire/array"
 	"github.com/nostric/replicatr/pkg/wire/object"
 	"testing"
 	"time"
@@ -11,7 +12,7 @@ var literal2 = object.T{
 	{"1", "aoeu"},
 	{"3", time.Now()},
 	{"sorta normal", 0.333},
-	{"array_with_object_inside", T{
+	{"array_with_object_inside", array.T{
 		"1",
 		"aoeu",
 		"3",
@@ -33,7 +34,7 @@ var literalAsMapStringInterface = map[string]interface{}{
 	"1":            "aoeu",
 	"3":            time.Now(),
 	"sorta normal": 0.333,
-	"array_with_object_inside": T{
+	"array_with_object_inside": array.T{
 		"1",
 		"aoeu",
 		"3",

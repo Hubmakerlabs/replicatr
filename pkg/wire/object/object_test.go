@@ -2,10 +2,8 @@ package object
 
 import (
 	"encoding/json"
-	"github.com/nostric/replicatr/pkg/nostr/kind"
 	"github.com/nostric/replicatr/pkg/nostr/tags"
 	"github.com/nostric/replicatr/pkg/nostr/timestamp"
-	"github.com/nostric/replicatr/pkg/wire/array"
 	"testing"
 	"time"
 )
@@ -21,37 +19,34 @@ type Event struct {
 	ID        string
 	PubKey    string
 	CreatedAt timestamp.T
-	Kind      kind.T
+	Kind      int
 	Tags      tags.T
 	Content   string
 	Sig       string
 }
 
-var structLiteral = array.T{"EVENT", Event{
+var structLiteral = Event{
 	ID:        "this is id",
 	PubKey:    "this is pubkey",
 	CreatedAt: timestamp.Now(),
-	Kind:      kind.MemoryHole,
+	Kind:      1,
 	Tags: tags.T{
 		{"e", "something", "something/else"},
 		{"e", "something", "something/else"},
 	},
 	Content: "this is content",
 	Sig:     "this is sig",
-}}
+}
 
-func EventToObject(ev array.T) (t array.T) {
-	return array.T{
-		ev[0],
-		T{
-			{"id", ev[1].(Event).ID},
-			{"pubkey", ev[1].(Event).PubKey},
-			{"created_at", ev[1].(Event).CreatedAt},
-			{"kind", ev[1].(Event).Kind},
-			{"tags", ev[1].(Event).Tags},
-			{"content", ev[1].(Event).Content},
-			{"sig", ev[1].(Event).Sig},
-		},
+func EventToObject(ev Event) (t T) {
+	return T{
+		{"id", ev.ID},
+		{"pubkey", ev.PubKey},
+		{"created_at", ev.CreatedAt},
+		{"kind", ev.Kind},
+		{"tags", ev.Tags},
+		{"content", ev.Content},
+		{"sig", ev.Sig},
 	}
 }
 
