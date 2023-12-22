@@ -17,7 +17,7 @@ func TestEnveloper(t *testing.T) {
 		&nip1.OKEnvelope{EventID: events[0].ID, OK: true,
 			Reason: nip1.OKPoW + ": 25>24 \\ "},
 		&nip1.ReqEnvelope{SubscriptionID: sub, Filters: filt},
-		&nip1.NoticeEnvelope{Text: "this notice has been noticed } \\\" ] "},
+		&nip1.NoticeEnvelope{Text: "this notice has been noticed } \\ \\\" ] "},
 		&nip1.EOSEEnvelope{SubscriptionID: sub},
 		&nip1.CloseEnvelope{SubscriptionID: sub},
 	}
@@ -29,16 +29,17 @@ func TestEnveloper(t *testing.T) {
 			t.Fatal(e)
 		}
 		marshaled := string(b)
-		// log.D.Ln("marshaled", marshaled)
+		log.D.Ln("marshaled  ", marshaled)
 		var env nip1.Enveloper
 		env, _, _, e = nip1.ProcessEnvelope(b)
 		if e != nil {
 			t.Fatal(e)
 		}
 		var um []byte
-		um, e = env.MarshalJSON()
+		// log.I.Ln("marshaling")
+		um, e = json.Marshal(env)
 		unmarshaled := string(um)
-		// log.D.Ln("unmarshaled", unmarshaled)
+		log.D.Ln("unmarshaled", unmarshaled)
 		if marshaled != unmarshaled {
 			t.Log("marshal/unmarshal mangled.")
 			t.Log("got:     ", unmarshaled)

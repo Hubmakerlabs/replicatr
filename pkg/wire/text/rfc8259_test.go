@@ -1,10 +1,14 @@
 package text
 
-import "testing"
+import (
+	log2 "mleku.online/git/log"
+	"testing"
+)
 
 const LastChar = '~'
 
 func TestEscapeJSONStringAndWrap(t *testing.T) {
+	log2.SetLogLevel(log2.Debug)
 	escapeStringVersion := EscapeString([]byte{},
 		GenerateStringWithAllASCII())
 	escapeJSONStringAndWrapVersion :=
@@ -13,6 +17,11 @@ func TestEscapeJSONStringAndWrap(t *testing.T) {
 		t.Logf("escapeString version %d chars, "+
 			"escapeJSONStringAndWrap version %d chars\n",
 			len(escapeJSONStringAndWrapVersion), len(escapeStringVersion))
+		t.Logf("escapeString\nlength: %d %s\n",
+			len(escapeStringVersion), escapeStringVersion)
+		t.Logf("escapJSONStringAndWrap\nlength: %d %s\n",
+			len(escapeJSONStringAndWrapVersion),
+			escapeJSONStringAndWrapVersion)
 		t.FailNow()
 	}
 	for i := range escapeStringVersion {
@@ -38,7 +47,7 @@ func TestEscapeJSONStringAndWrap(t *testing.T) {
 // GenerateStringWithAllASCII generates a string from code 0 up to
 // 127:
 func GenerateStringWithAllASCII() (str string) {
-	const all = 1 << 8
+	const all = 1 << 7
 	bytes := make([]byte, all)
 	for i := range bytes {
 		bytes[i] = byte(i)

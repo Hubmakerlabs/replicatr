@@ -50,6 +50,7 @@ func (E *NoticeEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	if noticeText, e = buf.ReadUntil('"'); fails(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
-	E.Text = string(noticeText[:])
+	E.Text = string(text.UnescapeByteString(noticeText))
+	// log.D.F("'%s'", E.Text)
 	return
 }

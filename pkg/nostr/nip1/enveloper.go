@@ -86,6 +86,7 @@ type Enveloper interface {
 // ready for some other envelope outside of nip-01 to decode.
 func ProcessEnvelope(b []byte) (env Enveloper, label []byte, buf *text.Buffer,
 	e error) {
+	// log.D.F("processing envelope:\n%s", string(b))
 	// The bytes must be valid JSON but we can't assume they are free of
 	// whitespace... So we will use some tools.
 	buf = text.New(b)

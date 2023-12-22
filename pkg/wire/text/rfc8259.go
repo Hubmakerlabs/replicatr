@@ -3,6 +3,8 @@
 // long inputs.
 package text
 
+import "fmt"
+
 // The character constants are used as their names. IDEs with inlays expanding
 // the values will demonstrate the equivalence of these with the same decimal
 // UTF-8 value, thus the secondary items with their Go rune equivalents.
@@ -93,13 +95,18 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 			c == FormFeed,
 			c == CarriageReturn:
 			length++
-			// remaining 8 bit values above 0x20 (Space) are not expanded
-		case c >= Space:
+		// except those above 128 (see todo about UTF-8 escaping)
+		case c > 128:
+			length += 5
 			// handle the 6 character escapes \uXXXX remaining.
 		case c < Space:
 			length += 5
+			// remaining 8 bit values above 0x20 (Space) and below 128 are not
+			// expanded
+		case c >= Space:
 		}
 	}
+	// log.D.F("preallocating %d for string of %d", length-2, len(s))
 	// allocate the required bytes, and then copy in the things.
 	//
 	// set size to zero to allow slice runtime to handle counting the appended
@@ -111,8 +118,10 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 	// Note that if this range statement uses comma syntax the value extracted
 	// at each character is parsed as Unicode which will cause this conversion
 	// to be incorrect according to RFC8259.
+	// log.D.F("'%s'", s)
 	for i := range s {
 		c := s[i]
+		// log.D.F(">%s<", string(c))
 		switch {
 		case c == QuotationMark:
 			escaped = append(escaped, []byte{ReverseSolidus, QuotationMark}...)
@@ -136,12 +145,15 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 				[]byte{ReverseSolidus, 'r'}...)
 		case c == ReverseSolidus:
 			var notEscaped bool
-			if i < len(s) {
+			if i+1 < len(s) {
+				// log.D.Ln(i, len(s))
 				// look ahead to see if this is a escape:
+				// log.D.F("\\ '%s'", string(s[i+1]))
 			escapeCheck:
 				switch s[i+1] {
 				case Space:
 					escaped = append(escaped,
+						// []byte{ReverseSolidus, ReverseSolidus}...)
 						ReverseSolidus)
 				case 'u', 'U':
 					// Let's just be extra careful and make sure the 2 next
@@ -165,10 +177,16 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 					}
 				case '0', '1', '2', '3', '4', '5', '6', '7':
 				default:
+					// log.D.Ln("not an escape")
+					escaped = append(escaped,
+						// ReverseSolidus)
+						[]byte{ReverseSolidus, ReverseSolidus}...)
 					notEscaped = true
 				}
 				if !notEscaped {
-					escaped = append(escaped, ReverseSolidus)
+					escaped = append(escaped,
+						ReverseSolidus)
+					// []byte{ReverseSolidus, ReverseSolidus}...)
 				}
 			}
 		case c < 0x10:
@@ -182,13 +200,33 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 			// be escaped with the 4 byte escape code here.
 			escaped = append(escaped,
 				[]byte{ReverseSolidus, 'u', '0', '0', '1', 0x47 + byte(c)}...)
-		case c >= Space:
+		case c >= Space && c < 128:
 			escaped = append(escaped, c)
+		default:
+			// todo: this code only deals with 8 bit ASCII, but that probably is
+			//  ok? Clients will read the unescaped output as UTF8 which will
+			//  preserve the raw bytes. Full UTF-8 escaping would be a lot more
+			//  expensive to do.
+			escaped = append(escaped, []byte(fmt.Sprintf("\\u00%2x", c))...)
+			// []byte{ReverseSolidus, 'u', '0', '0', '1', 0x47 + byte(c)}...)
 		}
-		// log.D.F("'%s' >%s< '%s' -> '%s'", s[:i], string(c),
-		// 	s[i+1:], string(escaped[1:]))
+		// if c == ReverseSolidus {
+		// 	log.D.F("\n1'%s' >%s< \n2'%s' -> '%s'", s[:i], string(c),
+		// 		s[i+1:], string(escaped[1:]))
+		// }
 	}
 	// add the final double quote character
 	escaped = append(escaped, QuotationMark)
+	return
+}
+
+// Unwrap is a dumb function that just slices off the first and last byte,
+// which from the EscapeJSONStringAndWrap function is the quotes around it.
+//
+// This can be unsafe to run as it assumes there is at least two bytes.
+//
+// TODO: rewrite this all to work from []byte and optional quote wrapping.
+func Unwrap(wrapped []byte) (unwrapped []byte) {
+	unwrapped = wrapped[1 : len(wrapped)-1]
 	return
 }
