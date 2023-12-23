@@ -3,7 +3,7 @@
 // long inputs.
 package text
 
-import "fmt"
+import "unicode/utf8"
 
 // The character constants are used as their names. IDEs with inlays expanding
 // the values will demonstrate the equivalence of these with the same decimal
@@ -41,7 +41,7 @@ const (
 	SpaceGo          = ' '
 )
 
-// EscapeJSONStringAndWrap takes an arbitrary string and escapes all control
+// EscapeJSONStringAndWrapOld takes an arbitrary string and escapes all control
 // characters as per rfc8259 section 7 https://www.rfc-editor.org/rfc/rfc8259
 // (retrieved 2023-11-21):
 //
@@ -80,8 +80,8 @@ const (
 // escaped, needs to have special handling to not escape the escaped, in order
 // to allow custom JSON marshalers to not keep adding backslashes to valid UTF-8
 // entities.
-func EscapeJSONStringAndWrap(s string) (escaped []byte) {
-	// log.D.F("escaping '%s'", s)
+func EscapeJSONStringAndWrapOld(s string) (escaped []byte) {
+	log.D.F("escaping %d %x\n'%s'", len(s), []byte(s), s)
 	// first calculate the extra bytes required for the given string
 	length := len(s) + 2
 	for _, c := range s {
@@ -121,7 +121,7 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 	// log.D.F("'%s'", s)
 	for i := range s {
 		c := s[i]
-		// log.D.F(">%s<", string(c))
+		log.D.F("%03d >%s< %d", i, string(c), c)
 		switch {
 		case c == QuotationMark:
 			escaped = append(escaped, []byte{ReverseSolidus, QuotationMark}...)
@@ -200,14 +200,15 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 			// be escaped with the 4 byte escape code here.
 			escaped = append(escaped,
 				[]byte{ReverseSolidus, 'u', '0', '0', '1', 0x47 + byte(c)}...)
-		case c >= Space && c < 128:
+		case c >= Space:
 			escaped = append(escaped, c)
 		default:
 			// todo: this code only deals with 8 bit ASCII, but that probably is
 			//  ok? Clients will read the unescaped output as UTF8 which will
 			//  preserve the raw bytes. Full UTF-8 escaping would be a lot more
 			//  expensive to do.
-			escaped = append(escaped, []byte(fmt.Sprintf("\\u00%2x", c))...)
+			escaped = append(escaped, c)
+			// escaped = append(escaped, []byte(fmt.Sprintf("\\u00%2x", c))...)
 			// []byte{ReverseSolidus, 'u', '0', '0', '1', 0x47 + byte(c)}...)
 		}
 		// if c == ReverseSolidus {
@@ -229,4 +230,121 @@ func EscapeJSONStringAndWrap(s string) (escaped []byte) {
 func Unwrap(wrapped []byte) (unwrapped []byte) {
 	unwrapped = wrapped[1 : len(wrapped)-1]
 	return
+}
+func EscapeJSONStringAndWrap(s string) (escaped []byte) {
+	length := len(s) + 2
+	for _, c := range s {
+		switch {
+		// handle the two character escapes `\x`
+		case c == QuotationMark,
+			c == ReverseSolidus,
+			c == Backspace,
+			c == Tab,
+			c == LineFeed,
+			c == FormFeed,
+			c == CarriageReturn:
+			length++
+
+			// to match what is done by escapeString, all the higher bit values
+			// than 127 0x80 are left as is
+			// // except those above 128 (see todo about UTF-8 escaping)
+			// case c > 128:
+			// 	length += 5
+			// handle the 6 character escapes \uXXXX remaining.
+		case c < Space:
+			length += 5
+			// remaining 8 bit values above 0x20 (Space) and below 128 are not
+			// expanded
+		case c >= Space:
+		}
+	}
+	escaped = make([]byte, 0, length)
+	// log.D.Ln(length)
+	return appendString(escaped, s, false)
+	// log.D.Ln(escaped)
+	// return
+}
+
+// appendString is the JSON string escaping code from encoding/json but is not
+// exported so it is copied here (it should remain valid enough to not need
+// updating frequently - its commit history is pretty sparse and most of the
+// recent changes have been to account for mostly insecure things in stupid
+// javascript libraries.
+func appendString[Bytes []byte | string](dst []byte, src Bytes,
+	escapeHTML bool) []byte {
+	dst = append(dst, '"')
+	start := 0
+	for i := 0; i < len(src); {
+		if b := src[i]; b < utf8.RuneSelf {
+			if htmlSafeSet[b] || (!escapeHTML && safeSet[b]) {
+				i++
+				continue
+			}
+			dst = append(dst, src[start:i]...)
+			switch b {
+			case '\\', '"':
+				dst = append(dst, '\\', b)
+			case '\b':
+				dst = append(dst, '\\', 'b')
+			case '\f':
+				dst = append(dst, '\\', 'f')
+			case '\n':
+				dst = append(dst, '\\', 'n')
+			case '\r':
+				dst = append(dst, '\\', 'r')
+			case '\t':
+				dst = append(dst, '\\', 't')
+			default:
+				// This encodes bytes < 0x20 except for \b, \f, \n, \r and \t.
+				// If escapeHTML is set, it also escapes <, >, and &
+				// because they can lead to security holes when
+				// user-controlled strings are rendered into JSON
+				// and served to some browsers.
+				dst = append(dst, '\\', 'u', '0', '0', hex[b>>4], hex[b&0xF])
+			}
+			i++
+			start = i
+			continue
+		}
+		// this section is commented out to match what escapeString does.
+		//
+		// it can also been seen that handling the UTF-8 more to spec is a known but unresolved issue.
+		// the foregoing code is much neater than the escapeString version.
+
+		// 	// TODO(https://go.dev/issue/56948): Use generic utf8 functionality.
+		// 	// For now, cast only a small portion of byte slices to a string
+		// 	// so that it can be stack allocated. This slows down []byte slightly
+		// 	// due to the extra copy, but keeps string performance roughly the same.
+		// 	n := len(src) - i
+		// 	if n > utf8.UTFMax {
+		// 		n = utf8.UTFMax
+		// 	}
+		// 	c, size := utf8.DecodeRuneInString(string(src[i : i+n]))
+		// 	if c == utf8.RuneError && size == 1 {
+		// 		dst = append(dst, src[start:i]...)
+		// 		dst = append(dst, `\ufffd`...)
+		// 		i += size
+		// 		start = i
+		// 		continue
+		// 	}
+		// 	// U+2028 is LINE SEPARATOR.
+		// 	// U+2029 is PARAGRAPH SEPARATOR.
+		// 	// They are both technically valid characters in JSON strings,
+		// 	// but don't work in JSONP, which has to be evaluated as JavaScript,
+		// 	// and can lead to security holes there. It is valid JSON to
+		// 	// escape them, so we do so unconditionally.
+		// 	// See https://en.wikipedia.org/wiki/JSON#Safety.
+		// 	if c == '\u2028' || c == '\u2029' {
+		// 		dst = append(dst, src[start:i]...)
+		// 		dst = append(dst, '\\', 'u', '2', '0', '2', hex[c&0xF])
+		// 		i += size
+		// 		start = i
+		// 		continue
+		// 	}
+		// 	i += size
+		i++
+	}
+	dst = append(dst, src[start:]...)
+	dst = append(dst, '"')
+	return dst
 }

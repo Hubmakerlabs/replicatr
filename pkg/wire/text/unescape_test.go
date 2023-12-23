@@ -23,8 +23,8 @@ func TestUnescapeByteString(t *testing.T) {
 	// log.D.Ln(len(b), string(b))
 	// log.D.Ln(len(unescaped), string(unescaped))
 	if string(unescaped) != string(b) {
-		t.Fatalf("mismatched from original after unescaping:\n%s\n%s",
-			string(b), string(unescaped))
+		t.Fatalf("mismatched from original after unescaping:\n%v\n%v",
+			b, unescaped)
 	}
 	jsonEscaped := EscapeJSONStringAndWrap(string(b))
 	jsonEscaped = jsonEscaped[1 : len(jsonEscaped)-1]
