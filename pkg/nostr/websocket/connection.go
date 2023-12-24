@@ -52,6 +52,7 @@ func New(ctx context.Context, url string,
 	state := ws.StateClientSide
 	for _, extension := range hs.Extensions {
 
+		// automatically enable compression if available
 		if string(extension.Name) == wsflate.ExtensionName {
 			c.enableCompression = true
 			state |= ws.StateExtended

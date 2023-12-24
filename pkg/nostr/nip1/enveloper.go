@@ -20,14 +20,14 @@ const (
 )
 
 // Labels is the nip1 envelope labels, matching the above enums.
-var Labels = [][]byte{
-	nil,
-	[]byte("EVENT"),
-	[]byte("OK"),
-	[]byte("NOTICE"),
-	[]byte("EOSE"),
-	[]byte("CLOSE"),
-	[]byte("REQ"),
+var Labels = map[Label][]byte{
+	LNil:    nil,
+	LEvent:  []byte("EVENT"),
+	LOK:     []byte("OK"),
+	LNotice: []byte("NOTICE"),
+	LEOSE:   []byte("EOSE"),
+	LClose:  []byte("CLOSE"),
+	LReq:    []byte("REQ"),
 }
 
 // With these, labels have easy short names for the strings, as well as neat
@@ -44,15 +44,10 @@ var (
 
 func GetLabel(s string) (l Label) {
 	for i := range Labels {
-		if i == 0 {
-			// skip the nil value
-			continue
-		}
 		if string(Labels[i]) == s {
-			return Label(i)
+			l = i
 		}
 	}
-	//
 	return
 }
 

@@ -49,7 +49,7 @@ func (E *OKEnvelope) Label() (l Label) { return LOK }
 // and Bytes function (array.T). To get the encoded form, invoke either of these
 // methods on the returned value.
 func (E *OKEnvelope) ToArray() (a array.T) {
-	log.D.F("'%s' %v '%s' ", E.EventID, E.OK, E.Reason)
+	// log.D.F("'%s' %v '%s' ", E.EventID, E.OK, E.Reason)
 	return array.T{OK, E.EventID, E.OK, E.Reason}
 }
 
