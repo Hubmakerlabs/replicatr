@@ -3,8 +3,8 @@ package nip1
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nostric/replicatr/pkg/wire/array"
-	"github.com/nostric/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 // ReqEnvelope is the wrapper for a query to a relay.
@@ -20,8 +20,13 @@ func (E *ReqEnvelope) Label() (l Label) { return LReq }
 func (E *ReqEnvelope) ToArray() array.T {
 	return array.T{REQ, E.SubscriptionID, E.Filters}
 }
+
 func (E *ReqEnvelope) String() (s string) {
 	return E.ToArray().String()
+}
+
+func (E *ReqEnvelope) Bytes() (s []byte) {
+	return E.ToArray().Bytes()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
@@ -63,11 +68,14 @@ func (E *ReqEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	if e = json.Unmarshal(filterArray, &E.Filters); fails(e) {
 		return
 	}
-	// technically we maybe should read ahead further to make sure the JSON
-	// closes correctly. Not going to abort because of this.
-	if e = buf.ScanUntil(']'); e != nil {
-		return fmt.Errorf("malformed JSON, no closing bracket on array")
-	}
+	// // technically we maybe should read ahead further to make sure the JSON
+	// // closes correctly. Not going to abort because of this.
+	// //
+	// TODO: this is a waste of time really, the rest of the buffer will be
+	//  discarded anyway as no more content is expected
+	// if e = buf.ScanUntil(']'); e != nil {
+	// 	return fmt.Errorf("malformed JSON, no closing bracket on array")
+	// }
 	// whatever remains doesn't matter as the envelope has fully unmarshaled.
 	return
 }

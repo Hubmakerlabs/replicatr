@@ -2,8 +2,8 @@ package compound
 
 import (
 	"encoding/json"
-	"github.com/nostric/replicatr/pkg/wire/array"
-	"github.com/nostric/replicatr/pkg/wire/object"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"testing"
 	"time"
 )

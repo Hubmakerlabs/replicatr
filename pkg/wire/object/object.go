@@ -16,7 +16,7 @@ package object
 import (
 	"bytes"
 	"fmt"
-	"github.com/nostric/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 	"reflect"
 	"strings"
 	"time"

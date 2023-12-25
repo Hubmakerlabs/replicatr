@@ -2,18 +2,21 @@ package nip1
 
 import (
 	"fmt"
-	"github.com/nostric/replicatr/pkg/wire/array"
-	"github.com/nostric/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 	"sort"
+	"strings"
 )
 
+type OkReason string
+
 const (
-	OKPoW         = "pow"
-	OKDuplicate   = "duplicate"
-	OKBlocked     = "blocked"
-	OKRateLimited = "rate-limited"
-	OKInvalid     = "invalid"
-	OKError       = "error"
+	OKPoW         OkReason = "pow"
+	OKDuplicate   OkReason = "duplicate"
+	OKBlocked     OkReason = "blocked"
+	OKRateLimited OkReason = "rate-limited"
+	OKInvalid     OkReason = "invalid"
+	OKError       OkReason = "error"
 )
 
 // OKEnvelope is a relay message sent in response to an EventEnvelope to
@@ -27,10 +30,10 @@ type OKEnvelope struct {
 	Reason  string
 }
 
-func NewOKEnvelope(eventID string, ok bool, reason string) (o *OKEnvelope,
+func NewOKEnvelope(eventID EventID, ok bool, reason string) (o *OKEnvelope,
 	e error) {
 	var ei EventID
-	if ei, e = NewEventID(eventID); fails(e) {
+	if ei, e = NewEventID(string(eventID)); fails(e) {
 		return
 	}
 	o = &OKEnvelope{
@@ -55,6 +58,10 @@ func (E *OKEnvelope) ToArray() (a array.T) {
 
 func (E *OKEnvelope) String() (s string) {
 	return E.ToArray().String()
+}
+
+func (E *OKEnvelope) Bytes() (s []byte) {
+	return E.ToArray().Bytes()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
@@ -168,4 +175,16 @@ maybeOK:
 	}
 	E.Reason = string(text.UnescapeByteString(reason))
 	return
+}
+
+// OKMessage takes a string message that is to be sent in an `OK` or `CLOSED`
+// command and prefixes it with "<prefix>: " if it doesn't already have an
+// acceptable prefix.
+func OKMessage(reason OkReason, prefix string) string {
+	if idx := strings.Index(string(reason),
+		": "); idx == -1 || strings.IndexByte(string(reason[0:idx]),
+		' ') != -1 {
+		return prefix + ": " + string(reason)
+	}
+	return string(reason)
 }

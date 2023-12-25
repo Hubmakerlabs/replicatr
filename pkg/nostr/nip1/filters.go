@@ -3,11 +3,11 @@ package nip1
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nostric/replicatr/pkg/nostr/kind"
-	"github.com/nostric/replicatr/pkg/nostr/tag"
-	"github.com/nostric/replicatr/pkg/nostr/timestamp"
-	"github.com/nostric/replicatr/pkg/wire/array"
-	"github.com/nostric/replicatr/pkg/wire/object"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"sort"
 )
 

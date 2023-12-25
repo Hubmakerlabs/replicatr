@@ -2,7 +2,7 @@ package nip1_test
 
 import (
 	"encoding/json"
-	"github.com/nostric/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	log2 "mleku.online/git/log"
 	"testing"
 )
@@ -15,7 +15,7 @@ func TestEnveloper(t *testing.T) {
 		&nip1.EventEnvelope{SubscriptionID: sub, Event: events[1]},
 		&nip1.EventEnvelope{Event: events[0]},
 		&nip1.OKEnvelope{EventID: events[0].ID, OK: true,
-			Reason: nip1.OKPoW + ": 25>24 \\ "},
+			Reason: nip1.OKMessage(nip1.OKPoW, "25>24 \\ ")},
 		&nip1.ReqEnvelope{SubscriptionID: sub, Filters: filt},
 		&nip1.NoticeEnvelope{Text: "this notice has been noticed } \\ \\\" ] "},
 		&nip1.EOSEEnvelope{SubscriptionID: sub},

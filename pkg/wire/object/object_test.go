@@ -2,8 +2,8 @@ package object
 
 import (
 	"encoding/json"
-	"github.com/nostric/replicatr/pkg/nostr/tags"
-	"github.com/nostric/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"testing"
 	"time"
 )

@@ -2,11 +2,11 @@ package nip1
 
 import (
 	"fmt"
-	"github.com/nostric/replicatr/pkg/nostr/kind"
-	"github.com/nostric/replicatr/pkg/nostr/tags"
-	"github.com/nostric/replicatr/pkg/nostr/timestamp"
-	"github.com/nostric/replicatr/pkg/wire/array"
-	"github.com/nostric/replicatr/pkg/wire/object"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"mleku.online/git/ec/schnorr"
 	secp256k1 "mleku.online/git/ec/secp"
 )
@@ -68,7 +68,7 @@ func (ev *Event) ToCanonical() (o array.T) {
 func (ev *Event) GetIDBytes() []byte { return Hash(ev.ToCanonical().Bytes()) }
 
 // GetID serializes and returns the event ID as a hexadecimal string.
-func (ev *Event) GetID() string { return encodeToHex(ev.GetIDBytes()) }
+func (ev *Event) GetID() EventID { return EventID(encodeToHex(ev.GetIDBytes())) }
 
 // CheckSignature checks if the signature is valid for the id (which is a hash
 // of the serialized event content). returns an error if the signature itself is

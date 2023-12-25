@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 	"github.com/minio/sha256-simd"
-	"github.com/nostric/replicatr/pkg/wire/text"
 	log2 "mleku.online/git/log"
 )
 

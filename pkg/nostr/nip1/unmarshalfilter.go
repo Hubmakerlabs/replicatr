@@ -4,9 +4,9 @@ package nip1
 
 import (
 	"fmt"
-	"github.com/nostric/replicatr/pkg/nostr/kind"
-	"github.com/nostric/replicatr/pkg/nostr/tag"
-	"github.com/nostric/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 type UnmarshalingFilter struct {
