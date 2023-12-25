@@ -2,8 +2,8 @@ package nip1
 
 import (
 	"fmt"
-	"github.com/nostric/replicatr/pkg/wire/array"
-	"github.com/nostric/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 type Label = byte
@@ -16,6 +16,7 @@ const (
 	LNotice
 	LEOSE
 	LClose
+	LClosed
 	LReq
 )
 
@@ -27,6 +28,7 @@ var Labels = map[Label][]byte{
 	LNotice: []byte("NOTICE"),
 	LEOSE:   []byte("EOSE"),
 	LClose:  []byte("CLOSE"),
+	LClosed: []byte("CLOSED"),
 	LReq:    []byte("REQ"),
 }
 
@@ -40,6 +42,7 @@ var (
 	NOTICE = string(Labels[LNotice])
 	EOSE   = string(Labels[LEOSE])
 	CLOSE  = string(Labels[LClose])
+	CLOSED = string(Labels[LClosed])
 )
 
 func GetLabel(s string) (l Label) {
@@ -111,7 +114,7 @@ matched:
 			}
 			if !differs {
 				// there can only be one!
-				match = Label(i)
+				match = i
 				break matched
 			}
 		}
@@ -142,6 +145,9 @@ matched:
 		e = env.Unmarshal(buf)
 	case LClose:
 		env = &CloseEnvelope{}
+		e = env.Unmarshal(buf)
+	case LClosed:
+		env = &ClosedEnvelope{}
 		e = env.Unmarshal(buf)
 	case LReq:
 		env = &ReqEnvelope{}

@@ -2,14 +2,19 @@ package nip1
 
 import (
 	"fmt"
-	"github.com/nostric/replicatr/pkg/wire/array"
-	"github.com/nostric/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 // NoticeEnvelope is a relay message intended to be shown to users in a nostr
 // client interface.
 type NoticeEnvelope struct {
 	Text string
+}
+
+func NewNoticeEnvelope(text string) (E *NoticeEnvelope) {
+	E = &NoticeEnvelope{Text: text}
+	return
 }
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
@@ -22,6 +27,10 @@ func (E *NoticeEnvelope) ToArray() (a array.T) {
 
 func (E *NoticeEnvelope) String() (s string) {
 	return E.ToArray().String()
+}
+
+func (E *NoticeEnvelope) Bytes() (s []byte) {
+	return E.ToArray().Bytes()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.

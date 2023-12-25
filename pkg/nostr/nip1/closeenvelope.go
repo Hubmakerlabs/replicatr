@@ -2,8 +2,8 @@ package nip1
 
 import (
 	"fmt"
-	"github.com/nostric/replicatr/pkg/wire/array"
-	"github.com/nostric/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 // CloseEnvelope is a wrapper for a signal to cancel a subscription.
@@ -11,16 +11,18 @@ type CloseEnvelope struct {
 	SubscriptionID
 }
 
+func NewCloseEnvelope(s SubscriptionID) (ce *CloseEnvelope) {
+	return &CloseEnvelope{SubscriptionID: s}
+}
+
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.Labels[Label]
-func (E *CloseEnvelope) Label() (l Label) { return LClose }
+func (E *CloseEnvelope) Label() (l Label)   { return LClose }
+func (E *CloseEnvelope) String() (s string) { return E.ToArray().String() }
+func (E *CloseEnvelope) Bytes() (s []byte)  { return E.ToArray().Bytes() }
 
 func (E *CloseEnvelope) ToArray() (a array.T) {
 	return array.T{CLOSE, E.SubscriptionID}
-}
-
-func (E *CloseEnvelope) String() (s string) {
-	return E.ToArray().String()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.

@@ -4,12 +4,15 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/nostric/replicatr/pkg/nostr/kind"
-	"github.com/nostric/replicatr/pkg/nostr/nip1"
-	"github.com/nostric/replicatr/pkg/nostr/tags"
-	"github.com/nostric/replicatr/pkg/wire/array"
-	"github.com/nostric/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 	log2 "mleku.online/git/log"
+	"net/url"
+	"strings"
+	"time"
 )
 
 var (
@@ -30,8 +33,22 @@ type AuthChallengeEnvelope struct {
 	Challenge string
 }
 
-func (a *AuthChallengeEnvelope) Label() nip1.Label {
-	return LAuth
+func NewChallenge(c string) (a *AuthChallengeEnvelope) {
+	return &AuthChallengeEnvelope{Challenge: c}
+}
+
+func (a *AuthChallengeEnvelope) Label() nip1.Label  { return LAuth }
+func (a *AuthChallengeEnvelope) String() (s string) { return a.ToArray().String() }
+func (a *AuthChallengeEnvelope) Bytes() (s []byte)  { return a.ToArray().Bytes() }
+
+func (a *AuthChallengeEnvelope) ToArray() array.T {
+	return array.T{AUTH, a.Challenge}
+}
+
+// MarshalJSON returns the JSON encoded form of the envelope.
+func (a *AuthChallengeEnvelope) MarshalJSON() (bytes []byte, e error) {
+	// log.D.F("auth challenge envelope marshal")
+	return a.ToArray().Bytes(), nil
 }
 
 func (a *AuthChallengeEnvelope) Unmarshal(buf *text.Buffer) (e error) {
@@ -57,20 +74,6 @@ func (a *AuthChallengeEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 		log.D.Ln("envelope unterminated but all fields found")
 	}
 	return
-}
-
-func (a *AuthChallengeEnvelope) ToArray() array.T {
-	return array.T{AUTH, a.Challenge}
-}
-
-func (a *AuthChallengeEnvelope) String() (s string) {
-	return a.ToArray().String()
-}
-
-// MarshalJSON returns the JSON encoded form of the envelope.
-func (a *AuthChallengeEnvelope) MarshalJSON() (bytes []byte, e error) {
-	// log.D.F("auth challenge envelope marshal")
-	return a.ToArray().Bytes(), nil
 }
 
 type AuthResponseEnvelope struct {
@@ -141,8 +144,61 @@ func (a *AuthResponseEnvelope) String() (s string) {
 	return a.ToArray().String()
 }
 
+func (a *AuthResponseEnvelope) Bytes() (s []byte) {
+	return a.ToArray().Bytes()
+}
+
 // MarshalJSON returns the JSON encoded form of the envelope.
 func (a *AuthResponseEnvelope) MarshalJSON() (bytes []byte, e error) {
 	// log.D.F("auth envelope marshal")
 	return a.ToArray().Bytes(), nil
+}
+
+// ValidateAuthEvent checks whether event is a valid NIP-42 event for given challenge and relayURL.
+// The result of the validation is encoded in the ok bool.
+func ValidateAuthEvent(event *nip1.Event, challenge string,
+	relayURL string) (pubkey string, ok bool) {
+
+	if event.Kind != kind.ClientAuthentication {
+		return "", false
+	}
+	if event.Tags.GetFirst([]string{"challenge", challenge}) == nil {
+		return "", false
+	}
+	var expected, found *url.URL
+	var e error
+	expected, e = parseURL(relayURL)
+	if e != nil {
+		return "", false
+	}
+	found, e = parseURL(event.Tags.GetFirst([]string{"relay", ""}).Value())
+	if e != nil {
+		return "", false
+	}
+	if expected.Scheme != found.Scheme ||
+		expected.Host != found.Host ||
+		expected.Path != found.Path {
+		return "", false
+	}
+	now := time.Now()
+	if event.CreatedAt.Time().After(now.Add(10*time.Minute)) ||
+		event.CreatedAt.Time().Before(now.Add(-10*time.Minute)) {
+
+		return "", false
+	}
+	// save for last, as it is most expensive operation
+	// no need to check returned error, since ok == true implies err == nil.
+	if ok, _ = event.CheckSignature(); !ok {
+		return "", false
+	}
+	return event.PubKey, true
+}
+
+// helper function for ValidateAuthEvent.
+func parseURL(input string) (*url.URL, error) {
+	return url.Parse(
+		strings.ToLower(
+			strings.TrimSuffix(input, "/"),
+		),
+	)
 }

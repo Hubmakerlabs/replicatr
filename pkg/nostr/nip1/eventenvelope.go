@@ -3,8 +3,8 @@ package nip1
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nostric/replicatr/pkg/wire/array"
-	"github.com/nostric/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 // EventEnvelope is the wrapper expected by a relay around an event.
@@ -54,6 +54,10 @@ func (E *EventEnvelope) ToArray() (a array.T) {
 
 func (E *EventEnvelope) String() (s string) {
 	return E.ToArray().String()
+}
+
+func (E *EventEnvelope) Bytes() (s []byte) {
+	return E.ToArray().Bytes()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
