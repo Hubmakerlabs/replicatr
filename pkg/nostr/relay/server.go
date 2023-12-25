@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"

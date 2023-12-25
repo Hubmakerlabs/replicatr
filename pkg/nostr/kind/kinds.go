@@ -5,7 +5,7 @@ import "github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 // T - which will be externally referenced as kind.T is the event type in the
 // nostr protocol, the use of the capital T signifying type, consistent with Go
 // idiom, the Go standard library, and much, conformant, existing code.
-type T int
+type T uint16
 
 // The event kinds are put in a separate package so they will be referred to as
 // `kind.EventType` rather than `nostr.KindEventType` as this is correct Go
