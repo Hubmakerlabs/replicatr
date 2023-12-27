@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay"
+	log2 "mleku.online/git/log"
 	"net/http"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore/badger"
 )
 
 func main() {
+	log2.SetLogLevel(log2.Trace)
 	rl := relay.New()
 
 	db := badger.Backend{Path: "/tmp/khatru-badgern-tmp"}

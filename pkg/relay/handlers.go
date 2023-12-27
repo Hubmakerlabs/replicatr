@@ -35,9 +35,10 @@ func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
-	conn, err := rl.upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		rl.Log.E.F("failed to upgrade websocket: %v\n", err)
+	var e error
+	var conn *websocket.Conn
+	if conn, e = rl.upgrader.Upgrade(w, r, nil); fails(e) {
+		rl.Log.E.F("failed to upgrade websocket: %v\n", e)
 		return
 	}
 	rl.clients.Store(conn, struct{}{})
@@ -45,7 +46,11 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 	// NIP-42 challenge
 	challenge := make([]byte, 8)
-	rand.Read(challenge)
+
+	var n int
+	if n, e = rand.Read(challenge); fails(e) {
+		log.E.F("only read %d bytes from system CSPRNG", n)
+	}
 
 	ws := &WebSocket{
 		conn:      conn,
@@ -57,19 +62,19 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(
 		context.WithValue(
 			context.Background(),
-			wsKey, ws,
+			WebsocketContextKey, ws,
 		),
 	)
 
 	kill := func() {
-		for _, ondisconnect := range rl.OnDisconnect {
-			ondisconnect(ctx)
+		for _, onDisconnect := range rl.OnDisconnect {
+			onDisconnect(ctx)
 		}
 
 		ticker.Stop()
 		cancel()
 		if _, ok := rl.clients.Load(conn); ok {
-			conn.Close()
+			log.D.Chk(conn.Close())
 			rl.clients.Delete(conn)
 			removeListener(ws)
 		}
@@ -79,19 +84,21 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		defer kill()
 
 		conn.SetReadLimit(rl.MaxMessageSize)
-		conn.SetReadDeadline(time.Now().Add(rl.PongWait))
+		log.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
 		conn.SetPongHandler(func(string) error {
-			conn.SetReadDeadline(time.Now().Add(rl.PongWait))
+			log.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
 			return nil
 		})
 
-		for _, onconnect := range rl.OnConnect {
-			onconnect(ctx)
+		for _, onConnect := range rl.OnConnect {
+			onConnect(ctx)
 		}
-
+		var err error
 		for {
-			typ, message, err := conn.ReadMessage()
-			if err != nil {
+			var typ int
+			var message []byte
+			typ, message, err = conn.ReadMessage()
+			if fails(err) {
 				if websocket.IsUnexpectedCloseError(
 					err,
 					websocket.CloseNormalClosure,    // 1000
@@ -103,16 +110,16 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 				}
 				return
 			}
-
+			log.D.F("received message on websocket: '%s'", string(message))
 			if typ == websocket.PingMessage {
-				ws.WriteMessage(websocket.PongMessage, nil)
+				log.D.Chk(ws.WriteMessage(websocket.PongMessage, nil))
 				continue
 			}
 
 			go func(message []byte) {
-				envelope, _, _, _ := nip1.ProcessEnvelope(message)
-				if envelope == nil {
-					// stop silently
+				var e error
+				var envelope nip1.Enveloper
+				if envelope, _, _, e = nip1.ProcessEnvelope(message); fails(e) || envelope == nil {
 					return
 				}
 
@@ -154,7 +161,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 							RequestAuth(ctx)
 						}
 					}
-					ws.WriteJSON(nip1.OKEnvelope{EventID: env.Event.ID, OK: ok, Reason: reason})
+					log.D.Chk(ws.WriteJSON(nip1.OKEnvelope{
+						EventID: env.Event.ID, OK: ok, Reason: reason}))
 				case *nip45.CountRequestEnvelope:
 					if rl.CountEvents == nil {
 						ws.WriteJSON(nip1.ClosedEnvelope{SubscriptionID: env.SubscriptionID, Reason: "unsupported: this relay does not support NIP-45"})
@@ -164,10 +172,10 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					for _, filter := range env.Filters {
 						total += rl.handleCountRequest(ctx, ws, filter)
 					}
-					ws.WriteJSON(nip45.CountResponseEnvelope{
+					log.D.Chk(ws.WriteJSON(nip45.CountResponseEnvelope{
 						SubscriptionID: env.SubscriptionID,
 						Count:          total,
-					})
+					}))
 				case *nip1.ReqEnvelope:
 					eose := sync.WaitGroup{}
 					eose.Add(len(env.Filters))
@@ -176,7 +184,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					reqCtx, cancelReqCtx := context.WithCancelCause(ctx)
 
 					// expose subscription id in the context
-					reqCtx = context.WithValue(reqCtx, subscriptionIdKey, env.SubscriptionID)
+					reqCtx = context.WithValue(reqCtx, SubscriptionIDContextKey, env.SubscriptionID)
 
 					// handle each filter separately -- dispatching events as they're loaded from databases
 					for _, filter := range env.Filters {
