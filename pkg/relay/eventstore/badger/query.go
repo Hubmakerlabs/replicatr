@@ -7,10 +7,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/dgraph-io/badger/v4"
 
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/dgraph-io/badger/v4"
 )
 
 type query struct {
@@ -26,8 +26,7 @@ type queryEvent struct {
 	query int
 }
 
-func (b BadgerBackend) QueryEvents(ctx context.Context,
-	filter nip1.Filter) (chan *nip1.Event, error) {
+func (b *Backend) QueryEvents(ctx context.Context, filter nip1.Filter) (chan *nip1.Event, error) {
 	ch := make(chan *nip1.Event)
 
 	queries, extraFilter, since, err := prepareQueries(filter)
@@ -81,10 +80,8 @@ func (b BadgerBackend) QueryEvents(ctx context.Context,
 						}
 						item.Value(func(val []byte) error {
 							evt := &nip1.Event{}
-							if err := nostr_binary.Unmarshal(val,
-								evt); err != nil {
-								log.E.F("badger: value read error (id %x): %s\n",
-									val[0:32], err)
+							if err := nostr_binary.Unmarshal(val, evt); err != nil {
+								log.E.F("badger: value read error (id %x): %s\n", val[0:32], err)
 								return err
 							}
 
@@ -113,8 +110,7 @@ func (b BadgerBackend) QueryEvents(ctx context.Context,
 			for _, q := range queries {
 				evt, ok := <-q.results
 				if ok {
-					emitQueue = append(emitQueue,
-						&queryEvent{Event: evt, query: q.i})
+					emitQueue = append(emitQueue, &queryEvent{Event: evt, query: q.i})
 				}
 			}
 
@@ -223,8 +219,7 @@ func prepareQueries(filter nip1.Filter) (
 			queries = make([]query, len(filter.Authors))
 			for i, pubkeyHex := range filter.Authors {
 				if len(pubkeyHex) != 64 {
-					return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'",
-						pubkeyHex)
+					return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 				}
 				pubkeyPrefix8, _ := hex.DecodeString(pubkeyHex[0 : 8*2])
 				prefix := make([]byte, 1+8)
@@ -239,8 +234,7 @@ func prepareQueries(filter nip1.Filter) (
 			for _, pubkeyHex := range filter.Authors {
 				for _, kind := range filter.Kinds {
 					if len(pubkeyHex) != 64 {
-						return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'",
-							pubkeyHex)
+						return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 					}
 					pubkeyPrefix8, _ := hex.DecodeString(pubkeyHex[0 : 8*2])
 					prefix := make([]byte, 1+8+2)
@@ -303,8 +297,7 @@ func prepareQueries(filter nip1.Filter) (
 		}
 	}
 	for i, q := range queries {
-		queries[i].startingPoint = binary.BigEndian.AppendUint32(q.prefix,
-			uint32(until))
+		queries[i].startingPoint = binary.BigEndian.AppendUint32(q.prefix, uint32(until))
 		queries[i].results = make(chan *nip1.Event, 12)
 	}
 

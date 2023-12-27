@@ -53,6 +53,14 @@ func (ei EventID) String() string {
 	return string(ei)
 }
 
+func (ei EventID) Bytes() (b []byte) {
+	var e error
+	if b, e = hexDecode(string(ei)); log.E.Chk(e) {
+		return
+	}
+	return
+}
+
 func (ei EventID) MarshalJSON() (b []byte, e error) {
 	return text.EscapeJSONStringAndWrap(string(ei)), nil
 }
