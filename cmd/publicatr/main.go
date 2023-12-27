@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,11 +16,18 @@ import (
 	"time"
 
 	"github.com/urfave/cli/v2"
+	log2 "mleku.online/git/log"
 
 	"github.com/fatih/color"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip04"
 	"github.com/nbd-wtf/go-nostr/nip19"
+)
+
+var (
+	log                    = log2.GetLogger()
+	fails                  = log.D.Chk
+	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
 const name = "publicatr"
@@ -144,38 +152,44 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		mu.Unlock()
 		m := map[string]struct{}{}
 
-		cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-			evs, err := relay.QuerySync(ctx, nostr.Filter{Kinds: []int{nostr.KindContactList}, Authors: []string{pub}, Limit: 1})
-			if err != nil {
-				return true
-			}
-			for _, ev := range evs {
-				var rm map[string]Relay
-				if cfg.tempRelay == false {
-					if err := json.Unmarshal([]byte(ev.Content), &rm); err == nil {
-						for k, v1 := range cfg.Relays {
-							if v2, ok := rm[k]; ok {
-								v2.Search = v1.Search
+		cfg.Do(Relay{Read: true},
+			func(ctx context.Context, relay *nostr.Relay) bool {
+				evs, err := relay.QuerySync(ctx,
+					nostr.Filter{
+						Kinds:   []int{nostr.KindContactList},
+						Authors: []string{pub},
+						Limit:   1,
+					})
+				if err != nil {
+					return true
+				}
+				for _, ev := range evs {
+					var rm map[string]Relay
+					if cfg.tempRelay == false {
+						if err := json.Unmarshal([]byte(ev.Content), &rm); err == nil {
+							for k, v1 := range cfg.Relays {
+								if v2, ok := rm[k]; ok {
+									v2.Search = v1.Search
+								}
 							}
+							cfg.Relays = rm
 						}
-						cfg.Relays = rm
+					}
+					for _, tag := range ev.Tags {
+						if len(tag) >= 2 && tag[0] == "p" {
+							mu.Lock()
+							m[tag[1]] = struct{}{}
+							mu.Unlock()
+						}
 					}
 				}
-				for _, tag := range ev.Tags {
-					if len(tag) >= 2 && tag[0] == "p" {
-						mu.Lock()
-						m[tag[1]] = struct{}{}
-						mu.Unlock()
-					}
-				}
-			}
-			return true
-		})
+				return true
+			})
 		if cfg.verbose {
 			fmt.Printf("found %d followers\n", len(m))
 		}
 		if len(m) > 0 {
-			follows := []string{}
+			var follows []string
 			for k := range m {
 				follows = append(follows, k)
 			}
@@ -338,7 +352,9 @@ func (cfg *Config) Decode(ev *nostr.Event) error {
 }
 
 // PrintEvents is
-func (cfg *Config) PrintEvents(evs []*nostr.Event, followsMap map[string]Profile, j, extra bool) {
+func (cfg *Config) PrintEvents(evs []*nostr.Event,
+	followsMap map[string]Profile, j, extra bool) {
+
 	if j {
 		if extra {
 			var events []Event
@@ -384,36 +400,37 @@ func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
-	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-		mu.Lock()
-		if found {
+	cfg.Do(Relay{Read: true},
+		func(ctx context.Context, relay *nostr.Relay) bool {
+			mu.Lock()
+			if found {
+				mu.Unlock()
+				return false
+			}
 			mu.Unlock()
-			return false
-		}
-		mu.Unlock()
-		evs, err := relay.QuerySync(ctx, filter)
-		if err != nil {
-			return true
-		}
-		for _, ev := range evs {
-			if _, ok := m.Load(ev.ID); !ok {
-				if ev.Kind == nostr.KindEncryptedDirectMessage {
-					if err := cfg.Decode(ev); err != nil {
-						continue
+			evs, err := relay.QuerySync(ctx, filter)
+			if err != nil {
+				return true
+			}
+			for _, ev := range evs {
+				if _, ok := m.Load(ev.ID); !ok {
+					if ev.Kind == nostr.KindEncryptedDirectMessage {
+						if err := cfg.Decode(ev); err != nil {
+							continue
+						}
+					}
+					m.LoadOrStore(ev.ID, ev)
+					if len(filter.IDs) == 1 {
+						mu.Lock()
+						found = true
+						ctx.Done()
+						mu.Unlock()
+						break
 					}
 				}
-				m.LoadOrStore(ev.ID, ev)
-				if len(filter.IDs) == 1 {
-					mu.Lock()
-					found = true
-					ctx.Done()
-					mu.Unlock()
-					break
-				}
 			}
-		}
-		return true
-	})
+			return true
+		})
 
 	keys := []string{}
 	m.Range(func(k, v any) bool {

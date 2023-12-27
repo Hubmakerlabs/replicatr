@@ -73,29 +73,34 @@ func (E *EventEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	// Next, find the comma after the label (note we aren't checking that only
 	// whitespace intervenes because laziness, usually this is the very next
 	// character).
-	if e = buf.ScanUntil(','); e != nil {
+	if e = buf.ScanUntil(','); log.D.Chk(e) {
 		return
 	}
-	// Next character we find will be open quotes for the subscription ID.
-	if e = buf.ScanThrough('"'); e != nil {
+	// Next character we find will be open quotes for the subscription ID, or
+	// the open brace of the embedded event.
+	var matched byte
+	if matched, e = buf.ScanForOneOf(false, '"', '{'); log.D.Chk(e) {
 		return
 	}
-	var sid []byte
-	// read the string
-	if sid, e = buf.ReadUntil('"'); fails(e) {
-		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
-	}
-	E.SubscriptionID = SubscriptionID(sid[:])
-	// Next, find the comma after the subscription ID (note we aren't checking
-	// that only whitespace intervenes because laziness, usually this is the
-	// very next
-	// character)
-	if e = buf.ScanUntil(','); e != nil {
-		return fmt.Errorf("event not found in event envelope")
+	if matched == '"' {
+		// Advance the cursor to consume the quote character.
+		buf.Pos++
+		var sid []byte
+		// Read the string.
+		if sid, e = buf.ReadUntil('"'); log.D.Chk(e) {
+			return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+		}
+		E.SubscriptionID = SubscriptionID(sid[:])
+		// Next, find the comma after the subscription ID (note we aren't checking
+		// that only whitespace intervenes because laziness, usually this is the
+		// very next character).
+		if e = buf.ScanUntil(','); log.D.Chk(e) {
+			return fmt.Errorf("event not found in event envelope")
+		}
 	}
 	// find the opening brace of the event object, usually this is the very next
 	// character, we aren't checking for valid whitespace because laziness.
-	if e = buf.ScanUntil('{'); e != nil {
+	if e = buf.ScanUntil('{'); log.D.Chk(e) {
 		return fmt.Errorf("event not found in event envelope")
 	}
 	// now we should have an event object next. It has no embedded object so it
@@ -113,7 +118,7 @@ func (E *EventEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	}
 	// technically we maybe should read ahead further to make sure the JSON
 	// closes correctly. Not going to abort because of this.
-	if e = buf.ScanUntil(']'); e != nil {
+	if e = buf.ScanUntil(']'); log.D.Chk(e) {
 		return fmt.Errorf("malformed JSON, no closing bracket on array")
 	}
 	// whatever remains doesn't matter as the envelope has fully unmarshaled.

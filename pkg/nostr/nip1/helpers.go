@@ -43,7 +43,7 @@ func NewSubscriptionID(s string) (SubscriptionID, error) {
 
 // IsValid returns true if the subscription id is between 1 and 64 characters.
 // Invalid means too long or not present.
-func (si SubscriptionID) IsValid() bool { return len(si) <= 64 }
+func (si SubscriptionID) IsValid() bool { return len(si) <= 64 && len(si) > 0 }
 
 // EventID is the SHA256 hash in hexadecimal of the canonical form of an event
 // as produced by the output of Event.ToCanonical().Bytes().

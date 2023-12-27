@@ -1,12 +1,19 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay"
 	log2 "mleku.online/git/log"
 	"net/http"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore/badger"
+)
+
+var (
+	log                    = log2.GetLogger()
+	fails                  = log.D.Chk
+	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
 func main() {

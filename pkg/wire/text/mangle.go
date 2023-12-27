@@ -15,9 +15,9 @@ type Buffer struct {
 	Buf []byte
 }
 
-// New returns a new buffer containing the provided slice. This slice
+// NewBuffer returns a new buffer containing the provided slice. This slice
 // can/will be mutated.
-func New(b []byte) (buf *Buffer) {
+func NewBuffer(b []byte) (buf *Buffer) {
 	return &Buffer{Buf: b}
 }
 
@@ -95,6 +95,7 @@ func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
 	var inQuotes bool
 	quotes := c == '"'
 	for i := b.Pos; i < bLen; i++ {
+		// log.D.F("'%s' searching '%s' found: %v, inquotes: %v, through %v quotes %v", string(b.Buf[i]), string(c), c == b.Buf[i], inQuotes, through, quotes)
 		// log.D.F("first: quotes: %v %d/%d '%s'", quotes, i, bLen,
 		// 	string(b.Buf[i]))
 		if !quotes {
@@ -194,6 +195,35 @@ func (b *Buffer) ReadEnclosed() (bb []byte, e error) {
 		if depth == 0 {
 			bb = b.Buf[b.Pos : i+1]
 			return
+		}
+	}
+	e = io.EOF
+	return
+}
+
+// ScanForOneOf provides the ability to scan for two or more different bytes.
+//
+// For simplicity it does not skip quotes, it was actually written to find
+// quotes or braces but just to make it clear this is very bare.
+//
+// if through is set to true, the cursor is advanced to the next after the match
+func (b *Buffer) ScanForOneOf(through bool, c ...byte) (which byte, e error) {
+	if len(c) < 2 {
+		e = fmt.Errorf("at least two bytes required for ScanUntilOneOf, " +
+			"otherwise just use ScanUntil")
+		return
+	}
+	bLen := len(b.Buf)
+	for i := b.Pos; i < bLen; i++ {
+		for _, d := range c {
+			if b.Buf[i] == d {
+				which = d
+				if through {
+					i++
+				}
+				b.Pos = i
+				return
+			}
 		}
 	}
 	e = io.EOF

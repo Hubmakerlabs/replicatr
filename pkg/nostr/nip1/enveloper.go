@@ -87,7 +87,7 @@ func ProcessEnvelope(b []byte) (env Enveloper, label []byte, buf *text.Buffer,
 	// log.D.F("processing envelope:\n%s", string(b))
 	// The bytes must be valid JSON but we can't assume they are free of
 	// whitespace... So we will use some tools.
-	buf = text.New(b)
+	buf = text.NewBuffer(b)
 	// First there must be an opening bracket.
 	if e = buf.ScanThrough('['); e != nil {
 		return
