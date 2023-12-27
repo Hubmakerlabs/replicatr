@@ -7,7 +7,7 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *BadgerBackend) runMigrations() error {
+func (b *Backend) runMigrations() error {
 	return b.Update(func(txn *badger.Txn) error {
 		var version uint16
 
@@ -59,7 +59,7 @@ func (b *BadgerBackend) runMigrations() error {
 	})
 }
 
-func (b *BadgerBackend) bumpVersion(txn *badger.Txn, version uint16) error {
+func (b *Backend) bumpVersion(txn *badger.Txn, version uint16) error {
 	buf := make([]byte, 2)
 	binary.BigEndian.PutUint16(buf, version)
 	return txn.Set([]byte{dbVersionKey}, buf)

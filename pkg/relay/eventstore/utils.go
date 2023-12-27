@@ -2,18 +2,17 @@ package eventstore
 
 import (
 	"encoding/hex"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"strconv"
 	"strings"
 )
 
-func GetAddrTagElements(tagValue string) (k kind.T, pkb []byte, d string) {
+func GetAddrTagElements(tagValue string) (kind uint16, pkb []byte, d string) {
 	spl := strings.Split(tagValue, ":")
 	if len(spl) == 3 {
 		if pkb, _ := hex.DecodeString(spl[1]); len(pkb) == 32 {
-			if k, err := strconv.ParseUint(spl[0], 10, 16); err == nil {
-				return kind.T(k), pkb, spl[2]
+			if kind, err := strconv.ParseUint(spl[0], 10, 16); err == nil {
+				return uint16(kind), pkb, spl[2]
 			}
 		}
 	}

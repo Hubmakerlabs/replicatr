@@ -3,10 +3,10 @@ package badger
 import (
 	"encoding/binary"
 	"encoding/hex"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	log2 "mleku.online/git/log"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 	"golang.org/x/exp/slices"
 )
 
@@ -24,7 +24,7 @@ func getTagIndexPrefix(tagValue string) ([]byte, int) {
 		// store value in the new special "a" tag index
 		k = make([]byte, 1+2+8+len(d)+4+4)
 		k[0] = indexTagAddrPrefix
-		binary.BigEndian.PutUint16(k[1:], uint16(kind))
+		binary.BigEndian.PutUint16(k[1:], kind)
 		copy(k[1+2:], pkb[0:8])
 		copy(k[1+2+8:], d)
 		offset = 1 + 2 + 8 + len(d)
@@ -47,11 +47,10 @@ func getTagIndexPrefix(tagValue string) ([]byte, int) {
 
 func getIndexKeysForEvent(evt *nip1.Event, idx []byte) [][]byte {
 	keys := make([][]byte, 0, 18)
-
 	// indexes
 	{
 		// ~ by id
-		idPrefix8, _ := hex.DecodeString(string(evt.ID)[0 : 8*2])
+		idPrefix8 := evt.ID.Bytes()[:8]
 		k := make([]byte, 1+8+4)
 		k[0] = indexIdPrefix
 		copy(k[1:], idPrefix8)
@@ -61,7 +60,7 @@ func getIndexKeysForEvent(evt *nip1.Event, idx []byte) [][]byte {
 
 	{
 		// ~ by pubkey+date
-		pubkeyPrefix8, _ := hex.DecodeString(evt.PubKey[0 : 8*2])
+		pubkeyPrefix8, _ := hex.DecodeString(evt.PubKey[:8*2])
 		k := make([]byte, 1+8+4+4)
 		k[0] = indexPubkeyPrefix
 		copy(k[1:], pubkeyPrefix8)
@@ -82,7 +81,7 @@ func getIndexKeysForEvent(evt *nip1.Event, idx []byte) [][]byte {
 
 	{
 		// ~ by pubkey+kind+date
-		pubkeyPrefix8, _ := hex.DecodeString(evt.PubKey[0 : 8*2])
+		pubkeyPrefix8, _ := hex.DecodeString(evt.PubKey[:8*2])
 		k := make([]byte, 1+8+2+4+4)
 		k[0] = indexPubkeyKindPrefix
 		copy(k[1:], pubkeyPrefix8)
