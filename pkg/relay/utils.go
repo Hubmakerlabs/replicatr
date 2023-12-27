@@ -8,17 +8,17 @@ import (
 )
 
 const (
-	wsKey = iota
-	subscriptionIdKey
+	WebsocketContextKey = iota
+	SubscriptionIDContextKey
 )
 
 func RequestAuth(ctx context.Context) {
 	ws := GetConnection(ctx)
-	ws.WriteJSON(nip42.AuthChallengeEnvelope{Challenge: ws.Challenge})
+	log.D.Chk(ws.WriteJSON(nip42.AuthChallengeEnvelope{Challenge: ws.Challenge}))
 }
 
 func GetConnection(ctx context.Context) *WebSocket {
-	return ctx.Value(wsKey).(*WebSocket)
+	return ctx.Value(WebsocketContextKey).(*WebSocket)
 }
 
 func GetAuthed(ctx context.Context) string {
@@ -30,7 +30,7 @@ func GetIP(ctx context.Context) string {
 }
 
 func GetSubscriptionID(ctx context.Context) string {
-	return ctx.Value(subscriptionIdKey).(string)
+	return ctx.Value(SubscriptionIDContextKey).(string)
 }
 
 func GetOpenSubscriptions(ctx context.Context) []nip1.Filter {
