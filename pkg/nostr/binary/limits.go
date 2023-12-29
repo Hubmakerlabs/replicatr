@@ -3,7 +3,7 @@ package binary
 import (
 	"math"
 
-	"github.com/nbd-wtf/go-nostr"
+	nostr "github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 )
 
 const (
