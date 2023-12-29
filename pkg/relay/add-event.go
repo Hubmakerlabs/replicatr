@@ -7,7 +7,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/fiatjaf/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 )
 
 func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) error {

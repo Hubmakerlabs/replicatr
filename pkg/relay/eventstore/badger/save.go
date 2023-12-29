@@ -4,8 +4,8 @@ import (
 	"context"
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 	"github.com/dgraph-io/badger/v4"
-	"github.com/fiatjaf/eventstore"
 )
 
 func (b *Backend) SaveEvent(ctx context.Context, evt *nip1.Event) error {
