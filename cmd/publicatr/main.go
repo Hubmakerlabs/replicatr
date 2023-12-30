@@ -18,10 +18,12 @@ import (
 	"github.com/urfave/cli/v2"
 	log2 "mleku.online/git/log"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
 	"github.com/fatih/color"
-	"github.com/nbd-wtf/go-nostr"
-	"github.com/nbd-wtf/go-nostr/nip04"
-	"github.com/nbd-wtf/go-nostr/nip19"
 )
 
 var (
@@ -59,8 +61,8 @@ type Config struct {
 
 // Event is
 type Event struct {
-	Event   *nostr.Event `json:"event"`
-	Profile Profile      `json:"profile"`
+	Event   *nip1.Event `json:"event"`
+	Profile Profile     `json:"profile"`
 }
 
 // Profile is
@@ -124,7 +126,7 @@ func loadConfig(profile string) (*Config, error) {
 	}
 	if len(cfg.Relays) == 0 {
 		cfg.Relays = map[string]Relay{}
-		cfg.Relays["wss://relay.nostr.band"] = Relay{
+		cfg.Relays["wss://relay.nip1.band"] = Relay{
 			Read:   true,
 			Write:  true,
 			Search: true,
@@ -138,7 +140,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 	var mu sync.Mutex
 	var pub string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-		if pub, err = nostr.GetPublicKey(s.(string)); err != nil {
+		if pub, err = nip19.GetPublicKey(s.(string)); err != nil {
 			return nil, err
 		}
 	} else {
@@ -155,8 +157,8 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		cfg.Do(Relay{Read: true},
 			func(ctx context.Context, relay *nostr.Relay) bool {
 				evs, err := relay.QuerySync(ctx,
-					nostr.Filter{
-						Kinds:   []int{nostr.KindContactList},
+					nip1.Filter{
+						Kinds:   kind.Array{kind.ContactList},
 						Authors: []string{pub},
 						Limit:   1,
 					})
@@ -203,8 +205,8 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 
 				// get follower's descriptions
 				cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-					evs, err := relay.QuerySync(ctx, nostr.Filter{
-						Kinds:   []int{nostr.KindProfileMetadata},
+					evs, err := relay.QuerySync(ctx, nip1.Filter{
+						Kinds:   kind.Array{kind.ProfileMetadata},
 						Authors: follows[i:end], // Use the updated end index
 					})
 					if err != nil {
@@ -274,9 +276,9 @@ func (cfg *Config) Do(r Relay, f func(context.Context, *nostr.Relay) bool) {
 			continue
 		}
 		wg.Add(1)
-		go func(wg *sync.WaitGroup, k string, v Relay) {
+		go func(wg *sync.WaitGroup, url string, rl Relay) {
 			defer wg.Done()
-			relay, err := nostr.RelayConnect(ctx, k)
+			relay, err := nostr.RelayConnect(ctx, url)
 			if err != nil {
 				if cfg.verbose {
 					fmt.Fprintln(os.Stderr, err)
@@ -316,12 +318,12 @@ func (cfg *Config) save(profile string) error {
 }
 
 // Decode is
-func (cfg *Config) Decode(ev *nostr.Event) error {
+func (cfg *Config) Decode(ev *nip1.Event) error {
 	var sk string
 	var pub string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
 		sk = s.(string)
-		if pub, err = nostr.GetPublicKey(s.(string)); err != nil {
+		if pub, err = nip19.GetPublicKey(s.(string)); err != nil {
 			return err
 		}
 	} else {
@@ -339,11 +341,11 @@ func (cfg *Config) Decode(ev *nostr.Event) error {
 	} else {
 		sp = ev.PubKey
 	}
-	ss, err := nip04.ComputeSharedSecret(sp, sk)
+	ss, err := nip4.ComputeSharedSecret(sp, sk)
 	if err != nil {
 		return err
 	}
-	content, err := nip04.Decrypt(ev.Content, ss)
+	content, err := nip4.Decrypt(ev.Content, ss)
 	if err != nil {
 		return err
 	}
@@ -352,7 +354,7 @@ func (cfg *Config) Decode(ev *nostr.Event) error {
 }
 
 // PrintEvents is
-func (cfg *Config) PrintEvents(evs []*nostr.Event,
+func (cfg *Config) PrintEvents(evs []*nip1.Event,
 	followsMap map[string]Profile, j, extra bool) {
 
 	if j {
@@ -396,7 +398,7 @@ func (cfg *Config) PrintEvents(evs []*nostr.Event,
 }
 
 // Events is
-func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
+func (cfg *Config) Events(filter nip1.Filter) []*nip1.Event {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
@@ -414,7 +416,7 @@ func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
 			}
 			for _, ev := range evs {
 				if _, ok := m.Load(ev.ID); !ok {
-					if ev.Kind == nostr.KindEncryptedDirectMessage {
+					if ev.Kind == kind.EncryptedDirectMessage {
 						if err := cfg.Decode(ev); err != nil {
 							continue
 						}
@@ -446,15 +448,15 @@ func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
 		if !ok {
 			return false
 		}
-		return lhs.(*nostr.Event).CreatedAt.Time().Before(rhs.(*nostr.Event).CreatedAt.Time())
+		return lhs.(*nip1.Event).CreatedAt.Time().Before(rhs.(*nip1.Event).CreatedAt.Time())
 	})
-	var evs []*nostr.Event
+	var evs []*nip1.Event
 	for _, key := range keys {
 		vv, ok := m.Load(key)
 		if !ok {
 			continue
 		}
-		evs = append(evs, vv.(*nostr.Event))
+		evs = append(evs, vv.(*nip1.Event))
 	}
 	return evs
 }
@@ -466,8 +468,8 @@ func doVersion(cCtx *cli.Context) error {
 
 func main() {
 	app := &cli.App{
-		Usage:       "A cli application for nostr",
-		Description: "A cli application for nostr",
+		Usage:       "A cli application for nip1",
+		Description: "A cli application for nip1",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "a", Usage: "profile name"},
 			&cli.StringFlag{Name: "relays", Usage: "relays"},
@@ -490,7 +492,7 @@ func main() {
 				Usage: "show stream",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "author"},
-					&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(nostr.KindTextNote)},
+					&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(int(kind.TextNote))},
 					&cli.BoolFlag{Name: "follow"},
 					&cli.StringFlag{Name: "pattern"},
 					&cli.StringFlag{Name: "reply"},

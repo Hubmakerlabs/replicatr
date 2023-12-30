@@ -40,7 +40,7 @@ func (C *CountRequestEnvelope) ToArray() array.T {
 
 // MarshalJSON returns the JSON encoded form of the envelope.
 func (C *CountRequestEnvelope) MarshalJSON() (bytes []byte, e error) {
-	// log.D.F("count envelope marshal")
+	// log.D.F("count request envelope marshal")
 	return C.ToArray().Bytes(), nil
 }
 
@@ -111,6 +111,8 @@ type CountResponseEnvelope struct {
 	Approximate    bool
 }
 
+var _ nip1.Enveloper = &CountResponseEnvelope{}
+
 func NewCountResponseEnvelope(sid nip1.SubscriptionID, count int64,
 	approx bool) (C *CountResponseEnvelope) {
 	C = &CountResponseEnvelope{
@@ -133,6 +135,11 @@ func (C *CountResponseEnvelope) ToArray() array.T {
 			object.KV{Key: "approximate", Value: C.Approximate})
 	}
 	return array.T{COUNT, C.SubscriptionID, count}
+}
+
+func (C *CountResponseEnvelope) MarshalJSON() (bytes []byte, e error) {
+	// log.D.F("count envelope marshal")
+	return C.ToArray().Bytes(), nil
 }
 
 func (C *CountResponseEnvelope) Unmarshal(buf *text.Buffer) (e error) {

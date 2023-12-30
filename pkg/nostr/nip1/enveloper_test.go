@@ -3,12 +3,11 @@ package nip1_test
 import (
 	"encoding/json"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	log2 "mleku.online/git/log"
 	"testing"
 )
 
 func TestEnveloper(t *testing.T) {
-	log2.SetLogLevel(log2.Debug)
+	// log2.SetLogLevel(log2.Debug)
 	const sub = "subscription000001"
 	envs := []nip1.Enveloper{
 		&nip1.EventEnvelope{SubscriptionID: sub, Event: events[0]},
@@ -36,7 +35,7 @@ func TestEnveloper(t *testing.T) {
 			t.Fatal(e)
 		}
 		var um []byte
-		// log.I.Ln("marshaling")
+		log.I.Ln("marshaling")
 		um, e = json.Marshal(env)
 		unmarshaled := string(um)
 		log.D.Ln("unmarshaled", unmarshaled)

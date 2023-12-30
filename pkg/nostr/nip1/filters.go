@@ -75,7 +75,14 @@ func (f *Filter) ToObject() (o object.T) {
 	// temp slice and sort it.
 	var tmp object.T
 	for i := range f.Tags {
-		tmp = append(tmp, object.KV{Key: i, Value: f.Tags[i]})
+		key := i
+		if len(i) == 1 {
+			v := i[0]
+			if v >= 'a' && v <= 'z' || v >= 'A' && v <= 'Z' {
+				key = "#" + i
+			}
+		}
+		tmp = append(tmp, object.KV{Key: key, Value: f.Tags[i]})
 	}
 	sort.Sort(tmp)
 	o = append(o, tmp...)
@@ -100,11 +107,12 @@ func (f *Filter) UnmarshalJSON(b []byte) (e error) {
 	if f == nil {
 		return fmt.Errorf("cannot unmarshal into nil Filter")
 	}
-	uf := &UnmarshalingFilter{}
-	if e = json.Unmarshal(b, uf); fails(e) {
+	log.D.F("unmarshaling filter `%s`", b)
+	var uf UnmarshalingFilter
+	if e = json.Unmarshal(b, &uf); fails(e) {
 		return
 	}
-	if e = CopyUnmarshalFilterToFilter(uf, f); fails(e) {
+	if e = CopyUnmarshalFilterToFilter(&uf, f); fails(e) {
 		return
 	}
 	return
