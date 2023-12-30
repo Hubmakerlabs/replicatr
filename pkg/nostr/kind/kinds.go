@@ -16,6 +16,7 @@ type T uint16
 // compiler at compile time.
 const (
 	ProfileMetadata               T = 0
+	SetMetadata                   T = 0
 	TextNote                      T = 1
 	RecommendServer               T = 2
 	ContactList                   T = 3

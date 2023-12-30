@@ -17,8 +17,12 @@ type ReqEnvelope struct {
 // be retrieved using nip1.Labels[Label]
 func (E *ReqEnvelope) Label() (l Label) { return LReq }
 
-func (E *ReqEnvelope) ToArray() array.T {
-	return array.T{REQ, E.SubscriptionID, E.Filters}
+func (E *ReqEnvelope) ToArray() (arr array.T) {
+	arr = array.T{REQ, E.SubscriptionID}
+	for _, f := range E.Filters {
+		arr = append(arr, f.ToObject())
+	}
+	return
 }
 
 func (E *ReqEnvelope) String() (s string) {
@@ -39,6 +43,7 @@ func (E *ReqEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
+	log.D.F("REQ '%s'", buf.Buf[buf.Pos:])
 	// Next, find the comma after the label
 	if e = buf.ScanThrough(','); e != nil {
 		return
@@ -52,30 +57,43 @@ func (E *ReqEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	if sid, e = buf.ReadUntil('"'); fails(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
+	log.D.F("Subscription ID: '%s'", sid)
 	E.SubscriptionID = SubscriptionID(sid)
-	// find the opening brace of the event object, usually this is the very next
-	// character, we aren't checking for valid whitespace because laziness.
-	if e = buf.ScanUntil('['); e != nil {
-		return fmt.Errorf("event not found in event envelope")
-	}
-	// now we should have an event object next. It has no embedded object so it
-	// should end with a close brace. This slice will be wrapped in braces and
-	// contain paired brackets, braces and quotes.
-	var filterArray []byte
-	if filterArray, e = buf.ReadEnclosed(); fails(e) {
+	// Next, find the comma (there must be one and at least one object brace
+	// after it
+	if e = buf.ScanThrough(','); e != nil {
 		return
 	}
-	if e = json.Unmarshal(filterArray, &E.Filters); fails(e) {
-		return
+	var which byte
+	for {
+		// find the opening brace of the event object, usually this is the very
+		// next character, we aren't checking for valid whitespace because
+		// laziness.
+		if e = buf.ScanUntil('{'); e != nil {
+			return fmt.Errorf("event not found in event envelope")
+		}
+		// now we should have an event object next. It has no embedded object so
+		// it should end with a close brace. This slice will be wrapped in
+		// braces and contain paired brackets, braces and quotes.
+		var filterArray []byte
+		if filterArray, e = buf.ReadEnclosed(); fails(e) {
+			return
+		}
+		log.D.F("filter: '%s'", filterArray)
+		var f Filter
+		if e = json.Unmarshal(filterArray, &f); fails(e) {
+			return
+		}
+		E.Filters = append(E.Filters, f)
+		log.D.F("remaining: '%s'", buf.Buf[buf.Pos:])
+		which = 0
+		if which, e = buf.ScanForOneOf(true, ',', ']'); fails(e) {
+			return
+		}
+		log.D.F("'%s'", string(which))
+		if which == ']' {
+			break
+		}
 	}
-	// // technically we maybe should read ahead further to make sure the JSON
-	// // closes correctly. Not going to abort because of this.
-	// //
-	// TODO: this is a waste of time really, the rest of the buffer will be
-	//  discarded anyway as no more content is expected
-	// if e = buf.ScanUntil(']'); e != nil {
-	// 	return fmt.Errorf("malformed JSON, no closing bracket on array")
-	// }
-	// whatever remains doesn't matter as the envelope has fully unmarshaled.
 	return
 }

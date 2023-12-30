@@ -58,6 +58,8 @@ func (ev *Event) MarshalJSON() (bytes []byte, e error) {
 	return b, nil
 }
 
+func (ev *Event) Serialize() []byte { return ev.ToObject().Bytes() }
+
 // ToCanonical returns a structure that provides a byte stringer that generates
 // the canonical form used to generate the ID hash that can be signed.
 func (ev *Event) ToCanonical() (o array.T) {

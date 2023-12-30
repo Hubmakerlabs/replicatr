@@ -179,6 +179,9 @@ func (b *Buffer) ReadEnclosed() (bb []byte, e error) {
 		switch b.Buf[i] {
 		case '"':
 			if inQuotes {
+				if i > 0 {
+
+				}
 				inQuotes = false
 			} else {
 				inQuotes = true
@@ -194,6 +197,7 @@ func (b *Buffer) ReadEnclosed() (bb []byte, e error) {
 		}
 		if depth == 0 {
 			bb = b.Buf[b.Pos : i+1]
+			b.Pos = i + 1
 			return
 		}
 	}

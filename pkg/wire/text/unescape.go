@@ -125,6 +125,7 @@ func SecondHexCharToValue(in byte) (out byte) {
 // characters that must be escaped for JSON/HTML encoding. This means octal
 // `\xxx` unicode backslash escapes \uXXXX and \UXXXX
 func UnescapeByteString(bs []byte) (o []byte) {
+	log.D.F("'%s'", bs)
 	in := NewBuffer(bs)  // read side
 	out := NewBuffer(bs) // write side
 	var e error
@@ -135,8 +136,9 @@ next:
 		// find the first escape character.
 		// start := in.Pos
 		if segment, e = in.ReadUntil('\\'); e != nil {
-			// log.D.F("'%s'", string(in.Buf[start:]))
+			log.D.F("'%s'", string(in.Buf[in.Pos:]))
 			if len(segment) > 0 {
+				log.D.F("'%s'", string(segment))
 				if e = out.WriteBytes(segment); fails(e) {
 					break next
 				}

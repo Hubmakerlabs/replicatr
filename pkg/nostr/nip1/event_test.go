@@ -103,7 +103,7 @@ func GenTextNote(sk *secp256k1.SecretKey, replyID,
 }
 
 func TestGenerateEvent(t *testing.T) {
-	log2.SetLogLevel(log2.Debug)
+	// log2.SetLogLevel(log2.Debug)
 	var e error
 	var note, noteID, relayURL string
 	sec, pub := GetTestKeyPair()
@@ -124,7 +124,7 @@ func TestEventSerialization(t *testing.T) {
 		var e error
 
 		b, e = json.Marshal(evt)
-		t.Log(string(b))
+		// t.Log(string(b))
 		var re nip1.Event
 		if e = json.Unmarshal(b, &re); e != nil {
 			t.Log(string(b))
