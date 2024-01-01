@@ -88,11 +88,12 @@ func Encrypt(message string, key []byte) (string, error) {
 	plaintext := []byte(message)
 	// add padding
 	base := len(plaintext)
-	// this will be a number between 1 and 16 (including), never 0
-	padding := block.BlockSize() - base%block.BlockSize()
+	// this will be a number between 1 and 16 (inclusive), never 0
+	bs := block.BlockSize()
+	padding := bs - base%bs
 	// encode the padding in all the padding bytes themselves
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	paddedMsgBytes := append(plaintext, padtext...)
+	padText := bytes.Repeat([]byte{byte(padding)}, padding)
+	paddedMsgBytes := append(plaintext, padText...)
 	ciphertext := make([]byte, len(paddedMsgBytes))
 	mode.CryptBlocks(ciphertext, paddedMsgBytes)
 	return base64.StdEncoding.EncodeToString(ciphertext) + "?iv=" +
@@ -101,40 +102,42 @@ func Encrypt(message string, key []byte) (string, error) {
 
 // Decrypt decrypts a content string using the shared secret key.
 // The inverse operation to message -> Encrypt(message, key).
-func Decrypt(content string, key []byte) (string, error) {
+func Decrypt(content string, key []byte) ([]byte, error) {
 	parts := strings.Split(content, "?iv=")
 	if len(parts) < 2 {
-		return "", fmt.Errorf(
+		return nil, fmt.Errorf(
 			"error parsing encrypted message: no initialization vector")
 	}
 	ciphertext, e := base64.StdEncoding.DecodeString(parts[0])
 	if e != nil {
-		return "", fmt.Errorf(
+		return nil, fmt.Errorf(
 			"error decoding ciphertext from base64: %w", e)
 	}
-	iv, e := base64.StdEncoding.DecodeString(parts[1])
+	var iv []byte
+	iv, e = base64.StdEncoding.DecodeString(parts[1])
 	if e != nil {
-		return "", fmt.Errorf("error decoding iv from base64: %w", e)
+		return nil, fmt.Errorf("error decoding iv from base64: %w", e)
 	}
-	block, e := aes.NewCipher(key)
+	var block cipher.Block
+	block, e = aes.NewCipher(key)
 	if e != nil {
-		return "", fmt.Errorf("error creating block cipher: %w", e)
+		return nil, fmt.Errorf("error creating block cipher: %w", e)
 	}
 	mode := cipher.NewCBCDecrypter(block, iv)
 	plaintext := make([]byte, len(ciphertext))
 	mode.CryptBlocks(plaintext, ciphertext)
 	// remove padding
 	var (
-		message      = string(plaintext)
+		message      = plaintext
 		plaintextLen = len(plaintext)
 	)
 	if plaintextLen > 0 {
 		// the padding amount is encoded in the padding bytes themselves
 		padding := int(plaintext[plaintextLen-1])
 		if padding > plaintextLen {
-			return "", fmt.Errorf("invalid padding amount: %d", padding)
+			return nil, fmt.Errorf("invalid padding amount: %d", padding)
 		}
-		message = string(plaintext[0 : plaintextLen-padding])
+		message = plaintext[0 : plaintextLen-padding]
 	}
 	return message, nil
 }

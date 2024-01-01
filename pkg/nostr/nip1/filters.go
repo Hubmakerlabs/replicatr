@@ -11,7 +11,7 @@ import (
 	"sort"
 )
 
-type Filters []Filter
+type Filters []*Filter
 
 func (eff Filters) ToArray() (a array.T) {
 	for i := range eff {

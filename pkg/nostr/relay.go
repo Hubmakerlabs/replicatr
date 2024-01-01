@@ -40,27 +40,22 @@ func (s Status) String() string {
 	case PublishStatusSucceeded:
 		return "success"
 	}
-
 	return "unknown"
 }
 
 type Relay struct {
-	URL           string
-	RequestHeader http.Header // e.g. for origin header
-
-	Connection    *Connection
-	Subscriptions *xsync.MapOf[string, *Subscription]
-
-	ConnectionError         error
-	connectionContext       context.Context // will be canceled when the connection closes
-	connectionContextCancel context.CancelFunc
-
+	URL                           string
+	RequestHeader                 http.Header // e.g. for origin header
+	Connection                    *Connection
+	Subscriptions                 *xsync.MapOf[string, *Subscription]
+	Err                           error
+	ctx                           context.Context // will be canceled when the connection closes
+	cancel                        context.CancelFunc
 	challenges                    chan string // NIP-42 challenges
 	notices                       chan string // NIP-01 NOTICEs
 	okCallbacks                   *xsync.MapOf[string, func(bool, *string)]
 	writeQueue                    chan writeRequest
 	subscriptionChannelCloseQueue chan *Subscription
-
 	// custom things that aren't often used
 	//
 	AssumeValid bool // this will skip verifying signatures for events received from this relay
@@ -72,18 +67,17 @@ type writeRequest struct {
 }
 
 // NewRelay returns a new relay. The relay connection will be closed when the context is canceled.
-func NewRelay(ctx context.Context, url string, opts ...RelayOption) *Relay {
+func NewRelay(ctx context.Context, url string, opts ...RelayOption) (r *Relay) {
 	ctx, cancel := context.WithCancel(ctx)
-	r := &Relay{
+	r = &Relay{
 		URL:                           normalize.URL(url),
-		connectionContext:             ctx,
-		connectionContextCancel:       cancel,
+		ctx:                           ctx,
+		cancel:                        cancel,
 		Subscriptions:                 xsync.NewMapOf[*Subscription](),
 		okCallbacks:                   xsync.NewMapOf[func(bool, *string)](),
 		writeQueue:                    make(chan writeRequest),
 		subscriptionChannelCloseQueue: make(chan *Subscription),
 	}
-
 	for _, opt := range opts {
 		switch o := opt.(type) {
 		case WithNoticeHandler:
@@ -106,24 +100,29 @@ func NewRelay(ctx context.Context, url string, opts ...RelayOption) *Relay {
 						},
 						Content: "",
 					}
-					if ok := o(r.connectionContext, authEvent); ok {
-						r.Auth(r.connectionContext, authEvent)
+					var e error
+					var status Status
+					if ok := o(r.ctx, authEvent); ok {
+						if status, e = r.Auth(r.ctx, authEvent); fails(e) {
+						}
+						log.D.Ln(status.String())
 					}
 				}
 			}()
 		}
 	}
-
 	return r
 }
 
 // RelayConnect returns a relay object connected to url.
 // Once successfully connected, cancelling ctx has no effect.
 // To close the connection, call r.Close().
-func RelayConnect(ctx context.Context, url string, opts ...RelayOption) (*Relay, error) {
-	r := NewRelay(context.Background(), url, opts...)
-	err := r.Connect(ctx)
-	return r, err
+func RelayConnect(ctx context.Context, url string,
+	opts ...RelayOption) (r *Relay, e error) {
+
+	r = NewRelay(context.Background(), url, opts...)
+	e = r.Connect(ctx)
+	return
 }
 
 // When instantiating relay connections, some options may be passed.
@@ -140,6 +139,7 @@ type WithNoticeHandler func(notice string)
 
 func (_ WithNoticeHandler) IsRelayOption() {}
 
+// compile time interface check
 var _ RelayOption = (WithNoticeHandler)(nil)
 
 // WithAuthHandler takes an auth event and expects it to be signed.
@@ -148,18 +148,17 @@ type WithAuthHandler func(ctx context.Context, authEvent *nip1.Event) (ok bool)
 
 func (_ WithAuthHandler) IsRelayOption() {}
 
+// compile time interface check
 var _ RelayOption = (WithAuthHandler)(nil)
 
 // String just returns the relay URL.
-func (r *Relay) String() string {
-	return r.URL
-}
+func (r *Relay) String() string { return r.URL }
 
 // Context retrieves the context that is associated with this relay connection.
-func (r *Relay) Context() context.Context { return r.connectionContext }
+func (r *Relay) Context() context.Context { return r.ctx }
 
 // IsConnected returns true if the connection to this relay seems to be active.
-func (r *Relay) IsConnected() bool { return r.connectionContext.Err() == nil }
+func (r *Relay) IsConnected() bool { return r.ctx.Err() == nil }
 
 // Connect tries to establish a websocket connection to r.URL.
 // If the context expires before the connection is complete, an error is returned.
@@ -169,34 +168,29 @@ func (r *Relay) IsConnected() bool { return r.connectionContext.Err() == nil }
 // The underlying relay connection will use a background context. If you want to
 // pass a custom context to the underlying relay connection, use NewRelay() and
 // then Relay.Connect().
-func (r *Relay) Connect(ctx context.Context) error {
-	if r.connectionContext == nil || r.Subscriptions == nil {
+func (r *Relay) Connect(ctx context.Context) (e error) {
+	if r.ctx == nil || r.Subscriptions == nil {
 		return fmt.Errorf("relay must be initialized with a call to NewRelay()")
 	}
-
 	if r.URL == "" {
 		return fmt.Errorf("invalid relay URL '%s'", r.URL)
 	}
-
 	if _, ok := ctx.Deadline(); !ok {
-		// if no timeout is set, force it to 7 seconds
+		// if no timeout is set, set it to 7 seconds
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, 7*time.Second)
 		defer cancel()
 	}
-
-	conn, err := NewConnection(ctx, r.URL, r.RequestHeader)
-	if err != nil {
-		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, err)
+	var conn *Connection
+	if conn, e = NewConnection(ctx, r.URL, r.RequestHeader); fails(e) {
+		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, e)
 	}
 	r.Connection = conn
-
 	// ping every 29 seconds
 	ticker := time.NewTicker(29 * time.Second)
-
 	// to be used when the connection is closed
 	go func() {
-		<-r.connectionContext.Done()
+		<-r.ctx.Done()
 		// close these things when the connection is closed
 		if r.challenges != nil {
 			close(r.challenges)
@@ -218,19 +212,19 @@ func (r *Relay) Connect(ctx context.Context) error {
 		for {
 			select {
 			case <-ticker.C:
-				err := wsutil.WriteClientMessage(r.Connection.conn, ws.OpPing, nil)
-				if err != nil {
-					log.E.F("{%s} error writing ping: %v; closing websocket", r.URL, err)
-					r.Close() // this should trigger a context cancelation
+				if e := wsutil.WriteClientMessage(r.Connection.conn, ws.OpPing, nil); fails(e) {
+					log.E.F("{%s} error writing ping: %v; closing websocket", r.URL, e)
+					if e = r.Close(); fails(e) {
+					} // this should trigger a context cancelation
 					return
 				}
-			case writeRequest := <-r.writeQueue:
+			case writeReq := <-r.writeQueue:
 				// all write requests will go through this to prevent races
-				if err := r.Connection.WriteMessage(writeRequest.msg); err != nil {
-					writeRequest.answer <- err
+				if e := r.Connection.WriteMessage(writeReq.msg); fails(e) {
+					writeReq.answer <- e
 				}
-				close(writeRequest.answer)
-			case <-r.connectionContext.Done():
+				close(writeReq.answer)
+			case <-r.ctx.Done():
 				// stop here
 				return
 			}
@@ -240,18 +234,17 @@ func (r *Relay) Connect(ctx context.Context) error {
 	// general message reader loop
 	go func() {
 		buf := new(bytes.Buffer)
-
 		for {
 			buf.Reset()
-			if e := conn.ReadMessage(r.connectionContext, buf); fails(e) {
-				r.ConnectionError = e
+			if e := conn.ReadMessage(r.ctx, buf); fails(e) {
+				r.Err = e
 				r.Close()
 				break
 			}
-
 			message := buf.Bytes()
 			log.D.F("{%s} %v", r.URL, string(message))
-			envelope, _, _, e := nip1.ProcessEnvelope(message)
+			var envelope nip1.Enveloper
+			envelope, _, _, e = nip1.ProcessEnvelope(message)
 			if envelope == nil || fails(e) {
 				continue
 			}
@@ -277,28 +270,26 @@ func (r *Relay) Connect(ctx context.Context) error {
 					continue
 				}
 				if subscription, ok := r.Subscriptions.Load(string(env.SubscriptionID)); !ok {
-					// InfoLogger.Printf("{%s} no subscription with id '%s'\n", r.URL, *env.SubscriptionID)
+					log.D.F("{%s} no subscription with id '%s'", r.URL, env.SubscriptionID)
 					continue
 				} else {
 					// check if the event matches the desired filter, ignore otherwise
 					if !subscription.Filters.Match(env.Event) {
-						log.E.F("{%s} filter does not match: %v ~ %v\n",
+						log.E.F("{%s} filter does not match: %v ~ %v",
 							r.URL, subscription.Filters, env.Event)
 						continue
 					}
-
 					// check signature, ignore invalid, except from trusted (AssumeValid) relays
 					if !r.AssumeValid {
-						if ok, err := env.Event.CheckSignature(); !ok {
-							errmsg := ""
-							if err != nil {
-								errmsg = err.Error()
+						if ok, e = env.Event.CheckSignature(); !ok {
+							msg := ""
+							if fails(e) {
+								msg = e.Error()
 							}
-							log.E.F("{%s} bad signature: %s\n", r.URL, errmsg)
+							log.E.F("{%s} bad signature: %s\n", r.URL, msg)
 							continue
 						}
 					}
-
 					// dispatch this to the internal .events channel of the subscription
 					subscription.dispatchEvent(env.Event)
 				}
@@ -319,7 +310,6 @@ func (r *Relay) Connect(ctx context.Context) error {
 			}
 		}
 	}()
-
 	return nil
 }
 
@@ -328,7 +318,7 @@ func (r *Relay) Write(msg []byte) <-chan error {
 	ch := make(chan error)
 	select {
 	case r.writeQueue <- writeRequest{msg: msg, answer: ch}:
-	case <-r.connectionContext.Done():
+	case <-r.ctx.Done():
 		go func() { ch <- fmt.Errorf("connection closed") }()
 	}
 	return ch
@@ -336,53 +326,46 @@ func (r *Relay) Write(msg []byte) <-chan error {
 
 // Publish sends an "EVENT" command to the relay r as in NIP-01.
 // Status can be: success, failed, or sent (no response from relay before ctx times out).
-func (r *Relay) Publish(ctx context.Context, event *nip1.Event) (Status, error) {
-	status := PublishStatusFailed
-	var err error
-
+func (r *Relay) Publish(ctx context.Context, event *nip1.Event) (s Status, e error) {
+	s = PublishStatusFailed
 	// data races on status variable without this mutex
 	var mu sync.Mutex
-
 	if _, ok := ctx.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, 7*time.Second)
 		defer cancel()
 	}
-
 	// make it cancellable so we can stop everything upon receiving an "OK"
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithCancel(ctx)
 	defer cancel()
-
 	// listen for an OK callback
 	okCallback := func(ok bool, msg *string) {
 		mu.Lock()
 		defer mu.Unlock()
 		if ok {
-			status = PublishStatusSucceeded
+			s = PublishStatusSucceeded
 		} else {
-			status = PublishStatusFailed
+			s = PublishStatusFailed
 			reason := ""
 			if msg != nil {
 				reason = *msg
 			}
-			err = fmt.Errorf("msg: %s", reason)
+			e = fmt.Errorf("msg: %s", reason)
 		}
 		cancel()
 	}
 	r.okCallbacks.Store(string(event.ID), okCallback)
 	defer r.okCallbacks.Delete(string(event.ID))
-
 	// publish event
 	envb, _ := (&nip1.EventEnvelope{Event: event}).MarshalJSON()
 	log.D.F("{%s} sending %v\n", r.URL, envb)
-	status = PublishStatusSent
-	if err := <-r.Write(envb); err != nil {
-		status = PublishStatusFailed
-		return status, err
+	s = PublishStatusSent
+	if e = <-r.Write(envb); fails(e) {
+		s = PublishStatusFailed
+		return
 	}
-
 	for {
 		select {
 		case <-ctx.Done(): // this will be called when we get an OK
@@ -390,42 +373,37 @@ func (r *Relay) Publish(ctx context.Context, event *nip1.Event) (Status, error) 
 			// e.g. if this happens because of the timeout then status will probably be "failed"
 			//      but if it happens because okCallback was called then it might be "succeeded"
 			// do not return if okCallback is in process
-			return status, err
-		case <-r.connectionContext.Done():
+			return
+		case <-r.ctx.Done():
 			// same as above, but when the relay loses connectivity entirely
-			return status, err
+			return
 		}
 	}
 }
 
 // Auth sends an "AUTH" command client -> relay as in NIP-42.
 // Status can be: success, failed, or sent (no response from relay before ctx times out).
-func (r *Relay) Auth(ctx context.Context, event *nip1.Event) (Status, error) {
-	status := PublishStatusFailed
-	var e error
-
-	// data races on status variable without this mutex
+func (r *Relay) Auth(ctx context.Context, event *nip1.Event) (s Status, e error) {
+	s = PublishStatusFailed
+	// data races on s variable without this mutex
 	var mu sync.Mutex
-
 	if _, ok := ctx.Deadline(); !ok {
 		// if no timeout is set, force it to 3 seconds
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, 3*time.Second)
 		defer cancel()
 	}
-
 	// make it cancellable so we can stop everything upon receiving an "OK"
 	var cancel context.CancelFunc
 	ctx, cancel = context.WithCancel(ctx)
 	defer cancel()
-
 	// listen for an OK callback
 	okCallback := func(ok bool, msg *string) {
 		mu.Lock()
 		if ok {
-			status = PublishStatusSucceeded
+			s = PublishStatusSucceeded
 		} else {
-			status = PublishStatusFailed
+			s = PublishStatusFailed
 			reason := ""
 			if msg != nil {
 				reason = *msg
@@ -437,26 +415,24 @@ func (r *Relay) Auth(ctx context.Context, event *nip1.Event) (Status, error) {
 	}
 	r.okCallbacks.Store(string(event.ID), okCallback)
 	defer r.okCallbacks.Delete(string(event.ID))
-
 	// send AUTH
 	authResponse, _ := (&nip42.AuthResponseEnvelope{Event: event}).MarshalJSON()
 	log.D.F("{%s} sending %v\n", r.URL, authResponse)
 	if e = <-r.Write(authResponse); e != nil {
-		// status will be "failed"
-		return status, e
+		// s will be "failed"
+		return s, e
 	}
 	// use mu.Lock() just in case the okCallback got called, extremely unlikely.
 	mu.Lock()
-	status = PublishStatusSent
+	s = PublishStatusSent
 	mu.Unlock()
-
-	// the context either times out, and the status is "sent"
-	// or the okCallback is called and the status is set to "succeeded" or "failed"
+	// the context either times out, and the s is "sent"
+	// or the okCallback is called and the s is set to "succeeded" or "failed"
 	// NIP-42 does not mandate an "OK" reply to an "AUTH" message
 	<-ctx.Done()
 	mu.Lock()
 	defer mu.Unlock()
-	return status, e
+	return s, e
 }
 
 // Subscribe sends a "REQ" command to the relay r as in NIP-01.
@@ -466,29 +442,28 @@ func (r *Relay) Auth(ctx context.Context, event *nip1.Event) (Status, error) {
 // Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.Context` will be canceled at some point.
 // Failure to do that will result in a huge number of halted goroutines being created.
 func (r *Relay) Subscribe(ctx context.Context, filters nip1.Filters,
-	opts ...SubscriptionOption) (*Subscription, error) {
+	opts ...SubscriptionOption) (s *Subscription, e error) {
 
-	sub := r.PrepareSubscription(ctx, filters, opts...)
-	if e := sub.Fire(); fails(e) {
+	s = r.PrepareSubscription(ctx, filters, opts...)
+	if e = s.Fire(); fails(e) {
 		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", filters, r.URL, e)
 	}
-
-	return sub, nil
+	return
 }
 
 // PrepareSubscription creates a subscription, but doesn't fire it.
 //
 // Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.Context` will be canceled at some point.
 // Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) PrepareSubscription(ctx context.Context, filters nip1.Filters, opts ...SubscriptionOption) *Subscription {
+func (r *Relay) PrepareSubscription(ctx context.Context, filters nip1.Filters,
+	opts ...SubscriptionOption) (s *Subscription) {
+
 	if r.Connection == nil {
 		panic(fmt.Errorf("must call .Connect() first before calling .Subscribe()"))
 	}
-
 	current := subscriptionIDCounter.Add(1)
 	ctx, cancel := context.WithCancel(ctx)
-
-	sub := &Subscription{
+	s = &Subscription{
 		Relay:             r,
 		Context:           ctx,
 		cancel:            cancel,
@@ -497,90 +472,79 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filters nip1.Filters, o
 		EndOfStoredEvents: make(chan struct{}),
 		Filters:           filters,
 	}
-
 	for _, opt := range opts {
 		switch o := opt.(type) {
 		case WithLabel:
-			sub.label = string(o)
+			s.label = string(o)
 		}
 	}
-
-	id := sub.GetID()
-	r.Subscriptions.Store(id, sub)
-
+	id := s.GetID()
+	r.Subscriptions.Store(id, s)
 	// start handling events, eose, unsub etc:
-	go sub.start()
-
-	return sub
+	go s.start()
+	return
 }
 
-func (r *Relay) QuerySync(ctx context.Context, filter nip1.Filter,
-	opts ...SubscriptionOption) ([]*nip1.Event, error) {
+func (r *Relay) QuerySync(ctx context.Context, filter *nip1.Filter,
+	opts ...SubscriptionOption) (evs []*nip1.Event, e error) {
 
-	sub, err := r.Subscribe(ctx, nip1.Filters{filter}, opts...)
-	if err != nil {
-		return nil, err
+	var sub *Subscription
+	if sub, e = r.Subscribe(ctx, nip1.Filters{filter}, opts...); fails(e) {
+		return
 	}
-
 	defer sub.Unsub()
-
 	if _, ok := ctx.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, 7*time.Second)
 		defer cancel()
 	}
-
-	var events []*nip1.Event
 	for {
 		select {
-		case evt := <-sub.Events:
-			if evt == nil {
+		case ev := <-sub.Events:
+			if ev == nil {
 				// channel is closed
-				return events, nil
+				return
 			}
-			events = append(events, evt)
+			evs = append(evs, ev)
 		case <-sub.EndOfStoredEvents:
-			return events, nil
+			return
 		case <-ctx.Done():
-			return events, nil
+			return
 		}
 	}
 }
 
-func (r *Relay) Count(ctx context.Context, filters nip1.Filters, opts ...SubscriptionOption) (int64, error) {
+func (r *Relay) Count(ctx context.Context, filters nip1.Filters,
+	opts ...SubscriptionOption) (c int64, e error) {
+
 	sub := r.PrepareSubscription(ctx, filters, opts...)
 	sub.countResult = make(chan int64)
-
-	if err := sub.Fire(); err != nil {
-		return 0, err
+	if e = sub.Fire(); fails(e) {
+		return
 	}
-
 	defer sub.Unsub()
-
 	if _, ok := ctx.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(ctx, 7*time.Second)
 		defer cancel()
 	}
-
 	for {
 		select {
-		case count := <-sub.countResult:
-			return count, nil
+		case c = <-sub.countResult:
+			return
 		case <-ctx.Done():
 			return 0, ctx.Err()
 		}
 	}
 }
 
-func (r *Relay) Close() error {
-	if r.connectionContextCancel == nil {
+func (r *Relay) Close() (e error) {
+	if r.cancel == nil {
 		return fmt.Errorf("relay not connected")
 	}
-
-	r.connectionContextCancel()
-	r.connectionContextCancel = nil
+	r.cancel()
+	r.cancel = nil
 	return r.Connection.Close()
 }
