@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -15,15 +14,11 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/fatih/color"
+	"github.com/nbd-wtf/go-nostr"
+	"github.com/nbd-wtf/go-nostr/nip04"
+	"github.com/nbd-wtf/go-nostr/nip19"
+	"github.com/nbd-wtf/nostr-sdk"
 )
 
 func doDMList(cCtx *cli.Context) error {
@@ -44,13 +39,13 @@ func doDMList(cCtx *cli.Context) error {
 	} else {
 		return err
 	}
-	if npub, err = nip19.GetPublicKey(sk); err != nil {
+	if npub, err = nostr.GetPublicKey(sk); err != nil {
 		return err
 	}
 
 	// get timeline
-	filter := nip1.Filter{
-		Kinds:   kind.Array{kind.EncryptedDirectMessage},
+	filter := nostr.Filter{
+		Kinds:   []int{nostr.KindEncryptedDirectMessage},
 		Authors: []string{npub},
 	}
 
@@ -114,7 +109,7 @@ func doDMTimeline(cCtx *cli.Context) error {
 	} else {
 		return err
 	}
-	if npub, err = nip19.GetPublicKey(sk); err != nil {
+	if npub, err = nostr.GetPublicKey(sk); err != nil {
 		return err
 	}
 
@@ -134,10 +129,10 @@ func doDMTimeline(cCtx *cli.Context) error {
 	}
 
 	// get timeline
-	filter := nip1.Filter{
-		Kinds:   kind.Array{kind.EncryptedDirectMessage},
+	filter := nostr.Filter{
+		Kinds:   []int{nostr.KindEncryptedDirectMessage},
 		Authors: []string{npub, pub},
-		Tags:    nip1.TagMap{"p": []string{npub, pub}},
+		Tags:    nostr.TagMap{"p": []string{npub, pub}},
 		Limit:   9999,
 	}
 
@@ -162,8 +157,8 @@ func doDMPost(cCtx *cli.Context) error {
 	} else {
 		return err
 	}
-	ev := &nip1.Event{}
-	if npub, err := nip19.GetPublicKey(sk); err == nil {
+	ev := nostr.Event{}
+	if npub, err := nostr.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(npub); err != nil {
 			return err
 		}
@@ -186,7 +181,7 @@ func doDMPost(cCtx *cli.Context) error {
 	}
 
 	if sensitive != "" {
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"content-warning", sensitive})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"content-warning", sensitive})
 	}
 
 	if u == "me" {
@@ -199,15 +194,15 @@ func doDMPost(cCtx *cli.Context) error {
 		return fmt.Errorf("failed to parse pubkey from '%s'", u)
 	}
 
-	ev.Tags = ev.Tags.AppendUnique(tag.T{"p", pub})
-	ev.CreatedAt = timestamp.Now()
-	ev.Kind = kind.EncryptedDirectMessage
+	ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"p", pub})
+	ev.CreatedAt = nostr.Now()
+	ev.Kind = nostr.KindEncryptedDirectMessage
 
-	ss, err := nip4.ComputeSharedSecret(ev.PubKey, sk)
+	ss, err := nip04.ComputeSharedSecret(ev.PubKey, sk)
 	if err != nil {
 		return err
 	}
-	ev.Content, err = nip4.Encrypt(ev.Content, ss)
+	ev.Content, err = nip04.Encrypt(ev.Content, ss)
 	if err != nil {
 		return err
 	}
@@ -248,8 +243,8 @@ func doPost(cCtx *cli.Context) error {
 	} else {
 		return err
 	}
-	ev := &nip1.Event{}
-	if pub, err := nip19.GetPublicKey(sk); err == nil {
+	ev := nostr.Event{}
+	if pub, err := nostr.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -271,10 +266,10 @@ func doPost(cCtx *cli.Context) error {
 		return errors.New("content is empty")
 	}
 
-	ev.Tags = tags.T{}
+	ev.Tags = nostr.Tags{}
 
 	for _, entry := range extractLinks(ev.Content) {
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"r", entry.text})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"r", entry.text})
 	}
 
 	for _, u := range cCtx.StringSlice("emoji") {
@@ -282,12 +277,12 @@ func doPost(cCtx *cli.Context) error {
 		if len(tok) != 2 {
 			return cli.ShowSubcommandHelp(cCtx)
 		}
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"emoji", tok[0], tok[1]})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"emoji", tok[0], tok[1]})
 	}
 	for _, entry := range extractEmojis(ev.Content) {
 		name := strings.Trim(entry.text, ":")
 		if icon, ok := cfg.Emojis[name]; ok {
-			ev.Tags = ev.Tags.AppendUnique(tag.T{"emoji", name, icon})
+			ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"emoji", name, icon})
 		}
 	}
 
@@ -298,18 +293,18 @@ func doPost(cCtx *cli.Context) error {
 		} else {
 			return fmt.Errorf("failed to parse pubkey from '%s'", u)
 		}
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"p", u})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"p", u})
 	}
 
 	if sensitive != "" {
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"content-warning", sensitive})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"content-warning", sensitive})
 	}
 
 	if geohash != "" {
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"g", geohash})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"g", geohash})
 	}
 
-	hashtag := tag.T{"h"}
+	hashtag := nostr.Tag{"h"}
 	for _, m := range regexp.MustCompile(`#[a-zA-Z0-9]+`).FindAllStringSubmatchIndex(ev.Content, -1) {
 		hashtag = append(hashtag, ev.Content[m[0]+1:m[1]])
 	}
@@ -317,8 +312,8 @@ func doPost(cCtx *cli.Context) error {
 		ev.Tags = ev.Tags.AppendUnique(hashtag)
 	}
 
-	ev.CreatedAt = timestamp.Now()
-	ev.Kind = kind.TextNote
+	ev.CreatedAt = nostr.Now()
+	ev.Kind = nostr.KindTextNote
 	if err := ev.Sign(sk); err != nil {
 		return err
 	}
@@ -358,8 +353,8 @@ func doReply(cCtx *cli.Context) error {
 	} else {
 		return err
 	}
-	ev := &nip1.Event{}
-	if pub, err := nip19.GetPublicKey(sk); err == nil {
+	ev := nostr.Event{}
+	if pub, err := nostr.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -369,13 +364,13 @@ func doReply(cCtx *cli.Context) error {
 	}
 
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID.String()
+		id = evp.ID
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
 
-	ev.CreatedAt = timestamp.Now()
-	ev.Kind = kind.TextNote
+	ev.CreatedAt = nostr.Now()
+	ev.Kind = nostr.KindTextNote
 	if stdin {
 		b, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
@@ -389,10 +384,10 @@ func doReply(cCtx *cli.Context) error {
 		return errors.New("content is empty")
 	}
 
-	ev.Tags = tags.T{}
+	ev.Tags = nostr.Tags{}
 
 	for _, entry := range extractLinks(ev.Content) {
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"r", entry.text})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"r", entry.text})
 	}
 
 	for _, u := range cCtx.StringSlice("emoji") {
@@ -400,24 +395,24 @@ func doReply(cCtx *cli.Context) error {
 		if len(tok) != 2 {
 			return cli.ShowSubcommandHelp(cCtx)
 		}
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"emoji", tok[0], tok[1]})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"emoji", tok[0], tok[1]})
 	}
 	for _, entry := range extractEmojis(ev.Content) {
 		name := strings.Trim(entry.text, ":")
 		if icon, ok := cfg.Emojis[name]; ok {
-			ev.Tags = ev.Tags.AppendUnique(tag.T{"emoji", name, icon})
+			ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"emoji", name, icon})
 		}
 	}
 
 	if sensitive != "" {
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"content-warning", sensitive})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"content-warning", sensitive})
 	}
 
 	if geohash != "" {
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"g", geohash})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"g", geohash})
 	}
 
-	hashtag := tag.T{"h"}
+	hashtag := nostr.Tag{"h"}
 	for _, m := range regexp.MustCompile(`#[a-zA-Z0-9]+`).FindAllStringSubmatchIndex(ev.Content, -1) {
 		hashtag = append(hashtag, ev.Content[m[0]+1:m[1]])
 	}
@@ -428,9 +423,9 @@ func doReply(cCtx *cli.Context) error {
 	var success atomic.Int64
 	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		if !quote {
-			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, relay.URL, "reply"})
+			ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"e", id, relay.URL, "reply"})
 		} else {
-			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, relay.URL, "mention"})
+			ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"e", id, relay.URL, "mention"})
 		}
 		if err := ev.Sign(sk); err != nil {
 			return true
@@ -455,14 +450,14 @@ func doRepost(cCtx *cli.Context) error {
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
 
-	ev := &nip1.Event{}
+	ev := nostr.Event{}
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
 		sk = s.(string)
 	} else {
 		return err
 	}
-	if pub, err := nip19.GetPublicKey(sk); err == nil {
+	if pub, err := nostr.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -472,18 +467,18 @@ func doRepost(cCtx *cli.Context) error {
 	}
 
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID.String()
+		id = evp.ID
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
-	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id})
-	filter := nip1.Filter{
-		Kinds: kind.Array{kind.TextNote},
+	ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"e", id})
+	filter := nostr.Filter{
+		Kinds: []int{nostr.KindTextNote},
 		IDs:   []string{id},
 	}
 
-	ev.CreatedAt = timestamp.Now()
-	ev.Kind = kind.Repost
+	ev.CreatedAt = nostr.Now()
+	ev.Kind = nostr.KindRepost
 	ev.Content = ""
 
 	var first atomic.Bool
@@ -497,7 +492,7 @@ func doRepost(cCtx *cli.Context) error {
 				return true
 			}
 			for _, tmp := range evs {
-				ev.Tags = ev.Tags.AppendUnique(tag.T{"p", string(tmp.ID)})
+				ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"p", tmp.ID})
 			}
 			first.Store(false)
 			if err := ev.Sign(sk); err != nil {
@@ -522,7 +517,7 @@ func doRepost(cCtx *cli.Context) error {
 func doUnrepost(cCtx *cli.Context) error {
 	id := cCtx.String("id")
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID.String()
+		id = evp.ID
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
@@ -535,16 +530,16 @@ func doUnrepost(cCtx *cli.Context) error {
 	} else {
 		return err
 	}
-	pub, err := nip19.GetPublicKey(sk)
+	pub, err := nostr.GetPublicKey(sk)
 	if err != nil {
 		return err
 	}
-	filter := nip1.Filter{
-		Kinds:   kind.Array{kind.Repost},
+	filter := nostr.Filter{
+		Kinds:   []int{nostr.KindRepost},
 		Authors: []string{pub},
-		Tags:    nip1.TagMap{"e": []string{id}},
+		Tags:    nostr.TagMap{"e": []string{id}},
 	}
-	var repostID nip1.EventID
+	var repostID string
 	var mu sync.Mutex
 	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		evs, err := relay.QuerySync(ctx, filter)
@@ -559,10 +554,10 @@ func doUnrepost(cCtx *cli.Context) error {
 		return true
 	})
 
-	ev := &nip1.Event{}
-	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", string(repostID)})
-	ev.CreatedAt = timestamp.Now()
-	ev.Kind = kind.Deletion
+	var ev nostr.Event
+	ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"e", repostID})
+	ev.CreatedAt = nostr.Now()
+	ev.Kind = nostr.KindDeletion
 	if err := ev.Sign(sk); err != nil {
 		return err
 	}
@@ -589,14 +584,14 @@ func doLike(cCtx *cli.Context) error {
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
 
-	ev := &nip1.Event{}
+	ev := nostr.Event{}
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
 		sk = s.(string)
 	} else {
 		return err
 	}
-	if pub, err := nip19.GetPublicKey(sk); err == nil {
+	if pub, err := nostr.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -606,25 +601,25 @@ func doLike(cCtx *cli.Context) error {
 	}
 
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID.String()
+		id = evp.ID
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
-	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id})
-	filter := nip1.Filter{
-		Kinds: kind.Array{kind.TextNote},
+	ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"e", id})
+	filter := nostr.Filter{
+		Kinds: []int{nostr.KindTextNote},
 		IDs:   []string{id},
 	}
 
-	ev.CreatedAt = timestamp.Now()
-	ev.Kind = kind.Reaction
+	ev.CreatedAt = nostr.Now()
+	ev.Kind = nostr.KindReaction
 	ev.Content = cCtx.String("content")
 	emoji := cCtx.String("emoji")
 	if emoji != "" {
 		if ev.Content == "" {
 			ev.Content = "like"
 		}
-		ev.Tags = ev.Tags.AppendUnique(tag.T{"emoji", ev.Content, emoji})
+		ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"emoji", ev.Content, emoji})
 		ev.Content = ":" + ev.Content + ":"
 	}
 	if ev.Content == "" {
@@ -642,7 +637,7 @@ func doLike(cCtx *cli.Context) error {
 				return true
 			}
 			for _, tmp := range evs {
-				ev.Tags = ev.Tags.AppendUnique(tag.T{"p", tmp.ID.String()})
+				ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"p", tmp.ID})
 			}
 			first.Store(false)
 			if err := ev.Sign(sk); err != nil {
@@ -668,7 +663,7 @@ func doLike(cCtx *cli.Context) error {
 func doUnlike(cCtx *cli.Context) error {
 	id := cCtx.String("id")
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID.String()
+		id = evp.ID
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
@@ -681,16 +676,16 @@ func doUnlike(cCtx *cli.Context) error {
 	} else {
 		return err
 	}
-	pub, err := nip19.GetPublicKey(sk)
+	pub, err := nostr.GetPublicKey(sk)
 	if err != nil {
 		return err
 	}
-	filter := nip1.Filter{
-		Kinds:   kind.Array{kind.Reaction},
+	filter := nostr.Filter{
+		Kinds:   []int{nostr.KindReaction},
 		Authors: []string{pub},
-		Tags:    nip1.TagMap{"e": []string{id}},
+		Tags:    nostr.TagMap{"e": []string{id}},
 	}
-	var likeID nip1.EventID
+	var likeID string
 	var mu sync.Mutex
 	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		evs, err := relay.QuerySync(ctx, filter)
@@ -705,10 +700,10 @@ func doUnlike(cCtx *cli.Context) error {
 		return true
 	})
 
-	ev := &nip1.Event{}
-	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", likeID.String()})
-	ev.CreatedAt = timestamp.Now()
-	ev.Kind = kind.Deletion
+	var ev nostr.Event
+	ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"e", likeID})
+	ev.CreatedAt = nostr.Now()
+	ev.Kind = nostr.KindDeletion
 	if err := ev.Sign(sk); err != nil {
 		return err
 	}
@@ -735,14 +730,14 @@ func doDelete(cCtx *cli.Context) error {
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
 
-	ev := &nip1.Event{}
+	ev := nostr.Event{}
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
 		sk = s.(string)
 	} else {
 		return err
 	}
-	if pub, err := nip19.GetPublicKey(sk); err == nil {
+	if pub, err := nostr.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -752,13 +747,13 @@ func doDelete(cCtx *cli.Context) error {
 	}
 
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID.String()
+		id = evp.ID
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
-	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id})
-	ev.CreatedAt = timestamp.Now()
-	ev.Kind = kind.Deletion
+	ev.Tags = ev.Tags.AppendUnique(nostr.Tag{"e", id})
+	ev.CreatedAt = nostr.Now()
+	ev.Kind = nostr.KindDeletion
 	if err := ev.Sign(sk); err != nil {
 		return err
 	}
@@ -800,8 +795,8 @@ func doSearch(cCtx *cli.Context) error {
 	}
 
 	// get timeline
-	filter := nip1.Filter{
-		Kinds:  kind.Array{kind.TextNote},
+	filter := nostr.Filter{
+		Kinds:  []int{nostr.KindTextNote},
 		Search: strings.Join(cCtx.Args().Slice(), " "),
 		Limit:  n,
 	}
@@ -812,11 +807,7 @@ func doSearch(cCtx *cli.Context) error {
 }
 
 func doStream(cCtx *cli.Context) error {
-	kindsS := cCtx.IntSlice("kind")
-	var kinds kind.Array
-	for i := range kindsS {
-		kinds = append(kinds, kind.T(kindsS[i]))
-	}
+	kinds := cCtx.IntSlice("kind")
 	authors := cCtx.StringSlice("author")
 	f := cCtx.Bool("follow")
 	pattern := cCtx.String("pattern")
@@ -845,7 +836,7 @@ func doStream(cCtx *cli.Context) error {
 	} else {
 		return err
 	}
-	pub, err := nip19.GetPublicKey(sk)
+	pub, err := nostr.GetPublicKey(sk)
 	if err != nil {
 		return err
 	}
@@ -864,30 +855,30 @@ func doStream(cCtx *cli.Context) error {
 		follows = authors
 	}
 
-	since := timestamp.Now()
-	filter := nip1.Filter{
+	since := nostr.Now()
+	filter := nostr.Filter{
 		Kinds:   kinds,
 		Authors: follows,
-		Since:   (*timestamp.Tp)(&since),
+		Since:   &since,
 	}
 
-	sub, err := relay.Subscribe(context.Background(), nip1.Filters{filter})
+	sub, err := relay.Subscribe(context.Background(), nostr.Filters{filter})
 	if err != nil {
 		return err
 	}
 	for ev := range sub.Events {
-		if ev.Kind == kind.TextNote {
+		if ev.Kind == nostr.KindTextNote {
 			if re != nil && !re.MatchString(ev.Content) {
 				continue
 			}
 			json.NewEncoder(os.Stdout).Encode(ev)
 			if reply != "" {
-				evr := &nip1.Event{}
+				var evr nostr.Event
 				evr.PubKey = pub
 				evr.Content = reply
-				evr.Tags = evr.Tags.AppendUnique(tag.T{"e", ev.ID.String(), "", "reply"})
-				evr.CreatedAt = timestamp.Now()
-				evr.Kind = kind.TextNote
+				evr.Tags = evr.Tags.AppendUnique(nostr.Tag{"e", ev.ID, "", "reply"})
+				evr.CreatedAt = nostr.Now()
+				evr.Kind = nostr.KindTextNote
 				if err := evr.Sign(sk); err != nil {
 					return err
 				}
@@ -921,8 +912,8 @@ func doTimeline(cCtx *cli.Context) error {
 	}
 
 	// get timeline
-	filter := nip1.Filter{
-		Kinds:   kind.Array{kind.TextNote},
+	filter := nostr.Filter{
+		Kinds:   []int{nostr.KindTextNote},
 		Authors: follows,
 		Limit:   n,
 	}
@@ -941,8 +932,8 @@ func postMsg(cCtx *cli.Context, msg string) error {
 	} else {
 		return err
 	}
-	ev := &nip1.Event{}
-	if pub, err := nip19.GetPublicKey(sk); err == nil {
+	ev := nostr.Event{}
+	if pub, err := nostr.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -952,9 +943,9 @@ func postMsg(cCtx *cli.Context, msg string) error {
 	}
 
 	ev.Content = msg
-	ev.CreatedAt = timestamp.Now()
-	ev.Kind = kind.TextNote
-	ev.Tags = tags.T{}
+	ev.CreatedAt = nostr.Now()
+	ev.Kind = nostr.KindTextNote
+	ev.Tags = nostr.Tags{}
 	if err := ev.Sign(sk); err != nil {
 		return err
 	}

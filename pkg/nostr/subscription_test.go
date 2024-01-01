@@ -91,7 +91,7 @@ func TestNestedSubscriptions(t *testing.T) {
 				select {
 				case <-sub.Events:
 					// do another subscription here in "sync" mode, just so we're sure things are not blocking
-					evs, e := rl.QuerySync(context.Background(), nip1.Filter{Limit: 1})
+					evs, e := rl.QuerySync(context.Background(), &nip1.Filter{Limit: 1})
 					if fails(e) {
 
 					}

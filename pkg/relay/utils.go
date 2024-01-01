@@ -33,9 +33,9 @@ func GetSubscriptionID(ctx context.Context) string {
 	return ctx.Value(SubscriptionIDContextKey).(string)
 }
 
-func GetOpenSubscriptions(ctx context.Context) []nip1.Filter {
+func GetOpenSubscriptions(ctx context.Context) (res []*nip1.Filter) {
 	if subs, ok := listeners.Load(GetConnection(ctx)); ok {
-		res := make([]nip1.Filter, 0, listeners.Size()*2)
+		res = make([]*nip1.Filter, 0, listeners.Size()*2)
 		subs.Range(func(_ string, sub *Listener) bool {
 			res = append(res, sub.filters...)
 			return true

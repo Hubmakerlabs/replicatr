@@ -51,26 +51,22 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	if n, e = rand.Read(challenge); fails(e) {
 		log.E.F("only read %d bytes from system CSPRNG", n)
 	}
-
 	ws := &WebSocket{
 		conn:      conn,
 		Request:   r,
 		Challenge: hex.EncodeToString(challenge),
 		Authed:    make(chan struct{}),
 	}
-
 	ctx, cancel := context.WithCancel(
 		context.WithValue(
 			context.Background(),
 			WebsocketContextKey, ws,
 		),
 	)
-
 	kill := func() {
 		for _, onDisconnect := range rl.OnDisconnect {
 			onDisconnect(ctx)
 		}
-
 		ticker.Stop()
 		cancel()
 		if _, ok := rl.clients.Load(conn); ok {
@@ -79,34 +75,31 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 			removeListener(ws)
 		}
 	}
-
 	go func() {
 		defer kill()
-
 		conn.SetReadLimit(rl.MaxMessageSize)
 		log.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
 		conn.SetPongHandler(func(string) error {
 			log.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
 			return nil
 		})
-
 		for _, onConnect := range rl.OnConnect {
 			onConnect(ctx)
 		}
-		var err error
+		var e error
 		for {
 			var typ int
 			var message []byte
-			typ, message, err = conn.ReadMessage()
-			if fails(err) {
+			typ, message, e = conn.ReadMessage()
+			if fails(e) {
 				if websocket.IsUnexpectedCloseError(
-					err,
+					e,
 					websocket.CloseNormalClosure,    // 1000
 					websocket.CloseGoingAway,        // 1001
 					websocket.CloseNoStatusReceived, // 1005
 					websocket.CloseAbnormalClosure,  // 1006
 				) {
-					rl.Log.E.F("unexpected close error from %s: %v\n", r.Header.Get("X-Forwarded-For"), err)
+					rl.Log.E.F("unexpected close error from %s: %v\n", r.Header.Get("X-Forwarded-For"), e)
 				}
 				return
 			}
@@ -115,43 +108,51 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 				log.D.Chk(ws.WriteMessage(websocket.PongMessage, nil))
 				continue
 			}
-
 			go func(message []byte) {
 				var e error
 				var envelope nip1.Enveloper
 				if envelope, _, _, e = nip1.ProcessEnvelope(message); fails(e) || envelope == nil {
 					return
 				}
-
 				switch env := envelope.(type) {
 				case *nip1.EventEnvelope:
 					// check id
 					hash := sha256.Sum256(env.Event.ToCanonical().Bytes())
 					id := hex.EncodeToString(hash[:])
 					if nip1.EventID(id) != env.Event.ID {
-						ws.WriteJSON(nip1.OKEnvelope{EventID: env.Event.ID, OK: false, Reason: "invalid: id is computed incorrectly"})
+						log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+							EventID: env.Event.ID,
+							OK:      false,
+							Reason:  "invalid: id is computed incorrectly",
+						}))
 						return
 					}
-
 					// check signature
 					if ok, err := env.Event.CheckSignature(); err != nil {
-						ws.WriteJSON(nip1.OKEnvelope{EventID: env.Event.ID, OK: false, Reason: "error: failed to verify signature"})
+						log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+							EventID: env.Event.ID,
+							OK:      false,
+							Reason:  "error: failed to verify signature",
+						}))
 						return
 					} else if !ok {
-						ws.WriteJSON(nip1.OKEnvelope{EventID: env.Event.ID, OK: false, Reason: "invalid: signature is invalid"})
+						log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+							EventID: env.Event.ID,
+							OK:      false,
+							Reason:  "invalid: signature is invalid",
+						}))
 						return
 					}
-
 					var ok bool
 					var writeErr error
 					if env.Event.Kind == 5 {
-						// this always returns "blocked: " whenever it returns an error
+						// this always returns "blocked: " whenever it returns
+						// an error
 						writeErr = rl.handleDeleteRequest(ctx, env.Event)
 					} else {
 						// this will also always return a prefixed reason
 						writeErr = rl.AddEvent(ctx, env.Event)
 					}
-
 					var reason string
 					if writeErr == nil {
 						ok = true
@@ -165,7 +166,11 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						EventID: env.Event.ID, OK: ok, Reason: reason}))
 				case *nip45.CountRequestEnvelope:
 					if rl.CountEvents == nil {
-						ws.WriteJSON(nip1.ClosedEnvelope{SubscriptionID: env.SubscriptionID, Reason: "unsupported: this relay does not support NIP-45"})
+						log.E.Chk(ws.WriteJSON(nip1.ClosedEnvelope{
+							SubscriptionID: env.SubscriptionID,
+							Reason: "unsupported: " +
+								"this relay does not support NIP-45",
+						}))
 						return
 					}
 					var total int64
@@ -179,47 +184,60 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 				case *nip1.ReqEnvelope:
 					eose := sync.WaitGroup{}
 					eose.Add(len(env.Filters))
-
 					// a context just for the "stored events" request handler
 					reqCtx, cancelReqCtx := context.WithCancelCause(ctx)
-
 					// expose subscription id in the context
-					reqCtx = context.WithValue(reqCtx, SubscriptionIDContextKey, env.SubscriptionID)
-
-					// handle each filter separately -- dispatching events as they're loaded from databases
+					reqCtx = context.WithValue(reqCtx, SubscriptionIDContextKey,
+						env.SubscriptionID)
+					// handle each filter separately -- dispatching events as
+					// they're loaded from databases
 					for _, filter := range env.Filters {
-						err := rl.handleRequest(reqCtx, env.SubscriptionID, &eose, ws, filter)
-						if err != nil {
+						e = rl.handleRequest(reqCtx, env.SubscriptionID,
+							&eose, ws, filter)
+						if e != nil {
 							// fail everything if any filter is rejected
-							reason := err.Error()
+							reason := e.Error()
 							if strings.HasPrefix(reason, "auth-required:") {
 								RequestAuth(ctx)
 							}
-							ws.WriteJSON(nip1.ClosedEnvelope{SubscriptionID: env.SubscriptionID, Reason: reason})
+							log.D.Chk(ws.WriteJSON(nip1.ClosedEnvelope{
+								SubscriptionID: env.SubscriptionID,
+								Reason:         reason,
+							}))
 							cancelReqCtx(errors.New("filter rejected"))
 							return
 						}
 					}
-
 					go func() {
-						// when all events have been loaded from databases and dispatched
-						// we can cancel the context and fire the EOSE message
+						// when all events have been loaded from databases and
+						// dispatched we can cancel the context and fire the
+						// EOSE message
 						eose.Wait()
 						cancelReqCtx(nil)
-						ws.WriteJSON(nip1.EOSEEnvelope{SubscriptionID: env.SubscriptionID})
+						log.E.Chk(ws.WriteJSON(nip1.EOSEEnvelope{
+							SubscriptionID: env.SubscriptionID}))
 					}()
 
-					setListener(env.SubscriptionID, ws, env.Filters, cancelReqCtx)
+					setListener(env.SubscriptionID, ws, env.Filters,
+						cancelReqCtx)
 				case *nip1.CloseEnvelope:
 					removeListenerId(ws, env.SubscriptionID)
 				case *nip42.AuthResponseEnvelope:
-					wsBaseUrl := strings.Replace(rl.ServiceURL, "http", "ws", 1)
-					if pubkey, ok := nip42.ValidateAuthEvent(env.Event, ws.Challenge, wsBaseUrl); ok {
+					wsBaseUrl := strings.Replace(rl.ServiceURL, "http",
+						"ws", 1)
+					if pubkey, ok := nip42.ValidateAuthEvent(env.Event,
+						ws.Challenge, wsBaseUrl); ok {
+
 						ws.AuthedPublicKey = pubkey
 						close(ws.Authed)
-						ws.WriteJSON(nip1.OKEnvelope{EventID: env.Event.ID, OK: true})
+						log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+							EventID: env.Event.ID, OK: true}))
 					} else {
-						ws.WriteJSON(nip1.OKEnvelope{EventID: env.Event.ID, OK: false, Reason: "error: failed to authenticate"})
+						log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+							EventID: env.Event.ID,
+							OK:      false,
+							Reason:  "error: failed to authenticate",
+						}))
 					}
 				}
 			}(message)
@@ -234,10 +252,13 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				err := ws.WriteMessage(websocket.PingMessage, nil)
-				if err != nil {
-					if !strings.HasSuffix(err.Error(), "use of closed network connection") {
-						rl.Log.E.F("error writing ping: %v; closing websocket\n", err)
+				e := ws.WriteMessage(websocket.PingMessage, nil)
+				if e != nil {
+					if !strings.HasSuffix(e.Error(),
+						"use of closed network connection",
+					) {
+						rl.Log.E.F("error writing ping: %v; "+
+							"closing websocket\n", e)
 					}
 					return
 				}
@@ -248,11 +269,9 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 func (rl *Relay) HandleNIP11(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/nostr+json")
-
-	info := *rl.Info
+	info := rl.Info
 	for _, ovw := range rl.OverwriteRelayInformation {
 		info = ovw(r.Context(), r, info)
 	}
-
-	json.NewEncoder(w).Encode(info)
+	log.E.Chk(json.NewEncoder(w).Encode(info))
 }

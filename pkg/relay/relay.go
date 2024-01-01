@@ -42,17 +42,17 @@ type Relay struct {
 	ServiceURL string
 
 	RejectEvent               []func(ctx context.Context, event *nip1.Event) (reject bool, msg string)
-	RejectFilter              []func(ctx context.Context, filter nip1.Filter) (reject bool, msg string)
-	RejectCountFilter         []func(ctx context.Context, filter nip1.Filter) (reject bool, msg string)
+	RejectFilter              []func(ctx context.Context, filter *nip1.Filter) (reject bool, msg string)
+	RejectCountFilter         []func(ctx context.Context, filter *nip1.Filter) (reject bool, msg string)
 	OverwriteDeletionOutcome  []func(ctx context.Context, target *nip1.Event, deletion *nip1.Event) (acceptDeletion bool, msg string)
 	OverwriteResponseEvent    []func(ctx context.Context, event *nip1.Event)
 	OverwriteFilter           []func(ctx context.Context, filter *nip1.Filter)
 	OverwriteCountFilter      []func(ctx context.Context, filter *nip1.Filter)
-	OverwriteRelayInformation []func(ctx context.Context, r *http.Request, info nip11.RelayInfo) nip11.RelayInfo
+	OverwriteRelayInformation []func(ctx context.Context, r *http.Request, info *nip11.RelayInfo) *nip11.RelayInfo
 	StoreEvent                []func(ctx context.Context, event *nip1.Event) error
 	DeleteEvent               []func(ctx context.Context, event *nip1.Event) error
-	QueryEvents               []func(ctx context.Context, filter nip1.Filter) (chan *nip1.Event, error)
-	CountEvents               []func(ctx context.Context, filter nip1.Filter) (int64, error)
+	QueryEvents               []func(ctx context.Context, filter *nip1.Filter) (chan *nip1.Event, error)
+	CountEvents               []func(ctx context.Context, filter *nip1.Filter) (int64, error)
 	OnAuth                    []func(ctx context.Context, pubkey string)
 	OnConnect                 []func(ctx context.Context)
 	OnDisconnect              []func(ctx context.Context)

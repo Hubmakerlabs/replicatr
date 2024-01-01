@@ -16,41 +16,39 @@ type Listener struct {
 var listeners = xsync.NewTypedMapOf[*WebSocket, *xsync.MapOf[string, *Listener]](pointerHasher[WebSocket])
 
 func GetListeningFilters() nip1.Filters {
-	respfilters := make(nip1.Filters, 0, listeners.Size()*2)
-
+	respFilters := make(nip1.Filters, 0, listeners.Size()*2)
 	// here we go through all the existing listeners
 	listeners.Range(func(_ *WebSocket, subs *xsync.MapOf[string, *Listener]) bool {
 		subs.Range(func(_ string, listener *Listener) bool {
-			for _, listenerfilter := range listener.filters {
-				for _, respfilter := range respfilters {
-					// check if this filter specifically is already added to respfilters
-					if nip1.FilterEqual(&listenerfilter, &respfilter) {
-						goto nextconn
+		next:
+			for _, listenerFilter := range listener.filters {
+				for _, respFilter := range respFilters {
+					// check if this filter specifically is already added to respFilters
+					if nip1.FilterEqual(listenerFilter, respFilter) {
+						// continue to the next filter
+						continue next
 					}
 				}
-
-				// field not yet present on respfilters, add it
-				respfilters = append(respfilters, listenerfilter)
-
-				// continue to the next filter
-			nextconn:
-				continue
+				// field not yet present on respFilters, add it
+				respFilters = append(respFilters, listenerFilter)
 			}
-
 			return true
 		})
-
 		return true
 	})
-
-	// respfilters will be a slice with all the distinct filter we currently have active
-	return respfilters
+	// respFilters will be a slice with all the distinct filter we currently
+	// have active
+	return respFilters
 }
 
-func setListener(id nip1.SubscriptionID, ws *WebSocket, filters nip1.Filters, cancel context.CancelCauseFunc) {
-	subs, _ := listeners.LoadOrCompute(ws, func() *xsync.MapOf[string, *Listener] {
-		return xsync.NewMapOf[*Listener]()
-	})
+func setListener(id nip1.SubscriptionID, ws *WebSocket,
+	filters nip1.Filters, cancel context.CancelCauseFunc) {
+
+	subs, _ := listeners.LoadOrCompute(ws,
+		func() *xsync.MapOf[string, *Listener] {
+
+			return xsync.NewMapOf[*Listener]()
+		})
 	subs.Store(string(id), &Listener{filters: filters, cancel: cancel})
 }
 

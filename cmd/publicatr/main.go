@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,23 +15,14 @@ import (
 	"time"
 
 	"github.com/urfave/cli/v2"
-	log2 "mleku.online/git/log"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
 	"github.com/fatih/color"
+	"github.com/nbd-wtf/go-nostr"
+	"github.com/nbd-wtf/go-nostr/nip04"
+	"github.com/nbd-wtf/go-nostr/nip19"
 )
 
-var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
-
-const name = "publicatr"
+const name = "algia"
 
 const version = "0.0.53"
 
@@ -61,8 +51,8 @@ type Config struct {
 
 // Event is
 type Event struct {
-	Event   *nip1.Event `json:"event"`
-	Profile Profile     `json:"profile"`
+	Event   *nostr.Event `json:"event"`
+	Profile Profile      `json:"profile"`
 }
 
 // Profile is
@@ -94,7 +84,7 @@ func loadConfig(profile string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	dir = filepath.Join(dir, "publicatr")
+	dir = filepath.Join(dir, "algia")
 
 	var fp string
 	if profile == "" {
@@ -126,7 +116,7 @@ func loadConfig(profile string) (*Config, error) {
 	}
 	if len(cfg.Relays) == 0 {
 		cfg.Relays = map[string]Relay{}
-		cfg.Relays["wss://relay.nip1.band"] = Relay{
+		cfg.Relays["wss://relay.nostr.band"] = Relay{
 			Read:   true,
 			Write:  true,
 			Search: true,
@@ -140,7 +130,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 	var mu sync.Mutex
 	var pub string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-		if pub, err = nip19.GetPublicKey(s.(string)); err != nil {
+		if pub, err = nostr.GetPublicKey(s.(string)); err != nil {
 			return nil, err
 		}
 	} else {
@@ -154,44 +144,38 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		mu.Unlock()
 		m := map[string]struct{}{}
 
-		cfg.Do(Relay{Read: true},
-			func(ctx context.Context, relay *nostr.Relay) bool {
-				evs, err := relay.QuerySync(ctx,
-					nip1.Filter{
-						Kinds:   kind.Array{kind.ContactList},
-						Authors: []string{pub},
-						Limit:   1,
-					})
-				if err != nil {
-					return true
-				}
-				for _, ev := range evs {
-					var rm map[string]Relay
-					if cfg.tempRelay == false {
-						if err := json.Unmarshal([]byte(ev.Content), &rm); err == nil {
-							for k, v1 := range cfg.Relays {
-								if v2, ok := rm[k]; ok {
-									v2.Search = v1.Search
-								}
-							}
-							cfg.Relays = rm
-						}
-					}
-					for _, tag := range ev.Tags {
-						if len(tag) >= 2 && tag[0] == "p" {
-							mu.Lock()
-							m[tag[1]] = struct{}{}
-							mu.Unlock()
-						}
-					}
-				}
+		cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+			evs, err := relay.QuerySync(ctx, nostr.Filter{Kinds: []int{nostr.KindContactList}, Authors: []string{pub}, Limit: 1})
+			if err != nil {
 				return true
-			})
+			}
+			for _, ev := range evs {
+				var rm map[string]Relay
+				if cfg.tempRelay == false {
+					if err := json.Unmarshal([]byte(ev.Content), &rm); err == nil {
+						for k, v1 := range cfg.Relays {
+							if v2, ok := rm[k]; ok {
+								v2.Search = v1.Search
+							}
+						}
+						cfg.Relays = rm
+					}
+				}
+				for _, tag := range ev.Tags {
+					if len(tag) >= 2 && tag[0] == "p" {
+						mu.Lock()
+						m[tag[1]] = struct{}{}
+						mu.Unlock()
+					}
+				}
+			}
+			return true
+		})
 		if cfg.verbose {
 			fmt.Printf("found %d followers\n", len(m))
 		}
 		if len(m) > 0 {
-			var follows []string
+			follows := []string{}
 			for k := range m {
 				follows = append(follows, k)
 			}
@@ -205,8 +189,8 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 
 				// get follower's descriptions
 				cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-					evs, err := relay.QuerySync(ctx, nip1.Filter{
-						Kinds:   kind.Array{kind.ProfileMetadata},
+					evs, err := relay.QuerySync(ctx, nostr.Filter{
+						Kinds:   []int{nostr.KindProfileMetadata},
 						Authors: follows[i:end], // Use the updated end index
 					})
 					if err != nil {
@@ -276,9 +260,9 @@ func (cfg *Config) Do(r Relay, f func(context.Context, *nostr.Relay) bool) {
 			continue
 		}
 		wg.Add(1)
-		go func(wg *sync.WaitGroup, url string, rl Relay) {
+		go func(wg *sync.WaitGroup, k string, v Relay) {
 			defer wg.Done()
-			relay, err := nostr.RelayConnect(ctx, url)
+			relay, err := nostr.RelayConnect(ctx, k)
 			if err != nil {
 				if cfg.verbose {
 					fmt.Fprintln(os.Stderr, err)
@@ -302,7 +286,7 @@ func (cfg *Config) save(profile string) error {
 	if err != nil {
 		return err
 	}
-	dir = filepath.Join(dir, "publicatr")
+	dir = filepath.Join(dir, "algia")
 
 	var fp string
 	if profile == "" {
@@ -318,12 +302,12 @@ func (cfg *Config) save(profile string) error {
 }
 
 // Decode is
-func (cfg *Config) Decode(ev *nip1.Event) error {
+func (cfg *Config) Decode(ev *nostr.Event) error {
 	var sk string
 	var pub string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
 		sk = s.(string)
-		if pub, err = nip19.GetPublicKey(s.(string)); err != nil {
+		if pub, err = nostr.GetPublicKey(s.(string)); err != nil {
 			return err
 		}
 	} else {
@@ -341,11 +325,11 @@ func (cfg *Config) Decode(ev *nip1.Event) error {
 	} else {
 		sp = ev.PubKey
 	}
-	ss, err := nip4.ComputeSharedSecret(sp, sk)
+	ss, err := nip04.ComputeSharedSecret(sp, sk)
 	if err != nil {
 		return err
 	}
-	content, err := nip4.Decrypt(ev.Content, ss)
+	content, err := nip04.Decrypt(ev.Content, ss)
 	if err != nil {
 		return err
 	}
@@ -354,9 +338,7 @@ func (cfg *Config) Decode(ev *nip1.Event) error {
 }
 
 // PrintEvents is
-func (cfg *Config) PrintEvents(evs []*nip1.Event,
-	followsMap map[string]Profile, j, extra bool) {
-
+func (cfg *Config) PrintEvents(evs []*nostr.Event, followsMap map[string]Profile, j, extra bool) {
 	if j {
 		if extra {
 			var events []Event
@@ -398,41 +380,40 @@ func (cfg *Config) PrintEvents(evs []*nip1.Event,
 }
 
 // Events is
-func (cfg *Config) Events(filter nip1.Filter) []*nip1.Event {
+func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
-	cfg.Do(Relay{Read: true},
-		func(ctx context.Context, relay *nostr.Relay) bool {
-			mu.Lock()
-			if found {
-				mu.Unlock()
-				return false
-			}
+	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+		mu.Lock()
+		if found {
 			mu.Unlock()
-			evs, err := relay.QuerySync(ctx, filter)
-			if err != nil {
-				return true
-			}
-			for _, ev := range evs {
-				if _, ok := m.Load(ev.ID); !ok {
-					if ev.Kind == kind.EncryptedDirectMessage {
-						if err := cfg.Decode(ev); err != nil {
-							continue
-						}
-					}
-					m.LoadOrStore(ev.ID, ev)
-					if len(filter.IDs) == 1 {
-						mu.Lock()
-						found = true
-						ctx.Done()
-						mu.Unlock()
-						break
+			return false
+		}
+		mu.Unlock()
+		evs, err := relay.QuerySync(ctx, filter)
+		if err != nil {
+			return true
+		}
+		for _, ev := range evs {
+			if _, ok := m.Load(ev.ID); !ok {
+				if ev.Kind == nostr.KindEncryptedDirectMessage {
+					if err := cfg.Decode(ev); err != nil {
+						continue
 					}
 				}
+				m.LoadOrStore(ev.ID, ev)
+				if len(filter.IDs) == 1 {
+					mu.Lock()
+					found = true
+					ctx.Done()
+					mu.Unlock()
+					break
+				}
 			}
-			return true
-		})
+		}
+		return true
+	})
 
 	keys := []string{}
 	m.Range(func(k, v any) bool {
@@ -448,15 +429,15 @@ func (cfg *Config) Events(filter nip1.Filter) []*nip1.Event {
 		if !ok {
 			return false
 		}
-		return lhs.(*nip1.Event).CreatedAt.Time().Before(rhs.(*nip1.Event).CreatedAt.Time())
+		return lhs.(*nostr.Event).CreatedAt.Time().Before(rhs.(*nostr.Event).CreatedAt.Time())
 	})
-	var evs []*nip1.Event
+	var evs []*nostr.Event
 	for _, key := range keys {
 		vv, ok := m.Load(key)
 		if !ok {
 			continue
 		}
-		evs = append(evs, vv.(*nip1.Event))
+		evs = append(evs, vv.(*nostr.Event))
 	}
 	return evs
 }
@@ -468,8 +449,8 @@ func doVersion(cCtx *cli.Context) error {
 
 func main() {
 	app := &cli.App{
-		Usage:       "A cli application for nip1",
-		Description: "A cli application for nip1",
+		Usage:       "A cli application for nostr",
+		Description: "A cli application for nostr",
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "a", Usage: "profile name"},
 			&cli.StringFlag{Name: "relays", Usage: "relays"},
@@ -492,7 +473,7 @@ func main() {
 				Usage: "show stream",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "author"},
-					&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(int(kind.TextNote))},
+					&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(nostr.KindTextNote)},
 					&cli.BoolFlag{Name: "follow"},
 					&cli.StringFlag{Name: "pattern"},
 					&cli.StringFlag{Name: "reply"},
@@ -510,7 +491,7 @@ func main() {
 					&cli.StringFlag{Name: "geohash"},
 				},
 				Usage:     "post new note",
-				UsageText: "publicatr post [note text]",
+				UsageText: "algia post [note text]",
 				HelpName:  "post",
 				ArgsUsage: "[note text]",
 				Action:    doPost,
@@ -527,7 +508,7 @@ func main() {
 					&cli.StringFlag{Name: "geohash"},
 				},
 				Usage:     "reply to the note",
-				UsageText: "publicatr reply --id [id] [note text]",
+				UsageText: "algia reply --id [id] [note text]",
 				HelpName:  "reply",
 				ArgsUsage: "[note text]",
 				Action:    doReply,
@@ -539,7 +520,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "repost the note",
-				UsageText: "publicatr repost --id [id]",
+				UsageText: "algia repost --id [id]",
 				HelpName:  "repost",
 				Action:    doRepost,
 			},
@@ -550,7 +531,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "unrepost the note",
-				UsageText: "publicatr unrepost --id [id]",
+				UsageText: "algia unrepost --id [id]",
 				HelpName:  "unrepost",
 				Action:    doUnrepost,
 			},
@@ -563,7 +544,7 @@ func main() {
 					&cli.StringFlag{Name: "emoji"},
 				},
 				Usage:     "like the note",
-				UsageText: "publicatr like --id [id]",
+				UsageText: "algia like --id [id]",
 				HelpName:  "like",
 				Action:    doLike,
 			},
@@ -574,7 +555,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "unlike the note",
-				UsageText: "publicatr unlike --id [id]",
+				UsageText: "algia unlike --id [id]",
 				HelpName:  "unlike",
 				Action:    doUnlike,
 			},
@@ -585,7 +566,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "delete the note",
-				UsageText: "publicatr delete --id [id]",
+				UsageText: "algia delete --id [id]",
 				HelpName:  "delete",
 				Action:    doDelete,
 			},
@@ -598,7 +579,7 @@ func main() {
 					&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
 				},
 				Usage:     "search notes",
-				UsageText: "publicatr search [words]",
+				UsageText: "algia search [words]",
 				HelpName:  "search",
 				Action:    doSearch,
 			},
@@ -628,7 +609,7 @@ func main() {
 					&cli.StringFlag{Name: "sensitive"},
 				},
 				Usage:     "post new note",
-				UsageText: "publicatr post [note text]",
+				UsageText: "algia post [note text]",
 				HelpName:  "post",
 				ArgsUsage: "[note text]",
 				Action:    doDMPost,
@@ -640,21 +621,21 @@ func main() {
 					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
 				},
 				Usage:     "show profile",
-				UsageText: "publicatr profile",
+				UsageText: "algia profile",
 				HelpName:  "profile",
 				Action:    doProfile,
 			},
 			{
 				Name:      "powa",
 				Usage:     "post ぽわ〜",
-				UsageText: "publicatr powa",
+				UsageText: "algia powa",
 				HelpName:  "powa",
 				Action:    doPowa,
 			},
 			{
 				Name:      "puru",
 				Usage:     "post ぷる",
-				UsageText: "publicatr puru",
+				UsageText: "algia puru",
 				HelpName:  "puru",
 				Action:    doPuru,
 			},
@@ -665,14 +646,14 @@ func main() {
 					&cli.StringFlag{Name: "comment", Usage: "comment for zap", Value: ""},
 				},
 				Usage:     "zap [note|npub|nevent]",
-				UsageText: "publicatr zap [note|npub|nevent]",
+				UsageText: "algia zap [note|npub|nevent]",
 				HelpName:  "zap",
 				Action:    doZap,
 			},
 			{
 				Name:      "version",
 				Usage:     "show version",
-				UsageText: "publicatr version",
+				UsageText: "algia version",
 				HelpName:  "version",
 				Action:    doVersion,
 			},

@@ -80,8 +80,8 @@ func (E *ReqEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 			return
 		}
 		log.D.F("filter: '%s'", filterArray)
-		var f Filter
-		if e = json.Unmarshal(filterArray, &f); fails(e) {
+		f := &Filter{}
+		if e = json.Unmarshal(filterArray, f); fails(e) {
 			return
 		}
 		E.Filters = append(E.Filters, f)

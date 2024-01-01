@@ -31,7 +31,7 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) error {
 		if evt.Kind.IsReplaceable() {
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
-				ch, err := query(ctx, nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kind.Array{evt.Kind}})
+				ch, err := query(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kind.Array{evt.Kind}})
 				if err != nil {
 					continue
 				}
@@ -46,7 +46,7 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) error {
 			d := evt.Tags.GetFirst([]string{"d", ""})
 			if d != nil {
 				for _, query := range rl.QueryEvents {
-					ch, err := query(ctx, nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kind.Array{evt.Kind}, Tags: nip1.TagMap{"d": []string{d.Value()}}})
+					ch, err := query(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kind.Array{evt.Kind}, Tags: nip1.TagMap{"d": []string{d.Value()}}})
 					if err != nil {
 						continue
 					}
@@ -90,7 +90,7 @@ func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nip1.Event) error
 		if len(tag) >= 2 && tag[0] == "e" {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
-				ch, err := query(ctx, nip1.Filter{IDs: []string{tag[1]}})
+				ch, err := query(ctx, &nip1.Filter{IDs: []string{tag[1]}})
 				if err != nil {
 					continue
 				}

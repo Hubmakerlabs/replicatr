@@ -9,10 +9,9 @@ import (
 
 	"github.com/urfave/cli/v2"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	nostr "github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
+	"github.com/nbd-wtf/go-nostr"
+	"github.com/nbd-wtf/go-nostr/nip19"
+	"github.com/nbd-wtf/nostr-sdk"
 )
 
 func doProfile(cCtx *cli.Context) error {
@@ -29,7 +28,7 @@ func doProfile(cCtx *cli.Context) error {
 	var pub string
 	if user == "" {
 		if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-			if pub, err = nip19.GetPublicKey(s.(string)); err != nil {
+			if pub, err = nostr.GetPublicKey(s.(string)); err != nil {
 				return err
 			}
 		} else {
@@ -45,7 +44,7 @@ func doProfile(cCtx *cli.Context) error {
 
 	// get set-metadata
 	filter := nostr.Filter{
-		Kinds:   kind.Array{kind.ProfileMetadata},
+		Kinds:   []int{nostr.KindProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
 	}
