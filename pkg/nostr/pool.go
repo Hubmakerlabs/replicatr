@@ -193,7 +193,7 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 }
 
 // QuerySingle returns the first event returned by the first relay, cancels everything else.
-func (pool *SimplePool) QuerySingle(ctx context.Context, urls []string, filter nip1.Filter) *IncomingEvent {
+func (pool *SimplePool) QuerySingle(ctx context.Context, urls []string, filter *nip1.Filter) *IncomingEvent {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 	for ievt := range pool.SubManyEose(ctx, urls, nip1.Filters{filter}) {

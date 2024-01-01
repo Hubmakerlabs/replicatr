@@ -243,7 +243,7 @@ func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string
 		t.Fatalf("len(raw) = %d; want at least 3", len(raw))
 	}
 	var typ string
-	json.Unmarshal(raw[0], &typ)
+	log.D.Chk(json.Unmarshal(raw[0], &typ))
 	if typ != "REQ" {
 		t.Errorf("typ = %q; want REQ", typ)
 	}
@@ -253,8 +253,8 @@ func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string
 	}
 	var ff nip1.Filters
 	for i, b := range raw[2:] {
-		var f nip1.Filter
-		if err := json.Unmarshal(b, &f); err != nil {
+		f := &nip1.Filter{}
+		if err := json.Unmarshal(b, f); err != nil {
 			t.Errorf("json.Unmarshal filter %d: %v", i, err)
 		}
 		ff = append(ff, f)

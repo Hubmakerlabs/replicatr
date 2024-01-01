@@ -75,7 +75,7 @@ func (C *CountRequestEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 		if filterArray, e = buf.ReadEnclosed(); fails(e) {
 			return
 		}
-		var f nip1.Filter
+		f := &nip1.Filter{}
 		if e = json.Unmarshal(filterArray, &f); fails(e) {
 			return
 		}
