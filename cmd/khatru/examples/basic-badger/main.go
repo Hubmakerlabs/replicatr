@@ -8,8 +8,10 @@ import (
 	"github.com/fiatjaf/eventstore/badger"
 )
 
+const appName = "replicatr"
+
 func main() {
-	relay := khatru.NewRelay()
+	relay := khatru.NewRelay(appName)
 
 	db := badger.BadgerBackend{Path: "/tmp/khatru-badgern-tmp"}
 	if err := db.Init(); err != nil {

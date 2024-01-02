@@ -3,16 +3,15 @@ package log
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"io"
-	"os"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
 )
 
-// The Level s
 const (
 	Off Level = iota
 	Fatal
@@ -83,9 +82,7 @@ var (
 		"dbg": Debug,
 		"trc": Trace,
 	}
-	tty      io.Writer = os.Stderr
-	writer             = tty
-	writerMx sync.Mutex
+	levelMx  sync.Mutex
 	logLevel = Info
 )
 
@@ -138,35 +135,31 @@ func GetLoc(skip int) (output string) {
 	return
 }
 
-// GetLogger returns a set of LevelPrinter with their subsystem preloaded
-func GetLogger() (l *Logger) {
+// New returns a set of LevelPrinter with their subsystem preloaded
+//
+// this copies the interface of stdlib log but we don't respect the settings
+// because a logger without timestamps is retarded
+func New(writer io.Writer, appID string, _ int) (l *Logger) {
 	return &Logger{
-		getOnePrinter(Fatal),
-		getOnePrinter(Error),
-		getOnePrinter(Warn),
-		getOnePrinter(Info),
-		getOnePrinter(Debug),
-		getOnePrinter(Trace),
+		getOnePrinter(writer, appID, Fatal),
+		getOnePrinter(writer, appID, Error),
+		getOnePrinter(writer, appID, Warn),
+		getOnePrinter(writer, appID, Info),
+		getOnePrinter(writer, appID, Debug),
+		getOnePrinter(writer, appID, Trace),
 	}
 }
 
 func SetLogLevel(l Level) {
-	writerMx.Lock()
-	defer writerMx.Unlock()
+	levelMx.Lock()
+	defer levelMx.Unlock()
 	logLevel = l
 }
 
 func GetLogLevel() (l Level) {
-	writerMx.Lock()
-	defer writerMx.Unlock()
+	levelMx.Lock()
+	defer levelMx.Unlock()
 	l = logLevel
-	return
-}
-
-func SetWriter(w io.Writer) {
-	writerMx.Lock()
-	defer writerMx.Unlock()
-	writer = w
 	return
 }
 
@@ -178,15 +171,15 @@ func (l LevelMap) String() (s string) {
 	return strings.Join(ss, " ")
 }
 
-func _c(level Level) Printc {
+func _c(writer io.Writer, appID string, level Level) Printc {
 	return func(closure func() string) {
-		logPrint(level, closure)()
+		logPrint(writer, appID, level, closure)()
 	}
 }
-func _chk(level Level) Chk {
+func _chk(writer io.Writer, appID string, level Level) Chk {
 	return func(e error) (is bool) {
 		if e != nil {
-			logPrint(level,
+			logPrint(writer, appID, level,
 				joinStrings(
 					" ",
 					"CHECK:",
@@ -197,39 +190,29 @@ func _chk(level Level) Chk {
 		return
 	}
 }
-
-func _f(level Level) Printf {
+func _f(writer io.Writer, appID string, level Level) Printf {
 	return func(format string, a ...interface{}) {
-		logPrint(
+		logPrint(writer, appID,
 			level, func() string {
 				return fmt.Sprintf(format, a...)
 			},
 		)()
 	}
 }
-
-// The collection of the different types of log print functions,
-// includes spew.Dump, closure and error check printers.
-
-func backticksToSingleQuote(in string) (out func() string) {
-	return func() string {
-		return strings.ReplaceAll(in, "`", "'")
-	}
-}
-
-func _ln(l Level) Println {
+func _ln(writer io.Writer, appID string, l Level) Println {
 	return func(a ...interface{}) {
-		logPrint(l, backticksToSingleQuote(joinStrings(" ", a...)()))()
+		logPrint(writer, appID, l,
+			backticksToSingleQuote(joinStrings(" ", a...)()))()
 	}
 }
-func _s(level Level) Prints {
+func _s(writer io.Writer, appID string, level Level) Prints {
 	return func(a ...interface{}) {
 		text := "spew:\n"
 		if s, ok := a[0].(string); ok {
 			text = strings.TrimSpace(s) + "\n"
 			a = a[1:]
 		}
-		logPrint(
+		logPrint(writer, appID,
 			level, func() string {
 				return backticksToSingleQuote(text + spew.Sdump(a...))()
 			},
@@ -237,13 +220,19 @@ func _s(level Level) Prints {
 	}
 }
 
-func getOnePrinter(level Level) LevelPrinter {
+func backticksToSingleQuote(in string) (out func() string) {
+	return func() string {
+		return strings.ReplaceAll(in, "`", "'")
+	}
+}
+
+func getOnePrinter(writer io.Writer, appID string, level Level) LevelPrinter {
 	return LevelPrinter{
-		Ln:  _ln(level),
-		F:   _f(level),
-		S:   _s(level),
-		C:   _c(level),
-		Chk: _chk(level),
+		Ln:  _ln(writer, appID, level),
+		F:   _f(writer, appID, level),
+		S:   _s(writer, appID, level),
+		C:   _c(writer, appID, level),
+		Chk: _chk(writer, appID, level),
 	}
 }
 
@@ -283,6 +272,8 @@ var formatString = "%s" +
 	" " +
 	"%s" +
 	" " +
+	"%s" +
+	" " +
 	"`%s`" +
 	" " +
 	"%s" +
@@ -290,16 +281,19 @@ var formatString = "%s" +
 
 // logPrint is the generic log printing function that provides the base
 // format for log entries.
-func logPrint(level Level, printFunc func() string) func() {
+func logPrint(writer io.Writer, appID string, level Level,
+	printFunc func() string) func() {
+
 	return func() {
-		writerMx.Lock()
-		defer writerMx.Unlock()
+		levelMx.Lock()
+		defer levelMx.Unlock()
 		if level > logLevel {
 			return
 		}
 		s := fmt.Sprintf(
 			formatString,
 			UnixNanoAsFloat(),
+			"["+appID+"]",
 			LvlStrShort[level],
 			printFunc(),
 			GetLoc(3),
