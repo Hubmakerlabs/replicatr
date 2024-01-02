@@ -13,9 +13,16 @@ import (
 	"github.com/mdp/qrterminal/v3"
 	"github.com/urfave/cli/v2"
 
-	"github.com/nbd-wtf/go-nostr"
-	"github.com/nbd-wtf/go-nostr/nip04"
-	"github.com/nbd-wtf/go-nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 // Lnurlp is
@@ -63,18 +70,16 @@ func pay(cfg *Config, invoice string) error {
 	wallet := uri.Host
 	host := uri.Query().Get("relay")
 	secret := uri.Query().Get("secret")
-	pub, err := nostr.GetPublicKey(secret)
+	pub, err := nip19.GetPublicKey(secret)
 	if err != nil {
 		return err
 	}
-
 	relay, err := nostr.RelayConnect(context.Background(), host)
 	if err != nil {
 		return err
 	}
 	defer relay.Close()
-
-	ss, err := nip04.ComputeSharedSecret(wallet, secret)
+	ss, err := nip4.ComputeSharedSecret(wallet, secret)
 	if err != nil {
 		return err
 	}
@@ -85,46 +90,44 @@ func pay(cfg *Config, invoice string) error {
 	if err != nil {
 		return err
 	}
-	content, err := nip04.Encrypt(string(b), ss)
+	content, err := nip4.Encrypt(string(b), ss)
 	if err != nil {
 		return err
 	}
-
-	ev := nostr.Event{
+	ev := &nip1.Event{
 		PubKey:    pub,
-		CreatedAt: nostr.Now(),
-		Kind:      nostr.KindNWCWalletRequest,
-		Tags:      nostr.Tags{nostr.Tag{"p", wallet}},
+		CreatedAt: timestamp.Now(),
+		Kind:      kind.NWCWalletRequest,
+		Tags:      tags.T{{"p", wallet}},
 		Content:   content,
 	}
 	err = ev.Sign(secret)
 	if err != nil {
 		return err
 	}
-
-	filters := []nostr.Filter{{
-		Tags: nostr.TagMap{
+	filters := []*nip1.Filter{{
+		Tags: nip1.TagMap{
 			"p": []string{pub},
-			"e": []string{ev.ID},
+			"e": []string{string(ev.ID)},
 		},
-		Kinds: []int{nostr.KindNWCWalletInfo, nostr.KindNWCWalletResponse, nostr.KindNWCWalletRequest},
+		Kinds: kinds.T{kind.NWCWalletInfo, kind.NWCWalletResponse, kind.NWCWalletRequest},
 		Limit: 1,
 	}}
 	sub, err := relay.Subscribe(context.Background(), filters)
 	if err != nil {
 		return err
 	}
-
 	_, err = relay.Publish(context.Background(), ev)
 	if err != nil {
 		return err
 	}
-
 	er := <-sub.Events
-	content, err = nip04.Decrypt(er.Content, ss)
+	var decrypted []byte
+	decrypted, err = nip4.Decrypt(er.Content, ss)
 	if err != nil {
 		return err
 	}
+	content = string(decrypted)
 	var resp PayResponse
 	err = json.Unmarshal([]byte(content), resp)
 	if err != nil {
@@ -144,25 +147,21 @@ func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
 		return nil, errors.New("cannot connect relays")
 	}
 	defer relay.Close()
-
 	// get set-metadata
-	filter := nostr.Filter{
-		Kinds:   []int{nostr.KindProfileMetadata},
+	filter := &nip1.Filter{
+		Kinds:   kinds.T{kind.ProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
 	}
-
 	evs := cfg.Events(filter)
 	if len(evs) == 0 {
 		return nil, errors.New("cannot find user")
 	}
-
 	var profile Profile
 	err := json.Unmarshal([]byte(evs[0].Content), &profile)
 	if err != nil {
 		return nil, err
 	}
-
 	tok := strings.SplitN(profile.Lud16, "@", 2)
 	if err != nil {
 		return nil, err
@@ -170,13 +169,11 @@ func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
 	if len(tok) != 2 {
 		return nil, errors.New("receipt address is not valid")
 	}
-
 	resp, err := http.Get("https://" + tok[1] + "/.well-known/lnurlp/" + tok[0])
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
 	var lp Lnurlp
 	err = json.NewDecoder(resp.Body).Decode(&lp)
 	if err != nil {
@@ -191,25 +188,20 @@ func doZap(cCtx *cli.Context) error {
 	if cCtx.Args().Len() == 0 {
 		return cli.ShowSubcommandHelp(cCtx)
 	}
-
 	if cCtx.Args().Len() == 0 {
 		return cli.ShowSubcommandHelp(cCtx)
 	}
-
 	cfg := cCtx.App.Metadata["config"].(*Config)
-
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
 		sk = s.(string)
 	} else {
 		return err
 	}
-
 	receipt := ""
-	zr := nostr.Event{}
-	zr.Tags = nostr.Tags{}
-
-	if pub, err := nostr.GetPublicKey(sk); err == nil {
+	zr := &nip1.Event{}
+	zr.Tags = tags.T{}
+	if pub, err := nip19.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -217,9 +209,8 @@ func doZap(cCtx *cli.Context) error {
 	} else {
 		return err
 	}
-
-	zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"amount", fmt.Sprint(amount * 1000)})
-	relays := nostr.Tag{"relays"}
+	zr.Tags = zr.Tags.AppendUnique(tag.T{"amount", fmt.Sprint(amount * 1000)})
+	relays := tag.T{"relays"}
 	for k, v := range cfg.Relays {
 		if v.Write {
 			relays = append(relays, k)
@@ -229,26 +220,25 @@ func doZap(cCtx *cli.Context) error {
 	if prefix, s, err := nip19.Decode(cCtx.Args().First()); err == nil {
 		switch prefix {
 		case "nevent":
-			receipt = s.(nostr.EventPointer).Author
-			zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"p", receipt})
-			zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"e", s.(nostr.EventPointer).ID})
+			receipt = s.(pointers.Event).Author
+			zr.Tags = zr.Tags.AppendUnique(tag.T{"p", receipt})
+			zr.Tags = zr.Tags.AppendUnique(tag.T{"e", string(s.(pointers.Event).ID)})
 		case "note":
-			evs := cfg.Events(nostr.Filter{IDs: []string{s.(string)}})
+			evs := cfg.Events(&nip1.Filter{IDs: []string{s.(string)}})
 			if len(evs) != 0 {
 				receipt = evs[0].PubKey
-				zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"p", receipt})
+				zr.Tags = zr.Tags.AppendUnique(tag.T{"p", receipt})
 			}
-			zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"e", s.(string)})
+			zr.Tags = zr.Tags.AppendUnique(tag.T{"e", s.(string)})
 		case "npub":
 			receipt = s.(string)
-			zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"p", receipt})
+			zr.Tags = zr.Tags.AppendUnique(tag.T{"p", receipt})
 		default:
 			return errors.New("invalid argument")
 		}
 	}
-
-	zr.Kind = nostr.KindZapRequest // 9734
-	zr.CreatedAt = nostr.Now()
+	zr.Kind = kind.ZapRequest // 9734
+	zr.CreatedAt = timestamp.Now()
 	zr.Content = comment
 	if err := zr.Sign(sk); err != nil {
 		return err
@@ -257,7 +247,6 @@ func doZap(cCtx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-
 	zi, err := cfg.ZapInfo(receipt)
 	if err != nil {
 		return err
@@ -275,13 +264,11 @@ func doZap(cCtx *cli.Context) error {
 		return err
 	}
 	defer resp.Body.Close()
-
 	var iv Invoice
 	err = json.NewDecoder(resp.Body).Decode(&iv)
 	if err != nil {
 		return err
 	}
-
 	if cfg.NwcURI == "" {
 		config := qrterminal.Config{
 			HalfBlocks: false,

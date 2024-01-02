@@ -2,12 +2,14 @@ package nip1_test
 
 import (
 	"encoding/json"
+	"testing"
+	"time"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"testing"
-	"time"
 )
 
 var filt = nip1.Filters{
@@ -18,7 +20,7 @@ var filt = nip1.Filters{
 			"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
 			"92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
 		},
-		Kinds: kind.Array{
+		Kinds: kinds.T{
 			kind.TextNote, kind.MemoryHole, kind.CategorizedBookmarksList,
 		},
 		Authors: []string{

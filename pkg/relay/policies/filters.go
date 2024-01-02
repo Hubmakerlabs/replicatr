@@ -2,7 +2,8 @@ package policies
 
 import (
 	"context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+
+	kinds2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"golang.org/x/exp/slices"
@@ -52,7 +53,7 @@ func RemoveSearchQueries(ctx context.Context, filter *nip1.Filter) {
 func RemoveAllButKinds(kinds ...uint16) func(context.Context, *nip1.Filter) {
 	return func(ctx context.Context, filter *nip1.Filter) {
 		if n := len(filter.Kinds); n > 0 {
-			newKinds := make(kind.Array, 0, n)
+			newKinds := make(kinds2.T, 0, n)
 			for i := 0; i < n; i++ {
 				if k := filter.Kinds[i]; slices.Contains(kinds, uint16(k)) {
 					newKinds = append(newKinds, k)

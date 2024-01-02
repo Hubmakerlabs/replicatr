@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
@@ -31,7 +32,7 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) error {
 		if evt.Kind.IsReplaceable() {
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
-				ch, err := query(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kind.Array{evt.Kind}})
+				ch, err := query(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kinds.T{evt.Kind}})
 				if err != nil {
 					continue
 				}
@@ -46,7 +47,7 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) error {
 			d := evt.Tags.GetFirst([]string{"d", ""})
 			if d != nil {
 				for _, query := range rl.QueryEvents {
-					ch, err := query(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kind.Array{evt.Kind}, Tags: nip1.TagMap{"d": []string{d.Value()}}})
+					ch, err := query(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kinds.T{evt.Kind}, Tags: nip1.TagMap{"d": []string{d.Value()}}})
 					if err != nil {
 						continue
 					}

@@ -3,11 +3,13 @@ package nostr
 import (
 	"context"
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 )
 
 const RELAY = "wss://nostr.mom"
@@ -25,7 +27,7 @@ func TestSubscribe(t *testing.T) {
 
 	sub, err := rl.Subscribe(context.Background(),
 		nip1.Filters{
-			{Kinds: kind.Array{kind.TextNote}, Limit: 2},
+			{Kinds: kinds.T{kind.TextNote}, Limit: 2},
 		})
 	if err != nil {
 		t.Errorf("subscription failed: %v", err)
@@ -68,7 +70,7 @@ func TestNestedSubscriptions(t *testing.T) {
 
 	// fetch 2 replies to a note
 	sub, err := rl.Subscribe(context.Background(), nip1.Filters{{
-		Kinds: kind.Array{kind.TextNote},
+		Kinds: kinds.T{kind.TextNote},
 		Tags:  nip1.TagMap{"e": []string{"0e34a74f8547e3b95d52a2543719b109fd0312aba144e2ef95cba043f42fe8c5"}},
 		Limit: 3,
 	}})
@@ -81,7 +83,7 @@ func TestNestedSubscriptions(t *testing.T) {
 		select {
 		case event := <-sub.Events:
 			// now fetch author of this
-			sub, err := rl.Subscribe(context.Background(), nip1.Filters{{Kinds: kind.Array{kind.SetMetadata}, Authors: []string{event.PubKey}, Limit: 1}})
+			sub, err := rl.Subscribe(context.Background(), nip1.Filters{{Kinds: kinds.T{kind.SetMetadata}, Authors: []string{event.PubKey}, Limit: 1}})
 			if err != nil {
 				t.Errorf("subscription 2 failed: %v", err)
 				return

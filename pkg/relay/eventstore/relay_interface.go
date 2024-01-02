@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 )
@@ -43,7 +44,7 @@ func (w RelayWrapper) Publish(ctx context.Context, evt nip1.Event) (e error) {
 	} else if evt.Kind.IsReplaceable() {
 		// replaceable event, delete before storing
 		var ch chan *nip1.Event
-		ch, e = w.Store.QueryEvents(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kind.Array{evt.Kind}})
+		ch, e = w.Store.QueryEvents(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kinds.T{evt.Kind}})
 		if fails(e) {
 			return fmt.Errorf("failed to query before replacing: %w", e)
 		}
@@ -59,7 +60,7 @@ func (w RelayWrapper) Publish(ctx context.Context, evt nip1.Event) (e error) {
 			var ch chan *nip1.Event
 			ch, e = w.Store.QueryEvents(ctx, &nip1.Filter{
 				Authors: []string{evt.PubKey},
-				Kinds:   kind.Array{evt.Kind},
+				Kinds:   kinds.T{evt.Kind},
 				Tags:    nip1.TagMap{"d": []string{d.Value()}},
 			})
 			if fails(e) {

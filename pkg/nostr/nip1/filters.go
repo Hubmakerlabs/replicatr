@@ -3,12 +3,13 @@ package nip1
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"sort"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
-	"sort"
 )
 
 type Filters []*Filter
@@ -50,7 +51,7 @@ func (eff Filters) ToArray() (a array.T) {
 // populated tags are put into the map as they are expected to be.
 type Filter struct {
 	IDs     tag.T         `json:"ids,omitempty"`
-	Kinds   kind.Array    `json:"kinds,omitempty"`
+	Kinds   kinds.T       `json:"kinds,omitempty"`
 	Authors tag.T         `json:"authors,omitempty"`
 	Tags    TagMap        `json:"-,omitempty"`
 	Since   *timestamp.Tp `json:"since,omitempty"`

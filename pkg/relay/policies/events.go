@@ -2,7 +2,9 @@ package policies
 
 import (
 	"context"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
@@ -14,7 +16,7 @@ import (
 //
 // If ignoreKinds is given this restriction will not apply to these kinds (useful for allowing a bigger).
 // If onlyKinds is given then all other kinds will be ignored.
-func PreventTooManyIndexableTags(max int, ignoreKinds kind.Array, onlyKinds kind.Array) func(context.Context, *nip1.Event) (bool, string) {
+func PreventTooManyIndexableTags(max int, ignoreKinds kinds.T, onlyKinds kinds.T) func(context.Context, *nip1.Event) (bool, string) {
 	ignore := func(kind kind.T) bool { return false }
 	if len(ignoreKinds) > 0 {
 		ignore = func(kind kind.T) bool {
