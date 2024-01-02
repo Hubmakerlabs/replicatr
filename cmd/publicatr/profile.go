@@ -17,25 +17,24 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
 
-func doProfile(cCtx *cli.Context) error {
+func doProfile(cCtx *cli.Context) (e error) {
 	user := cCtx.String("u")
 	j := cCtx.Bool("json")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
-	relay := cfg.FindRelay(context.Background(), Relay{Read: true})
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
+	relay := cfg.FindRelay(context.Background(), relayPerms{Read: true})
 	if relay == nil {
 		return errors.New("cannot connect relays")
 	}
 	defer relay.Close()
-
 	var pub string
 	if user == "" {
-		if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-			if pub, err = nip19.GetPublicKey(s.(string)); err != nil {
-				return err
-			}
-		} else {
-			return err
+		var s any
+		if _, s, e = nip19.Decode(cfg.PrivateKey); fails(e) {
+			return
+		}
+		if pub, e = nip19.GetPublicKey(s.(string)); fails(e) {
+			return
 		}
 	} else {
 		if pp := sdk.InputToProfile(context.TODO(), user); pp != nil {
@@ -44,31 +43,27 @@ func doProfile(cCtx *cli.Context) error {
 			return fmt.Errorf("failed to parse pubkey from '%s'", user)
 		}
 	}
-
 	// get set-metadata
 	filter := &nip1.Filter{
 		Kinds:   kinds.T{kind.ProfileMetadata},
 		Authors: tag.T{pub},
 		Limit:   1,
 	}
-
 	evs := cfg.Events(filter)
 	if len(evs) == 0 {
 		return errors.New("cannot find user")
 	}
-
 	if j {
 		fmt.Fprintln(os.Stdout, evs[0].Content)
 		return nil
 	}
-	var profile Profile
-	err := json.Unmarshal([]byte(evs[0].Content), &profile)
-	if err != nil {
-		return err
+	profile := &userProfile{}
+	if e = json.Unmarshal([]byte(evs[0].Content), profile); fails(e) {
+		return
 	}
-	npub, err := nip19.EncodePublicKey(pub)
-	if err != nil {
-		return err
+	var npub string
+	if npub, e = nip19.EncodePublicKey(pub); fails(e) {
+		return
 	}
 	fmt.Printf("Pubkey: %v\n", npub)
 	fmt.Printf("Name: %v\n", profile.Name)

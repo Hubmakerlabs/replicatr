@@ -4,15 +4,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net/url"
+	"strings"
+	"time"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 	log2 "mleku.online/git/log"
-	"net/url"
-	"strings"
-	"time"
 )
 
 var (
@@ -21,7 +22,7 @@ var (
 	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
-const LAuth nip1.Label = 7
+var LAuth = nip1.Label(len(nip1.Labels))
 const AUTH = "AUTH"
 
 func init() {

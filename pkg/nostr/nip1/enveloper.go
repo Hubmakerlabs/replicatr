@@ -2,6 +2,7 @@ package nip1
 
 import (
 	"fmt"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
@@ -20,8 +21,10 @@ const (
 	LReq
 )
 
+type EnvelopeLabel map[Label][]byte
+
 // Labels is the nip1 envelope labels, matching the above enums.
-var Labels = map[Label][]byte{
+var Labels = EnvelopeLabel{
 	LNil:    nil,
 	LEvent:  []byte("EVENT"),
 	LOK:     []byte("OK"),
@@ -30,6 +33,15 @@ var Labels = map[Label][]byte{
 	LClose:  []byte("CLOSE"),
 	LClosed: []byte("CLOSED"),
 	LReq:    []byte("REQ"),
+}
+
+func (l EnvelopeLabel) String() (s string) {
+	s+= "["
+	for i := range Labels {
+		s += fmt.Sprintf("%d:'%s',", i, Labels[i])
+	}
+	s+="]"
+	return
 }
 
 // With these, labels have easy short names for the strings, as well as neat
@@ -84,7 +96,7 @@ type Enveloper interface {
 // ready for some other envelope outside of nip-01 to decode.
 func ProcessEnvelope(b []byte) (env Enveloper, label []byte, buf *text.Buffer,
 	e error) {
-	// log.D.F("processing envelope:\n%s", string(b))
+	log.D.F("processing envelope:\n%s", string(b))
 	// The bytes must be valid JSON but we can't assume they are free of
 	// whitespace... So we will use some tools.
 	buf = text.NewBuffer(b)
@@ -100,6 +112,7 @@ func ProcessEnvelope(b []byte) (env Enveloper, label []byte, buf *text.Buffer,
 	if candidate, e = buf.ReadUntil('"'); e != nil {
 		return
 	}
+	// log.D.F("label: '%s' %v", string(candidate), Labels)
 	var differs bool
 	var match Label
 matched:
