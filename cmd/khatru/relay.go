@@ -14,35 +14,39 @@ import (
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
+const (
+	WriteWait             = 10 * time.Second
+	PongWait              = 60 * time.Second
+	PingPeriod            = 30 * time.Second
+	ReadBufferSize        = 4096
+	WriteBufferSize       = 4096
+	MaxMessageSize  int64 = 512000 // ???
+)
+
 func NewRelay(appName string) *Relay {
 	return &Relay{
 		Log: log.New(os.Stderr, appName, 0),
-
 		Info: &nip11.RelayInformationDocument{
 			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/khatru",
 			Version:       "n/a",
 			SupportedNIPs: make([]int, 0),
 		},
-
 		upgrader: websocket.Upgrader{
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
+			ReadBufferSize:  ReadBufferSize,
+			WriteBufferSize: WriteBufferSize,
 			CheckOrigin:     func(r *http.Request) bool { return true },
 		},
-
-		clients:  xsync.NewTypedMapOf[*websocket.Conn, struct{}](pointerHasher[websocket.Conn]),
-		serveMux: &http.ServeMux{},
-
-		WriteWait:      10 * time.Second,
-		PongWait:       60 * time.Second,
-		PingPeriod:     30 * time.Second,
-		MaxMessageSize: 512000,
+		clients:        xsync.NewTypedMapOf[*websocket.Conn, struct{}](pointerHasher[websocket.Conn]),
+		serveMux:       &http.ServeMux{},
+		WriteWait:      WriteWait,
+		PongWait:       PongWait,
+		PingPeriod:     PingPeriod,
+		MaxMessageSize: MaxMessageSize,
 	}
 }
 
 type Relay struct {
-	ServiceURL string
-
+	ServiceURL                string
 	RejectEvent               []func(ctx context.Context, event *nostr.Event) (reject bool, msg string)
 	RejectFilter              []func(ctx context.Context, filter nostr.Filter) (reject bool, msg string)
 	RejectCountFilter         []func(ctx context.Context, filter nostr.Filter) (reject bool, msg string)
@@ -58,25 +62,17 @@ type Relay struct {
 	OnConnect                 []func(ctx context.Context)
 	OnDisconnect              []func(ctx context.Context)
 	OnEventSaved              []func(ctx context.Context, event *nostr.Event)
-
 	// editing info will affect
 	Info *nip11.RelayInformationDocument
-
-	// Default logger, as set by NewServer, is a stdlib logger prefixed with "[khatru-relay] ",
-	// outputting to stderr.
-	Log *log.Logger
-
+	Log  *log.Logger
 	// for establishing websockets
 	upgrader websocket.Upgrader
-
 	// keep a connection reference to all connected clients for Server.Shutdown
 	clients *xsync.MapOf[*websocket.Conn, struct{}]
-
 	// in case you call Server.Start
 	Addr       string
 	serveMux   *http.ServeMux
 	httpServer *http.Server
-
 	// websocket options
 	WriteWait      time.Duration // Time allowed to write a message to the peer.
 	PongWait       time.Duration // Time allowed to read the next pong message from the peer.
