@@ -2,9 +2,10 @@ package relay
 
 import (
 	"context"
-	log2 "mleku.online/git/log"
 	"net/http"
 	"time"
+
+	log2 "mleku.online/git/log"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
@@ -17,7 +18,7 @@ func New() *Relay {
 		Log: log2.GetLogger(),
 
 		Info: &nip11.RelayInfo{
-			Software:      "https://github.com/fiatjaf/khatru",
+			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/khatru",
 			Version:       "n/a",
 			SupportedNIPs: make([]int, 0),
 		},
