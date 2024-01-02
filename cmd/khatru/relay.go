@@ -1,23 +1,23 @@
-package relay
+package khatru
 
 import (
 	"context"
+	"log"
 	"net/http"
+	"os"
 	"time"
 
-	log2 "mleku.online/git/log"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/fasthttp/websocket"
+	"github.com/nbd-wtf/go-nostr"
+	"github.com/nbd-wtf/go-nostr/nip11"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
-func New() *Relay {
+func NewRelay() *Relay {
 	return &Relay{
-		Log: log2.GetLogger(),
+		Log: log.New(os.Stderr, "[khatru-relay] ", log.LstdFlags),
 
-		Info: &nip11.RelayInfo{
+		Info: &nip11.RelayInformationDocument{
 			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/khatru",
 			Version:       "n/a",
 			SupportedNIPs: make([]int, 0),
@@ -42,29 +42,28 @@ func New() *Relay {
 type Relay struct {
 	ServiceURL string
 
-	RejectEvent               []func(ctx context.Context, event *nip1.Event) (reject bool, msg string)
-	RejectFilter              []func(ctx context.Context, filter *nip1.Filter) (reject bool, msg string)
-	RejectCountFilter         []func(ctx context.Context, filter *nip1.Filter) (reject bool, msg string)
-	OverwriteDeletionOutcome  []func(ctx context.Context, target *nip1.Event, deletion *nip1.Event) (acceptDeletion bool, msg string)
-	OverwriteResponseEvent    []func(ctx context.Context, event *nip1.Event)
-	OverwriteFilter           []func(ctx context.Context, filter *nip1.Filter)
-	OverwriteCountFilter      []func(ctx context.Context, filter *nip1.Filter)
-	OverwriteRelayInformation []func(ctx context.Context, r *http.Request, info *nip11.RelayInfo) *nip11.RelayInfo
-	StoreEvent                []func(ctx context.Context, event *nip1.Event) error
-	DeleteEvent               []func(ctx context.Context, event *nip1.Event) error
-	QueryEvents               []func(ctx context.Context, filter *nip1.Filter) (chan *nip1.Event, error)
-	CountEvents               []func(ctx context.Context, filter *nip1.Filter) (int64, error)
-	OnAuth                    []func(ctx context.Context, pubkey string)
+	RejectEvent               []func(ctx context.Context, event *nostr.Event) (reject bool, msg string)
+	RejectFilter              []func(ctx context.Context, filter nostr.Filter) (reject bool, msg string)
+	RejectCountFilter         []func(ctx context.Context, filter nostr.Filter) (reject bool, msg string)
+	OverwriteDeletionOutcome  []func(ctx context.Context, target *nostr.Event, deletion *nostr.Event) (acceptDeletion bool, msg string)
+	OverwriteResponseEvent    []func(ctx context.Context, event *nostr.Event)
+	OverwriteFilter           []func(ctx context.Context, filter *nostr.Filter)
+	OverwriteCountFilter      []func(ctx context.Context, filter *nostr.Filter)
+	OverwriteRelayInformation []func(ctx context.Context, r *http.Request, info nip11.RelayInformationDocument) nip11.RelayInformationDocument
+	StoreEvent                []func(ctx context.Context, event *nostr.Event) error
+	DeleteEvent               []func(ctx context.Context, event *nostr.Event) error
+	QueryEvents               []func(ctx context.Context, filter nostr.Filter) (chan *nostr.Event, error)
+	CountEvents               []func(ctx context.Context, filter nostr.Filter) (int64, error)
 	OnConnect                 []func(ctx context.Context)
 	OnDisconnect              []func(ctx context.Context)
-	OnEventSaved              []func(ctx context.Context, event *nip1.Event)
+	OnEventSaved              []func(ctx context.Context, event *nostr.Event)
 
 	// editing info will affect
-	Info *nip11.RelayInfo
+	Info *nip11.RelayInformationDocument
 
 	// Default logger, as set by NewServer, is a stdlib logger prefixed with "[khatru-relay] ",
 	// outputting to stderr.
-	Log *log2.Logger
+	Log *log.Logger
 
 	// for establishing websockets
 	upgrader websocket.Upgrader
