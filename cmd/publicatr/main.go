@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -32,35 +31,37 @@ const version = "0.0.53"
 
 var revision = "HEAD"
 
-// Relay is
-type Relay struct {
+// relayPerms is
+type relayPerms struct {
 	Read   bool `json:"read"`
 	Write  bool `json:"write"`
 	Search bool `json:"search"`
 }
 
-// Config is
-type Config struct {
-	Relays     map[string]Relay   `json:"relays"`
-	Follows    map[string]Profile `json:"follows"`
-	PrivateKey string             `json:"privatekey"`
-	Updated    time.Time          `json:"updated"`
-	Emojis     map[string]string  `json:"emojis"`
-	NwcURI     string             `json:"nwc-uri"`
-	NwcPub     string             `json:"nwc-pub"`
+type relayPermsMap map[string]relayPerms
+
+// clientConfig is
+type clientConfig struct {
+	Relays     relayPermsMap     `json:"relays"`
+	Follows    profilesMap       `json:"follows"`
+	PrivateKey string            `json:"privatekey"`
+	Updated    time.Time         `json:"updated"`
+	Emojis     map[string]string `json:"emojis"`
+	NwcURI     string            `json:"nwc-uri"`
+	NwcPub     string            `json:"nwc-pub"`
 	verbose    bool
 	tempRelay  bool
 	sk         string
 }
 
-// Event is
-type Event struct {
-	Event   *nip1.Event `json:"event"`
-	Profile Profile     `json:"profile"`
+// associatedEvent is
+type associatedEvent struct {
+	Event   *nip1.Event  `json:"event"`
+	Profile *userProfile `json:"profile"`
 }
 
-// Profile is
-type Profile struct {
+// userProfile is
+type userProfile struct {
 	Website     string `json:"website"`
 	Nip05       string `json:"nip05"`
 	Picture     string `json:"picture"`
@@ -70,12 +71,13 @@ type Profile struct {
 	Name        string `json:"name"`
 }
 
-func configDir() (string, error) {
+type profilesMap map[string]userProfile
+
+func configDir() (dir string, e error) {
 	switch runtime.GOOS {
 	case "darwin":
-		dir, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
+		if dir, e = os.UserHomeDir(); fails(e) {
+			return
 		}
 		return filepath.Join(dir, ".config"), nil
 	default:
@@ -83,17 +85,17 @@ func configDir() (string, error) {
 	}
 }
 
-func loadConfig(profile string) (*Config, error) {
-	dir, err := configDir()
-	if err != nil {
-		return nil, err
+func loadConfig(profile string) (cc *clientConfig, e error) {
+	var dir string
+	if dir, e = configDir(); fails(e) {
+		return
 	}
 	dir = filepath.Join(dir, appName)
-
 	var fp string
-	if profile == "" {
+	switch profile {
+	case "":
 		fp = filepath.Join(dir, "config.json")
-	} else if profile == "?" {
+	case "?":
 		names, err := filepath.Glob(filepath.Join(dir, "config-*.json"))
 		if err != nil {
 			return nil, err
@@ -104,61 +106,56 @@ func loadConfig(profile string) (*Config, error) {
 			fmt.Println(name)
 		}
 		os.Exit(0)
-	} else {
+	default:
 		fp = filepath.Join(dir, "config-"+profile+".json")
 	}
-	os.MkdirAll(filepath.Dir(fp), 0700)
-
-	b, err := ioutil.ReadFile(fp)
-	if err != nil {
-		return nil, err
+	log.D.Chk(os.MkdirAll(filepath.Dir(fp), 0700))
+	var b []byte
+	if b, e = os.ReadFile(fp); fails(e) {
+		return
 	}
-	var cfg Config
-	err = json.Unmarshal(b, &cfg)
-	if err != nil {
-		return nil, err
+	cfg := &clientConfig{}
+	if e = json.Unmarshal(b, &cfg); fails(e) {
+		return
 	}
 	if len(cfg.Relays) == 0 {
-		cfg.Relays = map[string]Relay{}
-		cfg.Relays["wss://relay.nostr.band"] = Relay{
+		cfg.Relays = relayPermsMap{"wss://relay.nostr.band": {
 			Read:   true,
 			Write:  true,
 			Search: true,
-		}
+		}}
 	}
-	return &cfg, nil
+	return
 }
 
 // GetFollows is
-func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
+func (cfg *clientConfig) GetFollows(profile string) (pm profilesMap, e error) {
 	var mu sync.Mutex
 	var pub string
-	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-		if pub, err = nip19.GetPublicKey(s.(string)); err != nil {
-			return nil, err
-		}
-	} else {
-		return nil, err
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); fails(e) {
+		return
 	}
-
+	if pub, e = nip19.GetPublicKey(s.(string)); fails(e) {
+		return
+	}
 	// get followers
 	if (cfg.Updated.Add(3*time.Hour).Before(time.Now()) && !cfg.tempRelay) || len(cfg.Follows) == 0 {
 		mu.Lock()
-		cfg.Follows = map[string]Profile{}
+		cfg.Follows = profilesMap{}
 		mu.Unlock()
 		m := map[string]struct{}{}
-
-		cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-			evs, err := relay.QuerySync(ctx, &nip1.Filter{
+		cfg.Do(relayPerms{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+			evs, e := relay.QuerySync(ctx, &nip1.Filter{
 				Kinds:   kinds.T{kind.ContactList},
 				Authors: tag.T{pub},
 				Limit:   1,
 			})
-			if err != nil {
+			if fails(e) {
 				return true
 			}
 			for _, ev := range evs {
-				var rm map[string]Relay
+				var rm relayPermsMap
 				if cfg.tempRelay == false {
 					if err := json.Unmarshal([]byte(ev.Content), &rm); err == nil {
 						for k, v1 := range cfg.Relays {
@@ -169,10 +166,10 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 						cfg.Relays = rm
 					}
 				}
-				for _, tag := range ev.Tags {
-					if len(tag) >= 2 && tag[0] == "p" {
+				for _, t := range ev.Tags {
+					if len(t) >= 2 && t[0] == "p" {
 						mu.Lock()
-						m[tag[1]] = struct{}{}
+						m[t[1]] = struct{}{}
 						mu.Unlock()
 					}
 				}
@@ -183,20 +180,18 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 			fmt.Printf("found %d followers\n", len(m))
 		}
 		if len(m) > 0 {
-			follows := []string{}
+			var follows []string
 			for k := range m {
 				follows = append(follows, k)
 			}
-
 			for i := 0; i < len(follows); i += 500 {
 				// Calculate the end index based on the current index and slice length
 				end := i + 500
 				if end > len(follows) {
 					end = len(follows)
 				}
-
 				// get follower's descriptions
-				cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+				cfg.Do(relayPerms{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 					evs, err := relay.QuerySync(ctx, &nip1.Filter{
 						Kinds:   kinds.T{kind.ProfileMetadata},
 						Authors: follows[i:end], // Use the updated end index
@@ -205,11 +200,10 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 						return true
 					}
 					for _, ev := range evs {
-						var profile Profile
-						err := json.Unmarshal([]byte(ev.Content), &profile)
-						if err == nil {
+						var prf userProfile
+						if e = json.Unmarshal([]byte(ev.Content), &prf); !fails(e) {
 							mu.Lock()
-							cfg.Follows[ev.PubKey] = profile
+							cfg.Follows[ev.PubKey] = prf
 							mu.Unlock()
 						}
 					}
@@ -217,109 +211,101 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 				})
 			}
 		}
-
 		cfg.Updated = time.Now()
-		if err := cfg.save(profile); err != nil {
-			return nil, err
+		if e = cfg.save(profile); fails(e) {
+			return
 		}
 	}
 	return cfg.Follows, nil
 }
 
 // FindRelay is
-func (cfg *Config) FindRelay(ctx context.Context, r Relay) *nostr.Relay {
+func (cfg *clientConfig) FindRelay(ctx context.Context, r relayPerms) (relay *nostr.Relay) {
+	var e error
 	for k, v := range cfg.Relays {
-		if r.Write && !v.Write {
-			continue
-		}
-		if !cfg.tempRelay && r.Search && !v.Search {
-			continue
-		}
-		if !r.Write && !v.Read {
+		if (r.Write && !v.Write) ||
+			(!cfg.tempRelay && r.Search && !v.Search) ||
+			(!r.Write && !v.Read) {
+
 			continue
 		}
 		if cfg.verbose {
-			fmt.Printf("trying relay: %s\n", k)
+			log.I.F("trying relay: %s\n", k)
 		}
-		relay, err := nostr.RelayConnect(ctx, k)
-		if err != nil {
+		if relay, e = nostr.RelayConnect(ctx, k); log.D.Chk(e) {
 			if cfg.verbose {
-				fmt.Fprintln(os.Stderr, err.Error())
+				log.E.Ln(e.Error())
 			}
 			continue
 		}
-		return relay
+		return
 	}
-	return nil
+	return
 }
 
 // Do is
-func (cfg *Config) Do(r Relay, f func(context.Context, *nostr.Relay) bool) {
+func (cfg *clientConfig) Do(r relayPerms, f func(context.Context, *nostr.Relay) bool) {
 	var wg sync.WaitGroup
 	ctx := context.Background()
 	for k, v := range cfg.Relays {
-		if r.Write && !v.Write {
-			continue
-		}
-		if r.Search && !v.Search {
-			continue
-		}
-		if !r.Write && !v.Read {
+		if (r.Write && !v.Write) ||
+			(r.Search && !v.Search) ||
+			(!r.Write && !v.Read) {
+
 			continue
 		}
 		wg.Add(1)
-		go func(wg *sync.WaitGroup, k string, v Relay) {
+		go func(wg *sync.WaitGroup, k string, v relayPerms) {
 			defer wg.Done()
-			relay, err := nostr.RelayConnect(ctx, k)
-			if err != nil {
+			var e error
+			var relay *nostr.Relay
+			if relay, e = nostr.RelayConnect(ctx, k); log.D.Chk(e) {
 				if cfg.verbose {
-					fmt.Fprintln(os.Stderr, err)
+					log.D.Chk(e)
 				}
 				return
 			}
 			if !f(ctx, relay) {
 				ctx.Done()
 			}
-			relay.Close()
+			log.D.Chk(relay.Close())
 		}(&wg, k, v)
 	}
 	wg.Wait()
 }
 
-func (cfg *Config) save(profile string) error {
+func (cfg *clientConfig) save(profile string) (e error) {
 	if cfg.tempRelay {
 		return nil
 	}
-	dir, err := configDir()
-	if err != nil {
-		return err
+	var dir string
+	if dir, e = configDir(); fails(e) {
+		return
 	}
 	dir = filepath.Join(dir, appName)
-
 	var fp string
 	if profile == "" {
 		fp = filepath.Join(dir, "config.json")
 	} else {
 		fp = filepath.Join(dir, "config-"+profile+".json")
 	}
-	b, err := json.MarshalIndent(&cfg, "", "  ")
-	if err != nil {
-		return err
+	var b []byte
+	if b, e = json.MarshalIndent(&cfg, "", "  "); fails(e) {
+		return
 	}
-	return ioutil.WriteFile(fp, b, 0644)
+	return os.WriteFile(fp, b, 0644)
 }
 
 // Decode is
-func (cfg *Config) Decode(ev *nip1.Event) error {
-	var sk string
-	var pub string
-	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-		sk = s.(string)
-		if pub, err = nip19.GetPublicKey(s.(string)); err != nil {
-			return err
-		}
-	} else {
-		return err
+func (cfg *clientConfig) Decode(ev *nip1.Event) (e error) {
+	var sk, pub string
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); fails(e) {
+		return
+	}
+	sk = s.(string)
+	if pub, e = nip19.GetPublicKey(s.(string)); fails(e) {
+		return e
 	}
 	tag := ev.Tags.GetFirst([]string{"p"})
 	if tag == nil {
@@ -346,15 +332,15 @@ func (cfg *Config) Decode(ev *nip1.Event) error {
 }
 
 // PrintEvents is
-func (cfg *Config) PrintEvents(evs []*nip1.Event, followsMap map[string]Profile, j, extra bool) {
+func (cfg *clientConfig) PrintEvents(evs []*nip1.Event, followsMap profilesMap, j, extra bool) {
 	if j {
 		if extra {
-			var events []Event
+			var events []associatedEvent
 			for _, ev := range evs {
 				if profile, ok := followsMap[ev.PubKey]; ok {
-					events = append(events, Event{
+					events = append(events, associatedEvent{
 						Event:   ev,
-						Profile: profile,
+						Profile: &profile,
 					})
 				}
 			}
@@ -388,11 +374,11 @@ func (cfg *Config) PrintEvents(evs []*nip1.Event, followsMap map[string]Profile,
 }
 
 // Events is
-func (cfg *Config) Events(filter *nip1.Filter) []*nip1.Event {
+func (cfg *clientConfig) Events(filter *nip1.Filter) []*nip1.Event {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
-	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		mu.Lock()
 		if found {
 			mu.Unlock()
@@ -681,9 +667,9 @@ func main() {
 			cfg.verbose = cCtx.Bool("V")
 			relays := cCtx.String("relays")
 			if strings.TrimSpace(relays) != "" {
-				cfg.Relays = make(map[string]Relay)
+				cfg.Relays = make(relayPermsMap)
 				for _, relay := range strings.Split(relays, ",") {
-					cfg.Relays[relay] = Relay{
+					cfg.Relays[relay] = relayPerms{
 						Read:  true,
 						Write: true,
 					}

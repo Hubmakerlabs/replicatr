@@ -62,7 +62,7 @@ type PayResponse struct {
 	} `json:"result"`
 }
 
-func pay(cfg *Config, invoice string) error {
+func pay(cfg *clientConfig, invoice string) error {
 	uri, err := url.Parse(cfg.NwcURI)
 	if err != nil {
 		return err
@@ -141,8 +141,8 @@ func pay(cfg *Config, invoice string) error {
 }
 
 // ZapInfo is
-func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
-	relay := cfg.FindRelay(context.Background(), Relay{Read: true})
+func (cfg *clientConfig) ZapInfo(pub string) (*Lnurlp, error) {
+	relay := cfg.FindRelay(context.Background(), relayPerms{Read: true})
 	if relay == nil {
 		return nil, errors.New("cannot connect relays")
 	}
@@ -157,7 +157,7 @@ func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
 	if len(evs) == 0 {
 		return nil, errors.New("cannot find user")
 	}
-	var profile Profile
+	var profile userProfile
 	err := json.Unmarshal([]byte(evs[0].Content), &profile)
 	if err != nil {
 		return nil, err
@@ -191,7 +191,7 @@ func doZap(cCtx *cli.Context) error {
 	if cCtx.Args().Len() == 0 {
 		return cli.ShowSubcommandHelp(cCtx)
 	}
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
 		sk = s.(string)
@@ -281,7 +281,7 @@ func doZap(cCtx *cli.Context) error {
 		fmt.Println("lightning:" + iv.PR)
 		qrterminal.GenerateWithConfig("lightning:"+iv.PR, config)
 	} else {
-		pay(cCtx.App.Metadata["config"].(*Config), iv.PR)
+		pay(cCtx.App.Metadata["config"].(*clientConfig), iv.PR)
 	}
 	return nil
 }

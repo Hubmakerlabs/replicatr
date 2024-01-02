@@ -15,7 +15,6 @@ func readTLVEntry(data []byte) (typ uint8, value []byte) {
 	if len(data) < 2 {
 		return 0, nil
 	}
-
 	typ = data[0]
 	length := int(data[1])
 	value = data[2 : 2+length]

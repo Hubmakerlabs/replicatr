@@ -1,9 +1,11 @@
 package nip19
 
 import (
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	nostr "github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
+	"reflect"
 	"testing"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 )
 
 func TestEncodeNpub(t *testing.T) {
@@ -54,7 +56,7 @@ func TestDecodeNprofile(t *testing.T) {
 	if prefix != "nprofile" {
 		t.Error("what")
 	}
-	pp, ok := data.(nostr.Profile)
+	pp, ok := data.(pointers.Profile)
 	if !ok {
 		t.Error("value returned of wrong type")
 	}
@@ -79,7 +81,7 @@ func TestDecodeOtherNprofile(t *testing.T) {
 	if prefix != "nprofile" {
 		t.Error("what")
 	}
-	pp, ok := data.(nostr.Profile)
+	pp, ok := data.(pointers.Profile)
 	if !ok {
 		t.Error("value returned of wrong type")
 	}
@@ -110,7 +112,9 @@ func TestEncodeNprofile(t *testing.T) {
 }
 
 func TestEncodeDecodeNaddr(t *testing.T) {
-	naddr, e := EncodeEntity(
+	var naddr string
+	var e error
+	naddr, e = EncodeEntity(
 		"3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d",
 		kind.Article,
 		"banana",
@@ -124,15 +128,20 @@ func TestEncodeDecodeNaddr(t *testing.T) {
 	if naddr != "naddr1qqrxyctwv9hxzqfwwaehxw309aex2mrp0yhxummnw3ezuetcv9khqmr99ekhjer0d4skjm3wv4uxzmtsd3jjucm0d5q3vamnwvaz7tmwdaehgu3wvfskuctwvyhxxmmdqgsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8grqsqqqa28a3lkds" {
 		t.Errorf("produced an unexpected naddr string: %s", naddr)
 	}
-
-	prefix, data, e := Decode(naddr)
-	if e != nil {
+	var prefix string
+	var data any
+	prefix, data, e = Decode(naddr)
+	// log.D.S(prefix, data, e)
+	if fails(e) {
 		t.Errorf("shouldn't error: %s", e)
 	}
-	if prefix != "naddr" {
+	if prefix != NentityHRP {
 		t.Error("returned invalid prefix")
 	}
-	ep := data.(nostr.Entity)
+	ep, ok := data.(pointers.Entity)
+	if !ok {
+		t.Fatalf("did not decode an entity type, got %v", reflect.TypeOf(data))
+	}
 	if ep.PublicKey != "3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d" {
 		t.Error("returned wrong pubkey")
 	}
@@ -155,7 +164,7 @@ func TestDecodeNaddrWithoutRelays(t *testing.T) {
 	if prefix != "naddr" {
 		t.Error("returned invalid prefix")
 	}
-	ep := data.(nostr.Entity)
+	ep := data.(pointers.Entity)
 	if ep.PublicKey != "7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194" {
 		t.Error("returned wrong pubkey")
 	}
@@ -189,7 +198,7 @@ func TestEncodeDecodeNEventTestEncodeDecodeNEvent(t *testing.T) {
 		t.Errorf("should have 'nevent' prefix, not '%s'", prefix)
 	}
 
-	ep, ok := res.(nostr.Event)
+	ep, ok := res.(pointers.Event)
 	if !ok {
 		t.Errorf("'%s' should be an nevent, not %v", nevent, res)
 	}

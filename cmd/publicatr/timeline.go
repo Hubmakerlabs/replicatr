@@ -30,7 +30,7 @@ import (
 func doDMList(cCtx *cli.Context) error {
 	j := cCtx.Bool("json")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	// get followers
 	followsMap, err := cfg.GetFollows(cCtx.String("a"))
@@ -104,7 +104,7 @@ func doDMTimeline(cCtx *cli.Context) error {
 	j := cCtx.Bool("json")
 	extra := cCtx.Bool("extra")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	var sk string
 	var npub string
@@ -154,7 +154,7 @@ func doDMPost(cCtx *cli.Context) error {
 	}
 	sensitive := cCtx.String("sensitive")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
@@ -216,7 +216,7 @@ func doDMPost(cCtx *cli.Context) error {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		status, err := relay.Publish(ctx, ev)
 		if cfg.verbose {
 			fmt.Fprintln(os.Stderr, relay.URL, status, err)
@@ -240,7 +240,7 @@ func doPost(cCtx *cli.Context) error {
 	sensitive := cCtx.String("sensitive")
 	geohash := cCtx.String("geohash")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
@@ -324,7 +324,7 @@ func doPost(cCtx *cli.Context) error {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		status, err := relay.Publish(ctx, ev)
 		if cfg.verbose {
 			fmt.Fprintln(os.Stderr, relay.URL, status, err)
@@ -350,7 +350,7 @@ func doReply(cCtx *cli.Context) error {
 	sensitive := cCtx.String("sensitive")
 	geohash := cCtx.String("geohash")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
@@ -426,7 +426,7 @@ func doReply(cCtx *cli.Context) error {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		if !quote {
 			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, relay.URL, "reply"})
 		} else {
@@ -453,7 +453,7 @@ func doReply(cCtx *cli.Context) error {
 func doRepost(cCtx *cli.Context) error {
 	id := cCtx.String("id")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	ev := &nip1.Event{}
 	var sk string
@@ -490,7 +490,7 @@ func doRepost(cCtx *cli.Context) error {
 	first.Store(true)
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		if first.Load() {
 			evs, err := relay.QuerySync(ctx, filter)
 			if err != nil {
@@ -527,7 +527,7 @@ func doUnrepost(cCtx *cli.Context) error {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
@@ -546,7 +546,7 @@ func doUnrepost(cCtx *cli.Context) error {
 	}
 	var repostID nip1.EventID
 	var mu sync.Mutex
-	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		evs, err := relay.QuerySync(ctx, filter)
 		if err != nil {
 			return true
@@ -568,7 +568,7 @@ func doUnrepost(cCtx *cli.Context) error {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		status, err := relay.Publish(ctx, ev)
 		if cfg.verbose {
 			fmt.Fprintln(os.Stderr, relay.URL, status, err)
@@ -587,7 +587,7 @@ func doUnrepost(cCtx *cli.Context) error {
 func doLike(cCtx *cli.Context) error {
 	id := cCtx.String("id")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	ev := &nip1.Event{}
 	var sk string
@@ -635,7 +635,7 @@ func doLike(cCtx *cli.Context) error {
 	first.Store(true)
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		if first.Load() {
 			evs, err := relay.QuerySync(ctx, filter)
 			if err != nil {
@@ -673,7 +673,7 @@ func doUnlike(cCtx *cli.Context) error {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
@@ -692,7 +692,7 @@ func doUnlike(cCtx *cli.Context) error {
 	}
 	var likeID string
 	var mu sync.Mutex
-	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		evs, err := relay.QuerySync(ctx, filter)
 		if err != nil {
 			return true
@@ -714,7 +714,7 @@ func doUnlike(cCtx *cli.Context) error {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		status, err := relay.Publish(ctx, ev)
 		if cfg.verbose {
 			fmt.Fprintln(os.Stderr, relay.URL, status, err)
@@ -733,7 +733,7 @@ func doUnlike(cCtx *cli.Context) error {
 func doDelete(cCtx *cli.Context) error {
 	id := cCtx.String("id")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	ev := &nip1.Event{}
 	var sk string
@@ -764,7 +764,7 @@ func doDelete(cCtx *cli.Context) error {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		status, err := relay.Publish(ctx, ev)
 		if cfg.verbose {
 			fmt.Fprintln(os.Stderr, relay.URL, status, err)
@@ -785,13 +785,13 @@ func doSearch(cCtx *cli.Context) error {
 	j := cCtx.Bool("json")
 	extra := cCtx.Bool("extra")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	// get followers
-	var followsMap map[string]Profile
+	var followsMap profilesMap
 	var err error
 	if j && !extra {
-		followsMap = make(map[string]Profile)
+		followsMap = make(profilesMap)
 	} else {
 		followsMap, err = cfg.GetFollows(cCtx.String("a"))
 		if err != nil {
@@ -828,9 +828,9 @@ func doStream(cCtx *cli.Context) error {
 		}
 	}
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
-	relay := cfg.FindRelay(context.Background(), Relay{Read: true})
+	relay := cfg.FindRelay(context.Background(), relayPerms{Read: true})
 	if relay == nil {
 		return errors.New("cannot connect relays")
 	}
@@ -888,7 +888,7 @@ func doStream(cCtx *cli.Context) error {
 				if err := evr.Sign(sk); err != nil {
 					return err
 				}
-				cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+				cfg.Do(relayPerms{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 					relay.Publish(ctx, evr)
 					return true
 				})
@@ -905,7 +905,7 @@ func doTimeline(cCtx *cli.Context) error {
 	j := cCtx.Bool("json")
 	extra := cCtx.Bool("extra")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	// get followers
 	followsMap, err := cfg.GetFollows(cCtx.String("a"))
@@ -930,7 +930,7 @@ func doTimeline(cCtx *cli.Context) error {
 }
 
 func postMsg(cCtx *cli.Context, msg string) error {
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*clientConfig)
 
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
@@ -957,7 +957,7 @@ func postMsg(cCtx *cli.Context, msg string) error {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(relayPerms{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 		status, err := relay.Publish(ctx, ev)
 		if cfg.verbose {
 			fmt.Fprintln(os.Stderr, relay.URL, status, err)
