@@ -2,10 +2,11 @@ package khatru
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/log"
 
 	"github.com/fasthttp/websocket"
 	"github.com/nbd-wtf/go-nostr"
@@ -13,9 +14,9 @@ import (
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
-func NewRelay() *Relay {
+func NewRelay(appName string) *Relay {
 	return &Relay{
-		Log: log.New(os.Stderr, "[khatru-relay] ", log.LstdFlags),
+		Log: log.New(os.Stderr, appName, 0),
 
 		Info: &nip11.RelayInformationDocument{
 			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/khatru",
