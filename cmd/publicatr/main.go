@@ -16,13 +16,17 @@ import (
 
 	"github.com/urfave/cli/v2"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/fatih/color"
-	"github.com/nbd-wtf/go-nostr"
-	"github.com/nbd-wtf/go-nostr/nip04"
-	"github.com/nbd-wtf/go-nostr/nip19"
 )
 
-const name = "algia"
+const appName = "publicatr"
 
 const version = "0.0.53"
 
@@ -51,8 +55,8 @@ type Config struct {
 
 // Event is
 type Event struct {
-	Event   *nostr.Event `json:"event"`
-	Profile Profile      `json:"profile"`
+	Event   *nip1.Event `json:"event"`
+	Profile Profile     `json:"profile"`
 }
 
 // Profile is
@@ -84,7 +88,7 @@ func loadConfig(profile string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	dir = filepath.Join(dir, "algia")
+	dir = filepath.Join(dir, appName)
 
 	var fp string
 	if profile == "" {
@@ -130,7 +134,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 	var mu sync.Mutex
 	var pub string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-		if pub, err = nostr.GetPublicKey(s.(string)); err != nil {
+		if pub, err = nip19.GetPublicKey(s.(string)); err != nil {
 			return nil, err
 		}
 	} else {
@@ -145,7 +149,11 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		m := map[string]struct{}{}
 
 		cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-			evs, err := relay.QuerySync(ctx, nostr.Filter{Kinds: []int{nostr.KindContactList}, Authors: []string{pub}, Limit: 1})
+			evs, err := relay.QuerySync(ctx, &nip1.Filter{
+				Kinds:   kinds.T{kind.ContactList},
+				Authors: tag.T{pub},
+				Limit:   1,
+			})
 			if err != nil {
 				return true
 			}
@@ -189,8 +197,8 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 
 				// get follower's descriptions
 				cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-					evs, err := relay.QuerySync(ctx, nostr.Filter{
-						Kinds:   []int{nostr.KindProfileMetadata},
+					evs, err := relay.QuerySync(ctx, &nip1.Filter{
+						Kinds:   kinds.T{kind.ProfileMetadata},
 						Authors: follows[i:end], // Use the updated end index
 					})
 					if err != nil {
@@ -286,7 +294,7 @@ func (cfg *Config) save(profile string) error {
 	if err != nil {
 		return err
 	}
-	dir = filepath.Join(dir, "algia")
+	dir = filepath.Join(dir, appName)
 
 	var fp string
 	if profile == "" {
@@ -302,12 +310,12 @@ func (cfg *Config) save(profile string) error {
 }
 
 // Decode is
-func (cfg *Config) Decode(ev *nostr.Event) error {
+func (cfg *Config) Decode(ev *nip1.Event) error {
 	var sk string
 	var pub string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
 		sk = s.(string)
-		if pub, err = nostr.GetPublicKey(s.(string)); err != nil {
+		if pub, err = nip19.GetPublicKey(s.(string)); err != nil {
 			return err
 		}
 	} else {
@@ -325,20 +333,20 @@ func (cfg *Config) Decode(ev *nostr.Event) error {
 	} else {
 		sp = ev.PubKey
 	}
-	ss, err := nip04.ComputeSharedSecret(sp, sk)
+	ss, err := nip4.ComputeSharedSecret(sp, sk)
 	if err != nil {
 		return err
 	}
-	content, err := nip04.Decrypt(ev.Content, ss)
+	content, err := nip4.Decrypt(ev.Content, ss)
 	if err != nil {
 		return err
 	}
-	ev.Content = content
+	ev.Content = string(content)
 	return nil
 }
 
 // PrintEvents is
-func (cfg *Config) PrintEvents(evs []*nostr.Event, followsMap map[string]Profile, j, extra bool) {
+func (cfg *Config) PrintEvents(evs []*nip1.Event, followsMap map[string]Profile, j, extra bool) {
 	if j {
 		if extra {
 			var events []Event
@@ -380,7 +388,7 @@ func (cfg *Config) PrintEvents(evs []*nostr.Event, followsMap map[string]Profile
 }
 
 // Events is
-func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
+func (cfg *Config) Events(filter *nip1.Filter) []*nip1.Event {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
@@ -397,7 +405,7 @@ func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
 		}
 		for _, ev := range evs {
 			if _, ok := m.Load(ev.ID); !ok {
-				if ev.Kind == nostr.KindEncryptedDirectMessage {
+				if ev.Kind == kind.EncryptedDirectMessage {
 					if err := cfg.Decode(ev); err != nil {
 						continue
 					}
@@ -415,7 +423,7 @@ func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
 		return true
 	})
 
-	keys := []string{}
+	keys := tag.T{}
 	m.Range(func(k, v any) bool {
 		keys = append(keys, k.(string))
 		return true
@@ -429,15 +437,15 @@ func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
 		if !ok {
 			return false
 		}
-		return lhs.(*nostr.Event).CreatedAt.Time().Before(rhs.(*nostr.Event).CreatedAt.Time())
+		return lhs.(*nip1.Event).CreatedAt.Time().Before(rhs.(*nip1.Event).CreatedAt.Time())
 	})
-	var evs []*nostr.Event
+	var evs []*nip1.Event
 	for _, key := range keys {
 		vv, ok := m.Load(key)
 		if !ok {
 			continue
 		}
-		evs = append(evs, vv.(*nostr.Event))
+		evs = append(evs, vv.(*nip1.Event))
 	}
 	return evs
 }
@@ -473,7 +481,7 @@ func main() {
 				Usage: "show stream",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "author"},
-					&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(nostr.KindTextNote)},
+					&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(int(kind.TextNote))},
 					&cli.BoolFlag{Name: "follow"},
 					&cli.StringFlag{Name: "pattern"},
 					&cli.StringFlag{Name: "reply"},
@@ -491,7 +499,7 @@ func main() {
 					&cli.StringFlag{Name: "geohash"},
 				},
 				Usage:     "post new note",
-				UsageText: "algia post [note text]",
+				UsageText: "publicatr post [note text]",
 				HelpName:  "post",
 				ArgsUsage: "[note text]",
 				Action:    doPost,
@@ -508,7 +516,7 @@ func main() {
 					&cli.StringFlag{Name: "geohash"},
 				},
 				Usage:     "reply to the note",
-				UsageText: "algia reply --id [id] [note text]",
+				UsageText: "publicatr reply --id [id] [note text]",
 				HelpName:  "reply",
 				ArgsUsage: "[note text]",
 				Action:    doReply,
@@ -520,7 +528,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "repost the note",
-				UsageText: "algia repost --id [id]",
+				UsageText: "publicatr repost --id [id]",
 				HelpName:  "repost",
 				Action:    doRepost,
 			},
@@ -531,7 +539,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "unrepost the note",
-				UsageText: "algia unrepost --id [id]",
+				UsageText: "publicatr unrepost --id [id]",
 				HelpName:  "unrepost",
 				Action:    doUnrepost,
 			},
@@ -544,7 +552,7 @@ func main() {
 					&cli.StringFlag{Name: "emoji"},
 				},
 				Usage:     "like the note",
-				UsageText: "algia like --id [id]",
+				UsageText: "publicatr like --id [id]",
 				HelpName:  "like",
 				Action:    doLike,
 			},
@@ -555,7 +563,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "unlike the note",
-				UsageText: "algia unlike --id [id]",
+				UsageText: "publicatr unlike --id [id]",
 				HelpName:  "unlike",
 				Action:    doUnlike,
 			},
@@ -566,7 +574,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "delete the note",
-				UsageText: "algia delete --id [id]",
+				UsageText: "publicatr delete --id [id]",
 				HelpName:  "delete",
 				Action:    doDelete,
 			},
@@ -579,7 +587,7 @@ func main() {
 					&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
 				},
 				Usage:     "search notes",
-				UsageText: "algia search [words]",
+				UsageText: "publicatr search [words]",
 				HelpName:  "search",
 				Action:    doSearch,
 			},
@@ -609,7 +617,7 @@ func main() {
 					&cli.StringFlag{Name: "sensitive"},
 				},
 				Usage:     "post new note",
-				UsageText: "algia post [note text]",
+				UsageText: "publicatr post [note text]",
 				HelpName:  "post",
 				ArgsUsage: "[note text]",
 				Action:    doDMPost,
@@ -621,21 +629,21 @@ func main() {
 					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
 				},
 				Usage:     "show profile",
-				UsageText: "algia profile",
+				UsageText: "publicatr profile",
 				HelpName:  "profile",
 				Action:    doProfile,
 			},
 			{
 				Name:      "powa",
 				Usage:     "post ぽわ〜",
-				UsageText: "algia powa",
+				UsageText: "publicatr powa",
 				HelpName:  "powa",
 				Action:    doPowa,
 			},
 			{
 				Name:      "puru",
 				Usage:     "post ぷる",
-				UsageText: "algia puru",
+				UsageText: "publicatr puru",
 				HelpName:  "puru",
 				Action:    doPuru,
 			},
@@ -646,14 +654,14 @@ func main() {
 					&cli.StringFlag{Name: "comment", Usage: "comment for zap", Value: ""},
 				},
 				Usage:     "zap [note|npub|nevent]",
-				UsageText: "algia zap [note|npub|nevent]",
+				UsageText: "publicatr zap [note|npub|nevent]",
 				HelpName:  "zap",
 				Action:    doZap,
 			},
 			{
 				Name:      "version",
 				Usage:     "show version",
-				UsageText: "algia version",
+				UsageText: "publicatr version",
 				HelpName:  "version",
 				Action:    doVersion,
 			},

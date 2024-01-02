@@ -3,7 +3,6 @@ package relay
 import (
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -16,6 +15,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip42"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip45"
 	"github.com/fasthttp/websocket"
+	"github.com/minio/sha256-simd"
 	"github.com/rs/cors"
 )
 

@@ -1,7 +1,5 @@
 package kind
 
-import "github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-
 // T - which will be externally referenced as kind.T is the event type in the
 // nostr protocol, the use of the capital T signifying type, consistent with Go
 // idiom, the Go standard library, and much, conformant, existing code.
@@ -69,52 +67,4 @@ func (evt T) IsEphemeral() bool {
 func (evt T) IsParameterizedReplaceable() bool {
 	return evt >= ParameterizedReplaceableStart &&
 		evt < ParameterizedReplaceableEnd
-}
-
-type Array []T
-
-// ToArray converts to the generic array.T type ([]interface{})
-func (ar Array) ToArray() (a array.T) {
-	a = make(array.T, len(ar))
-	for i := range ar {
-		a[i] = ar[i]
-	}
-	return
-}
-
-// Clone makes a new kind.Array with the same members.
-func (ar Array) Clone() (c Array) {
-	c = make(Array, len(ar))
-	for i := range ar {
-		c[i] = ar[i]
-	}
-	return
-}
-
-// Contains returns true if the provided element is found in the kind.Array.
-//
-// Note that the request must use the typed kind.T or convert the number thus.
-// Even if a custom number is found, this codebase does not have the logic to
-// deal with the kind so such a search is pointless and for which reason static
-// typing always wins. No mistakes possible with known quantities.
-func (ar Array) Contains(s T) bool {
-	for i := range ar {
-		if ar[i] == s {
-			return true
-		}
-	}
-	return false
-}
-
-// Equals checks that the provided kind.Array matches.
-func (ar Array) Equals(t1 Array) bool {
-	if len(ar) != len(t1) {
-		return false
-	}
-	for i := range ar {
-		if ar[i] != t1[i] {
-			return false
-		}
-	}
-	return true
 }

@@ -22,7 +22,7 @@ import (
 
 type UnmarshalingFilter struct {
 	IDs     tag.T         `+"`json:\"ids,omitempty\"`"+`
-	Kinds   kind.Array    `+"`json:\"kinds,omitempty\"`"+`
+	Kinds   kinds.T    `+"`json:\"kinds,omitempty\"`"+`
 	Authors tag.T         `+"`json:\"authors,omitempty\"`"+`
 `)
 	for i := 'a'; i < 'z'; i++ {

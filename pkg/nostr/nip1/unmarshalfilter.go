@@ -4,14 +4,15 @@ package nip1
 
 import (
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 type UnmarshalingFilter struct {
 	IDs     tag.T         `json:"ids,omitempty"`
-	Kinds   kind.Array    `json:"kinds,omitempty"`
+	Kinds   kinds.T       `json:"kinds,omitempty"`
 	Authors tag.T         `json:"authors,omitempty"`
 	Ta      tag.T         `json:"#a,omitempty"`
 	Tb      tag.T         `json:"#b,omitempty"`
