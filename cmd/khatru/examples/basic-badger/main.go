@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/cmd/khatru"
 	"github.com/fiatjaf/eventstore/badger"
@@ -11,18 +11,17 @@ import (
 const appName = "replicatr"
 
 func main() {
-	relay := khatru.NewRelay(appName)
+	r := khatru.NewRelay(appName)
 
-	db := badger.BadgerBackend{Path: "/tmp/khatru-badgern-tmp"}
+	db := badger.BadgerBackend{Path: "/tmp/replicatr-badger"}
 	if err := db.Init(); err != nil {
-		panic(err)
+		r.Log.E.F("unable to start database: '%s'", err)
+		os.Exit(1)
 	}
-
-	relay.StoreEvent = append(relay.StoreEvent, db.SaveEvent)
-	relay.QueryEvents = append(relay.QueryEvents, db.QueryEvents)
-	relay.CountEvents = append(relay.CountEvents, db.CountEvents)
-	relay.DeleteEvent = append(relay.DeleteEvent, db.DeleteEvent)
-
-	fmt.Println("running on :3334")
-	http.ListenAndServe(":3334", relay)
+	r.StoreEvent = append(r.StoreEvent, db.SaveEvent)
+	r.QueryEvents = append(r.QueryEvents, db.QueryEvents)
+	r.CountEvents = append(r.CountEvents, db.CountEvents)
+	r.DeleteEvent = append(r.DeleteEvent, db.DeleteEvent)
+	r.Log.I.Ln("running on :3334")
+	r.Log.E.Chk(http.ListenAndServe(":3334", r))
 }
