@@ -1,21 +1,24 @@
-package nostr
+package event
 
 import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/escape"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
 	"github.com/mailru/easyjson"
 )
 
-type Event struct {
+type T struct {
 	ID        string    `json:"id"`
 	PubKey    string    `json:"pubkey"`
-	CreatedAt Timestamp `json:"created_at"`
+	CreatedAt timestamp.Timestamp `json:"created_at"`
 	Kind      int       `json:"kind"`
-	Tags      Tags      `json:"tags"`
+	Tags      tags.Tags      `json:"tags"`
 	Content   string    `json:"content"`
 	Sig       string    `json:"sig"`
 
@@ -71,21 +74,21 @@ const (
 	KindSimpleGroupMembers          int = 39002
 )
 
-// Event Stringer interface, just returns the raw JSON as a string.
-func (evt Event) String() string {
+// T Stringer interface, just returns the raw JSON as a string.
+func (evt T) String() string {
 	j, _ := easyjson.Marshal(evt)
 	return string(j)
 }
 
 // GetID serializes and returns the event ID as a string.
-func (evt *Event) GetID() string {
+func (evt *T) GetID() string {
 	h := sha256.Sum256(evt.Serialize())
 	return hex.EncodeToString(h[:])
 }
 
 // Serialize outputs a byte array that can be hashed/signed to identify/authenticate.
 // JSON encoding as defined in RFC4627.
-func (evt *Event) Serialize() []byte {
+func (evt *T) Serialize() []byte {
 	// the serialization process is just putting everything into a JSON array
 	// so the order is kept. See NIP-01
 	dst := make([]byte, 0)
@@ -101,11 +104,11 @@ func (evt *Event) Serialize() []byte {
 		))...)
 
 	// tags
-	dst = evt.Tags.marshalTo(dst)
+	dst = evt.Tags.MarshalTo(dst)
 	dst = append(dst, ',')
 
 	// content needs to be escaped in general as it is user generated.
-	dst = escapeString(dst, evt.Content)
+	dst = escape.String(dst, evt.Content)
 	dst = append(dst, ']')
 
 	return dst
@@ -114,7 +117,7 @@ func (evt *Event) Serialize() []byte {
 // CheckSignature checks if the signature is valid for the id
 // (which is a hash of the serialized event content).
 // returns an error if the signature itself is invalid.
-func (evt Event) CheckSignature() (bool, error) {
+func (evt T) CheckSignature() (bool, error) {
 	// read and check pubkey
 	pk, err := hex.DecodeString(evt.PubKey)
 	if err != nil {
@@ -142,14 +145,14 @@ func (evt Event) CheckSignature() (bool, error) {
 }
 
 // Sign signs an event with a given privateKey.
-func (evt *Event) Sign(privateKey string, signOpts ...schnorr.SignOption) error {
+func (evt *T) Sign(privateKey string, signOpts ...schnorr.SignOption) error {
 	s, err := hex.DecodeString(privateKey)
 	if err != nil {
 		return fmt.Errorf("Sign called with invalid private key '%s': %w", privateKey, err)
 	}
 
 	if evt.Tags == nil {
-		evt.Tags = make(Tags, 0)
+		evt.Tags = make(tags.Tags, 0)
 	}
 
 	sk, pk := btcec.PrivKeyFromBytes(s)

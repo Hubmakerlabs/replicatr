@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
 	"github.com/urfave/cli/v2"
 
@@ -51,7 +52,7 @@ type Config struct {
 
 // Event is
 type Event struct {
-	Event   *nostr.Event `json:"event"`
+	Event   *event.T `json:"event"`
 	Profile Profile      `json:"profile"`
 }
 
@@ -145,7 +146,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		m := map[string]struct{}{}
 
 		cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-			evs, err := relay.QuerySync(ctx, nostr.Filter{Kinds: []int{nostr.KindContactList}, Authors: []string{pub}, Limit: 1})
+			evs, err := relay.QuerySync(ctx, nostr.Filter{Kinds: []int{event.KindContactList}, Authors: []string{pub}, Limit: 1})
 			if err != nil {
 				return true
 			}
@@ -190,7 +191,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 				// get follower's descriptions
 				cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
 					evs, err := relay.QuerySync(ctx, nostr.Filter{
-						Kinds:   []int{nostr.KindProfileMetadata},
+						Kinds:   []int{event.KindProfileMetadata},
 						Authors: follows[i:end], // Use the updated end index
 					})
 					if err != nil {
@@ -302,7 +303,7 @@ func (cfg *Config) save(profile string) (e error) {
 }
 
 // Decode is
-func (cfg *Config) Decode(ev *nostr.Event) (e error) {
+func (cfg *Config) Decode(ev *event.T) (e error) {
 	var sk string
 	var pub string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
@@ -338,7 +339,7 @@ func (cfg *Config) Decode(ev *nostr.Event) (e error) {
 }
 
 // PrintEvents is
-func (cfg *Config) PrintEvents(evs []*nostr.Event, followsMap map[string]Profile, j, extra bool) {
+func (cfg *Config) PrintEvents(evs []*event.T, followsMap map[string]Profile, j, extra bool) {
 	if j {
 		if extra {
 			var events []Event
@@ -380,7 +381,7 @@ func (cfg *Config) PrintEvents(evs []*nostr.Event, followsMap map[string]Profile
 }
 
 // Events is
-func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
+func (cfg *Config) Events(filter nostr.Filter) []*event.T {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
@@ -397,7 +398,7 @@ func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
 		}
 		for _, ev := range evs {
 			if _, ok := m.Load(ev.ID); !ok {
-				if ev.Kind == nostr.KindEncryptedDirectMessage {
+				if ev.Kind == event.KindEncryptedDirectMessage {
 					if err := cfg.Decode(ev); err != nil {
 						continue
 					}
@@ -429,15 +430,15 @@ func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
 		if !ok {
 			return false
 		}
-		return lhs.(*nostr.Event).CreatedAt.Time().Before(rhs.(*nostr.Event).CreatedAt.Time())
+		return lhs.(*event.T).CreatedAt.Time().Before(rhs.(*event.T).CreatedAt.Time())
 	})
-	var evs []*nostr.Event
+	var evs []*event.T
 	for _, key := range keys {
 		vv, ok := m.Load(key)
 		if !ok {
 			continue
 		}
-		evs = append(evs, vv.(*nostr.Event))
+		evs = append(evs, vv.(*event.T))
 	}
 	return evs
 }
@@ -473,7 +474,7 @@ func main() {
 				Usage: "show stream",
 				Flags: []cli.Flag{
 					&cli.StringFlag{Name: "author"},
-					&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(nostr.KindTextNote)},
+					&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(event.KindTextNote)},
 					&cli.BoolFlag{Name: "follow"},
 					&cli.StringFlag{Name: "pattern"},
 					&cli.StringFlag{Name: "reply"},

@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/puzpuzpuz/xsync/v2"
 )
@@ -20,12 +22,12 @@ type SimplePool struct {
 	Relays  *xsync.MapOf[string, *Relay]
 	Context context.Context
 
-	authHandler func(*Event) error
+	authHandler func(*event.T) error
 	cancel      context.CancelFunc
 }
 
 type IncomingEvent struct {
-	*Event
+	*event.T
 	Relay *Relay
 }
 
@@ -54,7 +56,7 @@ func NewSimplePool(ctx context.Context, opts ...PoolOption) *SimplePool {
 // WithAuthHandler must be a function that signs the auth event when called.
 // it will be called whenever any relay in the pool returns a `CLOSED` message
 // with the "auth-required:" prefix, only once for each relay
-type WithAuthHandler func(authEvent *Event) error
+type WithAuthHandler func(authEvent *event.T) error
 
 func (_ WithAuthHandler) IsPoolOption() {}
 func (h WithAuthHandler) Apply(pool *SimplePool) {
@@ -101,7 +103,7 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters Filt
 	ctx, cancel := context.WithCancel(ctx)
 	_ = cancel // do this so `go vet` will stop complaining
 	events := make(chan IncomingEvent)
-	seenAlready := xsync.NewMapOf[Timestamp]()
+	seenAlready := xsync.NewMapOf[timestamp.Timestamp]()
 	ticker := time.NewTicker(seenAlreadyDropTick)
 
 	eose := false
@@ -156,7 +158,7 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters Filt
 							// this means the connection was closed for weird reasons, like the server shut down
 							// so we will update the filters here to include only events seem from now on
 							// and try to reconnect until we succeed
-							now := Now()
+							now := timestamp.Now()
 							for i := range filters {
 								filters[i].Since = &now
 							}
@@ -168,13 +170,13 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters Filt
 							}
 						}
 						select {
-						case events <- IncomingEvent{Event: evt, Relay: relay}:
+						case events <- IncomingEvent{T: evt, Relay: relay}:
 						case <-ctx.Done():
 						}
 					case <-ticker.C:
 						if eose {
-							old := Timestamp(time.Now().Add(-seenAlreadyDropTick).Unix())
-							seenAlready.Range(func(id string, value Timestamp) bool {
+							old := timestamp.Timestamp(time.Now().Add(-seenAlreadyDropTick).Unix())
+							seenAlready.Range(func(id string, value timestamp.Timestamp) bool {
 								if value < old {
 									seenAlready.Delete(id)
 								}
@@ -281,7 +283,7 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 					}
 
 					select {
-					case events <- IncomingEvent{Event: evt, Relay: relay}:
+					case events <- IncomingEvent{T: evt, Relay: relay}:
 					case <-ctx.Done():
 						return
 					}

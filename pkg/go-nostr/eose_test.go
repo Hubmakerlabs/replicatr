@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 )
 
 func TestEOSEMadness(t *testing.T) {
@@ -11,7 +13,7 @@ func TestEOSEMadness(t *testing.T) {
 	defer rl.Close()
 
 	sub, err := rl.Subscribe(context.Background(), Filters{
-		{Kinds: []int{KindTextNote}, Limit: 2},
+		{Kinds: []int{event.KindTextNote}, Limit: 2},
 	})
 	if err != nil {
 		t.Errorf("subscription failed: %v", err)

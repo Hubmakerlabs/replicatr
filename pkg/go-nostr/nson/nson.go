@@ -8,7 +8,9 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
 
 /*
@@ -45,12 +47,12 @@ const (
 
 var ErrNotNSON = fmt.Errorf("not nson")
 
-func UnmarshalBytes(data []byte, evt *nostr.Event) (err error) {
+func UnmarshalBytes(data []byte, evt *event.T) (err error) {
 	return Unmarshal(unsafe.String(unsafe.SliceData(data), len(data)), evt)
 }
 
-// Unmarshal turns a NSON string into a nostr.Event struct.
-func Unmarshal(data string, evt *nostr.Event) (err error) {
+// Unmarshal turns a NSON string into a nostr.T struct.
+func Unmarshal(data string, evt *event.T) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("failed to decode nson: %v", r)
@@ -70,7 +72,7 @@ func Unmarshal(data string, evt *nostr.Event) (err error) {
 	evt.PubKey = data[PUBKEY_START:PUBKEY_END]
 	evt.Sig = data[SIG_START:SIG_END]
 	ts, _ := strconv.ParseUint(data[CREATED_AT_START:CREATED_AT_END], 10, 64)
-	evt.CreatedAt = nostr.Timestamp(ts)
+	evt.CreatedAt = timestamp.Timestamp(ts)
 
 	// dynamic fields
 	// kind
@@ -85,7 +87,7 @@ func Unmarshal(data string, evt *nostr.Event) (err error) {
 
 	// tags
 	nTags := int(nsonDescriptors[3])
-	evt.Tags = make(nostr.Tags, nTags)
+	evt.Tags = make(tags.Tags, nTags)
 	tagsStart := contentStart + contentChars + 9 // len(`","tags":`)
 
 	nsonIndex := 3
@@ -94,7 +96,7 @@ func Unmarshal(data string, evt *nostr.Event) (err error) {
 		nsonIndex++
 		tagsIndex += 1 // len(`[`) or len(`,`)
 		nItems := int(nsonDescriptors[nsonIndex])
-		tag := make(nostr.Tag, nItems)
+		tag := make(tags.Tag, nItems)
 		for n := 0; n < nItems; n++ {
 			nsonIndex++
 			itemStart := tagsIndex + 2 // len(`["`) or len(`,"`)
@@ -110,12 +112,12 @@ func Unmarshal(data string, evt *nostr.Event) (err error) {
 	return err
 }
 
-func MarshalBytes(evt *nostr.Event) ([]byte, error) {
+func MarshalBytes(evt *event.T) ([]byte, error) {
 	v, err := Marshal(evt)
 	return unsafe.Slice(unsafe.StringData(v), len(v)), err
 }
 
-func Marshal(evt *nostr.Event) (string, error) {
+func Marshal(evt *event.T) (string, error) {
 	// start building the nson descriptors (without the first byte that represents the nson size)
 	nsonBuf := make([]byte, 256)
 
@@ -212,9 +214,9 @@ func (ne *Event) parseDescriptors() {
 func (ne Event) GetID() string     { return ne.data[ID_START:ID_END] }
 func (ne Event) GetPubkey() string { return ne.data[PUBKEY_START:PUBKEY_END] }
 func (ne Event) GetSig() string    { return ne.data[SIG_START:SIG_END] }
-func (ne Event) GetCreatedAt() nostr.Timestamp {
+func (ne Event) GetCreatedAt() timestamp.Timestamp {
 	ts, _ := strconv.ParseUint(ne.data[CREATED_AT_START:CREATED_AT_END], 10, 64)
-	return nostr.Timestamp(ts)
+	return timestamp.Timestamp(ts)
 }
 
 func (ne *Event) GetKind() int {

@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/mailru/easyjson"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
+	"github.com/mailru/easyjson"
 	"golang.org/x/exp/slices"
 )
 
@@ -26,12 +29,12 @@ type Session struct {
 	SharedKey []byte
 }
 
-func (s Session) ParseRequest(event *nostr.Event) (Request, error) {
+func (s Session) ParseRequest(evt *event.T) (Request, error) {
 	var req Request
 
-	plain, err := nip04.Decrypt(event.Content, s.SharedKey)
+	plain, err := nip04.Decrypt(evt.Content, s.SharedKey)
 	if err != nil {
-		return req, fmt.Errorf("failed to decrypt event from %s: %w", event.PubKey, err)
+		return req, fmt.Errorf("failed to decrypt evt from %s: %w", evt.PubKey, err)
 	}
 
 	err = json.Unmarshal([]byte(plain), &req)
@@ -43,7 +46,7 @@ func (s Session) MakeResponse(
 	requester string,
 	result string,
 	err error,
-) (resp Response, evt nostr.Event, error error) {
+) (resp Response, evt event.T, error error) {
 	if err != nil {
 		resp = Response{
 			ID:    id,
@@ -63,9 +66,9 @@ func (s Session) MakeResponse(
 	}
 	evt.Content = ciphertext
 
-	evt.CreatedAt = nostr.Now()
-	evt.Kind = nostr.KindNostrConnect
-	evt.Tags = nostr.Tags{nostr.Tag{"p", requester}}
+	evt.CreatedAt = timestamp.Now()
+	evt.Kind = event.KindNostrConnect
+	evt.Tags = tags.Tags{tags.Tag{"p", requester}}
 
 	return resp, evt, nil
 }
@@ -118,18 +121,18 @@ func (p *Signer) GetSession(clientPubkey string) (Session, error) {
 	return session, nil
 }
 
-func (p *Signer) HandleRequest(event *nostr.Event) (req Request, resp Response, eventResponse nostr.Event, harmless bool, err error) {
-	if event.Kind != nostr.KindNostrConnect {
+func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventResponse event.T, harmless bool, err error) {
+	if evt.Kind != event.KindNostrConnect {
 		return req, resp, eventResponse, false,
-			fmt.Errorf("event kind is %d, but we expected %d", event.Kind, nostr.KindNostrConnect)
+			fmt.Errorf("evt kind is %d, but we expected %d", evt.Kind, event.KindNostrConnect)
 	}
 
-	session, err := p.GetSession(event.PubKey)
+	session, err := p.GetSession(evt.PubKey)
 	if err != nil {
 		return req, resp, eventResponse, false, err
 	}
 
-	req, err = session.ParseRequest(event)
+	req, err = session.ParseRequest(evt)
 	if err != nil {
 		return req, resp, eventResponse, false, fmt.Errorf("error parsing request: %w", err)
 	}
@@ -155,15 +158,15 @@ func (p *Signer) HandleRequest(event *nostr.Event) (req Request, resp Response, 
 			resultErr = fmt.Errorf("wrong number of arguments to 'sign_event'")
 			break
 		}
-		evt := nostr.Event{}
+		evt := event.T{}
 		err = easyjson.Unmarshal([]byte(req.Params[0]), &evt)
 		if err != nil {
-			resultErr = fmt.Errorf("failed to decode event/2: %w", err)
+			resultErr = fmt.Errorf("failed to decode evt/2: %w", err)
 			break
 		}
 		err = evt.Sign(p.secretKey)
 		if err != nil {
-			resultErr = fmt.Errorf("failed to sign event: %w", err)
+			resultErr = fmt.Errorf("failed to sign evt: %w", err)
 			break
 		}
 		jrevt, _ := easyjson.Marshal(evt)
@@ -221,7 +224,7 @@ func (p *Signer) HandleRequest(event *nostr.Event) (req Request, resp Response, 
 			fmt.Errorf("unknown method '%s'", req.Method)
 	}
 
-	resp, eventResponse, err = session.MakeResponse(req.ID, event.PubKey, result, resultErr)
+	resp, eventResponse, err = session.MakeResponse(req.ID, evt.PubKey, result, resultErr)
 	if err != nil {
 		return req, resp, eventResponse, harmless, err
 	}

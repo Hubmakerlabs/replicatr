@@ -12,6 +12,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"golang.org/x/net/websocket"
 )
@@ -19,11 +22,11 @@ import (
 func TestPublish(t *testing.T) {
 	// test note to be sent over websocket
 	priv, pub := makeKeyPair(t)
-	textNote := Event{
-		Kind:      KindTextNote,
+	textNote := event.T{
+		Kind:      event.KindTextNote,
 		Content:   "hello",
-		CreatedAt: Timestamp(1672068534), // random fixed timestamp
-		Tags:      Tags{[]string{"foo", "bar"}},
+		CreatedAt: timestamp.Timestamp(1672068534), // random fixed timestamp
+		Tags:      tags.Tags{[]string{"foo", "bar"}},
 		PubKey:    pub,
 	}
 	if err := textNote.Sign(priv); err != nil {
@@ -67,7 +70,7 @@ func TestPublish(t *testing.T) {
 
 func TestPublishBlocked(t *testing.T) {
 	// test note to be sent over websocket
-	textNote := Event{Kind: KindTextNote, Content: "hello"}
+	textNote := event.T{Kind: event.KindTextNote, Content: "hello"}
 	textNote.ID = textNote.GetID()
 
 	// fake relay server
@@ -93,7 +96,7 @@ func TestPublishBlocked(t *testing.T) {
 
 func TestPublishWriteFailed(t *testing.T) {
 	// test note to be sent over websocket
-	textNote := Event{Kind: KindTextNote, Content: "hello"}
+	textNote := event.T{Kind: event.KindTextNote, Content: "hello"}
 	textNote.ID = textNote.GetID()
 
 	// fake relay server
@@ -208,7 +211,7 @@ func MustRelayConnect(url string) *Relay {
 	return rl
 }
 
-func parseEventMessage(t *testing.T, raw []json.RawMessage) Event {
+func parseEventMessage(t *testing.T, raw []json.RawMessage) event.T {
 	t.Helper()
 	if len(raw) < 2 {
 		t.Fatalf("len(raw) = %d; want at least 2", len(raw))
@@ -218,11 +221,11 @@ func parseEventMessage(t *testing.T, raw []json.RawMessage) Event {
 	if typ != "EVENT" {
 		t.Errorf("typ = %q; want EVENT", typ)
 	}
-	var event Event
-	if err := json.Unmarshal(raw[1], &event); err != nil {
+	var evt event.T
+	if err := json.Unmarshal(raw[1], &evt); err != nil {
 		t.Errorf("json.Unmarshal(`%s`): %v", string(raw[1]), err)
 	}
-	return event
+	return evt
 }
 
 func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string, filters []Filter) {

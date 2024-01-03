@@ -63,13 +63,13 @@ func (rl *Relay) websocketProcessMessages(message []byte, ctx Ctx, ws *WebSocket
 		return
 	}
 	switch env := envelope.(type) {
-	case *EventEnvelope:
+	case *nostr.EventEnvelope:
 		// check id
-		hash := sha256.Sum256(env.Event.Serialize())
+		hash := sha256.Sum256(env.T.Serialize())
 		id := hex.EncodeToString(hash[:])
-		if id != env.Event.ID {
+		if id != env.T.ID {
 			rl.E.Chk(ws.WriteJSON(OKEnvelope{
-				EventID: env.Event.ID,
+				EventID: env.T.ID,
 				OK:      false,
 				Reason:  "invalid: id is computed incorrectly",
 			}))
@@ -77,28 +77,28 @@ func (rl *Relay) websocketProcessMessages(message []byte, ctx Ctx, ws *WebSocket
 		}
 		// check signature
 		var ok bool
-		if ok, e = env.Event.CheckSignature(); rl.E.Chk(e) {
+		if ok, e = env.T.CheckSignature(); rl.E.Chk(e) {
 			rl.E.Chk(ws.WriteJSON(OKEnvelope{
-				EventID: env.Event.ID,
+				EventID: env.T.ID,
 				OK:      false,
 				Reason:  "error: failed to verify signature"},
 			))
 			return
 		} else if !ok {
 			rl.E.Chk(ws.WriteJSON(OKEnvelope{
-				EventID: env.Event.ID,
+				EventID: env.T.ID,
 				OK:      false,
 				Reason:  "invalid: signature is invalid"},
 			))
 			return
 		}
 		var writeErr error
-		if env.Event.Kind == 5 {
+		if env.T.Kind == 5 {
 			// this always returns "blocked: " whenever it returns an error
-			writeErr = rl.handleDeleteRequest(ctx, &env.Event)
+			writeErr = rl.handleDeleteRequest(ctx, &env.T)
 		} else {
 			// this will also always return a prefixed reason
-			writeErr = rl.AddEvent(ctx, &env.Event)
+			writeErr = rl.AddEvent(ctx, &env.T)
 		}
 		var reason string
 		if ok = !rl.E.Chk(writeErr); !ok {
@@ -110,7 +110,7 @@ func (rl *Relay) websocketProcessMessages(message []byte, ctx Ctx, ws *WebSocket
 			ok = true
 		}
 		rl.E.Chk(ws.WriteJSON(OKEnvelope{
-			EventID: env.Event.ID,
+			EventID: env.T.ID,
 			OK:      ok,
 			Reason:  reason,
 		}))

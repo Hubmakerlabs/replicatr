@@ -8,6 +8,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk/cache"
 )
 
@@ -96,13 +97,13 @@ func (sys System) fetchProfileMetadata(ctx context.Context, pubkey string) (pm P
 }
 
 // FetchUserEvents fetches events from each users' outbox relays, grouping queries when possible.
-func (sys System) FetchUserEvents(ctx context.Context, filter nostr.Filter) (map[string][]*nostr.Event, error) {
+func (sys System) FetchUserEvents(ctx context.Context, filter nostr.Filter) (map[string][]*event.T, error) {
 	filters, err := sys.ExpandQueriesByAuthorAndRelays(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to expand queries: %w", err)
 	}
 
-	results := make(map[string][]*nostr.Event)
+	results := make(map[string][]*event.T)
 	wg := sync.WaitGroup{}
 	wg.Add(len(filters))
 	for relay, filter := range filters {

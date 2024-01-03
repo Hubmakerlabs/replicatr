@@ -7,6 +7,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -61,7 +62,7 @@ func (b BadgerBackend) CountEvents(ctx context.Context, filter *nostr.Filter) (i
 					}
 
 					err = item.Value(func(val []byte) (e error) {
-						evt := &nostr.Event{}
+						evt := &event.T{}
 						if err := nostr_binary.Unmarshal(val, evt); err != nil {
 							return err
 						}

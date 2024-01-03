@@ -8,26 +8,27 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/dgraph-io/badger/v4"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/dgraph-io/badger/v4"
 )
 
 type query struct {
 	i             int
 	prefix        []byte
 	startingPoint []byte
-	results       chan *nostr.Event
+	results       chan *event.T
 	skipTimestamp bool
 }
 
 type queryEvent struct {
-	*nostr.Event
+	*event.T
 	query int
 }
 
-func (b BadgerBackend) QueryEvents(ctx context.Context, filter *nostr.Filter) (chan *nostr.Event, error) {
-	ch := make(chan *nostr.Event)
+func (b BadgerBackend) QueryEvents(ctx context.Context, filter *nostr.Filter) (chan *event.T, error) {
+	ch := make(chan *event.T)
 
 	queries, extraFilter, since, err := prepareQueries(filter)
 	if err != nil {
@@ -79,7 +80,7 @@ func (b BadgerBackend) QueryEvents(ctx context.Context, filter *nostr.Filter) (c
 							return
 						}
 						item.Value(func(val []byte) (e error) {
-							evt := &nostr.Event{}
+							evt := &event.T{}
 							if err := nostr_binary.Unmarshal(val, evt); err != nil {
 								log.Printf("badger: value read error (id %x): %s\n", val[0:32], err)
 								return err
@@ -110,7 +111,7 @@ func (b BadgerBackend) QueryEvents(ctx context.Context, filter *nostr.Filter) (c
 			for _, q := range queries {
 				evt, ok := <-q.results
 				if ok {
-					emitQueue = append(emitQueue, &queryEvent{Event: evt, query: q.i})
+					emitQueue = append(emitQueue, &queryEvent{T: evt, query: q.i})
 				}
 			}
 
@@ -133,7 +134,7 @@ func (b BadgerBackend) QueryEvents(ctx context.Context, filter *nostr.Filter) (c
 			for {
 				// emit latest event in queue
 				latest := emitQueue[0]
-				ch <- latest.Event
+				ch <- latest.T
 
 				// stop when reaching limit
 				emittedEvents++
@@ -143,7 +144,7 @@ func (b BadgerBackend) QueryEvents(ctx context.Context, filter *nostr.Filter) (c
 
 				// fetch a new one from query results and replace the previous one with it
 				if evt, ok := <-queries[latest.query].results; ok {
-					emitQueue[0].Event = evt
+					emitQueue[0].T = evt
 					heap.Fix(&emitQueue, 0)
 				} else {
 					// if this query has no more events we just remove this and proceed normally
@@ -298,7 +299,7 @@ func prepareQueries(filter *nostr.Filter) (
 	}
 	for i, q := range queries {
 		queries[i].startingPoint = binary.BigEndian.AppendUint32(q.prefix, uint32(until))
-		queries[i].results = make(chan *nostr.Event, 12)
+		queries[i].results = make(chan *event.T, 12)
 	}
 
 	// this is where we'll end the iteration

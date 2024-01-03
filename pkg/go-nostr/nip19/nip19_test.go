@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 )
 
 func TestEncodeNpub(t *testing.T) {
@@ -112,7 +113,7 @@ func TestEncodeNprofile(t *testing.T) {
 func TestEncodeDecodeNaddr(t *testing.T) {
 	naddr, err := EncodeEntity(
 		"3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d",
-		nostr.KindArticle,
+		event.KindArticle,
 		"banana",
 		[]string{
 			"wss://relay.nostr.example.mydomain.example.com",
@@ -136,7 +137,7 @@ func TestEncodeDecodeNaddr(t *testing.T) {
 	if ep.PublicKey != "3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d" {
 		t.Error("returned wrong pubkey")
 	}
-	if ep.Kind != nostr.KindArticle {
+	if ep.Kind != event.KindArticle {
 		t.Error("returned wrong kind")
 	}
 	if ep.Identifier != "banana" {
@@ -159,7 +160,7 @@ func TestDecodeNaddrWithoutRelays(t *testing.T) {
 	if ep.PublicKey != "7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194" {
 		t.Error("returned wrong pubkey")
 	}
-	if ep.Kind != nostr.KindArticle {
+	if ep.Kind != event.KindArticle {
 		t.Error("returned wrong kind")
 	}
 	if ep.Identifier != "references" {

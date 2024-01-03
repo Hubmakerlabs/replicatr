@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 )
 
@@ -21,8 +22,8 @@ func FetchRelaysForPubkey(ctx context.Context, pool *nostr.SimplePool, pubkey st
 	ch := pool.SubManyEose(ctx, relays, nostr.Filters{
 		{
 			Kinds: []int{
-				nostr.KindRelayListMetadata,
-				nostr.KindContactList,
+				event.KindRelayListMetadata,
+				event.KindContactList,
 			},
 			Authors: []string{pubkey},
 			Limit:   2,
@@ -32,11 +33,11 @@ func FetchRelaysForPubkey(ctx context.Context, pool *nostr.SimplePool, pubkey st
 	result := make([]Relay, 0, 20)
 	i := 0
 	for ie := range ch {
-		switch ie.Event.Kind {
-		case nostr.KindRelayListMetadata:
-			result = append(result, ParseRelaysFromKind10002(ie.Event)...)
-		case nostr.KindContactList:
-			result = append(result, ParseRelaysFromKind3(ie.Event)...)
+		switch ie.T.Kind {
+		case event.KindRelayListMetadata:
+			result = append(result, ParseRelaysFromKind10002(ie.T)...)
+		case event.KindContactList:
+			result = append(result, ParseRelaysFromKind3(ie.T)...)
 		}
 
 		i++
@@ -48,7 +49,7 @@ func FetchRelaysForPubkey(ctx context.Context, pool *nostr.SimplePool, pubkey st
 	return result
 }
 
-func ParseRelaysFromKind10002(evt *nostr.Event) []Relay {
+func ParseRelaysFromKind10002(evt *event.T) []Relay {
 	result := make([]Relay, 0, len(evt.Tags))
 	for _, tag := range evt.Tags {
 		if u := tag.Value(); u != "" && tag[0] == "r" {
@@ -77,7 +78,7 @@ func ParseRelaysFromKind10002(evt *nostr.Event) []Relay {
 	return result
 }
 
-func ParseRelaysFromKind3(evt *nostr.Event) []Relay {
+func ParseRelaysFromKind3(evt *event.T) []Relay {
 	type Item struct {
 		Read  bool `json:"read"`
 		Write bool `json:"write"`

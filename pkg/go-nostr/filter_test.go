@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"golang.org/x/exp/slices"
 )
 
@@ -23,9 +25,9 @@ func TestFilterUnmarshal(t *testing.T) {
 }
 
 func TestFilterMarshal(t *testing.T) {
-	until := Timestamp(12345678)
+	until := timestamp.Timestamp(12345678)
 	filterj, err := json.Marshal(Filter{
-		Kinds: []int{KindTextNote, KindRecommendServer, KindEncryptedDirectMessage},
+		Kinds: []int{event.KindTextNote, event.KindRecommendServer, event.KindEncryptedDirectMessage},
 		Tags:  TagMap{"fruit": {"banana", "mango"}},
 		Until: &until,
 	})
@@ -41,41 +43,41 @@ func TestFilterMarshal(t *testing.T) {
 
 func TestFilterMatchingLive(t *testing.T) {
 	var filter Filter
-	var event Event
+	var evt event.T
 
 	json.Unmarshal([]byte(`{"kinds":[1],"authors":["a8171781fd9e90ede3ea44ddca5d3abf828fe8eedeb0f3abb0dd3e563562e1fc","1d80e5588de010d137a67c42b03717595f5f510e73e42cfc48f31bae91844d59","ed4ca520e9929dfe9efdadf4011b53d30afd0678a09aa026927e60e7a45d9244"],"since":1677033299}`), &filter)
-	json.Unmarshal([]byte(`{"id":"5a127c9c931f392f6afc7fdb74e8be01c34035314735a6b97d2cf360d13cfb94","pubkey":"1d80e5588de010d137a67c42b03717595f5f510e73e42cfc48f31bae91844d59","created_at":1677033299,"kind":1,"tags":[["t","japan"]],"content":"If you like my art,I'd appreciate a coin or two!!\nZap is welcome!! Thanks.\n\n\n#japan #bitcoin #art #bananaart\nhttps://void.cat/d/CgM1bzDgHUCtiNNwfX9ajY.webp","sig":"828497508487ca1e374f6b4f2bba7487bc09fccd5cc0d1baa82846a944f8c5766918abf5878a580f1e6615de91f5b57a32e34c42ee2747c983aaf47dbf2a0255"}`), &event)
+	json.Unmarshal([]byte(`{"id":"5a127c9c931f392f6afc7fdb74e8be01c34035314735a6b97d2cf360d13cfb94","pubkey":"1d80e5588de010d137a67c42b03717595f5f510e73e42cfc48f31bae91844d59","created_at":1677033299,"kind":1,"tags":[["t","japan"]],"content":"If you like my art,I'd appreciate a coin or two!!\nZap is welcome!! Thanks.\n\n\n#japan #bitcoin #art #bananaart\nhttps://void.cat/d/CgM1bzDgHUCtiNNwfX9ajY.webp","sig":"828497508487ca1e374f6b4f2bba7487bc09fccd5cc0d1baa82846a944f8c5766918abf5878a580f1e6615de91f5b57a32e34c42ee2747c983aaf47dbf2a0255"}`), &evt)
 
-	if !filter.Matches(&event) {
+	if !filter.Matches(&evt) {
 		t.Error("live filter should match")
 	}
 }
 
 func TestFilterEquality(t *testing.T) {
 	if !FilterEqual(
-		Filter{Kinds: []int{KindEncryptedDirectMessage, KindDeletion}},
-		Filter{Kinds: []int{KindEncryptedDirectMessage, KindDeletion}},
+		Filter{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}},
+		Filter{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}},
 	) {
 		t.Error("kinds filters should be equal")
 	}
 
 	if !FilterEqual(
-		Filter{Kinds: []int{KindEncryptedDirectMessage, KindDeletion}, Tags: TagMap{"letter": {"a", "b"}}},
-		Filter{Kinds: []int{KindEncryptedDirectMessage, KindDeletion}, Tags: TagMap{"letter": {"b", "a"}}},
+		Filter{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}, Tags: TagMap{"letter": {"a", "b"}}},
+		Filter{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}, Tags: TagMap{"letter": {"b", "a"}}},
 	) {
 		t.Error("kind+tags filters should be equal")
 	}
 
-	tm := Now()
+	tm := timestamp.Now()
 	if !FilterEqual(
 		Filter{
-			Kinds: []int{KindEncryptedDirectMessage, KindDeletion},
+			Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion},
 			Tags:  TagMap{"letter": {"a", "b"}, "fruit": {"banana"}},
 			Since: &tm,
 			IDs:   []string{"aaaa", "bbbb"},
 		},
 		Filter{
-			Kinds: []int{KindDeletion, KindEncryptedDirectMessage},
+			Kinds: []int{event.KindDeletion, event.KindEncryptedDirectMessage},
 			Tags:  TagMap{"letter": {"a", "b"}, "fruit": {"banana"}},
 			Since: &tm,
 			IDs:   []string{"aaaa", "bbbb"},
@@ -85,15 +87,15 @@ func TestFilterEquality(t *testing.T) {
 	}
 
 	if FilterEqual(
-		Filter{Kinds: []int{KindTextNote, KindEncryptedDirectMessage, KindDeletion}},
-		Filter{Kinds: []int{KindEncryptedDirectMessage, KindDeletion, KindRepost}},
+		Filter{Kinds: []int{event.KindTextNote, event.KindEncryptedDirectMessage, event.KindDeletion}},
+		Filter{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion, event.KindRepost}},
 	) {
 		t.Error("kinds filters shouldn't be equal")
 	}
 }
 
 func TestFilterClone(t *testing.T) {
-	ts := Now() - 60*60
+	ts := timestamp.Now() - 60*60
 	flt := Filter{
 		Kinds: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
 		Tags:  TagMap{"letter": {"a", "b"}, "fruit": {"banana"}},

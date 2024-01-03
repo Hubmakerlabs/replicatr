@@ -3,7 +3,9 @@ package binary
 import (
 	"encoding/hex"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
 
 type Event struct {
@@ -11,12 +13,12 @@ type Event struct {
 	Sig       [64]byte
 	ID        [32]byte
 	Kind      uint16
-	CreatedAt nostr.Timestamp
+	CreatedAt timestamp.Timestamp
 	Content   string
-	Tags      nostr.Tags
+	Tags      tags.Tags
 }
 
-func BinaryEvent(evt *nostr.Event) *Event {
+func BinaryEvent(evt *event.T) *Event {
 	bevt := Event{
 		Tags:      evt.Tags,
 		Content:   evt.Content,
@@ -31,8 +33,8 @@ func BinaryEvent(evt *nostr.Event) *Event {
 	return &bevt
 }
 
-func (bevt *Event) ToNormalEvent() *nostr.Event {
-	return &nostr.Event{
+func (bevt *Event) ToNormalEvent() *event.T {
+	return &event.T{
 		Tags:      bevt.Tags,
 		Content:   bevt.Content,
 		Kind:      int(bevt.Kind),

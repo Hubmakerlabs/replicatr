@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	nostr "github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 )
 
 func TestCheck(t *testing.T) {
@@ -32,8 +32,8 @@ func TestCheck(t *testing.T) {
 }
 
 func TestGenerateShort(t *testing.T) {
-	event := &nostr.Event{
-		Kind:    nostr.KindTextNote,
+	event := &event.T{
+		Kind:    event.KindTextNote,
 		Content: "It's just me mining my own business",
 		PubKey:  "a48380f4cfcc1ad5378294fcac36439770f9c878dd880ffa94bb74ea54a6f243",
 	}
@@ -52,8 +52,8 @@ func TestGenerateLong(t *testing.T) {
 		difficulty := difficulty
 		t.Run(fmt.Sprintf("%dbits", difficulty), func(t *testing.T) {
 			t.Parallel()
-			event := &nostr.Event{
-				Kind:    nostr.KindTextNote,
+			event := &event.T{
+				Kind:    event.KindTextNote,
 				Content: "It's just me mining my own business",
 				PubKey:  "a48380f4cfcc1ad5378294fcac36439770f9c878dd880ffa94bb74ea54a6f243",
 			}
@@ -69,7 +69,7 @@ func TestGenerateLong(t *testing.T) {
 	}
 }
 
-func testNonceTag(t *testing.T, event *nostr.Event, commitment int) {
+func testNonceTag(t *testing.T, event *event.T, commitment int) {
 	t.Helper()
 	tagptr := event.Tags.GetFirst([]string{"nonce"})
 	if tagptr == nil {
@@ -88,8 +88,8 @@ func testNonceTag(t *testing.T, event *nostr.Event, commitment int) {
 }
 
 func TestGenerateTimeout(t *testing.T) {
-	event := &nostr.Event{
-		Kind:    nostr.KindTextNote,
+	event := &event.T{
+		Kind:    event.KindTextNote,
 		Content: "It's just me mining my own business",
 		PubKey:  "a48380f4cfcc1ad5378294fcac36439770f9c878dd880ffa94bb74ea54a6f243",
 	}
@@ -116,8 +116,8 @@ func BenchmarkCheck(b *testing.B) {
 
 func BenchmarkGenerateOneIteration(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		event := &nostr.Event{
-			Kind:    nostr.KindTextNote,
+		event := &event.T{
+			Kind:    event.KindTextNote,
 			Content: "It's just me mining my own business",
 			PubKey:  "a48380f4cfcc1ad5378294fcac36439770f9c878dd880ffa94bb74ea54a6f243",
 		}
@@ -135,8 +135,8 @@ func BenchmarkGenerate(b *testing.B) {
 		difficulty := difficulty
 		b.Run(fmt.Sprintf("%dbits", difficulty), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				event := &nostr.Event{
-					Kind:    nostr.KindTextNote,
+				event := &event.T{
+					Kind:    event.KindTextNote,
 					Content: "It's just me mining my own business",
 					PubKey:  "a48380f4cfcc1ad5378294fcac36439770f9c878dd880ffa94bb74ea54a6f243",
 				}

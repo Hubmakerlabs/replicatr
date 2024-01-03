@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 )
 
 type Subscription struct {
@@ -20,7 +22,7 @@ type Subscription struct {
 
 	// the Events channel emits all EVENTs that come in a Subscription
 	// will be closed when the subscription ends
-	Events chan *Event
+	Events chan *event.T
 	mu     sync.Mutex
 
 	// the EndOfStoredEvents channel gets closed when an EOSE comes for that subscription
@@ -43,7 +45,7 @@ type Subscription struct {
 }
 
 type EventMessage struct {
-	Event Event
+	Event event.T
 	Relay string
 }
 
@@ -78,7 +80,7 @@ func (sub *Subscription) start() {
 	sub.mu.Unlock()
 }
 
-func (sub *Subscription) dispatchEvent(evt *Event) {
+func (sub *Subscription) dispatchEvent(evt *event.T) {
 	added := false
 	if !sub.eosed.Load() {
 		sub.storedwg.Add(1)

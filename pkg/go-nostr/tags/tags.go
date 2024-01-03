@@ -1,10 +1,11 @@
-package nostr
+package tags
 
 import (
 	"encoding/json"
 	"errors"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/escape"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"golang.org/x/exp/slices"
 )
@@ -170,7 +171,7 @@ func (tag Tag) marshalTo(dst []byte) []byte {
 		if i > 0 {
 			dst = append(dst, ',')
 		}
-		dst = escapeString(dst, s)
+		dst = escape.String(dst, s)
 	}
 	dst = append(dst, ']')
 	return dst
@@ -178,7 +179,7 @@ func (tag Tag) marshalTo(dst []byte) []byte {
 
 // MarshalTo appends the JSON encoded byte of Tags as [][]string to dst.
 // String escaping is as described in RFC8259.
-func (tags Tags) marshalTo(dst []byte) []byte {
+func (tags Tags) MarshalTo(dst []byte) []byte {
 	dst = append(dst, '[')
 	for i, tag := range tags {
 		if i > 0 {

@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 )
 
 const RELAY = "wss://nos.lol"
@@ -15,7 +17,7 @@ func TestSubscribeBasic(t *testing.T) {
 	rl := MustRelayConnect(RELAY)
 	defer rl.Close()
 
-	sub, err := rl.Subscribe(context.Background(), Filters{{Kinds: []int{KindTextNote}, Limit: 2}})
+	sub, err := rl.Subscribe(context.Background(), Filters{{Kinds: []int{event.KindTextNote}, Limit: 2}})
 	if err != nil {
 		t.Fatalf("subscription failed: %v", err)
 		return
@@ -56,7 +58,7 @@ func TestNestedSubscriptions(t *testing.T) {
 	n := atomic.Uint32{}
 
 	// fetch 2 replies to a note
-	sub, err := rl.Subscribe(context.Background(), Filters{{Kinds: []int{KindTextNote}, Tags: TagMap{"e": []string{"0e34a74f8547e3b95d52a2543719b109fd0312aba144e2ef95cba043f42fe8c5"}}, Limit: 3}})
+	sub, err := rl.Subscribe(context.Background(), Filters{{Kinds: []int{event.KindTextNote}, Tags: TagMap{"e": []string{"0e34a74f8547e3b95d52a2543719b109fd0312aba144e2ef95cba043f42fe8c5"}}, Limit: 3}})
 	if err != nil {
 		t.Fatalf("subscription 1 failed: %v", err)
 		return
@@ -64,9 +66,9 @@ func TestNestedSubscriptions(t *testing.T) {
 
 	for {
 		select {
-		case event := <-sub.Events:
+		case evt := <-sub.Events:
 			// now fetch author of this
-			sub, err := rl.Subscribe(context.Background(), Filters{{Kinds: []int{KindProfileMetadata}, Authors: []string{event.PubKey}, Limit: 1}})
+			sub, err := rl.Subscribe(context.Background(), Filters{{Kinds: []int{event.KindProfileMetadata}, Authors: []string{evt.PubKey}, Limit: 1}})
 			if err != nil {
 				t.Fatalf("subscription 2 failed: %v", err)
 				return

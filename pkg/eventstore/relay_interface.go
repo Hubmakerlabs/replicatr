@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 )
 
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.
 type RelayInterface interface {
-	Publish(ctx context.Context, event *nostr.Event) error
-	QuerySync(ctx context.Context, filter *nostr.Filter, opts ...nostr.SubscriptionOption) ([]*nostr.Event, error)
+	Publish(ctx context.Context, evt *event.T) error
+	QuerySync(ctx context.Context, filter *nostr.Filter, opts ...nostr.SubscriptionOption) ([]*event.T, error)
 }
 
 type RelayWrapper struct {
@@ -19,7 +20,7 @@ type RelayWrapper struct {
 
 var _ RelayInterface = (*RelayWrapper)(nil)
 
-func (w RelayWrapper) Publish(ctx context.Context, evt *nostr.Event) (e error) {
+func (w RelayWrapper) Publish(ctx context.Context, evt *event.T) (e error) {
 	if 20000 <= evt.Kind && evt.Kind < 30000 {
 		// do not store ephemeral events
 		return nil
@@ -57,7 +58,7 @@ func (w RelayWrapper) Publish(ctx context.Context, evt *nostr.Event) (e error) {
 	return nil
 }
 
-func (w RelayWrapper) QuerySync(ctx context.Context, filter *nostr.Filter, opts ...nostr.SubscriptionOption) ([]*nostr.Event, error) {
+func (w RelayWrapper) QuerySync(ctx context.Context, filter *nostr.Filter, opts ...nostr.SubscriptionOption) ([]*event.T, error) {
 	ch, err := w.Store.QueryEvents(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query: %w", err)
@@ -68,7 +69,7 @@ func (w RelayWrapper) QuerySync(ctx context.Context, filter *nostr.Filter, opts 
 		n = 500
 	}
 
-	results := make([]*nostr.Event, 0, n)
+	results := make([]*event.T, 0, n)
 	for evt := range ch {
 		results = append(results, evt)
 	}
