@@ -2,18 +2,28 @@ package tags
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
-	t "github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	log2 "mleku.online/git/log"
 )
 
-// T is a list of T - which are lists of string elements with ordering and
-// no uniqueness constraint (not a set).
-type T []t.T
+var (
+	log                    = log2.GetLogger()
+	fails                  = log.D.Chk
+	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
+)
 
-// GetFirst gets the first t in tags that matches the prefix, see [T.StartsWith]
-func (t T) GetFirst(tagPrefix []string) *t.T {
+// T is a list of T - which are lists of string elements with ordering and no
+// uniqueness constraint (not a set).
+type T []tag.T
+
+// GetFirst gets the first tag in tags that matches the prefix, see
+// [T.StartsWith]
+func (t T) GetFirst(tagPrefix []string) *tag.T {
 	for _, v := range t {
 		if v.StartsWith(tagPrefix) {
 			return &v
@@ -22,8 +32,8 @@ func (t T) GetFirst(tagPrefix []string) *t.T {
 	return nil
 }
 
-// GetLast gets the last t in tags that matches the prefix, see [T.StartsWith]
-func (t T) GetLast(tagPrefix []string) *t.T {
+// GetLast gets the last tag in tags that matches the prefix, see [T.StartsWith]
+func (t T) GetLast(tagPrefix []string) *tag.T {
 	for i := len(t) - 1; i >= 0; i-- {
 		v := t[i]
 		if v.StartsWith(tagPrefix) {
@@ -55,9 +65,10 @@ func (t T) FilterOut(tagPrefix []string) T {
 	return filtered
 }
 
-// AppendUnique appends a t if it doesn't exist yet, otherwise does nothing.
-// the uniqueness comparison is done based only on the first 2 elements of the t.
-func (t T) AppendUnique(tag t.T) T {
+// AppendUnique appends a tag if it doesn't exist yet, otherwise does nothing.
+// the uniqueness comparison is done based only on the first 2 elements of the
+// tag.
+func (t T) AppendUnique(tag tag.T) T {
 	n := len(tag)
 	if n > 2 {
 		n = 2
@@ -70,7 +81,7 @@ func (t T) AppendUnique(tag t.T) T {
 
 // Scan parses a string or raw bytes that should be a string and embeds the
 // values into the tags variable from which this method is invoked.
-func (t T) Scan(src any) (err error) {
+func (t T) Scan(src any) (e error) {
 	var jtags []byte
 	switch v := src.(type) {
 	case []byte:
@@ -78,14 +89,15 @@ func (t T) Scan(src any) (err error) {
 	case string:
 		jtags = []byte(v)
 	default:
-		return errors.New("couldn't scan t, it's not a json string")
+		return errors.New("couldn'tag scan tag, it's not a json string")
 	}
-	err = json.Unmarshal(jtags, &t)
+	e = json.Unmarshal(jtags, &t)
+	log.E.Chk(e)
 	return
 }
 
 // ContainsAny returns true if any of the strings given in `values` matches any
-// of the t elements.
+// of the tag elements.
 func (t T) ContainsAny(tagName string, values []string) bool {
 	for _, v := range t {
 		if len(v) < 2 {

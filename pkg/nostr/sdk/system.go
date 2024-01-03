@@ -84,11 +84,11 @@ func (s *System) fetchProfileMetadata(ctx context.Context,
 			Authors: []string{pubkey}})
 		log.D.Chk(e)
 		if len(res) != 0 {
-			if m, err := ParseMetadata(res[0]); err == nil {
-				m.PubKey = pubkey
-				m.Event = res[0]
-				s.MetadataCache.SetWithTTL(pubkey, m, time.Hour*6)
-				return m, true
+			if pm, e = ParseMetadata(res[0]); !log.E.Chk(e) {
+				pm.PubKey = pubkey
+				pm.Event = res[0]
+				s.MetadataCache.SetWithTTL(pubkey, pm, time.Hour*6)
+				return pm, true
 			}
 		}
 	}

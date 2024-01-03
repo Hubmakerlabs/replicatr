@@ -6,6 +6,13 @@ import (
 	"time"
 
 	ristretto "github.com/fiatjaf/generic-ristretto"
+	log2 "mleku.online/git/log"
+)
+
+var (
+	log                    = log2.GetLogger()
+	fails                  = log.D.Chk
+	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
 type RistrettoCache[V any] struct {
@@ -40,8 +47,9 @@ func shortUint64(idOrPubkey string) uint64 {
 	if length < 8 {
 		return 0
 	}
-	b, err := hex.DecodeString(idOrPubkey[length-8:])
-	if err != nil {
+	var b []byte
+	var e error
+	if b, e = hex.DecodeString(idOrPubkey[length-8:]); log.E.Chk(e) {
 		return 0
 	}
 	return uint64(binary.BigEndian.Uint32(b))
