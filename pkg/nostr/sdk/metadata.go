@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/pool"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 )
 
@@ -17,7 +18,7 @@ type ProfileMetadata struct {
 	// PubKey must always be set otherwise things will break
 	PubKey string `json:"-"`
 	// Event may be empty if a profile metadata event wasn't found
-	Event *nip1.Event `json:"-,omitempty"`
+	Event *event.T `json:"-,omitempty"`
 	// every one of these may be empty
 	Name        string `json:"name,omitempty"`
 	DisplayName string `json:"display_name,omitempty"`
@@ -55,12 +56,12 @@ func (p ProfileMetadata) ShortName() string {
 	return npub[0:7] + "…" + npub[58:]
 }
 
-func FetchProfileMetadata(ctx context.Context, pool *nostr.SimplePool,
+func FetchProfileMetadata(ctx context.Context, pool *pool.SimplePool,
 	pubkey string, relays ...string) (pm *ProfileMetadata) {
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	ch := pool.SubManyEose(ctx, relays, nip1.Filters{
+	ch := pool.SubManyEose(ctx, relays, filters.T{
 		{
 			Kinds:   kinds.T{kind.ProfileMetadata},
 			Authors: []string{pubkey},
@@ -69,14 +70,14 @@ func FetchProfileMetadata(ctx context.Context, pool *nostr.SimplePool,
 	})
 	var e error
 	for ie := range ch {
-		if pm, e = ParseMetadata(ie.Event); !log.E.Chk(e) {
+		if pm, e = ParseMetadata(ie.T); !log.E.Chk(e) {
 			return
 		}
 	}
 	return &ProfileMetadata{PubKey: pubkey}
 }
 
-func ParseMetadata(ev *nip1.Event) (pm *ProfileMetadata, e error) {
+func ParseMetadata(ev *event.T) (pm *ProfileMetadata, e error) {
 	if ev.Kind != 0 {
 		e = fmt.Errorf("event %s is kind %d, not 0", ev.ID, ev.Kind)
 		return

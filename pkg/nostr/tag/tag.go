@@ -3,9 +3,10 @@ package tag
 import (
 	"bytes"
 	"fmt"
+	"strings"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
-	"strings"
 )
 
 // The tag position meanings so they are clear when reading.

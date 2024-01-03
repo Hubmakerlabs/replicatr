@@ -5,15 +5,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 )
 
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.
 type RelayInterface interface {
-	Publish(ctx context.Context, event nip1.Event) error
-	QuerySync(ctx context.Context, filter *nip1.Filter, opts ...SubscriptionOption) ([]*nip1.Event, error)
+	Publish(ctx context.Context, event event.T) error
+	QuerySync(ctx context.Context, filter *filter.T, opts ...SubscriptionOption) ([]*event.T, error)
 }
 
 // SubscriptionOption is the type of the argument passed for that.
@@ -37,14 +37,14 @@ type RelayWrapper struct {
 // compile time interface check
 var _ RelayInterface = (*RelayWrapper)(nil)
 
-func (w RelayWrapper) Publish(ctx context.Context, evt nip1.Event) (e error) {
+func (w RelayWrapper) Publish(ctx context.Context, evt event.T) (e error) {
 	if evt.Kind.IsEphemeral() {
 		// do not store ephemeral events
 		return nil
 	} else if evt.Kind.IsReplaceable() {
 		// replaceable event, delete before storing
-		var ch chan *nip1.Event
-		ch, e = w.Store.QueryEvents(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kinds.T{evt.Kind}})
+		var ch chan *event.T
+		ch, e = w.Store.QueryEvents(ctx, &filter.T{Authors: []string{evt.PubKey}, Kinds: kinds.T{evt.Kind}})
 		if fails(e) {
 			return fmt.Errorf("failed to query before replacing: %w", e)
 		}
@@ -57,11 +57,11 @@ func (w RelayWrapper) Publish(ctx context.Context, evt nip1.Event) (e error) {
 		// parameterized replaceable event, delete before storing
 		d := evt.Tags.GetFirst([]string{"d", ""})
 		if d != nil {
-			var ch chan *nip1.Event
-			ch, e = w.Store.QueryEvents(ctx, &nip1.Filter{
+			var ch chan *event.T
+			ch, e = w.Store.QueryEvents(ctx, &filter.T{
 				Authors: []string{evt.PubKey},
 				Kinds:   kinds.T{evt.Kind},
-				Tags:    nip1.TagMap{"d": []string{d.Value()}},
+				Tags:    filter.TagMap{"d": []string{d.Value()}},
 			})
 			if fails(e) {
 				return fmt.Errorf(
@@ -81,10 +81,10 @@ func (w RelayWrapper) Publish(ctx context.Context, evt nip1.Event) (e error) {
 	return nil
 }
 
-func (w RelayWrapper) QuerySync(ctx context.Context, filter *nip1.Filter,
-	opts ...SubscriptionOption) (evs []*nip1.Event,e error) {
-	var ch chan *nip1.Event
-	if ch, e= w.Store.QueryEvents(ctx, filter); log.E.Chk(e){
+func (w RelayWrapper) QuerySync(ctx context.Context, filter *filter.T,
+	opts ...SubscriptionOption) (evs []*event.T, e error) {
+	var ch chan *event.T
+	if ch, e = w.Store.QueryEvents(ctx, filter); log.E.Chk(e) {
 		return nil, fmt.Errorf("failed to query: %w", e)
 	}
 
@@ -93,7 +93,7 @@ func (w RelayWrapper) QuerySync(ctx context.Context, filter *nip1.Filter,
 		n = 500
 	}
 
-	results := make([]*nip1.Event, 0, n)
+	results := make([]*event.T, 0, n)
 	for evt := range ch {
 		results = append(results, evt)
 	}

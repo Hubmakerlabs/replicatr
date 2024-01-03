@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
@@ -55,7 +55,7 @@ func InputToEventPointer(input string) (ep *pointers.Event) {
 	// handle if it is a hex string
 	if len(input) == 64 {
 		if _, e = hex.DecodeString(input); !log.E.Chk(e) {
-			return &pointers.Event{ID: nip1.EventID(input)}
+			return &pointers.Event{ID: eventid.EventID(input)}
 		}
 	}
 	// handle nip19 codes, if that's the case
@@ -71,7 +71,7 @@ func InputToEventPointer(input string) (ep *pointers.Event) {
 			log.E.F("note pointer was not expected string")
 			return
 		}
-		return &pointers.Event{ID: nip1.EventID(input)}
+		return &pointers.Event{ID: eventid.EventID(input)}
 	case "nevent":
 		if ep, ok = data.(*pointers.Event); !ok {
 			log.E.F("note pointer was not event pointer")

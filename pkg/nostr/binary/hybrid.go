@@ -4,21 +4,23 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
-func Unmarshal(data []byte, evt *nip1.Event) (err error) {
+func Unmarshal(data []byte, evt *event.T) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("failed to decode binary: %v", r)
 		}
 	}()
 
-	evt.ID = nip1.EventID(hex.EncodeToString(data[0:32]))
+	evt.ID = eventid.EventID(hex.EncodeToString(data[0:32]))
 	evt.PubKey = hex.EncodeToString(data[32:64])
 	evt.Sig = hex.EncodeToString(data[64:128])
 	evt.CreatedAt = timestamp.T(binary.BigEndian.Uint32(data[128:132]))
@@ -51,7 +53,7 @@ func Unmarshal(data []byte, evt *nip1.Event) (err error) {
 	return err
 }
 
-func Marshal(evt *nip1.Event) ([]byte, error) {
+func Marshal(evt *event.T) ([]byte, error) {
 	content := []byte(evt.Content)
 	buf := make([]byte, 32+32+64+4+2+2+len(content)+65536 /* blergh */)
 

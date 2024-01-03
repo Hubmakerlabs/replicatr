@@ -4,23 +4,27 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 // ReqEnvelope is the wrapper for a query to a relay.
 type ReqEnvelope struct {
-	SubscriptionID SubscriptionID
-	Filters
+	SubscriptionID subscriptionid.T
+	filters.T
 }
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
-// be retrieved using nip1.Labels[Label]
-func (E *ReqEnvelope) Label() (l Label) { return LReq }
+// be retrieved using nip1.List[T]
+func (E *ReqEnvelope) Label() (l labels.T) { return labels.LReq }
 
 func (E *ReqEnvelope) ToArray() (arr array.T) {
-	arr = array.T{REQ, E.SubscriptionID}
-	for _, f := range E.Filters {
+	arr = array.T{labels.REQ, E.SubscriptionID}
+	for _, f := range E.T {
 		arr = append(arr, f.ToObject())
 	}
 	return
@@ -64,7 +68,7 @@ func (E *ReqEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 			return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 		}
 		log.D.F("Subscription ID: '%s'", sid)
-		E.SubscriptionID = SubscriptionID(sid)
+		E.SubscriptionID = subscriptionid.T(sid)
 	}
 	// Next, find the comma (there must be one and at least one object brace
 	// after it
@@ -86,11 +90,11 @@ func (E *ReqEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 			return
 		}
 		// log.D.F("filter: '%s'", filterArray)
-		f := &Filter{}
+		f := &filter.T{}
 		if e = json.Unmarshal(filterArray, f); fails(e) {
 			return
 		}
-		E.Filters = append(E.Filters, f)
+		E.T = append(E.T, f)
 		// log.D.F("remaining: '%s'", buf.Buf[buf.Pos:])
 		which = 0
 		if which, e = buf.ScanForOneOf(true, ',', ']'); fails(e) {

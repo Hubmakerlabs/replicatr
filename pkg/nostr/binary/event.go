@@ -2,8 +2,10 @@ package binary
 
 import (
 	"encoding/hex"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	log2 "mleku.online/git/log"
@@ -25,7 +27,7 @@ type Event struct {
 	Tags      tags.T
 }
 
-func BinaryEvent(evt *nip1.Event) (be *Event) {
+func BinaryEvent(evt *event.T) (be *Event) {
 	be = &Event{
 		Tags:      evt.Tags,
 		Content:   evt.Content,
@@ -46,10 +48,10 @@ func BinaryEvent(evt *nip1.Event) (be *Event) {
 	return be
 }
 
-func (be *Event) ToNormalEvent() *nip1.Event {
-	id, e := nip1.NewEventID(encodeToHex(be.ID[:]))
+func (be *Event) ToNormalEvent() *event.T {
+	id, e := eventid.NewEventID(encodeToHex(be.ID[:]))
 	log.D.Chk(e)
-	return &nip1.Event{
+	return &event.T{
 		Tags:      be.Tags,
 		Content:   be.Content,
 		Kind:      kind.T(be.Kind),

@@ -7,7 +7,7 @@ import (
 )
 
 func TestEOSEMadness(t *testing.T) {
-	rl := mustRelayConnect(RELAY)
+	rl := MustRelayConnect(RELAY)
 	defer rl.Close()
 
 	sub, err := rl.Subscribe(context.Background(), Filters{

@@ -1,12 +1,14 @@
 package sdk
 
 import (
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 )
@@ -24,7 +26,7 @@ var mentionRegex = regexp.MustCompile(`\bnostr:((note|npub|naddr|nevent|nprofile
 
 // ParseReferences parses both NIP-08 and NIP-27 references in a single unifying
 // interface.
-func ParseReferences(evt *nip1.Event) (refs []*Reference) {
+func ParseReferences(evt *event.T) (refs []*Reference) {
 	content := evt.Content
 	for _, r := range mentionRegex.
 		FindAllStringSubmatchIndex(evt.Content, -1) {
@@ -48,7 +50,7 @@ func ParseReferences(evt *nip1.Event) (refs []*Reference) {
 					ref.Profile = &pp
 				case "note":
 					ref.Event = &pointers.Event{
-						ID:     data.(nip1.EventID),
+						ID:     data.(eventid.EventID),
 						Relays: []string{},
 					}
 				case "nevent":
@@ -84,7 +86,7 @@ func ParseReferences(evt *nip1.Event) (refs []*Reference) {
 						relays = append(relays, tag[2])
 					}
 					ref.Event = &pointers.Event{
-						ID:     nip1.EventID(tag[1]),
+						ID:     eventid.EventID(tag[1]),
 						Relays: relays,
 					}
 				case "a":

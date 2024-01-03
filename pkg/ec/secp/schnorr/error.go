@@ -77,7 +77,7 @@ func (e Error) Error() string {
 }
 
 // Unwrap returns the underlying wrapped error.
-func (e Error) Unwrap() (e error) {
+func (e Error) Unwrap() (ee error) {
 	return e.Err
 }
 

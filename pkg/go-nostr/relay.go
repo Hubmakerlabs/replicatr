@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/connection"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/puzpuzpuz/xsync/v2"
@@ -25,7 +27,7 @@ type Relay struct {
 	URL           string
 	RequestHeader http.Header // e.g. for origin header
 
-	Connection    *Connection
+	Connection    *connection.Connection
 	Subscriptions *xsync.MapOf[string, *Subscription]
 
 	ConnectionError         error
@@ -52,7 +54,7 @@ type writeRequest struct {
 func NewRelay(ctx context.Context, url string, opts ...RelayOption) *Relay {
 	ctx, cancel := context.WithCancel(ctx)
 	r := &Relay{
-		URL:                           NormalizeURL(url),
+		URL:                           normalize.URL(url),
 		connectionContext:             ctx,
 		connectionContextCancel:       cancel,
 		Subscriptions:                 xsync.NewMapOf[*Subscription](),
@@ -134,7 +136,7 @@ func (r *Relay) Connect(ctx context.Context) error {
 		defer cancel()
 	}
 
-	conn, err := NewConnection(ctx, r.URL, r.RequestHeader)
+	conn, err := connection.NewConnection(ctx, r.URL, r.RequestHeader)
 	if err != nil {
 		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, err)
 	}
@@ -164,9 +166,9 @@ func (r *Relay) Connect(ctx context.Context) error {
 		for {
 			select {
 			case <-ticker.C:
-				err := wsutil.WriteClientMessage(r.Connection.conn, ws.OpPing, nil)
+				err := wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil)
 				if err != nil {
-					InfoLogger.Printf("{%s} error writing ping: %v; closing websocket", r.URL, err)
+					fmt.Printf("{%s} error writing ping: %v; closing websocket", r.URL, err)
 					r.Close() // this should trigger a context cancelation
 					return
 				}
@@ -196,7 +198,7 @@ func (r *Relay) Connect(ctx context.Context) error {
 			}
 
 			message := buf.Bytes()
-			debugLogf("{%s} %v\n", r.URL, message)
+			fmt.Printf("{%s} %v\n", r.URL, string(message))
 			envelope := ParseMessage(message)
 			if envelope == nil {
 				continue
@@ -220,12 +222,12 @@ func (r *Relay) Connect(ctx context.Context) error {
 					continue
 				}
 				if subscription, ok := r.Subscriptions.Load(*env.SubscriptionID); !ok {
-					// InfoLogger.Printf("{%s} no subscription with id '%s'\n", r.URL, *env.SubscriptionID)
+					fmt.Printf("{%s} no subscription with id '%s'\n", r.URL, *env.SubscriptionID)
 					continue
 				} else {
 					// check if the event matches the desired filter, ignore otherwise
 					if !subscription.Filters.Match(&env.Event) {
-						InfoLogger.Printf("{%s} filter does not match: %v ~ %v\n", r.URL, subscription.Filters, env.Event)
+						fmt.Printf("{%s} filter does not match: %v ~ %v\n", r.URL, subscription.Filters, env.Event)
 						continue
 					}
 
@@ -236,7 +238,7 @@ func (r *Relay) Connect(ctx context.Context) error {
 							if err != nil {
 								errmsg = err.Error()
 							}
-							InfoLogger.Printf("{%s} bad signature on %s; %s\n", r.URL, env.Event.ID, errmsg)
+							fmt.Printf("{%s} bad signature on %s; %s\n", r.URL, env.Event.ID, errmsg)
 							continue
 						}
 					}
@@ -260,7 +262,7 @@ func (r *Relay) Connect(ctx context.Context) error {
 				if okCallback, exist := r.okCallbacks.Load(env.EventID); exist {
 					okCallback(env.OK, env.Reason)
 				} else {
-					InfoLogger.Printf("{%s} got an unexpected OK message for event %s", r.URL, env.EventID)
+					fmt.Printf("{%s} got an unexpected OK message for event %s", r.URL, env.EventID)
 				}
 			}
 		}
@@ -331,7 +333,7 @@ func (r *Relay) publish(ctx context.Context, id string, env Envelope) error {
 
 	// publish event
 	envb, _ := env.MarshalJSON()
-	debugLogf("{%s} sending %v\n", r.URL, envb)
+	fmt.Printf("{%s} sending %v\n", r.URL, string(envb))
 	if err := <-r.Write(envb); err != nil {
 		return err
 	}

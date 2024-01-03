@@ -4,12 +4,12 @@ import (
 	"context"
 
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *Backend) SaveEvent(ctx context.Context, evt *nip1.Event) (e error) {
+func (b *Backend) SaveEvent(ctx context.Context, evt *event.T) (e error) {
 	return b.Update(func(txn *badger.Txn) (e error) {
 		// query event by id to ensure we don't save duplicates
 		id := evt.ID.Bytes()
@@ -34,7 +34,7 @@ func (b *Backend) SaveEvent(ctx context.Context, evt *nip1.Event) (e error) {
 			return
 		}
 		for _, k := range getIndexKeysForEvent(evt, idx[1:]) {
-			if e= txn.Set(k, nil); log.E.Chk(e) {
+			if e = txn.Set(k, nil); log.E.Chk(e) {
 				return
 			}
 		}

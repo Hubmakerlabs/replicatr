@@ -1,8 +1,8 @@
 package pointers
 
 import (
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 )
 
 type Profile struct {
@@ -11,10 +11,10 @@ type Profile struct {
 }
 
 type Event struct {
-	ID     nip1.EventID `json:"id"`
-	Relays []string     `json:"relays,omitempty"`
-	Author string       `json:"author,omitempty"`
-	Kind   kind.T       `json:"kind,omitempty"`
+	ID     eventid.EventID `json:"id"`
+	Relays []string        `json:"relays,omitempty"`
+	Author string          `json:"author,omitempty"`
+	Kind   kind.T          `json:"kind,omitempty"`
 }
 
 type Entity struct {

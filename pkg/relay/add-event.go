@@ -5,13 +5,15 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 )
 
-func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) (e error) {
+func (rl *Relay) AddEvent(ctx context.Context, evt *event.T) (e error) {
 	if evt == nil {
 		return errors.New("error: event is nil")
 	}
@@ -25,14 +27,14 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) (e error) {
 			}
 		}
 	}
-	var ch chan *nip1.Event
+	var ch chan *event.T
 	if evt.Kind.IsEphemeral() {
 		// do not store ephemeral events
 	} else {
 		if evt.Kind.IsReplaceable() {
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
-				if ch, e = query(ctx, &nip1.Filter{
+				if ch, e = query(ctx, &filter.T{
 					Authors: []string{evt.PubKey},
 					Kinds:   kinds.T{evt.Kind},
 				}); rl.E.Chk(e) {
@@ -49,10 +51,10 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) (e error) {
 			d := evt.Tags.GetFirst([]string{"d", ""})
 			if d != nil {
 				for _, query := range rl.QueryEvents {
-					if ch, e = query(ctx, &nip1.Filter{
+					if ch, e = query(ctx, &filter.T{
 						Authors: []string{evt.PubKey},
 						Kinds:   kinds.T{evt.Kind},
-						Tags:    nip1.TagMap{"d": []string{d.Value()}},
+						Tags:    filter.TagMap{"d": []string{d.Value()}},
 					}); rl.E.Chk(e) {
 						continue
 					}
@@ -88,14 +90,14 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) (e error) {
 	return nil
 }
 
-func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nip1.Event) (e error) {
-	var ch chan *nip1.Event
+func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *event.T) (e error) {
+	var ch chan *event.T
 	// event deletion -- nip09
 	for _, tag := range evt.Tags {
 		if len(tag) >= 2 && tag[0] == "e" {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
-				if ch, e = query(ctx, &nip1.Filter{IDs: []string{tag[1]}}); rl.E.Chk(e) {
+				if ch, e = query(ctx, &filter.T{IDs: []string{tag[1]}}); rl.E.Chk(e) {
 					continue
 				}
 				target := <-ch

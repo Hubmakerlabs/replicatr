@@ -423,7 +423,7 @@ func (p *PartialSignature) Verify(pubNonce [PubNonceSize]byte,
 // detailed errors.  signed.
 func verifyPartialSig(partialSig *PartialSignature, pubNonce [PubNonceSize]byte,
 	combinedNonce [PubNonceSize]byte, keySet []*btcec.PublicKey,
-	pubKey []byte, msg [32]byte, signOpts ...SignOption) (e error) {
+	pubKey []byte, msg [32]byte, signOpts ...SignOption) (err error) {
 
 	opts := defaultSignOptions()
 	for _, option := range signOpts {

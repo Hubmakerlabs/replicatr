@@ -3,7 +3,7 @@ package eventstore
 import (
 	"encoding/hex"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	log2 "mleku.online/git/log"
 )
 
@@ -13,7 +13,7 @@ var (
 	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
-func isOlder(previous, next *nip1.Event) bool {
+func isOlder(previous, next *event.T) bool {
 	return previous.CreatedAt < next.CreatedAt ||
 		(previous.CreatedAt == next.CreatedAt && previous.ID > next.ID)
 }

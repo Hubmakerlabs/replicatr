@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
@@ -63,7 +64,7 @@ func (h WithAuthHandler) Apply(pool *SimplePool) {
 var _ PoolOption = (WithAuthHandler)(nil)
 
 func (pool *SimplePool) EnsureRelay(url string) (*Relay, error) {
-	nm := NormalizeURL(url)
+	nm := normalize.URL(url)
 
 	defer namedLock(url)()
 
@@ -202,7 +203,7 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters Filt
 				time.Sleep(interval)
 				interval = interval * 17 / 10 // the next time we try we will wait longer
 			}
-		}(NormalizeURL(url))
+		}(normalize.URL(url))
 	}
 
 	return events
@@ -247,7 +248,7 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 		subscribe:
 			sub, err := relay.Subscribe(ctx, filters)
 			if sub == nil {
-				debugLogf("error subscribing to %s with %v: %s", relay, filters, err)
+				fmt.Printf("error subscribing to %s with %v: %s", relay, filters, err)
 				return
 			}
 
@@ -286,7 +287,7 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 					}
 				}
 			}
-		}(NormalizeURL(url))
+		}(normalize.URL(url))
 	}
 
 	return events

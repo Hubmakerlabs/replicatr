@@ -7,7 +7,8 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip11"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/notice"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
 )
@@ -22,14 +23,14 @@ type (
 	TagMap          = nostr.TagMap
 	EventEnvelope   = nostr.EventEnvelope
 	OKEnvelope      = nostr.OKEnvelope
-	EventID         = nip1.EventID
+	EventID         = eventid.EventID
 	CountEnvelope   = nostr.CountEnvelope
 	ClosedEnvelope  = nostr.ClosedEnvelope
 	ReqEnvelope     = nostr.ReqEnvelope
 	EOSEEnvelope    = nostr.EOSEEnvelope
 	CloseEnvelope   = nostr.CloseEnvelope
 	AuthEnvelope    = nostr.AuthEnvelope
-	NoticeEnvelope  = nip1.NoticeEnvelope
+	NoticeEnvelope  = notice.Envelope
 	Conn            = websocket.Conn
 	Request         = http.Request
 	ResponseWriter  = http.ResponseWriter

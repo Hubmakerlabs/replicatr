@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"golang.org/x/net/websocket"
 )
 
@@ -54,7 +55,7 @@ func TestPublish(t *testing.T) {
 	defer ws.Close()
 
 	// connect a client and send the text note
-	rl := mustRelayConnect(ws.URL)
+	rl := MustRelayConnect(ws.URL)
 	err := rl.Publish(context.Background(), textNote)
 	if err != nil {
 		t.Errorf("publish should have succeeded")
@@ -83,7 +84,7 @@ func TestPublishBlocked(t *testing.T) {
 	defer ws.Close()
 
 	// connect a client and send a text note
-	rl := mustRelayConnect(ws.URL)
+	rl := MustRelayConnect(ws.URL)
 	err := rl.Publish(context.Background(), textNote)
 	if err == nil {
 		t.Errorf("should have failed to publish")
@@ -103,7 +104,7 @@ func TestPublishWriteFailed(t *testing.T) {
 	defer ws.Close()
 
 	// connect a client and send a text note
-	rl := mustRelayConnect(ws.URL)
+	rl := MustRelayConnect(ws.URL)
 	// Force brief period of time so that publish always fails on closed socket.
 	time.Sleep(1 * time.Millisecond)
 	err := rl.Publish(context.Background(), textNote)
@@ -161,7 +162,7 @@ func TestConnectWithOrigin(t *testing.T) {
 	defer ws.Close()
 
 	// relay client
-	r := NewRelay(context.Background(), NormalizeURL(ws.URL))
+	r := NewRelay(context.Background(), normalize.URL(ws.URL))
 	r.RequestHeader = http.Header{"origin": {"https://example.com"}}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -199,7 +200,7 @@ func makeKeyPair(t *testing.T) (priv, pub string) {
 	return privkey, pubkey
 }
 
-func mustRelayConnect(url string) *Relay {
+func MustRelayConnect(url string) *Relay {
 	rl, err := RelayConnect(context.Background(), url)
 	if err != nil {
 		panic(err.Error())

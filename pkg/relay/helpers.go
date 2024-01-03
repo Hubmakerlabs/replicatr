@@ -8,9 +8,8 @@ import (
 	"strings"
 	"unsafe"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	log2 "mleku.online/git/log"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 )
 
 var (
@@ -23,7 +22,7 @@ func pointerHasher[V any](_ maphash.Seed, k *V) uint64 {
 	return uint64(uintptr(unsafe.Pointer(k)))
 }
 
-func isOlder(previous, next *nip1.Event) bool {
+func isOlder(previous, next *event.T) bool {
 	return previous.CreatedAt < next.CreatedAt ||
 		(previous.CreatedAt == next.CreatedAt && previous.ID > next.ID)
 }

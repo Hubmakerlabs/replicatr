@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"golang.org/x/exp/slices"
 )
 
@@ -54,7 +55,7 @@ func (tag Tag) Value() string {
 
 func (tag Tag) Relay() string {
 	if (tag[0] == "e" || tag[0] == "p") && len(tag) > 2 {
-		return NormalizeURL(tag[2])
+		return normalize.URL(tag[2])
 	}
 	return ""
 }

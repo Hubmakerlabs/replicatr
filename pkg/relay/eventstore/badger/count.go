@@ -6,15 +6,16 @@ import (
 	"errors"
 
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *Backend) CountEvents(ctx context.Context, filter *nip1.Filter) (c int64, e error) {
+func (b *Backend) CountEvents(ctx context.Context, f *filter.T) (c int64, e error) {
 	var queries []query
-	var extraFilter *nip1.Filter
+	var extraFilter *filter.T
 	var since uint32
-	if queries, extraFilter, since, e = prepareQueries(filter); log.E.Chk(e) {
+	if queries, extraFilter, since, e = prepareQueries(f); log.E.Chk(e) {
 		return
 	}
 	e = b.View(func(txn *badger.Txn) (e error) {
@@ -53,7 +54,7 @@ func (b *Backend) CountEvents(ctx context.Context, filter *nip1.Filter) (c int64
 						return
 					}
 					e = item.Value(func(val []byte) (e error) {
-						evt := &nip1.Event{}
+						evt := &event.T{}
 						if e = nostr_binary.Unmarshal(val, evt); log.E.Chk(e) {
 							return e
 						}

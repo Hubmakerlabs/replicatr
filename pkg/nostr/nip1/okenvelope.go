@@ -2,11 +2,18 @@ package nip1
 
 import (
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 	"sort"
 	"strings"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
+	log2 "mleku.online/git/log"
 )
+
+var log = log2.GetLogger()
+var fails = log.D.Chk
 
 type OkReason string
 
@@ -25,15 +32,15 @@ const (
 // readable reason type, as listed in the RejectReason* constants above,
 // followed by ": " and a human readable message.
 type OKEnvelope struct {
-	EventID EventID
+	EventID eventid.EventID
 	OK      bool
 	Reason  string
 }
 
-func NewOKEnvelope(eventID EventID, ok bool, reason string) (o *OKEnvelope,
+func NewOKEnvelope(eventID eventid.EventID, ok bool, reason string) (o *OKEnvelope,
 	e error) {
-	var ei EventID
-	if ei, e = NewEventID(string(eventID)); fails(e) {
+	var ei eventid.EventID
+	if ei, e = eventid.NewEventID(string(eventID)); fails(e) {
 		return
 	}
 	o = &OKEnvelope{
@@ -45,15 +52,15 @@ func NewOKEnvelope(eventID EventID, ok bool, reason string) (o *OKEnvelope,
 }
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
-// be retrieved using nip1.Labels[Label]
-func (E *OKEnvelope) Label() (l Label) { return LOK }
+// be retrieved using nip1.List[T]
+func (E *OKEnvelope) Label() (l labels.T) { return labels.LOK }
 
 // ToArray converts an OKEnvelope to a form that has a JSON formatted String
 // and Bytes function (array.T). To get the encoded form, invoke either of these
 // methods on the returned value.
 func (E *OKEnvelope) ToArray() (a array.T) {
 	// log.D.F("'%s' %v '%s' ", E.EventID, E.OK, E.Reason)
-	return array.T{OK, E.EventID, E.OK, E.Reason}
+	return array.T{labels.OK, E.EventID, E.OK, E.Reason}
 }
 
 func (E *OKEnvelope) String() (s string) {
@@ -124,7 +131,7 @@ next:
 				string(eventID))
 		}
 	}
-	E.EventID = EventID(eventID)
+	E.EventID = eventid.EventID(eventID)
 	// next another comma
 	if e = buf.ScanThrough(','); e != nil {
 		return

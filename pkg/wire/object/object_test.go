@@ -2,10 +2,11 @@ package object
 
 import (
 	"encoding/json"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 var literal = T{
@@ -74,7 +75,7 @@ func TestEventToObject(t *testing.T) {
 	// Note in the output printed to the logger in this test, that json tags do
 	// not have to be specified but instead the mapping is created via the
 	// object.T conversion function, as those were omitted from the above
-	// reproduction of the Event struct, they are imputed to the same string as
+	// reproduction of the T struct, they are imputed to the same string as
 	// the variable name as the encoding/json library does, due to its use of
 	// reflect.
 
