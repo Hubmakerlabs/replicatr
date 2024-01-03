@@ -4,10 +4,9 @@ import (
 	err "errors"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
-	"github.com/pkg/errors"
 )
 
-func (rl *Relay) handleRequest(ctx Ctx, id string,
+func (rl *Relay) handleFilter(ctx Ctx, id string,
 	eose *WaitGroup, ws *WebSocket, f *Filter) (e error) {
 
 	defer eose.Done()
@@ -17,7 +16,7 @@ func (rl *Relay) handleRequest(ctx Ctx, id string,
 		ovw(ctx, f)
 	}
 	if f.Limit < 0 {
-		e = errors.New("blocked: filter invalidated")
+		e = err.New("blocked: filter invalidated")
 		rl.E.Chk(e)
 		return
 	}
@@ -57,29 +56,3 @@ func (rl *Relay) handleRequest(ctx Ctx, id string,
 	return nil
 }
 
-func (rl *Relay) handleCountRequest(ctx Ctx, ws *WebSocket,
-	filter *Filter) (subtotal int64) {
-
-	// overwrite the filter (for example, to eliminate some kinds or tags that
-	// we know we don't support)
-	for _, ovw := range rl.OverwriteCountFilter {
-		ovw(ctx, filter)
-	}
-	// then check if we'll reject this filter
-	for _, reject := range rl.RejectCountFilter {
-		if rej, msg := reject(ctx, filter); rej {
-			rl.E.Chk(ws.WriteJSON(NoticeEnvelope(msg)))
-			return 0
-		}
-	}
-	// run the functions to count (generally it will be just one)
-	var e error
-	var res int64
-	for _, count := range rl.CountEvents {
-		if res, e = count(ctx, filter); rl.E.Chk(e) {
-			rl.E.Chk(ws.WriteJSON(NoticeEnvelope(e.Error())))
-		}
-		subtotal += res
-	}
-	return
-}

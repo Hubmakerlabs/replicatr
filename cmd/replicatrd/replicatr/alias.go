@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/fasthttp/websocket"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip11"
@@ -21,6 +22,7 @@ type (
 	TagMap          = nostr.TagMap
 	EventEnvelope   = nostr.EventEnvelope
 	OKEnvelope      = nostr.OKEnvelope
+	EventID         = nip1.EventID
 	CountEnvelope   = nostr.CountEnvelope
 	ClosedEnvelope  = nostr.ClosedEnvelope
 	ReqEnvelope     = nostr.ReqEnvelope
