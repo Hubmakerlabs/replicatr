@@ -14,9 +14,9 @@ func (si T) MarshalJSON() (b []byte, e error) {
 	return text.EscapeJSONStringAndWrap(string(si)), nil
 }
 
-// NewSubscriptionID inspects a string and converts to T if it is
+// New inspects a string and converts to T if it is
 // valid. Invalid means length < 0 and <= 64 (hex encoded 256 bit hash).
-func NewSubscriptionID(s string) (T, error) {
+func New(s string) (T, error) {
 	si := T(s)
 	if si.IsValid() {
 		return si, nil

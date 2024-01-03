@@ -3,8 +3,8 @@ package relay
 import (
 	"context"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip42"
 	"github.com/sebest/xff"
 )
 
@@ -15,7 +15,7 @@ const (
 
 func RequestAuth(ctx context.Context) {
 	ws := GetConnection(ctx)
-	log.D.Chk(ws.WriteJSON(nip42.AuthChallengeEnvelope{Challenge: ws.Challenge}))
+	log.D.Chk(ws.WriteJSON(auth.ChallengeEnvelope{Challenge: ws.Challenge}))
 }
 
 func GetConnection(ctx context.Context) *WebSocket {

@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/close"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filtertest"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/notice"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/req"
 	log2 "mleku.online/git/log"
 )
 
@@ -25,9 +26,9 @@ func TestEnveloper(t *testing.T) {
 		&event.Envelope{SubscriptionID: sub, Event: eventest.D[0]},
 		&event.Envelope{SubscriptionID: sub, Event: eventest.D[1]},
 		&event.Envelope{Event: eventest.D[0]},
-		&nip1.OKEnvelope{EventID: eventest.D[0].ID, OK: true,
-			Reason: nip1.OKMessage(nip1.OKPoW, "25>24 \\ ")},
-		&nip1.ReqEnvelope{SubscriptionID: sub, T: filtertest.D},
+		&OK.Envelope{EventID: eventest.D[0].ID, OK: true,
+			Reason: OK.Message(OK.PoW, "25>24 \\ ")},
+		&req.Envelope{SubscriptionID: sub, T: filtertest.D},
 		&notice.Envelope{Text: "this notice has been noticed } \\ \\\" ] "},
 		&eose.Envelope{T: sub},
 		&close2.Envelope{T: sub},

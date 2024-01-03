@@ -3,6 +3,7 @@ package nip19
 import (
 	"encoding/hex"
 	"fmt"
+
 	btcec "mleku.online/git/ec"
 	log2 "mleku.online/git/log"
 

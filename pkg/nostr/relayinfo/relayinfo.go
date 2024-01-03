@@ -1,33 +1,33 @@
-package nip11
+package relayinfo
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/number"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 )
 
-// RelayInfo provides the information for a relay on the network as regards to
+// T provides the information for a relay on the network as regards to
 // versions, NIP support, contact, policies, and payment requirements.
 //
 // todo: change the string slices into tag type
-type RelayInfo struct {
+type T struct {
 	Name           string       `json:"name"`
 	Description    string       `json:"description"`
 	PubKey         string       `json:"pubkey"`
 	Contact        string       `json:"contact"`
 	SupportedNIPs  number.List  `json:"supported_nips"`
 	Software       string       `json:"software"`
-	Version        string       `json:"version"`
-	Limitation     *RelayLimits `json:"limitation,omitempty"`
-	RelayCountries []string     `json:"relay_countries,omitempty"`
+	Version        string   `json:"version"`
+	Limitation     *Limits  `json:"limitation,omitempty"`
+	RelayCountries []string `json:"relay_countries,omitempty"`
 	LanguageTags   []string     `json:"language_tags,omitempty"`
 	Tags           []string     `json:"tags,omitempty"`
 	PostingPolicy  string       `json:"posting_policy,omitempty"`
-	PaymentsURL    string       `json:"payments_url,omitempty"`
-	Fees           *RelayFees   `json:"fees,omitempty"`
-	Icon           string       `json:"icon"`
+	PaymentsURL    string `json:"payments_url,omitempty"`
+	Fees           *Fees  `json:"fees,omitempty"`
+	Icon           string `json:"icon"`
 }
 
-func (ri *RelayInfo) ToObject() (o object.T) {
+func (ri *T) ToObject() (o object.T) {
 	return object.T{
 		{"name", ri.Name},
 		{"description", ri.Description},
@@ -48,19 +48,19 @@ func (ri *RelayInfo) ToObject() (o object.T) {
 }
 
 // AddSupportedNIP appends a supported NIP number to a RelayInfo.
-func (ri *RelayInfo) AddSupportedNIP(number int) {
-	idx, exists := ri.SupportedNIPs.HasNumber(number)
+func (ri *T) AddSupportedNIP(n int) {
+	idx, exists := ri.SupportedNIPs.HasNumber(n)
 	if exists {
 		return
 	}
 	ri.SupportedNIPs = append(ri.SupportedNIPs, -1)
 	copy(ri.SupportedNIPs[idx+1:], ri.SupportedNIPs[idx:])
-	ri.SupportedNIPs[idx] = number
+	ri.SupportedNIPs[idx] = n
 }
 
-// RelayLimits specifies the various restrictions and limitations that apply to
+// Limits specifies the various restrictions and limitations that apply to
 // interactions with a given relay.
-type RelayLimits struct {
+type Limits struct {
 	MaxMessageLength int  `json:"max_message_length,omitempty"`
 	MaxSubscriptions int  `json:"max_subscriptions,omitempty"`
 	MaxFilters       int  `json:"max_filters,omitempty"`
@@ -74,7 +74,7 @@ type RelayLimits struct {
 	RestrictedWrites bool `json:"restricted_writes"`
 }
 
-func (ri *RelayLimits) ToObject() (o object.T) {
+func (ri *Limits) ToObject() (o object.T) {
 	return object.T{
 		{"max_message_length,omitempty", ri.MaxMessageLength},
 		{"max_subscriptions,omitempty", ri.MaxSubscriptions},
@@ -90,8 +90,8 @@ func (ri *RelayLimits) ToObject() (o object.T) {
 	}
 }
 
-// RelayFees defines the fee structure used for a paid relay.
-type RelayFees struct {
+// Fees defines the fee structure used for a paid relay.
+type Fees struct {
 	Admission []struct {
 		Amount int    `json:"amount"`
 		Unit   string `json:"unit"`

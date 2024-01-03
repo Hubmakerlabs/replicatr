@@ -8,14 +8,16 @@ type T = byte
 
 // T enums for compact identification of the label.
 const (
-	LNil    T = 0
-	LEvent  T = 1
-	LOK     T = 2
-	LNotice T = 3
-	LEOSE   T = 4
-	LClose  T = 5
-	LClosed T = 6
-	LReq    T = 7
+	LNil T = iota
+	LEvent
+	LOK
+	LNotice
+	LEOSE
+	LClose
+	LClosed
+	LReq
+	LCount
+	LAuth
 )
 
 // List is the nip1 envelope labels, matching the above enums.
@@ -28,6 +30,8 @@ var List = EnvelopeLabel{
 	LClose:  []byte("CLOSE"),
 	LClosed: []byte("CLOSED"),
 	LReq:    []byte("REQ"),
+	LCount:  []byte("COUNT"),
+	LAuth:   []byte("AUTH"),
 }
 
 type EnvelopeLabel map[T][]byte
@@ -52,6 +56,7 @@ var (
 	EOSE   = string(List[LEOSE])
 	CLOSE  = string(List[LClose])
 	CLOSED = string(List[LClosed])
+	COUNT  = string(List[LCount])
 )
 
 func GetLabel(s string) (l T) {

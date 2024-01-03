@@ -11,15 +11,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/close"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/closed"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countrequest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countresponse"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip42"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip45"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/req"
 	"github.com/fasthttp/websocket"
 	"github.com/minio/sha256-simd"
 	"github.com/rs/cors"
@@ -127,7 +129,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					hash := sha256.Sum256(env.Event.ToCanonical().Bytes())
 					id := hex.EncodeToString(hash[:])
 					if eventid.EventID(id) != env.Event.ID {
-						rl.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+						rl.E.Chk(ws.WriteJSON(OK.Envelope{
 							EventID: env.Event.ID,
 							OK:      false,
 							Reason:  "invalid: id is computed incorrectly",
@@ -136,14 +138,14 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					}
 					// check signature
 					if ok, e = env.Event.CheckSignature(); rl.E.Chk(e) {
-						rl.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+						rl.E.Chk(ws.WriteJSON(OK.Envelope{
 							EventID: env.Event.ID,
 							OK:      false,
 							Reason:  "error: failed to verify signature",
 						}))
 						return
 					} else if !ok {
-						rl.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+						rl.E.Chk(ws.WriteJSON(OK.Envelope{
 							EventID: env.Event.ID,
 							OK:      false,
 							Reason:  "invalid: signature is invalid",
@@ -169,12 +171,12 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 							RequestAuth(ctx)
 						}
 					}
-					rl.D.Chk(ws.WriteJSON(nip1.OKEnvelope{
+					rl.D.Chk(ws.WriteJSON(OK.Envelope{
 						EventID: env.Event.ID, OK: ok, Reason: reason}))
-				case *nip45.CountRequestEnvelope:
+				case *countrequest.Envelope:
 					if rl.CountEvents == nil {
 						rl.E.Chk(ws.WriteJSON(closed.Envelope{
-							SubscriptionID: env.SubscriptionID,
+							T: env.SubscriptionID,
 							Reason: "unsupported: " +
 								"this relay does not support NIP-45",
 						}))
@@ -184,11 +186,11 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					for _, filter := range env.T {
 						total += rl.handleCountRequest(ctx, ws, filter)
 					}
-					rl.D.Chk(ws.WriteJSON(nip45.CountResponseEnvelope{
+					rl.D.Chk(ws.WriteJSON(countresponse.Envelope{
 						SubscriptionID: env.SubscriptionID,
 						Count:          total,
 					}))
-				case *nip1.ReqEnvelope:
+				case *req.Envelope:
 					ee := sync.WaitGroup{}
 					ee.Add(len(env.T))
 					// a context just for the "stored events" request handler
@@ -208,8 +210,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 								RequestAuth(ctx)
 							}
 							rl.D.Chk(ws.WriteJSON(closed.Envelope{
-								SubscriptionID: env.SubscriptionID,
-								Reason:         reason,
+								T:      env.SubscriptionID,
+								Reason: reason,
 							}))
 							cancelReqCtx(errors.New("filter rejected"))
 							return
@@ -229,18 +231,18 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						cancelReqCtx)
 				case *close2.Envelope:
 					removeListenerId(ws, env.T)
-				case *nip42.AuthResponseEnvelope:
+				case *auth.ResponseEnvelope:
 					wsBaseUrl := strings.Replace(rl.ServiceURL, "http",
 						"ws", 1)
-					if pubkey, ok := nip42.ValidateAuthEvent(env.T,
-						ws.Challenge, wsBaseUrl); ok {
+					if pubkey, o := auth.Validate(env.T,
+						ws.Challenge, wsBaseUrl); o {
 
 						ws.AuthedPublicKey = pubkey
 						close(ws.Authed)
-						rl.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+						rl.E.Chk(ws.WriteJSON(OK.Envelope{
 							EventID: env.T.ID, OK: true}))
 					} else {
-						rl.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+						rl.E.Chk(ws.WriteJSON(OK.Envelope{
 							EventID: env.T.ID,
 							OK:      false,
 							Reason:  "error: failed to authenticate",
@@ -250,10 +252,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 			}(message)
 		}
 	}()
-
 	go func() {
 		defer kill()
-
 		for {
 			select {
 			case <-ctx.Done():

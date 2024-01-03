@@ -5,9 +5,9 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/notice"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
@@ -31,7 +31,7 @@ func (rl *Relay) handleRequest(ctx context.Context, id subscriptionid.T,
 	for _, reject := range rl.RejectFilter {
 		if reject, msg := reject(ctx, filter); reject {
 			rl.D.Chk(ws.WriteJSON(notice.Envelope{Text: msg}))
-			return errors.New(nip1.OKMessage(nip1.OKBlocked, msg))
+			return errors.New(OK.Message(OK.Blocked, msg))
 		}
 	}
 	// run the functions to query events (generally just one,

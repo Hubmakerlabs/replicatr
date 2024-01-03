@@ -1,4 +1,4 @@
-package nip1
+package OK
 
 import (
 	"fmt"
@@ -15,35 +15,35 @@ import (
 var log = log2.GetLogger()
 var fails = log.D.Chk
 
-type OkReason string
+type Reason string
 
 const (
-	OKPoW         OkReason = "pow"
-	OKDuplicate   OkReason = "duplicate"
-	OKBlocked     OkReason = "blocked"
-	OKRateLimited OkReason = "rate-limited"
-	OKInvalid     OkReason = "invalid"
-	OKError       OkReason = "error"
+	PoW         Reason = "pow"
+	Duplicate   Reason = "duplicate"
+	Blocked     Reason = "blocked"
+	RateLimited Reason = "rate-limited"
+	Invalid     Reason = "invalid"
+	Error       Reason = "error"
 )
 
-// OKEnvelope is a relay message sent in response to an EventEnvelope to
+// Envelope is a relay message sent in response to an EventEnvelope to
 // indicate acceptance (OK is true), rejection and provide a human readable
 // Reason for clients to display to users, with the first word being a machine
 // readable reason type, as listed in the RejectReason* constants above,
 // followed by ": " and a human readable message.
-type OKEnvelope struct {
+type Envelope struct {
 	EventID eventid.EventID
 	OK      bool
 	Reason  string
 }
 
-func NewOKEnvelope(eventID eventid.EventID, ok bool, reason string) (o *OKEnvelope,
+func NewOKEnvelope(eventID eventid.EventID, ok bool, reason string) (o *Envelope,
 	e error) {
 	var ei eventid.EventID
 	if ei, e = eventid.NewEventID(string(eventID)); fails(e) {
 		return
 	}
-	o = &OKEnvelope{
+	o = &Envelope{
 		EventID: ei,
 		OK:      ok,
 		Reason:  reason,
@@ -53,26 +53,26 @@ func NewOKEnvelope(eventID eventid.EventID, ok bool, reason string) (o *OKEnvelo
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *OKEnvelope) Label() (l labels.T) { return labels.LOK }
+func (E *Envelope) Label() (l labels.T) { return labels.LOK }
 
-// ToArray converts an OKEnvelope to a form that has a JSON formatted String
+// ToArray converts an Envelope to a form that has a JSON formatted String
 // and Bytes function (array.T). To get the encoded form, invoke either of these
 // methods on the returned value.
-func (E *OKEnvelope) ToArray() (a array.T) {
+func (E *Envelope) ToArray() (a array.T) {
 	// log.D.F("'%s' %v '%s' ", E.EventID, E.OK, E.Reason)
 	return array.T{labels.OK, E.EventID, E.OK, E.Reason}
 }
 
-func (E *OKEnvelope) String() (s string) {
+func (E *Envelope) String() (s string) {
 	return E.ToArray().String()
 }
 
-func (E *OKEnvelope) Bytes() (s []byte) {
+func (E *Envelope) Bytes() (s []byte) {
 	return E.ToArray().Bytes()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (E *OKEnvelope) MarshalJSON() (bytes []byte, e error) {
+func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
 	// log.D.F("ok envelope marshal")
 	return E.ToArray().Bytes(), nil
 }
@@ -85,7 +85,7 @@ const (
 )
 
 // Unmarshal the envelope.
-func (E *OKEnvelope) Unmarshal(buf *text.Buffer) (e error) {
+func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
@@ -184,10 +184,10 @@ maybeOK:
 	return
 }
 
-// OKMessage takes a string message that is to be sent in an `OK` or `CLOSED`
+// Message takes a string message that is to be sent in an `OK` or `CLOSED`
 // command and prefixes it with "<prefix>: " if it doesn't already have an
 // acceptable prefix.
-func OKMessage(reason OkReason, prefix string) string {
+func Message(reason Reason, prefix string) string {
 	if idx := strings.Index(string(reason),
 		": "); idx == -1 || strings.IndexByte(string(reason[0:idx]),
 		' ') != -1 {
