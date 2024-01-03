@@ -8,10 +8,11 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"strings"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	secp "mleku.online/git/ec/secp"
 	log2 "mleku.online/git/log"
-	"strings"
 )
 
 var (

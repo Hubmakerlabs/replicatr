@@ -70,8 +70,7 @@ func (ev *T) ToObject() (o object.T) {
 }
 
 func (ev *T) MarshalJSON() (bytes []byte, e error) {
-	b := ev.ToObject().Bytes()
-	return b, nil
+	return ev.ToObject().Bytes(), nil
 }
 
 func (ev *T) Serialize() []byte { return ev.ToObject().Bytes() }

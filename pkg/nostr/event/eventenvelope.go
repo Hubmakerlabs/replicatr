@@ -26,7 +26,7 @@ type Envelope struct {
 // error if the Subscription ID is invalid or the T is nil.
 func NewEventEnvelope(si string, ev *T) (ee *Envelope, e error) {
 	var sid subscriptionid.T
-	if sid, e = subscriptionid.NewSubscriptionID(si); fails(e) {
+	if sid, e = subscriptionid.New(si); fails(e) {
 		return
 	}
 	if ev == nil {

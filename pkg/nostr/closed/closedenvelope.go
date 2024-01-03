@@ -15,12 +15,12 @@ var fails = log.D.Chk
 
 // Envelope is a wrapper for a signal to cancel a subscription.
 type Envelope struct {
-	SubscriptionID subscriptionid.T
-	Reason         string
+	subscriptionid.T
+	Reason string
 }
 
 func NewClosedEnvelope(s subscriptionid.T, reason string) (ce *Envelope) {
-	ce = &Envelope{SubscriptionID: s, Reason: reason}
+	ce = &Envelope{T: s, Reason: reason}
 	return
 }
 
@@ -29,7 +29,7 @@ func NewClosedEnvelope(s subscriptionid.T, reason string) (ce *Envelope) {
 func (E *Envelope) Label() (l labels.T) { return labels.LClose }
 
 func (E *Envelope) ToArray() (a array.T) {
-	return array.T{labels.CLOSED, E.SubscriptionID, E.Reason}
+	return array.T{labels.CLOSED, E.T, E.Reason}
 }
 
 func (E *Envelope) String() (s string) {
@@ -65,7 +65,7 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	if sid, e = buf.ReadUntil('"'); fails(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
-	E.SubscriptionID = subscriptionid.T(sid[:])
+	E.T = subscriptionid.T(sid[:])
 	// Next must be a string, which can be empty, but must be at minimum a pair
 	// of quotes.
 	if e = buf.ScanThrough('"'); e != nil {

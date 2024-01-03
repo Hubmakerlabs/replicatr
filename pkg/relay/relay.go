@@ -10,7 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
 )
@@ -19,7 +19,7 @@ func New() *Relay {
 	return &Relay{
 		Log: log2.New(os.Stderr, "", 0),
 
-		Info: &nip11.RelayInfo{
+		Info: &relayinfo.T{
 			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/khatru",
 			Version:       "n/a",
 			SupportedNIPs: make([]int, 0),
@@ -51,7 +51,7 @@ type Relay struct {
 	OverwriteResponseEvent    []func(ctx context.Context, event *event.T)
 	OverwriteFilter           []func(ctx context.Context, filter *filter.T)
 	OverwriteCountFilter      []func(ctx context.Context, filter *filter.T)
-	OverwriteRelayInformation []func(ctx context.Context, r *http.Request, info *nip11.RelayInfo) *nip11.RelayInfo
+	OverwriteRelayInformation []func(ctx context.Context, r *http.Request, info *relayinfo.T) *relayinfo.T
 	StoreEvent                []func(ctx context.Context, event *event.T) error
 	DeleteEvent               []func(ctx context.Context, event *event.T) error
 	QueryEvents               []func(ctx context.Context, filter *filter.T) (chan *event.T, error)
@@ -62,7 +62,7 @@ type Relay struct {
 	OnEventSaved              []func(ctx context.Context, event *event.T)
 
 	// editing info will affect
-	Info *nip11.RelayInfo
+	Info *relayinfo.T
 
 	// Default logger, as set by NewServer, is a stdlib logger prefixed with "[khatru-relay] ",
 	// outputting to stderr.

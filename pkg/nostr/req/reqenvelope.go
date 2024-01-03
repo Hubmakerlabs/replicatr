@@ -1,4 +1,4 @@
-package nip1
+package req
 
 import (
 	"encoding/json"
@@ -10,19 +10,23 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
+	log2 "mleku.online/git/log"
 )
 
-// ReqEnvelope is the wrapper for a query to a relay.
-type ReqEnvelope struct {
+var log = log2.GetLogger()
+var fails = log.D.Chk
+
+// Envelope is the wrapper for a query to a relay.
+type Envelope struct {
 	SubscriptionID subscriptionid.T
 	filters.T
 }
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *ReqEnvelope) Label() (l labels.T) { return labels.LReq }
+func (E *Envelope) Label() (l labels.T) { return labels.LReq }
 
-func (E *ReqEnvelope) ToArray() (arr array.T) {
+func (E *Envelope) ToArray() (arr array.T) {
 	arr = array.T{labels.REQ, E.SubscriptionID}
 	for _, f := range E.T {
 		arr = append(arr, f.ToObject())
@@ -30,21 +34,21 @@ func (E *ReqEnvelope) ToArray() (arr array.T) {
 	return
 }
 
-func (E *ReqEnvelope) String() (s string) {
+func (E *Envelope) String() (s string) {
 	return E.ToArray().String()
 }
 
-func (E *ReqEnvelope) Bytes() (s []byte) {
+func (E *Envelope) Bytes() (s []byte) {
 	return E.ToArray().Bytes()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (E *ReqEnvelope) MarshalJSON() (bytes []byte, e error) {
+func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
 	return E.ToArray().Bytes(), nil
 }
 
 // Unmarshal the envelope.
-func (E *ReqEnvelope) Unmarshal(buf *text.Buffer) (e error) {
+func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
@@ -54,7 +58,7 @@ func (E *ReqEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 		return
 	}
 	var which byte
-	// ReqEnvelope can have one or no subscription IDs, if it is present we want
+	// Envelope can have one or no subscription IDs, if it is present we want
 	// to collect it before looking for the filters.
 	which, e = buf.ScanForOneOf(false, '{', '"')
 	if which == '"' {

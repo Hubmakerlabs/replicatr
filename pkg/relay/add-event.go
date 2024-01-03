@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 )
 
@@ -21,9 +21,9 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *event.T) (e error) {
 	for _, reject := range rl.RejectEvent {
 		if reject, msg := reject(ctx, evt); reject {
 			if msg == "" {
-				return errors.New("blocked: no reason")
+				return errors.New(OK.Message(OK.Blocked, "no reason"))
 			} else {
-				return errors.New(nip1.OKMessage(nip1.OKBlocked, msg))
+				return errors.New(OK.Message(OK.Blocked, msg))
 			}
 		}
 	}
@@ -74,7 +74,7 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *event.T) (e error) {
 				case eventstore.ErrDupEvent:
 					return nil
 				default:
-					return fmt.Errorf(nip1.OKMessage(nip1.OKError, saveErr.Error()))
+					return fmt.Errorf(OK.Message(OK.Error, saveErr.Error()))
 				}
 			}
 		}

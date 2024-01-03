@@ -8,10 +8,10 @@ import (
 	"sync/atomic"
 
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/close"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countrequest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip45"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/req"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
@@ -22,8 +22,8 @@ type Subscription struct {
 	Filters filters.T
 	// for this to be treated as a COUNT and not a REQ this must be set
 	CountResult chan int64
-	// the Events channel emits all EVENTs that come in a Subscription
-	// will be closed when the subscription ends
+	// the Events channel emits all EVENTs that come in a Subscription will be
+	// closed when the subscription ends
 	Events chan *event.T
 	mu     sync.Mutex
 	// the EndOfStoredEvents channel gets closed when an EOSE comes for that subscription
@@ -33,8 +33,8 @@ type Subscription struct {
 	Live    atomic.Bool
 	Eosed   atomic.Bool
 	Cancel  context.CancelFunc
-	// this keeps track of the events we've received before the EOSE that we must dispatch before
-	// closing the EndOfStoredEvents channel
+	// this keeps track of the events we've received before the EOSE that we
+	// must dispatch before closing the EndOfStoredEvents channel
 	Storedwg sync.WaitGroup
 }
 
@@ -51,7 +51,8 @@ type SubscriptionOption interface {
 	IsSubscriptionOption()
 }
 
-// WithLabel puts a label on the subscription (it is prepended to the automatic id) that is sent to relays.
+// WithLabel puts a label on the subscription (it is prepended to the automatic
+// id) that is sent to relays.
 type WithLabel string
 
 func (_ WithLabel) IsSubscriptionOption() {}
@@ -143,13 +144,13 @@ func (sub *Subscription) Fire() (e error) {
 	id := sub.GetID()
 	var reqb []byte
 	if sub.CountResult == nil {
-		if reqb, e = (&nip1.ReqEnvelope{
+		if reqb, e = (&req.Envelope{
 			SubscriptionID: subscriptionid.T(id),
 			T:              sub.Filters,
 		}).MarshalJSON(); fails(e) {
 		}
 	} else {
-		if reqb, e = (&nip45.CountRequestEnvelope{
+		if reqb, e = (&countrequest.Envelope{
 			SubscriptionID: subscriptionid.T(id),
 			T:              sub.Filters,
 		}).MarshalJSON(); fails(e) {

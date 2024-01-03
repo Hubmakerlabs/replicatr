@@ -81,7 +81,7 @@ func notifyListeners(evt *event.T) {
 			}
 			var e error
 			var sid subscriptionid.T
-			sid, e = subscriptionid.NewSubscriptionID(id)
+			sid, e = subscriptionid.New(id)
 			log.D.Chk(e)
 			log.E.Chk(ws.WriteJSON(&event.Envelope{SubscriptionID: sid, Event: evt}))
 			return true

@@ -9,15 +9,15 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countresponse"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip42"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip45"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/notice"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
@@ -28,29 +28,29 @@ import (
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
-// RelayOption is the type of the argument passed for that.
-// Some examples of this are WithNoticeHandler and WithAuthHandler.
-type RelayOption interface {
+// Option is the type of the argument passed for that. Some examples of this are
+// WithNoticeHandler and WithAuthHandler.
+type Option interface {
 	IsRelayOption()
 }
 
-// WithNoticeHandler just takes notices and is expected to do something with them.
-// when not given, defaults to logging the notices.
+// WithNoticeHandler just takes notices and is expected to do something with
+// them. when not given, defaults to logging the notices.
 type WithNoticeHandler func(notice string)
 
 func (_ WithNoticeHandler) IsRelayOption() {}
 
 // compile time interface check
-var _ RelayOption = (WithNoticeHandler)(nil)
+var _ Option = (WithNoticeHandler)(nil)
 
-// WithAuthHandler takes an auth event and expects it to be signed.
-// when not given, AUTH messages from relays are ignored.
+// WithAuthHandler takes an auth event and expects it to be signed. when not
+// given, AUTH messages from relays are ignored.
 type WithAuthHandler func(ctx context.Context, authEvent *event.T) (ok bool)
 
 func (_ WithAuthHandler) IsRelayOption() {}
 
 // compile time interface check
-var _ RelayOption = (WithAuthHandler)(nil)
+var _ Option = (WithAuthHandler)(nil)
 
 type Status int
 
@@ -96,8 +96,9 @@ type WriteRequest struct {
 	Answer chan error
 }
 
-// NewRelay returns a new relay. The relay connection will be closed when the context is canceled.
-func NewRelay(ctx context.Context, url string, opts ...RelayOption) (r *Relay) {
+// New returns a new relay. The relay connection will be closed when the context
+// is canceled.
+func New(ctx context.Context, url string, opts ...Option) (r *Relay) {
 	ctx, cancel := context.WithCancel(ctx)
 	r = &Relay{
 		URL:                           normalize.URL(url),
@@ -144,13 +145,13 @@ func NewRelay(ctx context.Context, url string, opts ...RelayOption) (r *Relay) {
 	return r
 }
 
-// RelayConnect returns a relay object connected to url.
-// Once successfully connected, cancelling ctx has no effect.
-// To close the connection, call r.Close().
+// RelayConnect returns a relay object connected to url. Once successfully
+// connected, cancelling ctx has no effect. To close the connection, call
+// r.Close().
 func RelayConnect(ctx context.Context, url string,
-	opts ...RelayOption) (r *Relay, e error) {
+	opts ...Option) (r *Relay, e error) {
 
-	r = NewRelay(context.Background(), url, opts...)
+	r = New(context.Background(), url, opts...)
 	e = r.Connect(ctx)
 	return
 }
@@ -166,17 +167,17 @@ func (r *Relay) Context() context.Context { return r.ctx }
 // IsConnected returns true if the connection to this relay seems to be active.
 func (r *Relay) IsConnected() bool { return r.ctx.Err() == nil }
 
-// Connect tries to establish a websocket connection to r.URL.
-// If the context expires before the connection is complete, an error is returned.
-// Once successfully connected, context expiration has no effect: call r.Close
-// to close the connection.
+// Connect tries to establish a websocket connection to r.URL. If the context
+// expires before the connection is complete, an error is returned. Once
+// successfully connected, context expiration has no effect: call r.Close to
+// close the connection.
 //
 // The underlying relay connection will use a background context. If you want to
-// pass a custom context to the underlying relay connection, use NewRelay() and
-// then Relay.Connect().
+// pass a custom context to the underlying relay connection, use New() and then
+// Relay.Connect().
 func (r *Relay) Connect(ctx context.Context) (e error) {
 	if r.ctx == nil || r.Subscriptions == nil {
-		return fmt.Errorf("relay must be initialized with a call to NewRelay()")
+		return fmt.Errorf("relay must be initialized with a call to New()")
 	}
 	if r.URL == "" {
 		return fmt.Errorf("invalid relay URL '%s'", r.URL)
@@ -263,7 +264,7 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 				} else {
 					log.D.F("NOTICE from %s: '%s'\n", r.URL, env.Text)
 				}
-			case *nip42.AuthChallengeEnvelope:
+			case *auth.ChallengeEnvelope:
 				if env.Challenge == "" {
 					continue
 				}
@@ -303,13 +304,13 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 				if subscription, ok := r.Subscriptions.Load(string(env.T)); ok {
 					subscription.dispatchEose()
 				}
-			case *nip45.CountResponseEnvelope:
+			case *countresponse.Envelope:
 				if subscription, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok &&
 					env.Count != 0 &&
 					subscription.CountResult != nil {
 					subscription.CountResult <- env.Count
 				}
-			case *nip1.OKEnvelope:
+			case *OK.Envelope:
 				if okCallback, exist := r.okCallbacks.Load(string(env.EventID)); exist {
 					okCallback(env.OK, &env.Reason)
 				}
@@ -330,8 +331,8 @@ func (r *Relay) Write(msg []byte) <-chan error {
 	return ch
 }
 
-// Publish sends an "EVENT" command to the relay r as in NIP-01.
-// Status can be: success, failed, or sent (no response from relay before ctx times out).
+// Publish sends an "EVENT" command to the relay r as in NIP-01. Status can be:
+// success, failed, or sent (no response from relay before ctx times out).
 func (r *Relay) Publish(ctx context.Context, evt *event.T) (s Status, e error) {
 	s = PublishStatusFailed
 	// data races on status variable without this mutex
@@ -375,10 +376,10 @@ func (r *Relay) Publish(ctx context.Context, evt *event.T) (s Status, e error) {
 	for {
 		select {
 		case <-ctx.Done(): // this will be called when we get an OK
-			// proceed to return status as it is
-			// e.g. if this happens because of the timeout then status will probably be "failed"
-			//      but if it happens because okCallback was called then it might be "succeeded"
-			// do not return if okCallback is in process
+			// proceed to return status as it is e.g. if this happens because of
+			// the timeout then status will probably be "failed" but if it
+			// happens because okCallback was called then it might be
+			// "succeeded" do not return if okCallback is in process
 			return
 		case <-r.ctx.Done():
 			// same as above, but when the relay loses connectivity entirely
@@ -388,7 +389,9 @@ func (r *Relay) Publish(ctx context.Context, evt *event.T) (s Status, e error) {
 }
 
 // Auth sends an "AUTH" command client -> relay as in NIP-42.
-// Status can be: success, failed, or sent (no response from relay before ctx times out).
+//
+// Status can be: success, failed, or sent (no response from relay before ctx
+// times out).
 func (r *Relay) Auth(ctx context.Context, event *event.T) (s Status, e error) {
 	s = PublishStatusFailed
 	// data races on s variable without this mutex
@@ -422,7 +425,7 @@ func (r *Relay) Auth(ctx context.Context, event *event.T) (s Status, e error) {
 	r.okCallbacks.Store(string(event.ID), okCallback)
 	defer r.okCallbacks.Delete(string(event.ID))
 	// send AUTH
-	authResponse, _ := (&nip42.AuthResponseEnvelope{T: event}).MarshalJSON()
+	authResponse, _ := (&auth.ResponseEnvelope{T: event}).MarshalJSON()
 	log.D.F("{%s} sending %v\n", r.URL, string(authResponse))
 	if e = <-r.Write(authResponse); e != nil {
 		// s will be "failed"
@@ -432,21 +435,22 @@ func (r *Relay) Auth(ctx context.Context, event *event.T) (s Status, e error) {
 	mu.Lock()
 	s = PublishStatusSent
 	mu.Unlock()
-	// the context either times out, and the s is "sent"
-	// or the okCallback is called and the s is set to "succeeded" or "failed"
-	// NIP-42 does not mandate an "OK" reply to an "AUTH" message
+	// the context either times out, and the s is "sent" or the okCallback is
+	// called and the s is set to "succeeded" or "failed" NIP-42 does not
+	// mandate an "OK" reply to an "AUTH" message
 	<-ctx.Done()
 	mu.Lock()
 	defer mu.Unlock()
 	return s, e
 }
 
-// Subscribe sends a "REQ" command to the relay r as in NIP-01.
-// Events are returned through the channel sub.Events.
-// The subscription is closed when context ctx is cancelled ("CLOSE" in NIP-01).
+// Subscribe sends a "REQ" command to the relay r as in NIP-01. Events are
+// returned through the channel sub.Events. The subscription is closed when
+// context ctx is cancelled ("CLOSE" in NIP-01).
 //
-// Remember to Cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.Context` will be canceled at some point.
-// Failure to do that will result in a huge number of halted goroutines being created.
+// Remember to Cancel subscriptions, either by calling `.Unsub()` on them or
+// ensuring their `context.Context` will be canceled at some point. Failure to
+// do that will result in a huge number of halted goroutines being created.
 func (r *Relay) Subscribe(ctx context.Context, filters filters.T,
 	opts ...SubscriptionOption) (s *Subscription, e error) {
 
@@ -459,8 +463,9 @@ func (r *Relay) Subscribe(ctx context.Context, filters filters.T,
 
 // PrepareSubscription creates a subscription, but doesn't fire it.
 //
-// Remember to Cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.Context` will be canceled at some point.
-// Failure to do that will result in a huge number of halted goroutines being created.
+// Remember to Cancel subscriptions, either by calling `.Unsub()` on them or
+// ensuring their `context.Context` will be canceled at some point. Failure to
+// do that will result in a huge number of halted goroutines being created.
 func (r *Relay) PrepareSubscription(ctx context.Context, filters filters.T,
 	opts ...SubscriptionOption) (s *Subscription) {
 

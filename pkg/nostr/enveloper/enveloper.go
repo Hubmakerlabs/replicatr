@@ -3,13 +3,14 @@ package enveloper
 import (
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/close"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/closed"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/notice"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/req"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 	log2 "mleku.online/git/log"
@@ -100,7 +101,7 @@ matched:
 		env = &event.Envelope{}
 		e = env.Unmarshal(buf)
 	case labels.LOK:
-		env = &nip1.OKEnvelope{}
+		env = &OK.Envelope{}
 		e = env.Unmarshal(buf)
 	case labels.LNotice:
 		env = &notice.Envelope{}
@@ -115,7 +116,7 @@ matched:
 		env = &closed.Envelope{}
 		e = env.Unmarshal(buf)
 	case labels.LReq:
-		env = &nip1.ReqEnvelope{}
+		env = &req.Envelope{}
 		e = env.Unmarshal(buf)
 	default:
 		// we know it is one of the above but static analysers don't.

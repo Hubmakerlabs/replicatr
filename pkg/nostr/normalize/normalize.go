@@ -27,7 +27,8 @@ func URL(u string) string {
 	// websocket as most public or production relays have a domain name and a
 	// well known port 80 or 443 and thus no port number.
 	//
-	// if a protocol prefix is present, we assume it is already complete. Converting http/s to websocket equivalent will be done later anyway.
+	// if a protocol prefix is present, we assume it is already complete.
+	// Converting http/s to websocket equivalent will be done later anyway.
 	if strings.Contains(u, ":") &&
 		!(strings.HasPrefix(u, "http://") ||
 			strings.HasPrefix(u, "https://") ||
@@ -63,8 +64,8 @@ func URL(u string) string {
 		}
 	}
 
-	// if prefix isn't specified as http/s or websocket, assume secure
-	// websocket and add wss prefix (this is the most common).
+	// if prefix isn't specified as http/s or websocket, assume secure websocket
+	// and add wss prefix (this is the most common).
 	if !(strings.HasPrefix(u, "http://") ||
 		strings.HasPrefix(u, "https://") ||
 		strings.HasPrefix(u, "ws://") ||
@@ -89,8 +90,9 @@ func URL(u string) string {
 	return p.String()
 }
 
-// OKMessage takes a string message that is to be sent in an `OK` or `CLOSED` command
-// and prefixes it with "<prefix>: " if it doesn't already have an acceptable prefix.
+// OKMessage takes a string message that is to be sent in an `OK` or `CLOSED`
+// command and prefixes it with "<prefix>: " if it doesn't already have an
+// acceptable prefix.
 func OKMessage(reason string, prefix string) string {
 	if idx := strings.Index(reason, ": "); idx == -1 || strings.IndexByte(reason[0:idx], ' ') != -1 {
 		return prefix + ": " + reason
