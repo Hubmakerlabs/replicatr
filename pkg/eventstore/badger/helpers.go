@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
-	"github.com/nbd-wtf/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"golang.org/x/exp/slices"
 )
 

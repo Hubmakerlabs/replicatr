@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/nbd-wtf/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 )
 
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.

@@ -5,9 +5,9 @@ import (
 	"encoding/binary"
 	"log"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
 	"github.com/dgraph-io/badger/v4"
-	"github.com/nbd-wtf/go-nostr"
-	nostr_binary "github.com/nbd-wtf/go-nostr/binary"
 )
 
 func (b BadgerBackend) CountEvents(ctx context.Context, filter *nostr.Filter) (int64, error) {

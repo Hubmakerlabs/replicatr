@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip42"
 	"github.com/fasthttp/websocket"
-	"github.com/nbd-wtf/go-nostr"
-	"github.com/nbd-wtf/go-nostr/nip42"
 )
 
 func (rl *Relay) HandleWebsocket(w ResponseWriter, r *Request) {

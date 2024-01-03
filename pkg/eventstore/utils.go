@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/nbd-wtf/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 )
 
 func GetAddrTagElements(tagValue string) (kind uint16, pkb []byte, d string) {

@@ -14,12 +14,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
 	"github.com/urfave/cli/v2"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/fatih/color"
-	"github.com/nbd-wtf/go-nostr"
-	"github.com/nbd-wtf/go-nostr/nip04"
-	"github.com/nbd-wtf/go-nostr/nip19"
 )
 
 const name = "algia"

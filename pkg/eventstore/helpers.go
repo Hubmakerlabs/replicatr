@@ -1,7 +1,7 @@
 package eventstore
 
 import (
-	"github.com/nbd-wtf/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 )
 
 func isOlder(previous, next *nostr.Event) bool {
