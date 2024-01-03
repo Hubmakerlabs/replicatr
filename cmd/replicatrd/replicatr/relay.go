@@ -1,17 +1,13 @@
 package replicatr
 
 import (
-	"context"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 
 	"github.com/fasthttp/websocket"
-	"github.com/nbd-wtf/go-nostr"
-	"github.com/nbd-wtf/go-nostr/nip11"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
@@ -22,32 +18,6 @@ const (
 	ReadBufferSize        = 4096
 	WriteBufferSize       = 4096
 	MaxMessageSize  int64 = 512000 // ???
-)
-
-// aliases so we can swap out to another package with only here changed
-type (
-	Ctx             = context.Context
-	Info            = nip11.RelayInformationDocument
-	Event           = nostr.Event
-	Filter          = nostr.Filter
-	Filters         = nostr.Filters
-	TagMap          = nostr.TagMap
-	EventEnvelope   = nostr.EventEnvelope
-	OKEnvelope      = nostr.OKEnvelope
-	CountEnvelope   = nostr.CountEnvelope
-	ClosedEnvelope  = nostr.ClosedEnvelope
-	ReqEnvelope     = nostr.ReqEnvelope
-	EOSEEnvelope    = nostr.EOSEEnvelope
-	CloseEnvelope   = nostr.CloseEnvelope
-	AuthEnvelope    = nostr.AuthEnvelope
-	NoticeEnvelope  = nostr.NoticeEnvelope
-	Conn            = websocket.Conn
-	Request         = http.Request
-	ResponseWriter  = http.ResponseWriter
-	Mutex           = sync.Mutex
-	WaitGroup       = sync.WaitGroup
-	CancelCauseFunc = context.CancelCauseFunc
-	ListenerMap     = *xsync.MapOf[string, *Listener]
 )
 
 // function types used in the relay state
