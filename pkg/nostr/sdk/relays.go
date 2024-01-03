@@ -6,12 +6,12 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/pool"
 )
 
 type Relay struct {
@@ -20,10 +20,10 @@ type Relay struct {
 	Outbox bool
 }
 
-func FetchRelaysForPubkey(ctx context.Context, pool *nostr.SimplePool, pubkey string, relays ...string) (r []Relay) {
+func FetchRelaysForPubkey(ctx context.Context, pool *pool.SimplePool, pubkey string, relays ...string) (r []Relay) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	ch := pool.SubManyEose(ctx, relays, nip1.Filters{
+	ch := pool.SubManyEose(ctx, relays, filters.T{
 		{
 			Kinds: kinds.T{
 				kind.RelayListMetadata,
@@ -36,11 +36,11 @@ func FetchRelaysForPubkey(ctx context.Context, pool *nostr.SimplePool, pubkey st
 	r = make([]Relay, 0, 20)
 	i := 0
 	for ie := range ch {
-		switch ie.Event.Kind {
+		switch ie.T.Kind {
 		case kind.RelayListMetadata:
-			r = append(r, ParseRelaysFromKind10002(ie.Event)...)
+			r = append(r, ParseRelaysFromKind10002(ie.T)...)
 		case kind.ContactList:
-			r = append(r, ParseRelaysFromKind3(ie.Event)...)
+			r = append(r, ParseRelaysFromKind3(ie.T)...)
 		}
 		i++
 		if i >= 2 {
@@ -50,7 +50,7 @@ func FetchRelaysForPubkey(ctx context.Context, pool *nostr.SimplePool, pubkey st
 	return
 }
 
-func ParseRelaysFromKind10002(evt *nip1.Event) (r []Relay) {
+func ParseRelaysFromKind10002(evt *event.T) (r []Relay) {
 	r = make([]Relay, 0, len(evt.Tags))
 	for _, tag := range evt.Tags {
 		if u := tag.Value(); u != "" && tag[0] == "r" {
@@ -74,7 +74,7 @@ func ParseRelaysFromKind10002(evt *nip1.Event) (r []Relay) {
 	return
 }
 
-func ParseRelaysFromKind3(evt *nip1.Event) (r []Relay) {
+func ParseRelaysFromKind3(evt *event.T) (r []Relay) {
 	type Item struct {
 		Read  bool `json:"read"`
 		Write bool `json:"write"`

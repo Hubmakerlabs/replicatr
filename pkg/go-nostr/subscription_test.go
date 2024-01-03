@@ -12,7 +12,7 @@ const RELAY = "wss://nos.lol"
 
 // test if we can fetch a couple of random events
 func TestSubscribeBasic(t *testing.T) {
-	rl := mustRelayConnect(RELAY)
+	rl := MustRelayConnect(RELAY)
 	defer rl.Close()
 
 	sub, err := rl.Subscribe(context.Background(), Filters{{Kinds: []int{KindTextNote}, Limit: 2}})
@@ -50,7 +50,7 @@ end:
 
 // test if we can do multiple nested subscriptions
 func TestNestedSubscriptions(t *testing.T) {
-	rl := mustRelayConnect(RELAY)
+	rl := MustRelayConnect(RELAY)
 	defer rl.Close()
 
 	n := atomic.Uint32{}

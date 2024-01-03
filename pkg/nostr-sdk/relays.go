@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 )
 
 type Relay struct {
@@ -54,7 +55,7 @@ func ParseRelaysFromKind10002(evt *nostr.Event) []Relay {
 			if !nostr.IsValidRelayURL(u) {
 				continue
 			}
-			u := nostr.NormalizeURL(u)
+			u := normalize.URL(u)
 
 			relay := Relay{
 				URL: u,
@@ -91,7 +92,7 @@ func ParseRelaysFromKind3(evt *nostr.Event) []Relay {
 		if !nostr.IsValidRelayURL(u) {
 			continue
 		}
-		u := nostr.NormalizeURL(u)
+		u := normalize.URL(u)
 
 		relay := Relay{
 			URL: u,

@@ -3,7 +3,7 @@ package binary
 import (
 	"math"
 
-	nostr "github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	nostr "github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 	MaxTagItemSize  = math.MaxUint16
 )
 
-func EventEligibleForBinaryEncoding(event *nostr.Event) bool {
+func EventEligibleForBinaryEncoding(event *nostr.T) bool {
 	if len(event.Content) > MaxContentSize || event.Kind > MaxKind || event.CreatedAt > MaxCreatedAt || len(event.Tags) > MaxTagCount {
 		return false
 	}

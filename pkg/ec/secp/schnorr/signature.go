@@ -7,6 +7,7 @@ package schnorr
 
 import (
 	"fmt"
+
 	"github.com/dchest/blake256"
 	"github.com/minio/sha256-simd"
 	"mleku.online/git/ec/secp"
@@ -118,7 +119,7 @@ func (sig Signature) IsEqual(otherSig *Signature) bool {
 // error to support better testing while the exported method simply returns a
 // bool indicating success or failure.
 func schnorrVerify(sig *Signature, hash []byte,
-	pubKey *secp256k1.PublicKey) (e error) {
+	pubKey *secp256k1.PublicKey) (er error) {
 	// The algorithm for producing a EC-Schnorr-DCRv0 signature is described in
 	// README.md and is reproduced here for reference:
 	//
@@ -285,8 +286,8 @@ func schnorrVerifyBlake256(sig *Signature, hash []byte,
 	// Step 6.
 	//
 	// Fail if e >= n
-	var e secp256k1.ModNScalar
-	if overflow := e.SetBytes(&commitment); overflow != 0 {
+	var s secp256k1.ModNScalar
+	if overflow := s.SetBytes(&commitment); overflow != 0 {
 		str := "hash of (R || m) too big"
 		return signatureError(ErrSchnorrHashValue, str)
 	}
@@ -297,7 +298,7 @@ func schnorrVerifyBlake256(sig *Signature, hash []byte,
 	var Q, R, sG, eQ secp256k1.JacobianPoint
 	pubKey.AsJacobian(&Q)
 	secp256k1.ScalarBaseMultNonConst(&sig.s, &sG)
-	secp256k1.ScalarMultNonConst(&e, &Q, &eQ)
+	secp256k1.ScalarMultNonConst(&s, &Q, &eQ)
 	secp256k1.AddNonConst(&sG, &eQ, &R)
 
 	// Step 8.

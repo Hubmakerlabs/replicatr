@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 	"mleku.online/git/bech32"
 )
@@ -18,8 +18,8 @@ const (
 	NsecHRP     = "nsec"
 	NpubHRP     = "npub"
 	NprofileHRP = "nprofile"
-	NeventHRP  = "nevent"
-	NentityHRP = "naddr"
+	NeventHRP   = "nevent"
+	NentityHRP  = "naddr"
 )
 
 func DecodeToString(bech32String string) (prefix, value string, e error) {
@@ -97,7 +97,7 @@ func Decode(bech32string string) (prefix string, value any, e error) {
 					return prefix, nil, fmt.Errorf("id is less than 32 bytes (%d)",
 						len(v))
 				}
-				result.ID = nip1.EventID(hex.EncodeToString(v))
+				result.ID = eventid.EventID(hex.EncodeToString(v))
 			case TLVRelay:
 				result.Relays = append(result.Relays, string(v))
 			case TLVAuthor:

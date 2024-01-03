@@ -9,7 +9,8 @@ import (
 	"fmt"
 
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -17,17 +18,17 @@ type query struct {
 	i             int
 	prefix        []byte
 	startingPoint []byte
-	results       chan *nip1.Event
+	results       chan *event.T
 	skipTimestamp bool
 }
 
 type queryEvent struct {
-	*nip1.Event
+	*event.T
 	query int
 }
 
-func (b *Backend) Q(queries []query, since uint32, extraFilter *nip1.Filter, filter *nip1.Filter,
-	evChan chan *nip1.Event) {
+func (b *Backend) Q(queries []query, since uint32, extraFilter *filter.T, filter *filter.T,
+	evChan chan *event.T) {
 
 	e := b.View(func(txn *badger.Txn) (e error) {
 		// iterate only through keys and in reverse order
@@ -66,7 +67,7 @@ func (b *Backend) Q(queries []query, since uint32, extraFilter *nip1.Filter, fil
 						return
 					}
 					log.D.Chk(item.Value(func(val []byte) (e error) {
-						evt := &nip1.Event{}
+						evt := &event.T{}
 						if e = nostr_binary.Unmarshal(val, evt); e != nil {
 							log.E.F("badger: value read error (id %x): %s\n", val[0:32], e)
 							return e
@@ -92,7 +93,7 @@ func (b *Backend) Q(queries []query, since uint32, extraFilter *nip1.Filter, fil
 		for _, q := range queries {
 			evt, ok := <-q.results
 			if ok {
-				emitQueue = append(emitQueue, &queryEvent{Event: evt, query: q.i})
+				emitQueue = append(emitQueue, &queryEvent{T: evt, query: q.i})
 			}
 		}
 		// now it's a good time to schedule this
@@ -111,7 +112,7 @@ func (b *Backend) Q(queries []query, since uint32, extraFilter *nip1.Filter, fil
 		for {
 			// emit latest event in queue
 			latest := emitQueue[0]
-			evChan <- latest.Event
+			evChan <- latest.T
 			// stop when reaching limit
 			emittedEvents++
 			if emittedEvents == limit {
@@ -119,7 +120,7 @@ func (b *Backend) Q(queries []query, since uint32, extraFilter *nip1.Filter, fil
 			}
 			// fetch a new one from query results and replace the previous one with it
 			if evt, ok := <-queries[latest.query].results; ok {
-				emitQueue[0].Event = evt
+				emitQueue[0].T = evt
 				heap.Fix(&emitQueue, 0)
 			} else {
 				// if this query has no more events we just remove this and proceed normally
@@ -137,12 +138,12 @@ func (b *Backend) Q(queries []query, since uint32, extraFilter *nip1.Filter, fil
 	}
 }
 
-func (b *Backend) QueryEvents(ctx context.Context, filter *nip1.Filter) (evChan chan *nip1.Event, e error) {
-	evChan = make(chan *nip1.Event)
+func (b *Backend) QueryEvents(ctx context.Context, f *filter.T) (evChan chan *event.T, e error) {
+	evChan = make(chan *event.T)
 	var queries []query
-	var extraFilter *nip1.Filter
+	var extraFilter *filter.T
 	var since uint32
-	if queries, extraFilter, since, e = prepareQueries(filter); fails(e) {
+	if queries, extraFilter, since, e = prepareQueries(f); fails(e) {
 		return
 	}
 
@@ -184,7 +185,7 @@ func (b *Backend) QueryEvents(ctx context.Context, filter *nip1.Filter) (evChan 
 							return
 						}
 						log.D.Chk(item.Value(func(val []byte) (e error) {
-							evt := &nip1.Event{}
+							evt := &event.T{}
 							if e = nostr_binary.Unmarshal(val, evt); e != nil {
 								log.E.F("badger: value read error (id %x): %s\n", val[0:32], e)
 								return e
@@ -200,8 +201,8 @@ func (b *Backend) QueryEvents(ctx context.Context, filter *nip1.Filter) (evChan 
 			}
 			// max number of events we'll return
 			limit := b.MaxLimit
-			if filter.Limit > 0 && filter.Limit < limit {
-				limit = filter.Limit
+			if f.Limit > 0 && f.Limit < limit {
+				limit = f.Limit
 			}
 			// receive results and ensure we only return the most recent ones always
 			emittedEvents := 0
@@ -210,7 +211,7 @@ func (b *Backend) QueryEvents(ctx context.Context, filter *nip1.Filter) (evChan 
 			for _, q := range queries {
 				evt, ok := <-q.results
 				if ok {
-					emitQueue = append(emitQueue, &queryEvent{Event: evt, query: q.i})
+					emitQueue = append(emitQueue, &queryEvent{T: evt, query: q.i})
 				}
 			}
 			// now it's a good time to schedule this
@@ -229,7 +230,7 @@ func (b *Backend) QueryEvents(ctx context.Context, filter *nip1.Filter) (evChan 
 			for {
 				// emit latest event in queue
 				latest := emitQueue[0]
-				evChan <- latest.Event
+				evChan <- latest.T
 				// stop when reaching limit
 				emittedEvents++
 				if emittedEvents == limit {
@@ -237,7 +238,7 @@ func (b *Backend) QueryEvents(ctx context.Context, filter *nip1.Filter) (evChan 
 				}
 				// fetch a new one from query results and replace the previous one with it
 				if evt, ok := <-queries[latest.query].results; ok {
-					emitQueue[0].Event = evt
+					emitQueue[0].T = evt
 					heap.Fix(&emitQueue, 0)
 				} else {
 					// if this query has no more events we just remove this and proceed normally
@@ -272,14 +273,14 @@ func (pq *priorityQueue) Pop() any {
 	return item
 }
 
-func prepareQueries(filter *nip1.Filter) (
-	qs []query, extra *nip1.Filter, since uint32, e error,
+func prepareQueries(f *filter.T) (
+	qs []query, extra *filter.T, since uint32, e error,
 ) {
 	var index byte
-	if len(filter.IDs) > 0 {
+	if len(f.IDs) > 0 {
 		index = indexIdPrefix
-		qs = make([]query, len(filter.IDs))
-		for i, idHex := range filter.IDs {
+		qs = make([]query, len(f.IDs))
+		for i, idHex := range f.IDs {
 			prefix := make([]byte, 1+8)
 			prefix[0] = index
 			if len(idHex) != 64 {
@@ -290,11 +291,11 @@ func prepareQueries(filter *nip1.Filter) (
 			copy(prefix[1:], idPrefix8)
 			qs[i] = query{i: i, prefix: prefix, skipTimestamp: true}
 		}
-	} else if len(filter.Authors) > 0 {
-		if len(filter.Kinds) == 0 {
+	} else if len(f.Authors) > 0 {
+		if len(f.Kinds) == 0 {
 			index = indexPubkeyPrefix
-			qs = make([]query, len(filter.Authors))
-			for i, pubkeyHex := range filter.Authors {
+			qs = make([]query, len(f.Authors))
+			for i, pubkeyHex := range f.Authors {
 				if len(pubkeyHex) != 64 {
 					e = fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 					return
@@ -307,10 +308,10 @@ func prepareQueries(filter *nip1.Filter) (
 			}
 		} else {
 			index = indexPubkeyKindPrefix
-			qs = make([]query, len(filter.Authors)*len(filter.Kinds))
+			qs = make([]query, len(f.Authors)*len(f.Kinds))
 			i := 0
-			for _, pubkeyHex := range filter.Authors {
-				for _, kind := range filter.Kinds {
+			for _, pubkeyHex := range f.Authors {
+				for _, kind := range f.Kinds {
 					if len(pubkeyHex) != 64 {
 						e = fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 						return
@@ -327,11 +328,11 @@ func prepareQueries(filter *nip1.Filter) (
 				}
 			}
 		}
-		extra = &nip1.Filter{Tags: filter.Tags}
-	} else if len(filter.Tags) > 0 {
+		extra = &filter.T{Tags: f.Tags}
+	} else if len(f.Tags) > 0 {
 		// determine the size of the queries array by inspecting all tags sizes
 		size := 0
-		for _, values := range filter.Tags {
+		for _, values := range f.Tags {
 			size += len(values)
 		}
 		if size == 0 {
@@ -339,9 +340,9 @@ func prepareQueries(filter *nip1.Filter) (
 			return
 		}
 		qs = make([]query, size)
-		extra = &nip1.Filter{Kinds: filter.Kinds}
+		extra = &filter.T{Kinds: f.Kinds}
 		i := 0
-		for _, values := range filter.Tags {
+		for _, values := range f.Tags {
 			for _, value := range values {
 				// get key prefix (with full length) and offset where to write the last parts
 				k, offset := getTagIndexPrefix(value)
@@ -351,10 +352,10 @@ func prepareQueries(filter *nip1.Filter) (
 				i++
 			}
 		}
-	} else if len(filter.Kinds) > 0 {
+	} else if len(f.Kinds) > 0 {
 		index = indexKindPrefix
-		qs = make([]query, len(filter.Kinds))
-		for i, kind := range filter.Kinds {
+		qs = make([]query, len(f.Kinds))
+		for i, kind := range f.Kinds {
 			prefix := make([]byte, 1+2)
 			prefix[0] = index
 			binary.BigEndian.PutUint16(prefix[1:], uint16(kind))
@@ -369,18 +370,18 @@ func prepareQueries(filter *nip1.Filter) (
 		extra = nil
 	}
 	var until uint32 = 4294967295
-	if filter.Until != nil {
-		if fu := uint32(*filter.Until); fu < until {
+	if f.Until != nil {
+		if fu := uint32(*f.Until); fu < until {
 			until = fu + 1
 		}
 	}
 	for i, q := range qs {
 		qs[i].startingPoint = binary.BigEndian.AppendUint32(q.prefix, uint32(until))
-		qs[i].results = make(chan *nip1.Event, 12)
+		qs[i].results = make(chan *event.T, 12)
 	}
 	// this is where we'll end the iteration
-	if filter.Since != nil {
-		if fs := uint32(*filter.Since); fs > since {
+	if f.Since != nil {
+		if fs := uint32(*f.Since); fs > since {
 			since = fs
 		}
 	}

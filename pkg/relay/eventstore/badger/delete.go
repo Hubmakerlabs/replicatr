@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/dgraph-io/badger/v4"
 )
 
 var serialDelete uint32 = 0
 
-func (b *Backend) DeleteEvent(ctx context.Context, evt *nip1.Event) (e error) {
+func (b *Backend) DeleteEvent(ctx context.Context, evt *event.T) (e error) {
 	deletionHappened := false
 
 	e = b.Update(func(txn *badger.Txn) (e error) {

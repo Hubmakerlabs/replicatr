@@ -4,22 +4,24 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"testing"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 func TestBinaryPartialGet(t *testing.T) {
 	for _, jevt := range normalEvents {
-		evt := &nip1.Event{}
+		evt := &event.T{}
 		json.Unmarshal([]byte(jevt), &evt)
 		bevt, err := Marshal(evt)
 		if err != nil {
 			t.Fatalf("error marshalling binary: %s", err)
 		}
 
-		if id := nip1.EventID(hex.EncodeToString(bevt[0:32])); id != evt.ID {
+		if id := eventid.EventID(hex.EncodeToString(bevt[0:32])); id != evt.ID {
 			t.Fatalf("partial id wrong. got %v, expected %v", id, evt.ID)
 		}
 		if pubkey := hex.EncodeToString(bevt[32:64]); pubkey != evt.PubKey {
@@ -45,7 +47,7 @@ func TestBinaryPartialGet(t *testing.T) {
 
 func TestBinaryEncode(t *testing.T) {
 	for _, jevt := range normalEvents {
-		var pevt nip1.Event
+		var pevt event.T
 		if err := json.Unmarshal([]byte(jevt), &pevt); err != nil {
 			t.Fatalf("failed to decode normal json: %s", err)
 		}
@@ -53,7 +55,7 @@ func TestBinaryEncode(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to encode binary: %s", err)
 		}
-		var evt nip1.Event
+		var evt event.T
 		if err := Unmarshal(bevt, &evt); err != nil {
 			t.Fatalf("error unmarshalling binary: %s", err)
 		}
@@ -62,9 +64,9 @@ func TestBinaryEncode(t *testing.T) {
 	}
 }
 
-func checkParsedCorrectly(t *testing.T, evt *nip1.Event,
+func checkParsedCorrectly(t *testing.T, evt *event.T,
 	jevt string) (isBad bool) {
-	var canonical nip1.Event
+	var canonical event.T
 	err := json.Unmarshal([]byte(jevt), &canonical)
 	if err != nil {
 		t.Fatalf("error unmarshalling normal json: %s", err)

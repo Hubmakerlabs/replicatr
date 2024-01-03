@@ -4,19 +4,22 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	filters2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
 type Listener struct {
-	filters nip1.Filters
+	filters filters2.T
 	cancel  context.CancelCauseFunc
 }
 
 var listeners = xsync.NewTypedMapOf[*WebSocket, *xsync.MapOf[string, *Listener]](pointerHasher[WebSocket])
 
-func GetListeningFilters() nip1.Filters {
-	respFilters := make(nip1.Filters, 0, listeners.Size()*2)
+func GetListeningFilters() filters2.T {
+	respFilters := make(filters2.T, 0, listeners.Size()*2)
 	// here we go through all the existing listeners
 	listeners.Range(func(_ *WebSocket, subs *xsync.MapOf[string, *Listener]) bool {
 		subs.Range(func(_ string, listener *Listener) bool {
@@ -24,7 +27,7 @@ func GetListeningFilters() nip1.Filters {
 			for _, listenerFilter := range listener.filters {
 				for _, respFilter := range respFilters {
 					// check if this filter specifically is already added to respFilters
-					if nip1.FilterEqual(listenerFilter, respFilter) {
+					if filter.FilterEqual(listenerFilter, respFilter) {
 						// continue to the next filter
 						continue next
 					}
@@ -41,8 +44,8 @@ func GetListeningFilters() nip1.Filters {
 	return respFilters
 }
 
-func setListener(id nip1.SubscriptionID, ws *WebSocket,
-	filters nip1.Filters, cancel context.CancelCauseFunc) {
+func setListener(id subscriptionid.T, ws *WebSocket,
+	filters filters2.T, cancel context.CancelCauseFunc) {
 
 	subs, _ := listeners.LoadOrCompute(ws,
 		func() *xsync.MapOf[string, *Listener] {
@@ -53,7 +56,7 @@ func setListener(id nip1.SubscriptionID, ws *WebSocket,
 
 // remove a specific subscription id from listeners for a given ws client
 // and cancel its specific context
-func removeListenerId(ws *WebSocket, id nip1.SubscriptionID) {
+func removeListenerId(ws *WebSocket, id subscriptionid.T) {
 	if subs, ok := listeners.Load(ws); ok {
 		if listener, ok := subs.LoadAndDelete(string(id)); ok {
 			listener.cancel(fmt.Errorf("subscription closed by client"))
@@ -70,17 +73,17 @@ func removeListener(ws *WebSocket) {
 	listeners.Delete(ws)
 }
 
-func notifyListeners(event *nip1.Event) {
+func notifyListeners(evt *event.T) {
 	listeners.Range(func(ws *WebSocket, subs *xsync.MapOf[string, *Listener]) bool {
 		subs.Range(func(id string, listener *Listener) bool {
-			if !listener.filters.Match(event) {
+			if !listener.filters.Match(evt) {
 				return true
 			}
 			var e error
-			var sid nip1.SubscriptionID
-			sid, e = nip1.NewSubscriptionID(id)
+			var sid subscriptionid.T
+			sid, e = subscriptionid.NewSubscriptionID(id)
 			log.D.Chk(e)
-			log.E.Chk(ws.WriteJSON(nip1.EventEnvelope{SubscriptionID: sid, Event: event}))
+			log.E.Chk(ws.WriteJSON(&event.Envelope{SubscriptionID: sid, Event: evt}))
 			return true
 		})
 		return true

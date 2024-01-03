@@ -6,12 +6,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk/cache"
+	"github.com/Hubmakerlabs/replicatr/pkg/pool"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 )
 
@@ -19,7 +21,7 @@ type System struct {
 	RelaysCache      cache.Cache32[[]Relay]
 	FollowsCache     cache.Cache32[[]Follow]
 	MetadataCache    cache.Cache32[*ProfileMetadata]
-	Pool             *nostr.SimplePool
+	Pool             *pool.SimplePool
 	RelayListRelays  []string
 	FollowListRelays []string
 	MetadataRelays   []string
@@ -80,7 +82,7 @@ func (s *System) fetchProfileMetadata(ctx context.Context,
 		return v, true
 	}
 	if s.Store != nil {
-		res, e := s.StoreRelay().QuerySync(ctx, &nip1.Filter{Kinds: kinds.T{kind.ProfileMetadata},
+		res, e := s.StoreRelay().QuerySync(ctx, &filter.T{Kinds: kinds.T{kind.ProfileMetadata},
 			Authors: []string{pubkey}})
 		log.D.Chk(e)
 		if len(res) != 0 {
@@ -105,25 +107,25 @@ func (s *System) fetchProfileMetadata(ctx context.Context,
 // FetchUserEvents fetches events from each users' outbox relays, grouping
 // queries when possible.
 func (s *System) FetchUserEvents(ctx context.Context,
-	filter *nip1.Filter) (r map[string][]*nip1.Event, e error) {
+	f *filter.T) (r map[string][]*event.T, e error) {
 
-	var filters map[*nostr.Relay]*nip1.Filter
-	if filters, e = s.ExpandQueriesByAuthorAndRelays(ctx,
-		filter); fails(e) {
+	var ff map[*relay.Relay]*filter.T
+	if ff, e = s.ExpandQueriesByAuthorAndRelays(ctx,
+		f); fails(e) {
 
 		return nil, fmt.Errorf("failed to expand queries: %w", e)
 	}
-	r = make(map[string][]*nip1.Event)
+	r = make(map[string][]*event.T)
 	wg := sync.WaitGroup{}
-	wg.Add(len(filters))
-	for relay, f := range filters {
-		go func(relay *nostr.Relay, filter *nip1.Filter) {
+	wg.Add(len(ff))
+	for rl, f := range ff {
+		go func(rl *relay.Relay, f *filter.T) {
 			defer wg.Done()
-			filter.Limit = filter.Limit *
-				len(filter.Authors) // hack
-			var sub *nostr.Subscription
-			if sub, e = relay.Subscribe(ctx,
-				nip1.Filters{filter}); fails(e) {
+			f.Limit = f.Limit *
+				len(f.Authors) // hack
+			var sub *relay.Subscription
+			if sub, e = rl.Subscribe(ctx,
+				filters.T{f}); fails(e) {
 
 				return
 			}
@@ -135,7 +137,7 @@ func (s *System) FetchUserEvents(ctx context.Context,
 					return
 				}
 			}
-		}(relay, f)
+		}(rl, f)
 	}
 	wg.Wait()
 	return

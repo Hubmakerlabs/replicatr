@@ -3,11 +3,13 @@ package relay
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
-	log2 "mleku.online/git/log"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
@@ -15,7 +17,7 @@ import (
 
 func New() *Relay {
 	return &Relay{
-		Log: log2.GetLogger(),
+		Log: log2.New(os.Stderr, "", 0),
 
 		Info: &nip11.RelayInfo{
 			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/khatru",
@@ -42,29 +44,29 @@ func New() *Relay {
 type Relay struct {
 	ServiceURL string
 
-	RejectEvent               []func(ctx context.Context, event *nip1.Event) (reject bool, msg string)
-	RejectFilter              []func(ctx context.Context, filter *nip1.Filter) (reject bool, msg string)
-	RejectCountFilter         []func(ctx context.Context, filter *nip1.Filter) (reject bool, msg string)
-	OverwriteDeletionOutcome  []func(ctx context.Context, target *nip1.Event, deletion *nip1.Event) (acceptDeletion bool, msg string)
-	OverwriteResponseEvent    []func(ctx context.Context, event *nip1.Event)
-	OverwriteFilter           []func(ctx context.Context, filter *nip1.Filter)
-	OverwriteCountFilter      []func(ctx context.Context, filter *nip1.Filter)
+	RejectEvent               []func(ctx context.Context, event *event.T) (reject bool, msg string)
+	RejectFilter              []func(ctx context.Context, filter *filter.T) (reject bool, msg string)
+	RejectCountFilter         []func(ctx context.Context, filter *filter.T) (reject bool, msg string)
+	OverwriteDeletionOutcome  []func(ctx context.Context, target *event.T, deletion *event.T) (acceptDeletion bool, msg string)
+	OverwriteResponseEvent    []func(ctx context.Context, event *event.T)
+	OverwriteFilter           []func(ctx context.Context, filter *filter.T)
+	OverwriteCountFilter      []func(ctx context.Context, filter *filter.T)
 	OverwriteRelayInformation []func(ctx context.Context, r *http.Request, info *nip11.RelayInfo) *nip11.RelayInfo
-	StoreEvent                []func(ctx context.Context, event *nip1.Event) error
-	DeleteEvent               []func(ctx context.Context, event *nip1.Event) error
-	QueryEvents               []func(ctx context.Context, filter *nip1.Filter) (chan *nip1.Event, error)
-	CountEvents               []func(ctx context.Context, filter *nip1.Filter) (int64, error)
+	StoreEvent                []func(ctx context.Context, event *event.T) error
+	DeleteEvent               []func(ctx context.Context, event *event.T) error
+	QueryEvents               []func(ctx context.Context, filter *filter.T) (chan *event.T, error)
+	CountEvents               []func(ctx context.Context, filter *filter.T) (int64, error)
 	OnAuth                    []func(ctx context.Context, pubkey string)
 	OnConnect                 []func(ctx context.Context)
 	OnDisconnect              []func(ctx context.Context)
-	OnEventSaved              []func(ctx context.Context, event *nip1.Event)
+	OnEventSaved              []func(ctx context.Context, event *event.T)
 
 	// editing info will affect
 	Info *nip11.RelayInfo
 
 	// Default logger, as set by NewServer, is a stdlib logger prefixed with "[khatru-relay] ",
 	// outputting to stderr.
-	Log *log2.Logger
+	*log2.Log
 
 	// for establishing websockets
 	upgrader websocket.Upgrader

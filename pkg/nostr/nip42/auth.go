@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
@@ -22,12 +23,13 @@ var (
 	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
-var LAuth = nip1.Label(len(nip1.Labels))
+var LAuth = labels.T(len(labels.List))
+
 const AUTH = "AUTH"
 
 func init() {
 	// add this label to the nip1 envelope label map
-	nip1.Labels[LAuth] = []byte(AUTH)
+	labels.List[LAuth] = []byte(AUTH)
 }
 
 type AuthChallengeEnvelope struct {
@@ -38,7 +40,7 @@ func NewChallenge(c string) (a *AuthChallengeEnvelope) {
 	return &AuthChallengeEnvelope{Challenge: c}
 }
 
-func (a *AuthChallengeEnvelope) Label() nip1.Label  { return LAuth }
+func (a *AuthChallengeEnvelope) Label() labels.T    { return LAuth }
 func (a *AuthChallengeEnvelope) String() (s string) { return a.ToArray().String() }
 func (a *AuthChallengeEnvelope) Bytes() (s []byte)  { return a.ToArray().Bytes() }
 
@@ -78,7 +80,7 @@ func (a *AuthChallengeEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 }
 
 type AuthResponseEnvelope struct {
-	*nip1.Event
+	*event.T
 }
 
 // New creates an AuthResponseEnvelope response from an AuthChallengeEnvelope.
@@ -87,7 +89,7 @@ type AuthResponseEnvelope struct {
 // authenticate.
 func New(ac *AuthChallengeEnvelope, relay string) (ae *AuthResponseEnvelope) {
 	ae = &AuthResponseEnvelope{
-		&nip1.Event{
+		&event.T{
 			Kind: kind.ClientAuthentication,
 			Tags: tags.T{
 				{"relay", relay},
@@ -98,7 +100,7 @@ func New(ac *AuthChallengeEnvelope, relay string) (ae *AuthResponseEnvelope) {
 	return
 }
 
-func (a *AuthResponseEnvelope) Label() nip1.Label { return LAuth }
+func (a *AuthResponseEnvelope) Label() labels.T { return LAuth }
 
 func (a *AuthResponseEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	if a == nil {
@@ -123,8 +125,8 @@ func (a *AuthResponseEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 		return fmt.Errorf("event not found in auth envelope")
 	}
 	// allocate an event to unmarshal into
-	a.Event = &nip1.Event{}
-	if e = json.Unmarshal(eventObj, a.Event); fails(e) {
+	a.T = &event.T{}
+	if e = json.Unmarshal(eventObj, a.T); fails(e) {
 		log.D.S(string(eventObj))
 		return
 	}
@@ -138,7 +140,7 @@ func (a *AuthResponseEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 }
 
 func (a *AuthResponseEnvelope) ToArray() array.T {
-	return array.T{AUTH, a.Event.ToObject()}
+	return array.T{AUTH, a.T.ToObject()}
 }
 
 func (a *AuthResponseEnvelope) String() (s string) {
@@ -157,7 +159,7 @@ func (a *AuthResponseEnvelope) MarshalJSON() (bytes []byte, e error) {
 
 // ValidateAuthEvent checks whether event is a valid NIP-42 event for given challenge and relayURL.
 // The result of the validation is encoded in the ok bool.
-func ValidateAuthEvent(event *nip1.Event, challenge string,
+func ValidateAuthEvent(event *event.T, challenge string,
 	relayURL string) (pubkey string, ok bool) {
 
 	if event.Kind != kind.ClientAuthentication {

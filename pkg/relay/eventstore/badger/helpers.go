@@ -3,9 +3,10 @@ package badger
 import (
 	"encoding/binary"
 	"encoding/hex"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	log2 "mleku.online/git/log"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 	"golang.org/x/exp/slices"
 )
@@ -45,7 +46,7 @@ func getTagIndexPrefix(tagValue string) ([]byte, int) {
 	return k, offset
 }
 
-func getIndexKeysForEvent(evt *nip1.Event, idx []byte) [][]byte {
+func getIndexKeysForEvent(evt *event.T, idx []byte) [][]byte {
 	keys := make([][]byte, 0, 18)
 	// indexes
 	{

@@ -4,6 +4,7 @@ package schnorr
 
 import (
 	"fmt"
+
 	"mleku.online/git/ec"
 	"mleku.online/git/ec/chainhash"
 	secp "mleku.online/git/ec/secp"
@@ -172,12 +173,12 @@ func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (e error) {
 		chainhash.TagBIP0340Challenge, rBytes[:], pBytes, hash,
 	)
 
-	var e btcec.ModNScalar
-	e.SetBytes((*[32]byte)(commitment))
+	var s btcec.ModNScalar
+	s.SetBytes((*[32]byte)(commitment))
 
 	// Negate e here so we can use AddNonConst below to subtract the s*G
 	// point from e*P.
-	e.Negate()
+	s.Negate()
 
 	// Step 6.
 	//
@@ -185,7 +186,7 @@ func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (e error) {
 	var P, R, sG, eP btcec.JacobianPoint
 	pubKey.AsJacobian(&P)
 	btcec.ScalarBaseMultNonConst(&sig.s, &sG)
-	btcec.ScalarMultNonConst(&e, &P, &eP)
+	btcec.ScalarMultNonConst(&s, &P, &eP)
 	btcec.AddNonConst(&sG, &eP, &R)
 
 	// Step 7.

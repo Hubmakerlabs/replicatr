@@ -140,12 +140,12 @@ func (sub *Subscription) Close() {
 		id := sub.GetID()
 		closeMsg := CloseEnvelope(id)
 		closeb, _ := (&closeMsg).MarshalJSON()
-		debugLogf("{%s} sending %v", sub.Relay.URL, closeb)
+		fmt.Printf("{%s} sending %v", sub.Relay.URL, string(closeb))
 		<-sub.Relay.Write(closeb)
 	}
 }
 
-// Sub sets sub.Filters and then calls sub.Fire(ctx).
+// Sub sets sub.T and then calls sub.Fire(ctx).
 // The subscription will be closed if the context expires.
 func (sub *Subscription) Sub(_ context.Context, filters Filters) {
 	sub.Filters = filters
@@ -162,7 +162,7 @@ func (sub *Subscription) Fire() error {
 	} else {
 		reqb, _ = CountEnvelope{id, sub.Filters, nil}.MarshalJSON()
 	}
-	debugLogf("{%s} sending %v", sub.Relay.URL, reqb)
+	fmt.Printf("{%s} sending %v", sub.Relay.URL, string(reqb))
 
 	sub.live.Store(true)
 	if err := <-sub.Relay.Write(reqb); err != nil {

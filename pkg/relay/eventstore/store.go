@@ -3,7 +3,8 @@ package eventstore
 import (
 	"context"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 )
 
 // Store is a persistence layer for nostr events handled by a relay.
@@ -18,9 +19,9 @@ type Store interface {
 	// QueryEvents is invoked upon a client's REQ as described in NIP-01.
 	// it should return a channel with the events as they're recovered from a database.
 	// the channel should be closed after the events are all delivered.
-	QueryEvents(context.Context, *nip1.Filter) (chan *nip1.Event, error)
+	QueryEvents(context.Context, *filter.T) (chan *event.T, error)
 	// DeleteEvent is used to handle deletion events, as per NIP-09.
-	DeleteEvent(context.Context, *nip1.Event) error
+	DeleteEvent(context.Context, *event.T) error
 	// SaveEvent is called once Relay.AcceptEvent reports true.
-	SaveEvent(context.Context, *nip1.Event) error
+	SaveEvent(context.Context, *event.T) error
 }

@@ -3,14 +3,14 @@ package policies
 import (
 	"context"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	kinds2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"golang.org/x/exp/slices"
 )
 
 // NoComplexFilters disallows filters with more than 2 tags.
-func NoComplexFilters(ctx context.Context, filter nip1.Filter) (reject bool, msg string) {
+func NoComplexFilters(ctx context.Context, filter filter.T) (reject bool, msg string) {
 	items := len(filter.Tags) + len(filter.Kinds)
 
 	if items > 4 && len(filter.Tags) > 2 {
@@ -21,7 +21,7 @@ func NoComplexFilters(ctx context.Context, filter nip1.Filter) (reject bool, msg
 }
 
 // NoEmptyFilters disallows filters that don't have at least a tag, a kind, an author or an id.
-func NoEmptyFilters(ctx context.Context, filter nip1.Filter) (reject bool, msg string) {
+func NoEmptyFilters(ctx context.Context, filter filter.T) (reject bool, msg string) {
 	c := len(filter.Kinds) + len(filter.IDs) + len(filter.Authors)
 	for _, tagItems := range filter.Tags {
 		c += len(tagItems)
@@ -34,24 +34,24 @@ func NoEmptyFilters(ctx context.Context, filter nip1.Filter) (reject bool, msg s
 
 // AntiSyncBots tries to prevent people from syncing kind:1s from this relay to else by always
 // requiring an author parameter at least.
-func AntiSyncBots(ctx context.Context, filter nip1.Filter) (reject bool, msg string) {
+func AntiSyncBots(ctx context.Context, filter filter.T) (reject bool, msg string) {
 	return (len(filter.Kinds) == 0 || slices.Contains(filter.Kinds, 1)) &&
 		len(filter.Authors) == 0, "an author must be specified to get their kind:1 notes"
 }
 
-func NoSearchQueries(ctx context.Context, filter nip1.Filter) (reject bool, msg string) {
+func NoSearchQueries(ctx context.Context, filter filter.T) (reject bool, msg string) {
 	if filter.Search != "" {
 		return true, "search is not supported"
 	}
 	return false, ""
 }
 
-func RemoveSearchQueries(ctx context.Context, filter *nip1.Filter) {
+func RemoveSearchQueries(ctx context.Context, filter *filter.T) {
 	filter.Search = ""
 }
 
-func RemoveAllButKinds(kinds ...uint16) func(context.Context, *nip1.Filter) {
-	return func(ctx context.Context, filter *nip1.Filter) {
+func RemoveAllButKinds(kinds ...uint16) func(context.Context, *filter.T) {
+	return func(ctx context.Context, filter *filter.T) {
 		if n := len(filter.Kinds); n > 0 {
 			newKinds := make(kinds2.T, 0, n)
 			for i := 0; i < n; i++ {
@@ -64,8 +64,8 @@ func RemoveAllButKinds(kinds ...uint16) func(context.Context, *nip1.Filter) {
 	}
 }
 
-func RemoveAllButTags(tagNames ...string) func(context.Context, *nip1.Filter) {
-	return func(ctx context.Context, filter *nip1.Filter) {
+func RemoveAllButTags(tagNames ...string) func(context.Context, *filter.T) {
+	return func(ctx context.Context, filter *filter.T) {
 		for tagName := range filter.Tags {
 			if !slices.Contains(tagNames, tagName) {
 				delete(filter.Tags, tagName)

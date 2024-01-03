@@ -3,13 +3,13 @@ package policies
 import (
 	"context"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay"
 	"golang.org/x/exp/slices"
 )
 
 // RejectKind04Snoopers prevents reading NIP-04 messages from people not involved in the conversation.
-func RejectKind04Snoopers(ctx context.Context, filter nip1.Filter) (bool, string) {
+func RejectKind04Snoopers(ctx context.Context, filter filter.T) (bool, string) {
 	// prevent kind-4 events from being returned to unauthed users,
 	//   only when authentication is a thing
 	if !slices.Contains(filter.Kinds, 4) {

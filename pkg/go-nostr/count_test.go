@@ -8,7 +8,7 @@ import (
 func TestCount(t *testing.T) {
 	const RELAY = "wss://relay.nostr.band"
 
-	rl := mustRelayConnect(RELAY)
+	rl := MustRelayConnect(RELAY)
 	defer rl.Close()
 
 	count, err := rl.Count(context.Background(), Filters{
