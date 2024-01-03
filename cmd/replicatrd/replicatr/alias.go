@@ -29,7 +29,7 @@ type (
 	EOSEEnvelope    = nostr.EOSEEnvelope
 	CloseEnvelope   = nostr.CloseEnvelope
 	AuthEnvelope    = nostr.AuthEnvelope
-	NoticeEnvelope  = nostr.NoticeEnvelope
+	NoticeEnvelope  = nip1.NoticeEnvelope
 	Conn            = websocket.Conn
 	Request         = http.Request
 	ResponseWriter  = http.ResponseWriter

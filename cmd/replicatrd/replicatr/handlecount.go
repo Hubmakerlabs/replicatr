@@ -11,7 +11,7 @@ func (rl *Relay) handleCountRequest(ctx Ctx, ws *WebSocket,
 	// then check if we'll reject this filter
 	for _, reject := range rl.RejectCountFilter {
 		if rej, msg := reject(ctx, filter); rej {
-			rl.E.Chk(ws.WriteJSON(NoticeEnvelope(msg)))
+			rl.E.Chk(ws.WriteJSON(&NoticeEnvelope{Text: msg}))
 			return 0
 		}
 	}
@@ -20,7 +20,7 @@ func (rl *Relay) handleCountRequest(ctx Ctx, ws *WebSocket,
 	var res int64
 	for _, count := range rl.CountEvents {
 		if res, e = count(ctx, filter); rl.E.Chk(e) {
-			rl.E.Chk(ws.WriteJSON(NoticeEnvelope(e.Error())))
+			rl.E.Chk(ws.WriteJSON(&NoticeEnvelope{Text: e.Error()}))
 		}
 		subtotal += res
 	}
