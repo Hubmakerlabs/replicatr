@@ -7,14 +7,14 @@ import (
 	"github.com/nbd-wtf/go-nostr"
 )
 
-func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nostr.Event) error {
+func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nostr.Event) (e error) {
 	// event deletion -- nip09
 	for _, tag := range evt.Tags {
 		if len(tag) >= 2 && tag[0] == "e" {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
-				ch, err := query(ctx, &nostr.Filter{IDs: []string{tag[1]}})
-				if err != nil {
+				var ch chan *nostr.Event
+				if ch, e = query(ctx, &nostr.Filter{IDs: []string{tag[1]}}); rl.Log.E.Chk(e) {
 					continue
 				}
 				target := <-ch
@@ -34,11 +34,13 @@ func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nostr.Event) erro
 				if acceptDeletion {
 					// delete it
 					for _, del := range rl.DeleteEvent {
-						del(ctx, target)
+						rl.Log.E.Chk(del(ctx, target))
 					}
 				} else {
 					// fail and stop here
-					return fmt.Errorf("blocked: %s", msg)
+					e = fmt.Errorf("blocked: %s", msg)
+					rl.Log.E.Chk(e)
+					return
 				}
 
 				// don't try to query this same event again

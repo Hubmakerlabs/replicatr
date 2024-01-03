@@ -26,6 +26,117 @@ type queryEvent struct {
 	query int
 }
 
+func (b *Backend) Q(queries []query, since uint32, extraFilter *nip1.Filter, filter *nip1.Filter,
+	evChan chan *nip1.Event) {
+
+	e := b.View(func(txn *badger.Txn) (e error) {
+		// iterate only through keys and in reverse order
+		opts := badger.IteratorOptions{
+			Reverse: true,
+		}
+		// actually iterate
+		iteratorClosers := make([]func(), len(queries))
+		for i, q := range queries {
+			go func(i int, q query) {
+				it := txn.NewIterator(opts)
+				iteratorClosers[i] = it.Close
+				defer close(q.results)
+				for it.Seek(q.startingPoint); it.ValidForPrefix(q.prefix); it.Next() {
+					item := it.Item()
+					key := item.Key()
+					idxOffset := len(key) - 4 // this is where the idx actually starts
+					// "id" indexes don't contain a timestamp
+					if !q.skipTimestamp {
+						createdAt := binary.BigEndian.Uint32(key[idxOffset-4 : idxOffset])
+						if createdAt < since {
+							break
+						}
+					}
+					idx := make([]byte, 5)
+					idx[0] = rawEventStorePrefix
+					copy(idx[1:], key[idxOffset:])
+					// fetch actual event
+					item, e = txn.Get(idx)
+					if e != nil {
+						if errors.Is(e, badger.ErrDiscardedTxn) {
+							return
+						}
+						log.E.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s\n",
+							idx, q.prefix, key, e)
+						return
+					}
+					log.D.Chk(item.Value(func(val []byte) (e error) {
+						evt := &nip1.Event{}
+						if e = nostr_binary.Unmarshal(val, evt); e != nil {
+							log.E.F("badger: value read error (id %x): %s\n", val[0:32], e)
+							return e
+						}
+						// check if this matches the other filters that were not part of the index
+						if extraFilter == nil || extraFilter.Matches(evt) {
+							q.results <- evt
+						}
+						return nil
+					}))
+				}
+			}(i, q)
+		}
+		// max number of events we'll return
+		limit := b.MaxLimit
+		if filter.Limit > 0 && filter.Limit < limit {
+			limit = filter.Limit
+		}
+		// receive results and ensure we only return the most recent ones always
+		emittedEvents := 0
+		// first pass
+		emitQueue := make(priorityQueue, 0, len(queries)+limit)
+		for _, q := range queries {
+			evt, ok := <-q.results
+			if ok {
+				emitQueue = append(emitQueue, &queryEvent{Event: evt, query: q.i})
+			}
+		}
+		// now it's a good time to schedule this
+		defer func() {
+			close(evChan)
+			for _, itclose := range iteratorClosers {
+				itclose()
+			}
+		}()
+		// queue may be empty here if we have literally nothing
+		if len(emitQueue) == 0 {
+			return nil
+		}
+		heap.Init(&emitQueue)
+		// iterate until we've emitted all events required
+		for {
+			// emit latest event in queue
+			latest := emitQueue[0]
+			evChan <- latest.Event
+			// stop when reaching limit
+			emittedEvents++
+			if emittedEvents == limit {
+				break
+			}
+			// fetch a new one from query results and replace the previous one with it
+			if evt, ok := <-queries[latest.query].results; ok {
+				emitQueue[0].Event = evt
+				heap.Fix(&emitQueue, 0)
+			} else {
+				// if this query has no more events we just remove this and proceed normally
+				heap.Remove(&emitQueue, 0)
+				// check if the list is empty and end
+				if len(emitQueue) == 0 {
+					break
+				}
+			}
+		}
+		return nil
+	})
+	if log.E.Chk(e) {
+		log.E.F("badger: query txn error: %s\n", e)
+	}
+}
+
 func (b *Backend) QueryEvents(ctx context.Context, filter *nip1.Filter) (evChan chan *nip1.Event, e error) {
 	evChan = make(chan *nip1.Event)
 	var queries []query
@@ -36,7 +147,7 @@ func (b *Backend) QueryEvents(ctx context.Context, filter *nip1.Filter) (evChan 
 	}
 
 	go func() {
-		err := b.View(func(txn *badger.Txn) error {
+		e := b.View(func(txn *badger.Txn) (e error) {
 			// iterate only through keys and in reverse order
 			opts := badger.IteratorOptions{
 				Reverse: true,
@@ -139,8 +250,8 @@ func (b *Backend) QueryEvents(ctx context.Context, filter *nip1.Filter) (evChan 
 			}
 			return nil
 		})
-		if err != nil {
-			log.E.F("badger: query txn error: %s\n", err)
+		if log.E.Chk(e) {
+			log.E.F("badger: query txn error: %s\n", e)
 		}
 	}()
 	return

@@ -98,7 +98,7 @@ func NewConnection(ctx context.Context, url string, requestHeader http.Header) (
 	}, nil
 }
 
-func (c *Connection) WriteMessage(data []byte) error {
+func (c *Connection) WriteMessage(data []byte) (e error) {
 	if c.msgState.IsCompressed() && c.enableCompression {
 		c.flateWriter.Reset(c.writer)
 		if _, e := io.Copy(c.flateWriter, bytes.NewReader(data)); fails(e) {
@@ -121,7 +121,7 @@ func (c *Connection) WriteMessage(data []byte) error {
 	return nil
 }
 
-func (c *Connection) ReadMessage(ctx context.Context, buf io.Writer) error {
+func (c *Connection) ReadMessage(ctx context.Context, buf io.Writer) (e error) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -163,6 +163,6 @@ func (c *Connection) ReadMessage(ctx context.Context, buf io.Writer) error {
 	return nil
 }
 
-func (c *Connection) Close() error {
+func (c *Connection) Close() (e error) {
 	return c.conn.Close()
 }

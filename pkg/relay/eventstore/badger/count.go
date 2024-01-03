@@ -10,20 +10,18 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *Backend) CountEvents(ctx context.Context, filter *nip1.Filter) (int64, error) {
-	var count int64 = 0
-
-	queries, extraFilter, since, err := prepareQueries(filter)
-	if err != nil {
-		return 0, err
+func (b *Backend) CountEvents(ctx context.Context, filter *nip1.Filter) (c int64, e error) {
+	var queries []query
+	var extraFilter *nip1.Filter
+	var since uint32
+	if queries, extraFilter, since, e = prepareQueries(filter); log.E.Chk(e) {
+		return
 	}
-
-	err = b.View(func(txn *badger.Txn) error {
+	e = b.View(func(txn *badger.Txn) (e error) {
 		// iterate only through keys and in reverse order
 		opts := badger.IteratorOptions{
 			Reverse: true,
 		}
-
 		// actually iterate
 		for _, q := range queries {
 			it := txn.NewIterator(opts)
@@ -32,9 +30,7 @@ func (b *Backend) CountEvents(ctx context.Context, filter *nip1.Filter) (int64, 
 			for it.Seek(q.startingPoint); it.ValidForPrefix(q.prefix); it.Next() {
 				item := it.Item()
 				key := item.Key()
-
 				idxOffset := len(key) - 4 // this is where the idx actually starts
-
 				// "id" indexes don't contain a timestamp
 				if !q.skipTimestamp {
 					createdAt := binary.BigEndian.Uint32(key[idxOffset-4 : idxOffset])
@@ -42,46 +38,38 @@ func (b *Backend) CountEvents(ctx context.Context, filter *nip1.Filter) (int64, 
 						break
 					}
 				}
-
 				idx := make([]byte, 5)
 				idx[0] = rawEventStorePrefix
 				copy(idx[1:], key[idxOffset:])
-
 				if extraFilter == nil {
-					count++
+					c++
 				} else {
 					// fetch actual event
-					item, err := txn.Get(idx)
-					if err != nil {
-						if errors.Is(err, badger.ErrDiscardedTxn) {
-							return err
+					if item, e = txn.Get(idx); log.E.Chk(e) {
+						if errors.Is(e, badger.ErrDiscardedTxn) {
+							return
 						}
-						log.E.F("badger: count (%v) failed to get %d from raw event store: %s\n", q, idx, err)
-						return err
+						log.E.F("badger: count (%v) failed to get %d from raw event store: %s\n", q, idx, e)
+						return
 					}
-
-					err = item.Value(func(val []byte) error {
+					e = item.Value(func(val []byte) (e error) {
 						evt := &nip1.Event{}
-						if err := nostr_binary.Unmarshal(val, evt); err != nil {
-							return err
+						if e = nostr_binary.Unmarshal(val, evt); log.E.Chk(e) {
+							return e
 						}
-
 						// check if this matches the other filters that were not part of the index
 						if extraFilter == nil || extraFilter.Matches(evt) {
-							count++
+							c++
 						}
-
 						return nil
 					})
-					if err != nil {
-						log.E.F("badger: count value read error: %s\n", err)
+					if log.E.Chk(e) {
+						log.E.F("badger: count value read error: %s\n", e)
 					}
 				}
 			}
 		}
-
 		return nil
 	})
-
-	return count, err
+	return
 }

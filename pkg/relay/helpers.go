@@ -3,11 +3,12 @@ package relay
 import (
 	"encoding/hex"
 	"hash/maphash"
-	log2 "mleku.online/git/log"
 	"net/http"
 	"strconv"
 	"strings"
 	"unsafe"
+
+	log2 "mleku.online/git/log"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 )
@@ -39,7 +40,7 @@ func getServiceBaseURL(r *http.Request) string {
 		} else if strings.Index(host, ":") != -1 {
 			// has a port number
 			proto = "http"
-		} else if _, err := strconv.Atoi(strings.ReplaceAll(host, ".", "")); err == nil {
+		} else if _, e := strconv.Atoi(strings.ReplaceAll(host, ".", "")); log.E.Chk(e) {
 			// it's a naked IP
 			proto = "http"
 		} else {

@@ -124,11 +124,11 @@ func (e Error) Error() string {
 }
 
 // Unwrap returns the underlying wrapped error.
-func (e Error) Unwrap() error {
+func (e Error) Unwrap() (e error) {
 	return e.Err
 }
 
 // signatureError creates an Error given a set of arguments.
-func signatureError(kind ErrorKind, desc string) Error {
+func signatureError(kind ErrorKind, desc string) (e error) {
 	return Error{Err: kind, Description: desc}
 }

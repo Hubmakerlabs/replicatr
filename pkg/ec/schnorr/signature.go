@@ -110,7 +110,7 @@ func (sig Signature) IsEqual(otherSig *Signature) bool {
 // This differs from the exported Verify method in that it returns a specific
 // error to support better testing while the exported method simply returns a
 // bool indicating success or failure.
-func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) error {
+func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (e error) {
 	// The algorithm for producing a BIP-340 signature is described in
 	// README.md and is reproduced here for reference:
 	//

@@ -118,7 +118,7 @@ func (sig Signature) IsEqual(otherSig *Signature) bool {
 // error to support better testing while the exported method simply returns a
 // bool indicating success or failure.
 func schnorrVerify(sig *Signature, hash []byte,
-	pubKey *secp256k1.PublicKey) error {
+	pubKey *secp256k1.PublicKey) (e error) {
 	// The algorithm for producing a EC-Schnorr-DCRv0 signature is described in
 	// README.md and is reproduced here for reference:
 	//
@@ -229,7 +229,7 @@ func schnorrVerify(sig *Signature, hash []byte,
 // error to support better testing while the exported method simply returns a
 // bool indicating success or failure.
 func schnorrVerifyBlake256(sig *Signature, hash []byte,
-	pubKey *secp256k1.PublicKey) error {
+	pubKey *secp256k1.PublicKey) (e error) {
 	// The algorithm for producing a EC-Schnorr-DCRv0 signature is described in
 	// README.md and is reproduced here for reference:
 	//

@@ -355,7 +355,7 @@ func TestDoubleJacobian(t *testing.T) {
 // checkNAFEncoding returns an error if the provided positive and negative
 // portions of an overall NAF encoding do not adhere to the requirements or they
 // do not sum back to the provided original value.
-func checkNAFEncoding(pos, neg []byte, origValue *big.Int) error {
+func checkNAFEncoding(pos, neg []byte, origValue *big.Int) (e error) {
 	// NAF must not have a leading zero byte and the number of negative
 	// bytes must not exceed the positive portion.
 	if len(pos) > 0 && pos[0] == 0 {
@@ -611,7 +611,7 @@ func modNBitLen(s *ModNScalar) uint16 {
 
 // checkLambdaDecomposition returns an error if the provided decomposed scalars
 // do not satisfy the required equation or they are not small in magnitude.
-func checkLambdaDecomposition(origK, k1, k2 *ModNScalar) error {
+func checkLambdaDecomposition(origK, k1, k2 *ModNScalar) (e error) {
 	// Recompose the scalar from the decomposed scalars to ensure they satisfy
 	// the required equation.
 	calcK := new(ModNScalar).Mul2(k2, endoLambda).Add(k1)

@@ -256,7 +256,7 @@ func NewContext(signingKey *btcec.SecretKey, shouldSort bool,
 
 // combineSignerKeys is used to compute the aggregated signer key once all the
 // signers are known.
-func (c *Context) combineSignerKeys() error {
+func (c *Context) combineSignerKeys() (e error) {
 	// As a sanity check, make sure the signing key is actually
 	// amongst the sit of signers.
 	var keyFound bool

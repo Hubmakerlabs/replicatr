@@ -14,7 +14,7 @@ import (
 	"github.com/nbd-wtf/nostr-sdk"
 )
 
-func doProfile(cCtx *cli.Context) error {
+func doProfile(cCtx *cli.Context) (e error) {
 	user := cCtx.String("u")
 	j := cCtx.Bool("json")
 

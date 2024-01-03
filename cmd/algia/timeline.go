@@ -21,7 +21,7 @@ import (
 	"github.com/nbd-wtf/nostr-sdk"
 )
 
-func doDMList(cCtx *cli.Context) error {
+func doDMList(cCtx *cli.Context) (e error) {
 	j := cCtx.Bool("json")
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
@@ -94,7 +94,7 @@ func doDMList(cCtx *cli.Context) error {
 	return nil
 }
 
-func doDMTimeline(cCtx *cli.Context) error {
+func doDMTimeline(cCtx *cli.Context) (e error) {
 	u := cCtx.String("u")
 	j := cCtx.Bool("json")
 	extra := cCtx.Bool("extra")
@@ -141,7 +141,7 @@ func doDMTimeline(cCtx *cli.Context) error {
 	return nil
 }
 
-func doDMPost(cCtx *cli.Context) error {
+func doDMPost(cCtx *cli.Context) (e error) {
 	u := cCtx.String("u")
 	stdin := cCtx.Bool("stdin")
 	if !stdin && cCtx.Args().Len() == 0 {
@@ -226,7 +226,7 @@ func doDMPost(cCtx *cli.Context) error {
 	return nil
 }
 
-func doPost(cCtx *cli.Context) error {
+func doPost(cCtx *cli.Context) (e error) {
 	stdin := cCtx.Bool("stdin")
 	if !stdin && cCtx.Args().Len() == 0 {
 		return cli.ShowSubcommandHelp(cCtx)
@@ -333,7 +333,7 @@ func doPost(cCtx *cli.Context) error {
 	return nil
 }
 
-func doReply(cCtx *cli.Context) error {
+func doReply(cCtx *cli.Context) (e error) {
 	stdin := cCtx.Bool("stdin")
 	id := cCtx.String("id")
 	quote := cCtx.Bool("quote")
@@ -442,7 +442,7 @@ func doReply(cCtx *cli.Context) error {
 	return nil
 }
 
-func doRepost(cCtx *cli.Context) error {
+func doRepost(cCtx *cli.Context) (e error) {
 	id := cCtx.String("id")
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
@@ -510,7 +510,7 @@ func doRepost(cCtx *cli.Context) error {
 	return nil
 }
 
-func doUnrepost(cCtx *cli.Context) error {
+func doUnrepost(cCtx *cli.Context) (e error) {
 	id := cCtx.String("id")
 	if evp := sdk.InputToEventPointer(id); evp != nil {
 		id = evp.ID
@@ -574,7 +574,7 @@ func doUnrepost(cCtx *cli.Context) error {
 	return nil
 }
 
-func doLike(cCtx *cli.Context) error {
+func doLike(cCtx *cli.Context) (e error) {
 	id := cCtx.String("id")
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
@@ -654,7 +654,7 @@ func doLike(cCtx *cli.Context) error {
 	return nil
 }
 
-func doUnlike(cCtx *cli.Context) error {
+func doUnlike(cCtx *cli.Context) (e error) {
 	id := cCtx.String("id")
 	if evp := sdk.InputToEventPointer(id); evp != nil {
 		id = evp.ID
@@ -718,7 +718,7 @@ func doUnlike(cCtx *cli.Context) error {
 	return nil
 }
 
-func doDelete(cCtx *cli.Context) error {
+func doDelete(cCtx *cli.Context) (e error) {
 	id := cCtx.String("id")
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
@@ -767,7 +767,7 @@ func doDelete(cCtx *cli.Context) error {
 	return nil
 }
 
-func doSearch(cCtx *cli.Context) error {
+func doSearch(cCtx *cli.Context) (e error) {
 	n := cCtx.Int("n")
 	j := cCtx.Bool("json")
 	extra := cCtx.Bool("extra")
@@ -798,7 +798,7 @@ func doSearch(cCtx *cli.Context) error {
 	return nil
 }
 
-func doStream(cCtx *cli.Context) error {
+func doStream(cCtx *cli.Context) (e error) {
 	kinds := cCtx.IntSlice("kind")
 	authors := cCtx.StringSlice("author")
 	f := cCtx.Bool("follow")
@@ -886,7 +886,7 @@ func doStream(cCtx *cli.Context) error {
 	return nil
 }
 
-func doTimeline(cCtx *cli.Context) error {
+func doTimeline(cCtx *cli.Context) (e error) {
 	n := cCtx.Int("n")
 	j := cCtx.Bool("json")
 	extra := cCtx.Bool("extra")
@@ -915,7 +915,7 @@ func doTimeline(cCtx *cli.Context) error {
 	return nil
 }
 
-func postMsg(cCtx *cli.Context, msg string) error {
+func postMsg(cCtx *cli.Context, msg string) (e error) {
 	cfg := cCtx.App.Metadata["config"].(*Config)
 
 	var sk string
@@ -958,10 +958,10 @@ func postMsg(cCtx *cli.Context, msg string) error {
 	return nil
 }
 
-func doPowa(cCtx *cli.Context) error {
+func doPowa(cCtx *cli.Context) (e error) {
 	return postMsg(cCtx, "ぽわ〜")
 }
 
-func doPuru(cCtx *cli.Context) error {
+func doPuru(cCtx *cli.Context) (e error) {
 	return postMsg(cCtx, "(((( ˙꒳​˙  ))))ﾌﾟﾙﾌﾟﾙﾌﾟﾙﾌﾟﾙﾌﾟﾙﾌﾟﾙﾌﾟﾙ")
 }

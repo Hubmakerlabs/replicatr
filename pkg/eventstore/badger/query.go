@@ -35,7 +35,7 @@ func (b BadgerBackend) QueryEvents(ctx context.Context, filter *nostr.Filter) (c
 	}
 
 	go func() {
-		err := b.View(func(txn *badger.Txn) error {
+		err := b.View(func(txn *badger.Txn) (e error) {
 			// iterate only through keys and in reverse order
 			opts := badger.IteratorOptions{
 				Reverse: true,
@@ -78,7 +78,7 @@ func (b BadgerBackend) QueryEvents(ctx context.Context, filter *nostr.Filter) (c
 								idx, q.prefix, key, err)
 							return
 						}
-						item.Value(func(val []byte) error {
+						item.Value(func(val []byte) (e error) {
 							evt := &nostr.Event{}
 							if err := nostr_binary.Unmarshal(val, evt); err != nil {
 								log.Printf("badger: value read error (id %x): %s\n", val[0:32], err)

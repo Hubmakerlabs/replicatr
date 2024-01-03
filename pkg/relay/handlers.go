@@ -49,7 +49,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 	var n int
 	if n, e = rand.Read(challenge); fails(e) {
-		log.E.F("only read %d bytes from system CSPRNG", n)
+		rl.Log.E.F("only read %d bytes from system CSPRNG", n)
 	}
 	ws := &WebSocket{
 		conn:      conn,
@@ -70,7 +70,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		ticker.Stop()
 		cancel()
 		if _, ok := rl.clients.Load(conn); ok {
-			log.D.Chk(conn.Close())
+			rl.Log.D.Chk(conn.Close())
 			rl.clients.Delete(conn)
 			removeListener(ws)
 		}
@@ -78,9 +78,9 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer kill()
 		conn.SetReadLimit(rl.MaxMessageSize)
-		log.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
-		conn.SetPongHandler(func(string) error {
-			log.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
+		rl.Log.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
+		conn.SetPongHandler(func(string) (e error) {
+			rl.Log.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
 			return nil
 		})
 		for _, onConnect := range rl.OnConnect {
@@ -103,13 +103,14 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 				}
 				return
 			}
-			log.D.F("received message on websocket: '%s'", string(message))
+			rl.Log.D.F("received message on websocket: '%s'", string(message))
 			if typ == websocket.PingMessage {
-				log.D.Chk(ws.WriteMessage(websocket.PongMessage, nil))
+				rl.Log.D.Chk(ws.WriteMessage(websocket.PongMessage, nil))
 				continue
 			}
 			go func(message []byte) {
 				var e error
+				var ok bool
 				var envelope nip1.Enveloper
 				if envelope, _, _, e = nip1.ProcessEnvelope(message); fails(e) || envelope == nil {
 					return
@@ -120,7 +121,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					hash := sha256.Sum256(env.Event.ToCanonical().Bytes())
 					id := hex.EncodeToString(hash[:])
 					if nip1.EventID(id) != env.Event.ID {
-						log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+						rl.Log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
 							EventID: env.Event.ID,
 							OK:      false,
 							Reason:  "invalid: id is computed incorrectly",
@@ -128,15 +129,15 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					// check signature
-					if ok, err := env.Event.CheckSignature(); err != nil {
-						log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+					if ok, e = env.Event.CheckSignature(); rl.Log.E.Chk(e) {
+						rl.Log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
 							EventID: env.Event.ID,
 							OK:      false,
 							Reason:  "error: failed to verify signature",
 						}))
 						return
 					} else if !ok {
-						log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+						rl.Log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
 							EventID: env.Event.ID,
 							OK:      false,
 							Reason:  "invalid: signature is invalid",
@@ -162,11 +163,11 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 							RequestAuth(ctx)
 						}
 					}
-					log.D.Chk(ws.WriteJSON(nip1.OKEnvelope{
+					rl.Log.D.Chk(ws.WriteJSON(nip1.OKEnvelope{
 						EventID: env.Event.ID, OK: ok, Reason: reason}))
 				case *nip45.CountRequestEnvelope:
 					if rl.CountEvents == nil {
-						log.E.Chk(ws.WriteJSON(nip1.ClosedEnvelope{
+						rl.Log.E.Chk(ws.WriteJSON(nip1.ClosedEnvelope{
 							SubscriptionID: env.SubscriptionID,
 							Reason: "unsupported: " +
 								"this relay does not support NIP-45",
@@ -177,7 +178,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					for _, filter := range env.Filters {
 						total += rl.handleCountRequest(ctx, ws, filter)
 					}
-					log.D.Chk(ws.WriteJSON(nip45.CountResponseEnvelope{
+					rl.Log.D.Chk(ws.WriteJSON(nip45.CountResponseEnvelope{
 						SubscriptionID: env.SubscriptionID,
 						Count:          total,
 					}))
@@ -200,7 +201,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 							if strings.HasPrefix(reason, "auth-required:") {
 								RequestAuth(ctx)
 							}
-							log.D.Chk(ws.WriteJSON(nip1.ClosedEnvelope{
+							rl.Log.D.Chk(ws.WriteJSON(nip1.ClosedEnvelope{
 								SubscriptionID: env.SubscriptionID,
 								Reason:         reason,
 							}))
@@ -214,7 +215,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						// EOSE message
 						eose.Wait()
 						cancelReqCtx(nil)
-						log.E.Chk(ws.WriteJSON(nip1.EOSEEnvelope{
+						rl.Log.E.Chk(ws.WriteJSON(nip1.EOSEEnvelope{
 							SubscriptionID: env.SubscriptionID}))
 					}()
 
@@ -230,10 +231,10 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 						ws.AuthedPublicKey = pubkey
 						close(ws.Authed)
-						log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+						rl.Log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
 							EventID: env.Event.ID, OK: true}))
 					} else {
-						log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
+						rl.Log.E.Chk(ws.WriteJSON(nip1.OKEnvelope{
 							EventID: env.Event.ID,
 							OK:      false,
 							Reason:  "error: failed to authenticate",
@@ -273,5 +274,5 @@ func (rl *Relay) HandleNIP11(w http.ResponseWriter, r *http.Request) {
 	for _, ovw := range rl.OverwriteRelayInformation {
 		info = ovw(r.Context(), r, info)
 	}
-	log.E.Chk(json.NewEncoder(w).Encode(info))
+	rl.Log.E.Chk(json.NewEncoder(w).Encode(info))
 }

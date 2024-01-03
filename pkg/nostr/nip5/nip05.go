@@ -47,7 +47,7 @@ func QueryIdentifier(ctx context.Context, fullname string) (*pointers.Profile, e
 	}
 
 	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		CheckRedirect: func(req *http.Request, via []*http.Request) (e error) {
 			return http.ErrUseLastResponse
 		},
 	}

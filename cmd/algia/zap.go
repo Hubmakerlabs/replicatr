@@ -56,7 +56,7 @@ type PayResponse struct {
 	} `json:"result"`
 }
 
-func pay(cfg *Config, invoice string) error {
+func pay(cfg *Config, invoice string) (e error) {
 	uri, err := url.Parse(cfg.NwcURI)
 	if err != nil {
 		return err
@@ -186,7 +186,7 @@ func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
 	return &lp, nil
 }
 
-func doZap(cCtx *cli.Context) error {
+func doZap(cCtx *cli.Context) (e error) {
 	amount := cCtx.Uint64("amount")
 	comment := cCtx.String("comment")
 	if cCtx.Args().Len() == 0 {
