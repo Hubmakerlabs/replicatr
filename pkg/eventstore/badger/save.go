@@ -6,8 +6,8 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
 	"github.com/dgraph-io/badger/v4"
-	"github.com/nbd-wtf/go-nostr"
-	nostr_binary "github.com/nbd-wtf/go-nostr/binary"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
 )
 
 func (b *BadgerBackend) SaveEvent(ctx context.Context, evt *nostr.Event) (e error) {

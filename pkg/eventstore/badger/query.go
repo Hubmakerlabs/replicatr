@@ -9,8 +9,8 @@ import (
 	"log"
 
 	"github.com/dgraph-io/badger/v4"
-	"github.com/nbd-wtf/go-nostr"
-	nostr_binary "github.com/nbd-wtf/go-nostr/binary"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
 )
 
 type query struct {

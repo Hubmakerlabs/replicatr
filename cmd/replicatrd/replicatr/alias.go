@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip11"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/fasthttp/websocket"
-	"github.com/nbd-wtf/go-nostr"
-	"github.com/nbd-wtf/go-nostr/nip11"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 

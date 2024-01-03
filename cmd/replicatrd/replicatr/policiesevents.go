@@ -1,7 +1,7 @@
 package replicatr
 
 import (
-	"github.com/nbd-wtf/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"golang.org/x/exp/slices"
 )
 

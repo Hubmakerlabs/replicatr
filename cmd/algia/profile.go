@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
 	"github.com/urfave/cli/v2"
 
-	"github.com/nbd-wtf/go-nostr"
-	"github.com/nbd-wtf/go-nostr/nip19"
-	"github.com/nbd-wtf/nostr-sdk"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 )
 
 func doProfile(cCtx *cli.Context) (e error) {

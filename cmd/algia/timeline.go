@@ -12,13 +12,13 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
 	"github.com/urfave/cli/v2"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/fatih/color"
-	"github.com/nbd-wtf/go-nostr"
-	"github.com/nbd-wtf/go-nostr/nip04"
-	"github.com/nbd-wtf/go-nostr/nip19"
-	"github.com/nbd-wtf/nostr-sdk"
 )
 
 func doDMList(cCtx *cli.Context) (e error) {

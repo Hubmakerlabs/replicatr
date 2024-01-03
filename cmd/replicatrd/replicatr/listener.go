@@ -3,7 +3,7 @@ package replicatr
 import (
 	"fmt"
 
-	"github.com/nbd-wtf/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
@@ -64,19 +64,3 @@ func removeListenerId(ws *WebSocket, id string) {
 // remove WebSocket conn from listeners (no need to cancel contexts as they are
 // all inherited from the main connection context)
 func removeListener(ws *WebSocket) { listeners.Delete(ws) }
-
-func notifyListeners(event *Event) {
-	listeners.Range(func(ws *WebSocket, subs ListenerMap) bool {
-		subs.Range(func(id string, listener *Listener) bool {
-			if !listener.filters.Match(event) {
-				return true
-			}
-			log.E.Chk(ws.WriteJSON(EventEnvelope{
-				SubscriptionID: &id,
-				Event:          *event},
-			))
-			return true
-		})
-		return true
-	})
-}
