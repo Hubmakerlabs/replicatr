@@ -34,9 +34,9 @@ func (rl *Relay) handleRequest(ctx context.Context, id nip1.SubscriptionID,
 	// but we might be fetching stuff from multiple places)
 	eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
-		ch, err := query(ctx, filter)
-		if err != nil {
-			rl.Log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: err.Error()}))
+		var ch chan *nip1.Event
+		if ch, e = query(ctx, filter); rl.Log.E.Chk(e) {
+			rl.Log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: e.Error()}))
 			eose.Done()
 			continue
 		}

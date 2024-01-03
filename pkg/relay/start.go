@@ -2,6 +2,7 @@ package relay
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"strconv"
@@ -18,11 +19,10 @@ func (rl *Relay) Router() *http.ServeMux {
 // Start creates an http server and starts listening on given host and port.
 func (rl *Relay) Start(host string, port int, started ...chan bool) (e error) {
 	addr := net.JoinHostPort(host, strconv.Itoa(port))
-	ln, err := net.Listen("tcp", addr)
-	if err != nil {
-		return err
+	var ln net.Listener
+	if ln, e = net.Listen("tcp", addr); rl.Log.E.Chk(e) {
+		return
 	}
-
 	rl.Addr = ln.Addr().String()
 	rl.httpServer = &http.Server{
 		Handler:      cors.Default().Handler(rl),
@@ -31,16 +31,14 @@ func (rl *Relay) Start(host string, port int, started ...chan bool) (e error) {
 		ReadTimeout:  2 * time.Second,
 		IdleTimeout:  30 * time.Second,
 	}
-
 	// notify caller that we're starting
 	for _, started := range started {
 		close(started)
 	}
-
-	if err := rl.httpServer.Serve(ln); err == http.ErrServerClosed {
+	if e = rl.httpServer.Serve(ln); errors.Is(e, http.ErrServerClosed) {
 		return nil
-	} else if err != nil {
-		return err
+	} else if rl.Log.E.Chk(e) {
+		return
 	} else {
 		return nil
 	}
@@ -48,11 +46,10 @@ func (rl *Relay) Start(host string, port int, started ...chan bool) (e error) {
 
 // Shutdown sends a websocket close control message to all connected clients.
 func (rl *Relay) Shutdown(ctx context.Context) {
-	rl.httpServer.Shutdown(ctx)
-
+	rl.Log.E.Chk(rl.httpServer.Shutdown(ctx))
 	rl.clients.Range(func(conn *websocket.Conn, _ struct{}) bool {
-		conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second))
-		conn.Close()
+		rl.Log.E.Chk(conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second)))
+		rl.Log.E.Chk(conn.Close())
 		rl.clients.Delete(conn)
 		return true
 	})
