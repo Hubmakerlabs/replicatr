@@ -15,14 +15,14 @@ func main() {
 	log2.SetLogLevel(log2.Trace)
 	rl := replicatr.NewRelay(appName)
 	db := &badger.BadgerBackend{Path: "/tmp/replicatr-badger"}
-	if e:= db.Init(); rl.Log.E.Chk(e) {
-		rl.Log.E.F("unable to start database: '%s'", e)
+	if e:= db.Init(); rl.E.Chk(e) {
+		rl.E.F("unable to start database: '%s'", e)
 		os.Exit(1)
 	}
 	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
 	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
 	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
 	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
-	rl.Log.I.Ln("running on :3334")
-	rl.Log.E.Chk(http.ListenAndServe(":3334", rl))
+	rl.I.Ln("running on :3334")
+	rl.E.Chk(http.ListenAndServe(":3334", rl))
 }

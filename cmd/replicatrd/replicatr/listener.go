@@ -15,43 +15,36 @@ type Listener struct {
 
 var listeners = xsync.NewTypedMapOf[*WebSocket, *xsync.MapOf[string, *Listener]](pointerHasher[WebSocket])
 
-func GetListeningFilters() nostr.Filters {
-	respfilters := make(nostr.Filters, 0, listeners.Size()*2)
-
+func GetListeningFilters() (respFilters nostr.Filters) {
+	respFilters = make(nostr.Filters, 0, listeners.Size()*2)
 	// here we go through all the existing listeners
 	listeners.Range(func(_ *WebSocket, subs *xsync.MapOf[string, *Listener]) bool {
 		subs.Range(func(_ string, listener *Listener) bool {
-			for _, listenerfilter := range listener.filters {
-				for _, respfilter := range respfilters {
-					// check if this filter specifically is already added to respfilters
-					if nostr.FilterEqual(listenerfilter, respfilter) {
-						goto nextconn
+			for _, listenerFilter := range listener.filters {
+				for _, respFilter := range respFilters {
+					// check if this filter specifically is already added to respFilters
+					if nostr.FilterEqual(listenerFilter, respFilter) {
+						goto next
 					}
 				}
-
-				// field not yet present on respfilters, add it
-				respfilters = append(respfilters, listenerfilter)
-
+				// field not yet present on respFilters, add it
+				respFilters = append(respFilters, listenerFilter)
 				// continue to the next filter
-			nextconn:
+			next:
 				continue
 			}
-
 			return true
 		})
-
 		return true
 	})
-
-	// respfilters will be a slice with all the distinct filter we currently have active
-	return respfilters
+	return
 }
 
-func setListener(id string, ws *WebSocket, filters nostr.Filters, cancel context.CancelCauseFunc) {
+func setListener(id string, ws *WebSocket, f Filters, c context.CancelCauseFunc) {
 	subs, _ := listeners.LoadOrCompute(ws, func() *xsync.MapOf[string, *Listener] {
 		return xsync.NewMapOf[*Listener]()
 	})
-	subs.Store(id, &Listener{filters: filters, cancel: cancel})
+	subs.Store(id, &Listener{filters: f, cancel: c})
 }
 
 // remove a specific subscription id from listeners for a given ws client
@@ -69,17 +62,15 @@ func removeListenerId(ws *WebSocket, id string) {
 
 // remove WebSocket conn from listeners
 // (no need to cancel contexts as they are all inherited from the main connection context)
-func removeListener(ws *WebSocket) {
-	listeners.Delete(ws)
-}
+func removeListener(ws *WebSocket) { listeners.Delete(ws) }
 
-func notifyListeners(event *nostr.Event) {
+func notifyListeners(event Event) {
 	listeners.Range(func(ws *WebSocket, subs *xsync.MapOf[string, *Listener]) bool {
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(event) {
 				return true
 			}
-			ws.WriteJSON(nostr.EventEnvelope{SubscriptionID: &id, Event: *event})
+			log.E.Chk(ws.WriteJSON(nostr.EventEnvelope{SubscriptionID: &id, Event: *event}))
 			return true
 		})
 		return true

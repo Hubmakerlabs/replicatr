@@ -20,7 +20,7 @@ func (rl *Relay) Router() *http.ServeMux {
 func (rl *Relay) Start(host string, port int, started ...chan bool) (e error) {
 	addr := net.JoinHostPort(host, strconv.Itoa(port))
 	var ln net.Listener
-	if ln, e = net.Listen("tcp", addr); rl.Log.E.Chk(e) {
+	if ln, e = net.Listen("tcp", addr); rl.E.Chk(e) {
 		return
 	}
 	rl.Addr = ln.Addr().String()
@@ -37,7 +37,7 @@ func (rl *Relay) Start(host string, port int, started ...chan bool) (e error) {
 	}
 	if e = rl.httpServer.Serve(ln); errors.Is(e, http.ErrServerClosed) {
 		return nil
-	} else if rl.Log.E.Chk(e) {
+	} else if rl.E.Chk(e) {
 		return
 	} else {
 		return nil
@@ -46,10 +46,10 @@ func (rl *Relay) Start(host string, port int, started ...chan bool) (e error) {
 
 // Shutdown sends a websocket close control message to all connected clients.
 func (rl *Relay) Shutdown(ctx context.Context) {
-	rl.Log.E.Chk(rl.httpServer.Shutdown(ctx))
+	rl.E.Chk(rl.httpServer.Shutdown(ctx))
 	rl.clients.Range(func(conn *websocket.Conn, _ struct{}) bool {
-		rl.Log.E.Chk(conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second)))
-		rl.Log.E.Chk(conn.Close())
+		rl.E.Chk(conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second)))
+		rl.E.Chk(conn.Close())
 		rl.clients.Delete(conn)
 		return true
 	})

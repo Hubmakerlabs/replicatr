@@ -1,28 +1,31 @@
 package replicatr
 
 import (
-	"context"
-	"errors"
+	err "errors"
 	"fmt"
 
-	"github.com/fiatjaf/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/nbd-wtf/go-nostr"
 )
 
-// AddEvent sends an event through then normal add pipeline, as if it was received from a websocket.
-func (rl *Relay) AddEvent(ctx context.Context, evt *nostr.Event) (e error) {
+// AddEvent sends an event through then normal add pipeline, as if it was
+// received from a websocket.
+func (rl *Relay) AddEvent(ctx Ctx, evt Event) (e error) {
 	if evt == nil {
-		return errors.New("error: event is nil")
+		e = err.New("error: event is nil")
+		rl.E.Ln(e)
+		return
 	}
 	for _, rejectors := range rl.RejectEvent {
 		if reject, msg := rejectors(ctx, evt); reject {
 			if msg == "" {
-				e = errors.New("blocked: no reason")
-				rl.Log.E.Ln(e)
+				e = err.New("blocked: no reason")
+				rl.E.Ln(e)
 				return
 			} else {
-				e = errors.New(nostr.NormalizeOKMessage(msg, "blocked"))
-				rl.Log.E.Ln(e)
+				e = err.New(normalize.OKMessage(msg, "blocked"))
+				rl.E.Ln(e)
 				return
 			}
 		}
@@ -35,12 +38,12 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nostr.Event) (e error) {
 			for _, query := range rl.QueryEvents {
 				var ch chan *nostr.Event
 				ch, e = query(ctx, &nostr.Filter{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}})
-				if rl.Log.E.Chk(e) {
+				if rl.E.Chk(e) {
 					continue
 				}
 				if previous := <-ch; previous != nil && isOlder(previous, evt) {
 					for _, del := range rl.DeleteEvent {
-						rl.Log.D.Chk(del(ctx, previous))
+						rl.D.Chk(del(ctx, previous))
 					}
 				}
 			}
@@ -54,12 +57,12 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nostr.Event) (e error) {
 						Authors: []string{evt.PubKey},
 						Kinds:   []int{evt.Kind},
 						Tags:    nostr.TagMap{"d": []string{d.Value()}},
-					}); rl.Log.E.Chk(e) {
+					}); rl.E.Chk(e) {
 						continue
 					}
 					if previous := <-ch; previous != nil && isOlder(previous, evt) {
 						for _, del := range rl.DeleteEvent {
-							rl.Log.E.Chk(del(ctx, previous))
+							rl.E.Chk(del(ctx, previous))
 						}
 					}
 				}
@@ -67,12 +70,12 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nostr.Event) (e error) {
 		}
 		// store
 		for _, store := range rl.StoreEvent {
-			if saveErr := store(ctx, evt); rl.Log.E.Chk(saveErr){
+			if saveErr := store(ctx, evt); rl.E.Chk(saveErr) {
 				switch {
-				case errors.Is(saveErr, eventstore.ErrDupEvent):
+				case err.Is(saveErr, eventstore.ErrDupEvent):
 					return nil
 				default:
-					return fmt.Errorf(nostr.NormalizeOKMessage(saveErr.Error(), "error"))
+					return fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))
 				}
 			}
 		}

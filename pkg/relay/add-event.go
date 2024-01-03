@@ -35,12 +35,12 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) (e error) {
 				if ch, e = query(ctx, &nip1.Filter{
 					Authors: []string{evt.PubKey},
 					Kinds:   kinds.T{evt.Kind},
-				}); rl.Log.E.Chk(e) {
+				}); rl.E.Chk(e) {
 					continue
 				}
 				if previous := <-ch; previous != nil && isOlder(previous, evt) {
 					for _, del := range rl.DeleteEvent {
-						rl.Log.E.Chk(del(ctx, previous))
+						rl.E.Chk(del(ctx, previous))
 					}
 				}
 			}
@@ -53,7 +53,7 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) (e error) {
 						Authors: []string{evt.PubKey},
 						Kinds:   kinds.T{evt.Kind},
 						Tags:    nip1.TagMap{"d": []string{d.Value()}},
-					}); rl.Log.E.Chk(e) {
+					}); rl.E.Chk(e) {
 						continue
 					}
 					if previous := <-ch; previous != nil && isOlder(previous, evt) {
@@ -95,7 +95,7 @@ func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nip1.Event) (e er
 		if len(tag) >= 2 && tag[0] == "e" {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
-				if ch, e = query(ctx, &nip1.Filter{IDs: []string{tag[1]}}); rl.Log.E.Chk(e) {
+				if ch, e = query(ctx, &nip1.Filter{IDs: []string{tag[1]}}); rl.E.Chk(e) {
 					continue
 				}
 				target := <-ch
@@ -115,7 +115,7 @@ func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nip1.Event) (e er
 				if acceptDeletion {
 					// delete it
 					for _, del := range rl.DeleteEvent {
-						rl.Log.E.Chk(del(ctx, target))
+						rl.E.Chk(del(ctx, target))
 					}
 				} else {
 					// fail and stop here

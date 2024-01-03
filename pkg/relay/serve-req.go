@@ -26,7 +26,7 @@ func (rl *Relay) handleRequest(ctx context.Context, id nip1.SubscriptionID,
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if reject, msg := reject(ctx, filter); reject {
-			rl.Log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: msg}))
+			rl.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: msg}))
 			return errors.New(nip1.OKMessage(nip1.OKBlocked, msg))
 		}
 	}
@@ -35,8 +35,8 @@ func (rl *Relay) handleRequest(ctx context.Context, id nip1.SubscriptionID,
 	eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
 		var ch chan *nip1.Event
-		if ch, e = query(ctx, filter); rl.Log.E.Chk(e) {
-			rl.Log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: e.Error()}))
+		if ch, e = query(ctx, filter); rl.E.Chk(e) {
+			rl.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: e.Error()}))
 			eose.Done()
 			continue
 		}
@@ -45,7 +45,7 @@ func (rl *Relay) handleRequest(ctx context.Context, id nip1.SubscriptionID,
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(ctx, event)
 				}
-				rl.Log.D.Chk(ws.WriteJSON(nip1.EventEnvelope{SubscriptionID: id, Event: event}))
+				rl.D.Chk(ws.WriteJSON(nip1.EventEnvelope{SubscriptionID: id, Event: event}))
 			}
 			eose.Done()
 		}(ch)
@@ -61,7 +61,7 @@ func (rl *Relay) handleCountRequest(ctx context.Context, ws *WebSocket, filter *
 	// then check if we'll reject this filter
 	for _, reject := range rl.RejectCountFilter {
 		if rejecting, msg := reject(ctx, filter); rejecting {
-			rl.Log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: msg}))
+			rl.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: msg}))
 			return 0
 		}
 	}
@@ -70,8 +70,8 @@ func (rl *Relay) handleCountRequest(ctx context.Context, ws *WebSocket, filter *
 	for _, count := range rl.CountEvents {
 		var e error
 		var res int64
-		if res, e = count(ctx, filter); rl.Log.E.Chk(e) {
-			rl.Log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: e.Error()}))
+		if res, e = count(ctx, filter); rl.E.Chk(e) {
+			rl.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: e.Error()}))
 		}
 		subtotal += res
 	}

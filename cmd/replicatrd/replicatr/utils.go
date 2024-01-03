@@ -1,8 +1,6 @@
 package replicatr
 
 import (
-	"context"
-
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/sebest/xff"
 )
@@ -12,33 +10,25 @@ const (
 	subscriptionIdKey
 )
 
-func RequestAuth(ctx context.Context) {
+func RequestAuth(ctx Ctx) {
 	ws := GetConnection(ctx)
 	ws.authLock.Lock()
 	if ws.Authed == nil {
 		ws.Authed = make(chan struct{})
 	}
 	ws.authLock.Unlock()
-	ws.WriteJSON(nostr.AuthEnvelope{Challenge: &ws.Challenge})
+	log.E.Chk(ws.WriteJSON(nostr.AuthEnvelope{Challenge: &ws.Challenge}))
 }
 
-func GetConnection(ctx context.Context) *WebSocket {
-	return ctx.Value(wsKey).(*WebSocket)
-}
+func GetConnection(ctx Ctx) *WebSocket { return ctx.Value(wsKey).(*WebSocket) }
 
-func GetAuthed(ctx context.Context) string {
-	return GetConnection(ctx).AuthedPublicKey
-}
+func GetAuthed(ctx Ctx) string { return GetConnection(ctx).AuthedPublicKey }
 
-func GetIP(ctx context.Context) string {
-	return xff.GetRemoteAddr(GetConnection(ctx).Request)
-}
+func GetIP(ctx Ctx) string { return xff.GetRemoteAddr(GetConnection(ctx).Request) }
 
-func GetSubscriptionID(ctx context.Context) string {
-	return ctx.Value(subscriptionIdKey).(string)
-}
+func GetSubscriptionID(ctx Ctx) string { return ctx.Value(subscriptionIdKey).(string) }
 
-func GetOpenSubscriptions(ctx context.Context) []nostr.Filter {
+func GetOpenSubscriptions(ctx Ctx) Filters {
 	if subs, ok := listeners.Load(GetConnection(ctx)); ok {
 		res := make([]nostr.Filter, 0, listeners.Size()*2)
 		subs.Range(func(_ string, sub *Listener) bool {
