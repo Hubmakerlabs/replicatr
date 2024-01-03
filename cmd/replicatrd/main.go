@@ -1,35 +1,27 @@
 package main
 
 import (
-	"encoding/hex"
-	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/relay"
-	log2 "mleku.online/git/log"
 	"net/http"
+	"os"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/cmd/replicatrd/replicatr"
+	"github.com/Hubmakerlabs/replicatr/pkg/eventstore/badger"
 )
 
-var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+const appName = "replicatr"
 
 func main() {
-	log2.SetLogLevel(log2.Trace)
-	rl := relay.New()
+	r := replicatr.NewRelay(appName)
 
-	db := badger.Backend{Path: "/tmp/khatru-badgern-tmp"}
+	db := badger.BadgerBackend{Path: "/tmp/replicatr-badger"}
 	if err := db.Init(); err != nil {
-		panic(err)
+		r.Log.E.F("unable to start database: '%s'", err)
+		os.Exit(1)
 	}
-
-	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
-	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
-	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
-	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
-
-	fmt.Println("running on :3334")
-	http.ListenAndServe(":3334", rl)
+	r.StoreEvent = append(r.StoreEvent, db.SaveEvent)
+	r.QueryEvents = append(r.QueryEvents, db.QueryEvents)
+	r.CountEvents = append(r.CountEvents, db.CountEvents)
+	r.DeleteEvent = append(r.DeleteEvent, db.DeleteEvent)
+	r.Log.I.Ln("running on :3334")
+	r.Log.E.Chk(http.ListenAndServe(":3334", r))
 }
