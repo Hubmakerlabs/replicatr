@@ -26,7 +26,7 @@ func (rl *Relay) handleFilter(ctx Ctx, id string,
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(ctx, f); rej {
-			rl.E.Chk(ws.WriteJSON(NoticeEnvelope(msg)))
+			rl.E.Chk(ws.WriteJSON(&NoticeEnvelope{Text: msg}))
 			return err.New(normalize.OKMessage(msg, "blocked"))
 		}
 	}
@@ -36,7 +36,7 @@ func (rl *Relay) handleFilter(ctx Ctx, id string,
 	for _, query := range rl.QueryEvents {
 		var ch chan *Event
 		if ch, e = query(ctx, f); rl.E.Chk(e) {
-			rl.E.Chk(ws.WriteJSON(NoticeEnvelope(e.Error())))
+			rl.E.Chk(ws.WriteJSON(&NoticeEnvelope{Text: e.Error()}))
 			eose.Done()
 			continue
 		}
