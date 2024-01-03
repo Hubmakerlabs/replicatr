@@ -8,13 +8,13 @@ import (
 	"github.com/nbd-wtf/go-nostr"
 )
 
-func (rl *Relay) handleRequest(ctx context.Context, id string, eose *sync.WaitGroup, ws *WebSocket, filter nostr.Filter) error {
+func (rl *Relay) handleRequest(ctx context.Context, id string, eose *sync.WaitGroup, ws *WebSocket, filter *nostr.Filter) error {
 	defer eose.Done()
 
 	// overwrite the filter (for example, to eliminate some kinds or
 	// that we know we don't support)
 	for _, ovw := range rl.OverwriteFilter {
-		ovw(ctx, &filter)
+		ovw(ctx, filter)
 	}
 
 	if filter.Limit < 0 {
@@ -57,10 +57,10 @@ func (rl *Relay) handleRequest(ctx context.Context, id string, eose *sync.WaitGr
 	return nil
 }
 
-func (rl *Relay) handleCountRequest(ctx context.Context, ws *WebSocket, filter nostr.Filter) int64 {
+func (rl *Relay) handleCountRequest(ctx context.Context, ws *WebSocket, filter *nostr.Filter) int64 {
 	// overwrite the filter (for example, to eliminate some kinds or tags that we know we don't support)
 	for _, ovw := range rl.OverwriteCountFilter {
-		ovw(ctx, &filter)
+		ovw(ctx, filter)
 	}
 
 	// then check if we'll reject this filter

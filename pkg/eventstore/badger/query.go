@@ -26,7 +26,7 @@ type queryEvent struct {
 	query int
 }
 
-func (b BadgerBackend) QueryEvents(ctx context.Context, filter nostr.Filter) (chan *nostr.Event, error) {
+func (b BadgerBackend) QueryEvents(ctx context.Context, filter *nostr.Filter) (chan *nostr.Event, error) {
 	ch := make(chan *nostr.Event)
 
 	queries, extraFilter, since, err := prepareQueries(filter)
@@ -192,7 +192,7 @@ func (pq *priorityQueue) Pop() any {
 	return item
 }
 
-func prepareQueries(filter nostr.Filter) (
+func prepareQueries(filter *nostr.Filter) (
 	queries []query,
 	extraFilter *nostr.Filter,
 	since uint32,
