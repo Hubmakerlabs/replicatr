@@ -19,7 +19,7 @@ type RelayWrapper struct {
 
 var _ RelayInterface = (*RelayWrapper)(nil)
 
-func (w RelayWrapper) Publish(ctx context.Context, evt *nostr.Event) error {
+func (w RelayWrapper) Publish(ctx context.Context, evt *nostr.Event) (e error) {
 	if 20000 <= evt.Kind && evt.Kind < 30000 {
 		// do not store ephemeral events
 		return nil

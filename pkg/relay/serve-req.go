@@ -9,7 +9,7 @@ import (
 )
 
 func (rl *Relay) handleRequest(ctx context.Context, id nip1.SubscriptionID,
-	eose *sync.WaitGroup, ws *WebSocket, filter *nip1.Filter) error {
+	eose *sync.WaitGroup, ws *WebSocket, filter *nip1.Filter) (e error) {
 
 	defer eose.Done()
 	// overwrite the filter (for example, to eliminate some kinds or
@@ -26,7 +26,7 @@ func (rl *Relay) handleRequest(ctx context.Context, id nip1.SubscriptionID,
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if reject, msg := reject(ctx, filter); reject {
-			log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: msg}))
+			rl.Log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: msg}))
 			return errors.New(nip1.OKMessage(nip1.OKBlocked, msg))
 		}
 	}
@@ -36,22 +36,20 @@ func (rl *Relay) handleRequest(ctx context.Context, id nip1.SubscriptionID,
 	for _, query := range rl.QueryEvents {
 		ch, err := query(ctx, filter)
 		if err != nil {
-			log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: err.Error()}))
+			rl.Log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: err.Error()}))
 			eose.Done()
 			continue
 		}
-
 		go func(ch chan *nip1.Event) {
 			for event := range ch {
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(ctx, event)
 				}
-				log.D.Chk(ws.WriteJSON(nip1.EventEnvelope{SubscriptionID: id, Event: event}))
+				rl.Log.D.Chk(ws.WriteJSON(nip1.EventEnvelope{SubscriptionID: id, Event: event}))
 			}
 			eose.Done()
 		}(ch)
 	}
-
 	return nil
 }
 
@@ -60,24 +58,22 @@ func (rl *Relay) handleCountRequest(ctx context.Context, ws *WebSocket, filter *
 	for _, ovw := range rl.OverwriteCountFilter {
 		ovw(ctx, filter)
 	}
-
 	// then check if we'll reject this filter
 	for _, reject := range rl.RejectCountFilter {
 		if rejecting, msg := reject(ctx, filter); rejecting {
-			log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: msg}))
+			rl.Log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: msg}))
 			return 0
 		}
 	}
-
 	// run the functions to count (generally it will be just one)
 	var subtotal int64 = 0
 	for _, count := range rl.CountEvents {
-		res, err := count(ctx, filter)
-		if err != nil {
-			log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{err.Error()}))
+		var e error
+		var res int64
+		if res, e = count(ctx, filter); rl.Log.E.Chk(e) {
+			rl.Log.D.Chk(ws.WriteJSON(nip1.NoticeEnvelope{Text: e.Error()}))
 		}
 		subtotal += res
 	}
-
 	return subtotal
 }

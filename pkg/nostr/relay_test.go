@@ -196,7 +196,7 @@ func newWebsocketServer(handler func(*websocket.Conn)) *httptest.Server {
 // anyOriginHandshake is an alternative to default in golang.org/x/net/websocket
 // which checks for origin. nostr client sends no origin and it makes no difference
 // for the tests here anyway.
-var anyOriginHandshake = func(conf *websocket.Config, r *http.Request) error {
+var anyOriginHandshake = func(conf *websocket.Config, r *http.Request) (e error) {
 	return nil
 }
 

@@ -11,7 +11,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 )
 
-func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) error {
+func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) (e error) {
 	if evt == nil {
 		return errors.New("error: event is nil")
 	}
@@ -25,20 +25,22 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) error {
 			}
 		}
 	}
-
+	var ch chan *nip1.Event
 	if evt.Kind.IsEphemeral() {
 		// do not store ephemeral events
 	} else {
 		if evt.Kind.IsReplaceable() {
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
-				ch, err := query(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kinds.T{evt.Kind}})
-				if err != nil {
+				if ch, e = query(ctx, &nip1.Filter{
+					Authors: []string{evt.PubKey},
+					Kinds:   kinds.T{evt.Kind},
+				}); rl.Log.E.Chk(e) {
 					continue
 				}
 				if previous := <-ch; previous != nil && isOlder(previous, evt) {
 					for _, del := range rl.DeleteEvent {
-						del(ctx, previous)
+						rl.Log.E.Chk(del(ctx, previous))
 					}
 				}
 			}
@@ -47,8 +49,11 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) error {
 			d := evt.Tags.GetFirst([]string{"d", ""})
 			if d != nil {
 				for _, query := range rl.QueryEvents {
-					ch, err := query(ctx, &nip1.Filter{Authors: []string{evt.PubKey}, Kinds: kinds.T{evt.Kind}, Tags: nip1.TagMap{"d": []string{d.Value()}}})
-					if err != nil {
+					if ch, e = query(ctx, &nip1.Filter{
+						Authors: []string{evt.PubKey},
+						Kinds:   kinds.T{evt.Kind},
+						Tags:    nip1.TagMap{"d": []string{d.Value()}},
+					}); rl.Log.E.Chk(e) {
 						continue
 					}
 					if previous := <-ch; previous != nil && isOlder(previous, evt) {
@@ -76,23 +81,21 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nip1.Event) error {
 			ons(ctx, evt)
 		}
 	}
-
 	for _, ovw := range rl.OverwriteResponseEvent {
 		ovw(ctx, evt)
 	}
 	notifyListeners(evt)
-
 	return nil
 }
 
-func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nip1.Event) error {
+func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nip1.Event) (e error) {
+	var ch chan *nip1.Event
 	// event deletion -- nip09
 	for _, tag := range evt.Tags {
 		if len(tag) >= 2 && tag[0] == "e" {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
-				ch, err := query(ctx, &nip1.Filter{IDs: []string{tag[1]}})
-				if err != nil {
+				if ch, e = query(ctx, &nip1.Filter{IDs: []string{tag[1]}}); rl.Log.E.Chk(e) {
 					continue
 				}
 				target := <-ch
@@ -112,18 +115,16 @@ func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nip1.Event) error
 				if acceptDeletion {
 					// delete it
 					for _, del := range rl.DeleteEvent {
-						del(ctx, target)
+						rl.Log.E.Chk(del(ctx, target))
 					}
 				} else {
 					// fail and stop here
 					return fmt.Errorf("blocked: %s", msg)
 				}
-
 				// don't try to query this same event again
 				break
 			}
 		}
 	}
-
 	return nil
 }

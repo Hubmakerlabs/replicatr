@@ -18,7 +18,7 @@ func (b BadgerBackend) CountEvents(ctx context.Context, filter *nostr.Filter) (i
 		return 0, err
 	}
 
-	err = b.View(func(txn *badger.Txn) error {
+	err = b.View(func(txn *badger.Txn) (e error) {
 		// iterate only through keys and in reverse order
 		opts := badger.IteratorOptions{
 			Reverse: true,
@@ -60,7 +60,7 @@ func (b BadgerBackend) CountEvents(ctx context.Context, filter *nostr.Filter) (i
 						return err
 					}
 
-					err = item.Value(func(val []byte) error {
+					err = item.Value(func(val []byte) (e error) {
 						evt := &nostr.Event{}
 						if err := nostr_binary.Unmarshal(val, evt); err != nil {
 							return err

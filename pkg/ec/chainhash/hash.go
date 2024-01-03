@@ -90,7 +90,7 @@ func (hash *Hash) CloneBytes() []byte {
 
 // SetBytes sets the bytes which represent the hash.  An error is returned if
 // the number of bytes passed in is not HashSize.
-func (hash *Hash) SetBytes(newHash []byte) error {
+func (hash *Hash) SetBytes(newHash []byte) (e error) {
 	nhlen := len(newHash)
 	if nhlen != HashSize {
 		return fmt.Errorf("invalid hash length of %v, want %v", nhlen,
@@ -118,7 +118,7 @@ func (hash Hash) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON parses the hash with JSON appropriate string value.
-func (hash *Hash) UnmarshalJSON(input []byte) error {
+func (hash *Hash) UnmarshalJSON(input []byte) (e error) {
 	// If the first byte indicates an array, the hash could have been marshalled
 	// using the legacy method and e.g. persisted.
 	if len(input) > 0 && input[0] == '[' {
@@ -192,7 +192,7 @@ func NewHashFromStr(hash string) (*Hash, error) {
 
 // Decode decodes the byte-reversed hexadecimal string encoding of a Hash to a
 // destination.
-func Decode(dst *Hash, src string) error {
+func Decode(dst *Hash, src string) (e error) {
 	// Return error if hash string is too long.
 	if len(src) > MaxHashStringSize {
 		return ErrHashStrSize
@@ -228,7 +228,7 @@ func Decode(dst *Hash, src string) error {
 
 // decodeLegacy decodes an Hash that has been encoded with the legacy method
 // (i.e. represented as a bytes array) to a destination.
-func decodeLegacy(dst *Hash, src []byte) error {
+func decodeLegacy(dst *Hash, src []byte) (e error) {
 	var hashBytes []byte
 	err := json.Unmarshal(src, &hashBytes)
 	if err != nil {

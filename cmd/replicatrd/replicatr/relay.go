@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/log"
-
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	
 	"github.com/fasthttp/websocket"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip11"
@@ -23,9 +23,9 @@ const (
 	MaxMessageSize  int64 = 512000 // ???
 )
 
-func NewRelay(appName string) *Relay {
-	return &Relay{
-		Log: log.New(os.Stderr, appName, 0),
+func NewRelay(appName string) (r *Relay) {
+	r = &Relay{
+		Log: log2.New(os.Stderr, appName, 0),
 		Info: &nip11.RelayInformationDocument{
 			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/khatru",
 			Version:       "n/a",
@@ -43,12 +43,18 @@ func NewRelay(appName string) *Relay {
 		PingPeriod:     PingPeriod,
 		MaxMessageSize: MaxMessageSize,
 	}
+	return
 }
+
+type (
+	RejectEvent  func(ctx context.Context, event *nostr.Event) (reject bool, msg string)
+	RejectFilter func(ctx context.Context, filter *nostr.Filter) (reject bool, msg string)
+)
 
 type Relay struct {
 	ServiceURL                string
-	RejectEvent               []func(ctx context.Context, event *nostr.Event) (reject bool, msg string)
-	RejectFilter              []func(ctx context.Context, filter *nostr.Filter) (reject bool, msg string)
+	RejectEvent               []RejectEvent
+	RejectFilter              []RejectFilter
 	RejectCountFilter         []func(ctx context.Context, filter *nostr.Filter) (reject bool, msg string)
 	OverwriteDeletionOutcome  []func(ctx context.Context, target *nostr.Event, deletion *nostr.Event) (acceptDeletion bool, msg string)
 	OverwriteResponseEvent    []func(ctx context.Context, event *nostr.Event)
@@ -64,7 +70,7 @@ type Relay struct {
 	OnEventSaved              []func(ctx context.Context, event *nostr.Event)
 	// editing info will affect
 	Info *nip11.RelayInformationDocument
-	Log  *log.Logger
+	Log  *log2.Logger
 	// for establishing websockets
 	upgrader websocket.Upgrader
 	// keep a connection reference to all connected clients for Server.Shutdown

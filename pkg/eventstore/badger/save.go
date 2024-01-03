@@ -10,8 +10,8 @@ import (
 	nostr_binary "github.com/nbd-wtf/go-nostr/binary"
 )
 
-func (b *BadgerBackend) SaveEvent(ctx context.Context, evt *nostr.Event) error {
-	return b.Update(func(txn *badger.Txn) error {
+func (b *BadgerBackend) SaveEvent(ctx context.Context, evt *nostr.Event) (e error) {
+	return b.Update(func(txn *badger.Txn) (e error) {
 		// query event by id to ensure we don't save duplicates
 		id, _ := hex.DecodeString(evt.ID)
 		prefix := make([]byte, 1+8)

@@ -1,6 +1,7 @@
 package replicatr
 
 import (
+	"encoding/hex"
 	"hash/maphash"
 	"net/http"
 	"strconv"
@@ -8,6 +9,13 @@ import (
 	"unsafe"
 
 	"github.com/nbd-wtf/go-nostr"
+	log2 "mleku.online/git/log"
+)
+
+var (
+	log                    = log2.GetLogger()
+	fails                  = log.D.Chk
+	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
 func pointerHasher[V any](_ maphash.Seed, k *V) uint64 {
@@ -31,7 +39,7 @@ func getServiceBaseURL(r *http.Request) string {
 		} else if strings.Index(host, ":") != -1 {
 			// has a port number
 			proto = "http"
-		} else if _, err := strconv.Atoi(strings.ReplaceAll(host, ".", "")); err == nil {
+		} else if _, e := strconv.Atoi(strings.ReplaceAll(host, ".", "")); log.E.Chk(e) {
 			// it's a naked IP
 			proto = "http"
 		} else {

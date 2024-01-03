@@ -2,25 +2,26 @@ package badger
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *Backend) runMigrations() error {
-	return b.Update(func(txn *badger.Txn) error {
+func (b *Backend) runMigrations() (e error) {
+	return b.Update(func(txn *badger.Txn) (e error) {
 		var version uint16
-
-		item, err := txn.Get([]byte{dbVersionKey})
-		if err == badger.ErrKeyNotFound {
+		var item *badger.Item
+		item, e = txn.Get([]byte{dbVersionKey})
+		if errors.Is(e, badger.ErrKeyNotFound) {
 			version = 0
-		} else if err != nil {
-			return err
+		} else if log.E.Chk(e) {
+			return
 		} else {
-			item.Value(func(val []byte) error {
+			log.E.Chk(item.Value(func(val []byte) (e error) {
 				version = binary.BigEndian.Uint16(val)
 				return nil
-			})
+			}))
 		}
 
 		// do the migrations in increasing steps (there is no rollback)
@@ -59,7 +60,7 @@ func (b *Backend) runMigrations() error {
 	})
 }
 
-func (b *Backend) bumpVersion(txn *badger.Txn, version uint16) error {
+func (b *Backend) bumpVersion(txn *badger.Txn, version uint16) (e error) {
 	buf := make([]byte, 2)
 	binary.BigEndian.PutUint16(buf, version)
 	return txn.Set([]byte{dbVersionKey}, buf)

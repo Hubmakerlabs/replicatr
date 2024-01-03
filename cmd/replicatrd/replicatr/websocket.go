@@ -22,13 +22,13 @@ type WebSocket struct {
 	authLock sync.Mutex
 }
 
-func (ws *WebSocket) WriteJSON(any any) error {
+func (ws *WebSocket) WriteJSON(any any) (e error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
 	return ws.conn.WriteJSON(any)
 }
 
-func (ws *WebSocket) WriteMessage(t int, b []byte) error {
+func (ws *WebSocket) WriteMessage(t int, b []byte) (e error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
 	return ws.conn.WriteMessage(t, b)

@@ -11,10 +11,10 @@ import (
 
 var serialDelete uint32 = 0
 
-func (b *BadgerBackend) DeleteEvent(ctx context.Context, evt *nostr.Event) error {
+func (b *BadgerBackend) DeleteEvent(ctx context.Context, evt *nostr.Event) (e error) {
 	deletionHappened := false
 
-	err := b.Update(func(txn *badger.Txn) error {
+	err := b.Update(func(txn *badger.Txn) (e error) {
 		idx := make([]byte, 1, 5)
 		idx[0] = rawEventStorePrefix
 

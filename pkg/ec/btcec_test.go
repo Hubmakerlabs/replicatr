@@ -858,7 +858,7 @@ func TestKeyGeneration(t *testing.T) {
 // checkNAFEncoding returns an error if the provided positive and negative
 // portions of an overall NAF encoding do not adhere to the requirements or they
 // do not sum back to the provided original value.
-func checkNAFEncoding(pos, neg []byte, origValue *big.Int) error {
+func checkNAFEncoding(pos, neg []byte, origValue *big.Int) (e error) {
 	// NAF must not have a leading zero byte and the number of negative
 	// bytes must not exceed the positive portion.
 	if len(pos) > 0 && pos[0] == 0 {

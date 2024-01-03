@@ -6,22 +6,23 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/cmd/replicatrd/replicatr"
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore/badger"
+	log2 "mleku.online/git/log"
 )
 
 const appName = "replicatr"
 
 func main() {
-	r := replicatr.NewRelay(appName)
-
-	db := badger.BadgerBackend{Path: "/tmp/replicatr-badger"}
-	if err := db.Init(); err != nil {
-		r.Log.E.F("unable to start database: '%s'", err)
+	log2.SetLogLevel(log2.Trace)
+	rl := replicatr.NewRelay(appName)
+	db := &badger.BadgerBackend{Path: "/tmp/replicatr-badger"}
+	if e:= db.Init(); rl.Log.E.Chk(e) {
+		rl.Log.E.F("unable to start database: '%s'", e)
 		os.Exit(1)
 	}
-	r.StoreEvent = append(r.StoreEvent, db.SaveEvent)
-	r.QueryEvents = append(r.QueryEvents, db.QueryEvents)
-	r.CountEvents = append(r.CountEvents, db.CountEvents)
-	r.DeleteEvent = append(r.DeleteEvent, db.DeleteEvent)
-	r.Log.I.Ln("running on :3334")
-	r.Log.E.Chk(http.ListenAndServe(":3334", r))
+	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
+	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
+	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
+	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
+	rl.Log.I.Ln("running on :3334")
+	rl.Log.E.Chk(http.ListenAndServe(":3334", rl))
 }

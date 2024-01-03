@@ -73,7 +73,7 @@ func NewPartialSignature(s *btcec.ModNScalar,
 
 // Encode writes a serialized version of the partial signature to the passed
 // io.Writer
-func (p *PartialSignature) Encode(w io.Writer) error {
+func (p *PartialSignature) Encode(w io.Writer) (e error) {
 	var sBytes [32]byte
 	p.S.PutBytes(&sBytes)
 
@@ -86,7 +86,7 @@ func (p *PartialSignature) Encode(w io.Writer) error {
 
 // Decode attempts to parse a serialized PartialSignature stored in the passed
 // io reader.
-func (p *PartialSignature) Decode(r io.Reader) error {
+func (p *PartialSignature) Decode(r io.Reader) (e error) {
 	p.S = new(btcec.ModNScalar)
 
 	var sBytes [32]byte
@@ -423,7 +423,7 @@ func (p *PartialSignature) Verify(pubNonce [PubNonceSize]byte,
 // detailed errors.  signed.
 func verifyPartialSig(partialSig *PartialSignature, pubNonce [PubNonceSize]byte,
 	combinedNonce [PubNonceSize]byte, keySet []*btcec.PublicKey,
-	pubKey []byte, msg [32]byte, signOpts ...SignOption) error {
+	pubKey []byte, msg [32]byte, signOpts ...SignOption) (e error) {
 
 	opts := defaultSignOptions()
 	for _, option := range signOpts {

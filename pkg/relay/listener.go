@@ -46,7 +46,6 @@ func setListener(id nip1.SubscriptionID, ws *WebSocket,
 
 	subs, _ := listeners.LoadOrCompute(ws,
 		func() *xsync.MapOf[string, *Listener] {
-
 			return xsync.NewMapOf[*Listener]()
 		})
 	subs.Store(string(id), &Listener{filters: filters, cancel: cancel})
@@ -77,11 +76,11 @@ func notifyListeners(event *nip1.Event) {
 			if !listener.filters.Match(event) {
 				return true
 			}
-			var err error
+			var e error
 			var sid nip1.SubscriptionID
-			sid, err = nip1.NewSubscriptionID(id)
-			log.D.Chk(err)
-			ws.WriteJSON(nip1.EventEnvelope{SubscriptionID: sid, Event: event})
+			sid, e = nip1.NewSubscriptionID(id)
+			log.D.Chk(e)
+			log.E.Chk(ws.WriteJSON(nip1.EventEnvelope{SubscriptionID: sid, Event: event}))
 			return true
 		})
 		return true

@@ -20,6 +20,6 @@ type ErrorKind = ecdsa_schnorr.ErrorKind
 type Error = ecdsa_schnorr.Error
 
 // signatureError creates an Error given a set of arguments.
-func signatureError(kind ErrorKind, desc string) Error {
+func signatureError(kind ErrorKind, desc string) (e error) {
 	return Error{Err: kind, Description: desc}
 }

@@ -278,7 +278,7 @@ func (cfg *Config) Do(r Relay, f func(context.Context, *nostr.Relay) bool) {
 	wg.Wait()
 }
 
-func (cfg *Config) save(profile string) error {
+func (cfg *Config) save(profile string) (e error) {
 	if cfg.tempRelay {
 		return nil
 	}
@@ -302,7 +302,7 @@ func (cfg *Config) save(profile string) error {
 }
 
 // Decode is
-func (cfg *Config) Decode(ev *nostr.Event) error {
+func (cfg *Config) Decode(ev *nostr.Event) (e error) {
 	var sk string
 	var pub string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
@@ -442,7 +442,7 @@ func (cfg *Config) Events(filter nostr.Filter) []*nostr.Event {
 	return evs
 }
 
-func doVersion(cCtx *cli.Context) error {
+func doVersion(cCtx *cli.Context) (e error) {
 	fmt.Println(version)
 	return nil
 }
@@ -658,7 +658,7 @@ func main() {
 				Action:    doVersion,
 			},
 		},
-		Before: func(cCtx *cli.Context) error {
+		Before: func(cCtx *cli.Context) (e error) {
 			if cCtx.Args().Get(0) == "version" {
 				return nil
 			}

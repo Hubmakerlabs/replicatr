@@ -217,26 +217,26 @@ type lengthWriter func(w io.Writer, b []byte) error
 
 // uint8Writer is an implementation of lengthWriter that writes the length of
 // the byte slice using 1 byte.
-func uint8Writer(w io.Writer, b []byte) error {
+func uint8Writer(w io.Writer, b []byte) (e error) {
 	return binary.Write(w, byteOrder, uint8(len(b)))
 }
 
 // uint32Writer is an implementation of lengthWriter that writes the length of
 // the byte slice using 4 bytes.
-func uint32Writer(w io.Writer, b []byte) error {
+func uint32Writer(w io.Writer, b []byte) (e error) {
 	return binary.Write(w, byteOrder, uint32(len(b)))
 }
 
 // uint32Writer is an implementation of lengthWriter that writes the length of
 // the byte slice using 8 bytes.
-func uint64Writer(w io.Writer, b []byte) error {
+func uint64Writer(w io.Writer, b []byte) (e error) {
 	return binary.Write(w, byteOrder, uint64(len(b)))
 }
 
 // writeBytesPrefix is used to write out: len(b) || b, to the passed io.Writer.
 // The lengthWriter function closure is used to allow the caller to specify the
 // precise byte packing of the length.
-func writeBytesPrefix(w io.Writer, b []byte, lenWriter lengthWriter) error {
+func writeBytesPrefix(w io.Writer, b []byte, lenWriter lengthWriter) (e error) {
 	// Write out the length of the byte first, followed by the set of bytes
 	// itself.
 	if err := lenWriter(w, b); err != nil {

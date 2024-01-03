@@ -31,31 +31,28 @@ type Backend struct {
 	seq *badger.Sequence
 }
 
-func (b *Backend) Init() error {
-	db, err := badger.Open(badger.DefaultOptions(b.Path))
-	if err != nil {
-		return err
+func (b *Backend) Init() (e error) {
+	var db *badger.DB
+	if db, e = badger.Open(badger.DefaultOptions(b.Path)); log.E.Chk(e) {
+		return
 	}
 	b.DB = db
-	b.seq, err = db.GetSequence([]byte("events"), 1000)
-	if err != nil {
-		return err
+	b.seq, e = db.GetSequence([]byte("events"), 1000)
+	if log.E.Chk(e) {
+		return
 	}
-
-	if err := b.runMigrations(); err != nil {
-		return fmt.Errorf("error running migrations: %w", err)
+	if e = b.runMigrations(); log.E.Chk(e) {
+		return fmt.Errorf("error running migrations: %w", e)
 	}
-
 	if b.MaxLimit == 0 {
 		b.MaxLimit = 500
 	}
-
 	return nil
 }
 
 func (b *Backend) Close() {
-	b.DB.Close()
-	b.seq.Release()
+	log.E.Chk(b.DB.Close())
+	log.E.Chk(b.seq.Release())
 }
 
 func (b *Backend) Serial() []byte {

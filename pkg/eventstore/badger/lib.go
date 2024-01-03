@@ -31,7 +31,7 @@ type BadgerBackend struct {
 	seq *badger.Sequence
 }
 
-func (b *BadgerBackend) Init() error {
+func (b *BadgerBackend) Init() (e error) {
 	db, err := badger.Open(badger.DefaultOptions(b.Path))
 	if err != nil {
 		return err
