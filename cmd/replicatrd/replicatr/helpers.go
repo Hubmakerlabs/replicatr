@@ -8,7 +8,6 @@ import (
 	"strings"
 	"unsafe"
 
-	"github.com/nbd-wtf/go-nostr"
 	log2 "mleku.online/git/log"
 )
 
@@ -22,9 +21,9 @@ func pointerHasher[V any](_ maphash.Seed, k *V) uint64 {
 	return uint64(uintptr(unsafe.Pointer(k)))
 }
 
-func isOlder(previous, next *nostr.Event) bool {
-	return previous.CreatedAt < next.CreatedAt ||
-		(previous.CreatedAt == next.CreatedAt && previous.ID > next.ID)
+func isOlder(prev, next Event) bool {
+	p, n := prev.CreatedAt, next.CreatedAt
+	return p < n || (p == n && prev.ID > next.ID)
 }
 
 func getServiceBaseURL(r *http.Request) string {

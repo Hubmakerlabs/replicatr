@@ -1,20 +1,19 @@
 package replicatr
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/nbd-wtf/go-nostr"
 )
 
-func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nostr.Event) (e error) {
+func (rl *Relay) handleDeleteRequest(ctx Ctx, evt Event) (e error) {
 	// event deletion -- nip09
 	for _, tag := range evt.Tags {
 		if len(tag) >= 2 && tag[0] == "e" {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
 				var ch chan *nostr.Event
-				if ch, e = query(ctx, &nostr.Filter{IDs: []string{tag[1]}}); rl.Log.E.Chk(e) {
+				if ch, e = query(ctx, &nostr.Filter{IDs: []string{tag[1]}}); rl.E.Chk(e) {
 					continue
 				}
 				target := <-ch
@@ -34,20 +33,18 @@ func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nostr.Event) (e e
 				if acceptDeletion {
 					// delete it
 					for _, del := range rl.DeleteEvent {
-						rl.Log.E.Chk(del(ctx, target))
+						rl.E.Chk(del(ctx, target))
 					}
 				} else {
 					// fail and stop here
 					e = fmt.Errorf("blocked: %s", msg)
-					rl.Log.E.Chk(e)
+					rl.E.Ln(e)
 					return
 				}
-
 				// don't try to query this same event again
 				break
 			}
 		}
 	}
-
 	return nil
 }

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	
+
 	"github.com/fasthttp/websocket"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip11"
@@ -21,6 +21,25 @@ const (
 	ReadBufferSize        = 4096
 	WriteBufferSize       = 4096
 	MaxMessageSize  int64 = 512000 // ???
+)
+
+type (
+	Ctx                       = context.Context
+	Filter                    = *nostr.Filter
+	Event                     = *nostr.Event
+	Info                      = *nip11.RelayInformationDocument
+	Filters                   = nostr.Filters
+	RejectEvent               func(ctx Ctx, event Event) (reject bool, msg string)
+	RejectFilter              func(ctx Ctx, filter Filter) (reject bool, msg string)
+	OverwriteFilter           func(ctx Ctx, filter Filter)
+	OverwriteDeletionOutcome  func(ctx Ctx, target Event, del Event) (accept bool, msg string)
+	OverwriteResponseEvent    func(ctx Ctx, event Event)
+	Events                    func(ctx Ctx, event Event) error
+	Hook                      func(ctx Ctx)
+	OverwriteRelayInformation func(ctx Ctx, r *http.Request, info Info) Info
+	QueryEvents               func(ctx Ctx, filter Filter) (eventC chan Event, e error)
+	CountEvents               func(ctx Ctx, filter Filter) (c int64, e error)
+	OnEventSaved              func(ctx Ctx, event Event)
 )
 
 func NewRelay(appName string) (r *Relay) {
@@ -46,31 +65,26 @@ func NewRelay(appName string) (r *Relay) {
 	return
 }
 
-type (
-	RejectEvent  func(ctx context.Context, event *nostr.Event) (reject bool, msg string)
-	RejectFilter func(ctx context.Context, filter *nostr.Filter) (reject bool, msg string)
-)
-
 type Relay struct {
-	ServiceURL                string
-	RejectEvent               []RejectEvent
-	RejectFilter              []RejectFilter
-	RejectCountFilter         []func(ctx context.Context, filter *nostr.Filter) (reject bool, msg string)
-	OverwriteDeletionOutcome  []func(ctx context.Context, target *nostr.Event, deletion *nostr.Event) (acceptDeletion bool, msg string)
-	OverwriteResponseEvent    []func(ctx context.Context, event *nostr.Event)
-	OverwriteFilter           []func(ctx context.Context, filter *nostr.Filter)
-	OverwriteCountFilter      []func(ctx context.Context, filter *nostr.Filter)
-	OverwriteRelayInformation []func(ctx context.Context, r *http.Request, info nip11.RelayInformationDocument) nip11.RelayInformationDocument
-	StoreEvent                []func(ctx context.Context, event *nostr.Event) error
-	DeleteEvent               []func(ctx context.Context, event *nostr.Event) error
-	QueryEvents               []func(ctx context.Context, filter *nostr.Filter) (chan *nostr.Event, error)
-	CountEvents               []func(ctx context.Context, filter *nostr.Filter) (int64, error)
-	OnConnect                 []func(ctx context.Context)
-	OnDisconnect              []func(ctx context.Context)
-	OnEventSaved              []func(ctx context.Context, event *nostr.Event)
+	ServiceURL               string
+	RejectEvent              []RejectEvent
+	RejectFilter             []RejectFilter
+	RejectCountFilter        []RejectFilter
+	OverwriteDeletionOutcome []OverwriteDeletionOutcome
+	OverwriteResponseEvent   []OverwriteResponseEvent
+	OverwriteFilter          []OverwriteFilter
+	OverwriteCountFilter     []OverwriteFilter
+	OverwriteRelayInfo       []OverwriteRelayInformation
+	StoreEvent               []Events
+	DeleteEvent              []Events
+	QueryEvents              []QueryEvents
+	CountEvents              []CountEvents
+	OnConnect                []Hook
+	OnDisconnect             []Hook
+	OnEventSaved             []OnEventSaved
 	// editing info will affect
-	Info *nip11.RelayInformationDocument
-	Log  *log2.Logger
+	Info Info
+	*log2.Log
 	// for establishing websockets
 	upgrader websocket.Upgrader
 	// keep a connection reference to all connected clients for Server.Shutdown

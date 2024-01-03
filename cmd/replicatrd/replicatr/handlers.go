@@ -6,7 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
+	err "errors"
 	"net/http"
 	"strings"
 	"sync"
@@ -36,8 +36,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	var e error
 	var conn *websocket.Conn
 	conn, e = rl.upgrader.Upgrade(w, r, nil)
-	if rl.Log.E.Chk(e) {
-		rl.Log.E.F("failed to upgrade websocket: %v\n", e)
+	if rl.E.Chk(e) {
+		rl.E.F("failed to upgrade websocket: %v\n", e)
 		return
 	}
 	rl.clients.Store(conn, struct{}{})
@@ -45,7 +45,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	// NIP-42 challenge
 	challenge := make([]byte, 8)
 	_, e = rand.Read(challenge)
-	rl.Log.E.Chk(e)
+	rl.E.Chk(e)
 	ws := &WebSocket{
 		conn:      conn,
 		Request:   r,
@@ -64,7 +64,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		ticker.Stop()
 		cancel()
 		if _, ok := rl.clients.Load(conn); ok {
-			rl.Log.E.Chk(conn.Close())
+			_ = conn.Close()
 			rl.clients.Delete(conn)
 			removeListener(ws)
 		}
@@ -73,7 +73,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	go rl.watcher(ctx, kill, ticker, ws)
 }
 
-func (rl *Relay) processMessages(message []byte, ctx context.Context, ws *WebSocket) {
+func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 	var e error
 	envelope := nostr.ParseMessage(message)
 	if envelope == nil {
@@ -86,7 +86,7 @@ func (rl *Relay) processMessages(message []byte, ctx context.Context, ws *WebSoc
 		hash := sha256.Sum256(env.Event.Serialize())
 		id := hex.EncodeToString(hash[:])
 		if id != env.Event.ID {
-			rl.Log.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+			rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
 				EventID: env.Event.ID,
 				OK:      false,
 				Reason:  "invalid: id is computed incorrectly",
@@ -95,15 +95,15 @@ func (rl *Relay) processMessages(message []byte, ctx context.Context, ws *WebSoc
 		}
 		// check signature
 		var ok bool
-		if ok, e = env.Event.CheckSignature(); rl.Log.E.Chk(e) {
-			rl.Log.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+		if ok, e = env.Event.CheckSignature(); rl.E.Chk(e) {
+			rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
 				EventID: env.Event.ID,
 				OK:      false,
 				Reason:  "error: failed to verify signature"},
 			))
 			return
 		} else if !ok {
-			rl.Log.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+			rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
 				EventID: env.Event.ID,
 				OK:      false,
 				Reason:  "invalid: signature is invalid"},
@@ -119,22 +119,22 @@ func (rl *Relay) processMessages(message []byte, ctx context.Context, ws *WebSoc
 			writeErr = rl.AddEvent(ctx, &env.Event)
 		}
 		var reason string
-		if !rl.Log.E.Chk(writeErr) {
-			ok = true
-		} else {
+		if ok = !rl.E.Chk(writeErr); !ok {
 			reason = writeErr.Error()
 			if strings.HasPrefix(reason, "auth-required:") {
 				RequestAuth(ctx)
 			}
+		} else {
+			ok = true
 		}
-		rl.Log.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+		rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
 			EventID: env.Event.ID,
 			OK:      ok,
 			Reason:  reason,
 		}))
 	case *nostr.CountEnvelope:
 		if rl.CountEvents == nil {
-			rl.Log.E.Chk(ws.WriteJSON(nostr.ClosedEnvelope{
+			rl.E.Chk(ws.WriteJSON(nostr.ClosedEnvelope{
 				SubscriptionID: env.SubscriptionID,
 				Reason:         "unsupported: this relay does not support NIP-45"},
 			))
@@ -144,7 +144,7 @@ func (rl *Relay) processMessages(message []byte, ctx context.Context, ws *WebSoc
 		for _, filter := range env.Filters {
 			total += rl.handleCountRequest(ctx, ws, &filter)
 		}
-		rl.Log.E.Chk(ws.WriteJSON(nostr.CountEnvelope{
+		rl.E.Chk(ws.WriteJSON(nostr.CountEnvelope{
 			SubscriptionID: env.SubscriptionID,
 			Count:          &total,
 		}))
@@ -158,17 +158,17 @@ func (rl *Relay) processMessages(message []byte, ctx context.Context, ws *WebSoc
 		// handle each filter separately -- dispatching events as they're loaded from databases
 		for _, filter := range env.Filters {
 			e = rl.handleRequest(reqCtx, env.SubscriptionID, &eose, ws, &filter)
-			if rl.Log.E.Chk(e) {
+			if rl.E.Chk(e) {
 				// fail everything if any filter is rejected
 				reason := e.Error()
 				if strings.HasPrefix(reason, "auth-required:") {
 					RequestAuth(ctx)
 				}
-				rl.Log.E.Chk(ws.WriteJSON(nostr.ClosedEnvelope{
+				rl.E.Chk(ws.WriteJSON(nostr.ClosedEnvelope{
 					SubscriptionID: env.SubscriptionID,
 					Reason:         reason},
 				))
-				cancelReqCtx(errors.New("filter rejected"))
+				cancelReqCtx(err.New("filter rejected"))
 				return
 			}
 		}
@@ -177,7 +177,7 @@ func (rl *Relay) processMessages(message []byte, ctx context.Context, ws *WebSoc
 			// we can cancel the context and fire the EOSE message
 			eose.Wait()
 			cancelReqCtx(nil)
-			rl.Log.E.Chk(ws.WriteJSON(nostr.EOSEEnvelope(env.SubscriptionID)))
+			rl.E.Chk(ws.WriteJSON(nostr.EOSEEnvelope(env.SubscriptionID)))
 		}()
 		setListener(env.SubscriptionID, ws, env.Filters, cancelReqCtx)
 	case *nostr.CloseEnvelope:
@@ -192,12 +192,12 @@ func (rl *Relay) processMessages(message []byte, ctx context.Context, ws *WebSoc
 				ws.Authed = nil
 			}
 			ws.authLock.Unlock()
-			rl.Log.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+			rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
 				EventID: env.Event.ID,
 				OK:      true},
 			))
 		} else {
-			rl.Log.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+			rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
 				EventID: env.Event.ID,
 				OK:      false,
 				Reason:  "error: failed to authenticate"},
@@ -205,13 +205,13 @@ func (rl *Relay) processMessages(message []byte, ctx context.Context, ws *WebSoc
 		}
 	}
 }
-func (rl *Relay) readMessages(ctx context.Context, kill func(), ws *WebSocket, conn *websocket.Conn, r *http.Request) {
+func (rl *Relay) readMessages(ctx Ctx, kill func(), ws *WebSocket, conn *websocket.Conn, r *http.Request) {
 	defer kill()
 	conn.SetReadLimit(rl.MaxMessageSize)
-	rl.Log.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
+	rl.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
 	conn.SetPongHandler(func(string) (e error) {
 		e = conn.SetReadDeadline(time.Now().Add(rl.PongWait))
-		rl.Log.E.Chk(e)
+		rl.E.Chk(e)
 		return
 	})
 	for _, onConnect := range rl.OnConnect {
@@ -222,7 +222,7 @@ func (rl *Relay) readMessages(ctx context.Context, kill func(), ws *WebSocket, c
 		var typ int
 		var message []byte
 		typ, message, e = conn.ReadMessage()
-		if rl.Log.E.Chk(e) {
+		if e != nil {
 			if websocket.IsUnexpectedCloseError(
 				e,
 				websocket.CloseNormalClosure,    // 1000
@@ -230,20 +230,20 @@ func (rl *Relay) readMessages(ctx context.Context, kill func(), ws *WebSocket, c
 				websocket.CloseNoStatusReceived, // 1005
 				websocket.CloseAbnormalClosure,  // 1006
 			) {
-				rl.Log.E.F("unexpected close error from %s: %v\n",
+				rl.E.F("unexpected close error from %s: %v\n",
 					r.Header.Get("X-Forwarded-For"), e)
 			}
 			return
 		}
 		if typ == websocket.PingMessage {
-			rl.Log.E.Chk(ws.WriteMessage(websocket.PongMessage, nil))
+			rl.E.Chk(ws.WriteMessage(websocket.PongMessage, nil))
 			continue
 		}
 		go rl.processMessages(message, ctx, ws)
 	}
 }
 
-func (rl *Relay) watcher(ctx context.Context, kill func(), ticker *time.Ticker, ws *WebSocket) {
+func (rl *Relay) watcher(ctx Ctx, kill func(), ticker *time.Ticker, ws *WebSocket) {
 	var e error
 	defer kill()
 	for {
@@ -251,9 +251,9 @@ func (rl *Relay) watcher(ctx context.Context, kill func(), ticker *time.Ticker, 
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if e = ws.WriteMessage(websocket.PingMessage, nil); rl.Log.E.Chk(e) {
+			if e = ws.WriteMessage(websocket.PingMessage, nil); rl.E.Chk(e) {
 				if !strings.HasSuffix(e.Error(), "use of closed network connection") {
-					rl.Log.E.F("error writing ping: %v; closing websocket\n", e)
+					rl.E.F("error writing ping: %v; closing websocket\n", e)
 				}
 				return
 			}
@@ -263,9 +263,9 @@ func (rl *Relay) watcher(ctx context.Context, kill func(), ticker *time.Ticker, 
 
 func (rl *Relay) HandleNIP11(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/nostr+json")
-	info := *rl.Info
-	for _, ovw := range rl.OverwriteRelayInformation {
+	info := rl.Info
+	for _, ovw := range rl.OverwriteRelayInfo {
 		info = ovw(r.Context(), r, info)
 	}
-	rl.Log.E.Chk(json.NewEncoder(w).Encode(info))
+	rl.E.Chk(json.NewEncoder(w).Encode(info))
 }

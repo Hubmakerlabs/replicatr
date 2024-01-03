@@ -3,11 +3,12 @@ package nostr
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/fiatjaf/generic-ristretto/z"
-	"sync"
-	"time"
 
 	"github.com/puzpuzpuz/xsync/v2"
 )

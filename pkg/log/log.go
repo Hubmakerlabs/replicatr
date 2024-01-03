@@ -69,7 +69,7 @@ var (
 		Trace: "TRC",
 	}
 
-	// log is your generic Logger creation invocation that uses the version data
+	// log is your generic Log creation invocation that uses the version data
 	// in version.go that provides the current compilation path prefix for making
 	// relative paths for log printing code locations.
 	lvlStrs = map[string]Level{
@@ -122,8 +122,8 @@ type (
 	LevelSpec struct {
 		Name string
 	}
-	// Logger is a set of log printers for the various Level items.
-	Logger struct {
+	// Log is a set of log printers for the various Level items.
+	Log struct {
 		F, E, W, I, D, T LevelPrinter
 	}
 )
@@ -139,8 +139,8 @@ func GetLoc(skip int) (output string) {
 //
 // this copies the interface of stdlib log but we don't respect the settings
 // because a logger without timestamps is retarded
-func New(writer io.Writer, appID string, _ int) (l *Logger) {
-	return &Logger{
+func New(writer io.Writer, appID string, _ int) (l *Log) {
+	return &Log{
 		getOnePrinter(writer, appID, Fatal),
 		getOnePrinter(writer, appID, Error),
 		getOnePrinter(writer, appID, Warn),
