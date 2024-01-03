@@ -22,7 +22,8 @@ func GetListeningFilters() (respFilters Filters) {
 		subs.Range(func(_ string, listener *Listener) bool {
 			for _, listenerFilter := range listener.filters {
 				for _, respFilter := range respFilters {
-					// check if this filter specifically is already added to respFilters
+					// check if this filter specifically is already added to
+					// respFilters
 					if nostr.FilterEqual(listenerFilter, respFilter) {
 						goto next
 					}
@@ -47,8 +48,8 @@ func setListener(id string, ws *WebSocket, f Filters, c CancelCauseFunc) {
 	subs.Store(id, &Listener{filters: f, cancel: c})
 }
 
-// remove a specific subscription id from listeners for a given ws client
-// and cancel its specific context
+// remove a specific subscription id from listeners for a given ws client and
+// cancel its specific context
 func removeListenerId(ws *WebSocket, id string) {
 	if subs, ok := listeners.Load(ws); ok {
 		if listener, ok := subs.LoadAndDelete(id); ok {
@@ -60,8 +61,8 @@ func removeListenerId(ws *WebSocket, id string) {
 	}
 }
 
-// remove WebSocket conn from listeners
-// (no need to cancel contexts as they are all inherited from the main connection context)
+// remove WebSocket conn from listeners (no need to cancel contexts as they are
+// all inherited from the main connection context)
 func removeListener(ws *WebSocket) { listeners.Delete(ws) }
 
 func notifyListeners(event *Event) {
