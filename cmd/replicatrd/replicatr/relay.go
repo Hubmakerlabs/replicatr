@@ -35,29 +35,6 @@ type (
 	OnEventSaved              func(ctx Ctx, event *Event)
 )
 
-func NewRelay(appName string) (r *Relay) {
-	r = &Relay{
-		Log: log2.New(os.Stderr, appName, 0),
-		Info: &Info{
-			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/khatru",
-			Version:       "n/a",
-			SupportedNIPs: make([]int, 0),
-		},
-		upgrader: websocket.Upgrader{
-			ReadBufferSize:  ReadBufferSize,
-			WriteBufferSize: WriteBufferSize,
-			CheckOrigin:     func(r *http.Request) bool { return true },
-		},
-		clients:        xsync.NewTypedMapOf[*websocket.Conn, struct{}](pointerHasher[websocket.Conn]),
-		serveMux:       &http.ServeMux{},
-		WriteWait:      WriteWait,
-		PongWait:       PongWait,
-		PingPeriod:     PingPeriod,
-		MaxMessageSize: MaxMessageSize,
-	}
-	return
-}
-
 type Relay struct {
 	ServiceURL               string
 	RejectEvent              []RejectEvent
@@ -91,4 +68,27 @@ type Relay struct {
 	PongWait       time.Duration // Time allowed to read the next pong message from the peer.
 	PingPeriod     time.Duration // Send pings to peer with this period. Must be less than pongWait.
 	MaxMessageSize int64         // Maximum message size allowed from peer.
+}
+
+func NewRelay(appName string) (r *Relay) {
+	r = &Relay{
+		Log: log2.New(os.Stderr, appName, 0),
+		Info: &Info{
+			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/khatru",
+			Version:       "n/a",
+			SupportedNIPs: make([]int, 0),
+		},
+		upgrader: websocket.Upgrader{
+			ReadBufferSize:  ReadBufferSize,
+			WriteBufferSize: WriteBufferSize,
+			CheckOrigin:     func(r *http.Request) bool { return true },
+		},
+		clients:        xsync.NewTypedMapOf[*websocket.Conn, struct{}](pointerHasher[websocket.Conn]),
+		serveMux:       &http.ServeMux{},
+		WriteWait:      WriteWait,
+		PongWait:       PongWait,
+		PingPeriod:     PingPeriod,
+		MaxMessageSize: MaxMessageSize,
+	}
+	return
 }

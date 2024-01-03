@@ -3,7 +3,6 @@ package replicatr
 import (
 	"context"
 
-	"github.com/nbd-wtf/go-nostr"
 	"golang.org/x/exp/slices"
 )
 
@@ -47,7 +46,7 @@ func RemoveSearchQueries(ctx Ctx, filter *Filter) {
 	filter.Search = ""
 }
 
-func RemoveAllButKinds(kinds ...uint16) func(Ctx, *nostr.Filter) {
+func RemoveAllButKinds(kinds ...uint16) func(Ctx, *Filter) {
 	return func(ctx Ctx, filter *Filter) {
 		if n := len(filter.Kinds); n > 0 {
 			newKinds := make([]int, 0, n)

@@ -28,12 +28,10 @@ func PreventTooManyIndexableTags(max int, ignoreKinds []int,
 			return !isApplicable
 		}
 	}
-
 	return func(ctx Ctx, event *Event) (reject bool, msg string) {
 		if ignore(event.Kind) {
 			return false, ""
 		}
-
 		ntags := 0
 		for _, tag := range event.Tags {
 			if len(tag) > 0 && len(tag[0]) == 1 {

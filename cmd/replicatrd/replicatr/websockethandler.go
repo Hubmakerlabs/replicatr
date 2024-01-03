@@ -5,32 +5,14 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
-	err "errors"
-	"net/http"
+	"errors"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/fasthttp/websocket"
 	"github.com/nbd-wtf/go-nostr"
 	"github.com/nbd-wtf/go-nostr/nip42"
-	"github.com/rs/cors"
 )
-
-// ServeHTTP implements http.Handler interface.
-func (rl *Relay) ServeHTTP(w ResponseWriter, r *Request) {
-	if rl.ServiceURL == "" {
-		rl.ServiceURL = getServiceBaseURL(r)
-	}
-	if r.Header.Get("Upgrade") == "websocket" {
-		rl.HandleWebsocket(w, r)
-	} else if r.Header.Get("Accept") == "application/nostr+json" {
-		cors.AllowAll().Handler(http.HandlerFunc(rl.HandleNIP11)).ServeHTTP(w, r)
-	} else {
-		rl.serveMux.ServeHTTP(w, r)
-	}
-}
 
 func (rl *Relay) HandleWebsocket(w ResponseWriter, r *Request) {
 	var e error
@@ -69,11 +51,11 @@ func (rl *Relay) HandleWebsocket(w ResponseWriter, r *Request) {
 			removeListener(ws)
 		}
 	}
-	go rl.readMessages(ctx, kill, ws, conn, r)
-	go rl.watcher(ctx, kill, ticker, ws)
+	go rl.websocketReadMessages(ctx, kill, ws, conn, r)
+	go rl.websocketWatcher(ctx, kill, ticker, ws)
 }
 
-func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
+func (rl *Relay) websocketProcessMessages(message []byte, ctx Ctx, ws *WebSocket) {
 	var e error
 	envelope := nostr.ParseMessage(message)
 	if envelope == nil {
@@ -136,8 +118,8 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 		if rl.CountEvents == nil {
 			rl.E.Chk(ws.WriteJSON(ClosedEnvelope{
 				SubscriptionID: env.SubscriptionID,
-				Reason:         "unsupported: this relay does not support NIP-45"},
-			))
+				Reason:         "unsupported: this relay does not support NIP-45",
+			}))
 			return
 		}
 		var total int64
@@ -149,7 +131,7 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 			Count:          &total,
 		}))
 	case *ReqEnvelope:
-		eose := sync.WaitGroup{}
+		eose := WaitGroup{}
 		eose.Add(len(env.Filters))
 		// a context just for the "stored events" request handler
 		reqCtx, cancelReqCtx := context.WithCancelCause(ctx)
@@ -157,7 +139,7 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 		reqCtx = context.WithValue(reqCtx, subscriptionIdKey, env.SubscriptionID)
 		// handle each filter separately -- dispatching events as they're loaded from databases
 		for _, filter := range env.Filters {
-			e = rl.handleRequest(reqCtx, env.SubscriptionID, &eose, ws, &filter)
+			e = rl.handleFilter(reqCtx, env.SubscriptionID, &eose, ws, &filter)
 			if rl.E.Chk(e) {
 				// fail everything if any filter is rejected
 				reason := e.Error()
@@ -168,7 +150,7 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 					SubscriptionID: env.SubscriptionID,
 					Reason:         reason},
 				))
-				cancelReqCtx(err.New("filter rejected"))
+				cancelReqCtx(errors.New("filter rejected"))
 				return
 			}
 		}
@@ -205,7 +187,10 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 		}
 	}
 }
-func (rl *Relay) readMessages(ctx Ctx, kill func(), ws *WebSocket, conn *Conn, r *Request) {
+
+func (rl *Relay) websocketReadMessages(ctx Ctx, kill func(),
+	ws *WebSocket, conn *Conn, r *Request) {
+
 	defer kill()
 	conn.SetReadLimit(rl.MaxMessageSize)
 	rl.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
@@ -239,11 +224,11 @@ func (rl *Relay) readMessages(ctx Ctx, kill func(), ws *WebSocket, conn *Conn, r
 			rl.E.Chk(ws.WriteMessage(websocket.PongMessage, nil))
 			continue
 		}
-		go rl.processMessages(message, ctx, ws)
+		go rl.websocketProcessMessages(message, ctx, ws)
 	}
 }
 
-func (rl *Relay) watcher(ctx Ctx, kill func(), ticker *time.Ticker, ws *WebSocket) {
+func (rl *Relay) websocketWatcher(ctx Ctx, kill func(), ticker *time.Ticker, ws *WebSocket) {
 	var e error
 	defer kill()
 	for {
@@ -259,13 +244,4 @@ func (rl *Relay) watcher(ctx Ctx, kill func(), ticker *time.Ticker, ws *WebSocke
 			}
 		}
 	}
-}
-
-func (rl *Relay) HandleNIP11(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/nostr+json")
-	info := rl.Info
-	for _, ovw := range rl.OverwriteRelayInfo {
-		info = ovw(r.Context(), r, info)
-	}
-	rl.E.Chk(json.NewEncoder(w).Encode(info))
 }
