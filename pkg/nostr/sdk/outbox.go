@@ -3,8 +3,9 @@ package sdk
 import (
 	"context"
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	"sync"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr"
 )
@@ -27,8 +28,8 @@ func (s *System) ExpandQueriesByAuthorAndRelays(
 			relayURLs := s.FetchOutboxRelays(ctx, pubkey)
 			c := 0
 			for _, r := range relayURLs {
-				relay, err := s.Pool.EnsureRelay(r)
-				if err != nil {
+				var relay *nostr.Relay
+				if relay, e = s.Pool.EnsureRelay(r); log.E.Chk(e) {
 					continue
 				}
 				relaysForPubkey[pubkey] = append(relaysForPubkey[pubkey], relay)

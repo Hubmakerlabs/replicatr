@@ -56,7 +56,7 @@ func (p ProfileMetadata) ShortName() string {
 }
 
 func FetchProfileMetadata(ctx context.Context, pool *nostr.SimplePool,
-	pubkey string, relays ...string) *ProfileMetadata {
+	pubkey string, relays ...string) (pm *ProfileMetadata) {
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -67,9 +67,10 @@ func FetchProfileMetadata(ctx context.Context, pool *nostr.SimplePool,
 			Limit:   1,
 		},
 	})
+	var e error
 	for ie := range ch {
-		if m, err := ParseMetadata(ie.Event); err == nil {
-			return m
+		if pm, e = ParseMetadata(ie.Event); !log.E.Chk(e) {
+			return
 		}
 	}
 	return &ProfileMetadata{PubKey: pubkey}

@@ -2,6 +2,7 @@ package eventstore
 
 import (
 	"encoding/hex"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip1"
 	log2 "mleku.online/git/log"
 )
