@@ -13,7 +13,7 @@ func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *nostr.Event) erro
 		if len(tag) >= 2 && tag[0] == "e" {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
-				ch, err := query(ctx, nostr.Filter{IDs: []string{tag[1]}})
+				ch, err := query(ctx, &nostr.Filter{IDs: []string{tag[1]}})
 				if err != nil {
 					continue
 				}

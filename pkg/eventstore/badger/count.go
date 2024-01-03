@@ -10,7 +10,7 @@ import (
 	nostr_binary "github.com/nbd-wtf/go-nostr/binary"
 )
 
-func (b BadgerBackend) CountEvents(ctx context.Context, filter nostr.Filter) (int64, error) {
+func (b BadgerBackend) CountEvents(ctx context.Context, filter *nostr.Filter) (int64, error) {
 	var count int64 = 0
 
 	queries, extraFilter, since, err := prepareQueries(filter)

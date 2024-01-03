@@ -31,7 +31,7 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nostr.Event) error {
 		if evt.Kind == 0 || evt.Kind == 3 || (10000 <= evt.Kind && evt.Kind < 20000) {
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
-				ch, err := query(ctx, nostr.Filter{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}})
+				ch, err := query(ctx, &nostr.Filter{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}})
 				if err != nil {
 					continue
 				}
@@ -46,7 +46,7 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *nostr.Event) error {
 			d := evt.Tags.GetFirst([]string{"d", ""})
 			if d != nil {
 				for _, query := range rl.QueryEvents {
-					ch, err := query(ctx, nostr.Filter{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}, Tags: nostr.TagMap{"d": []string{d.Value()}}})
+					ch, err := query(ctx, &nostr.Filter{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}, Tags: nostr.TagMap{"d": []string{d.Value()}}})
 					if err != nil {
 						continue
 					}

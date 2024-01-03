@@ -160,7 +160,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					}
 					var total int64
 					for _, filter := range env.Filters {
-						total += rl.handleCountRequest(ctx, ws, filter)
+						total += rl.handleCountRequest(ctx, ws, &filter)
 					}
 					ws.WriteJSON(nostr.CountEnvelope{SubscriptionID: env.SubscriptionID, Count: &total})
 				case *nostr.ReqEnvelope:
@@ -175,7 +175,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 					// handle each filter separately -- dispatching events as they're loaded from databases
 					for _, filter := range env.Filters {
-						err := rl.handleRequest(reqCtx, env.SubscriptionID, &eose, ws, filter)
+						err := rl.handleRequest(reqCtx, env.SubscriptionID, &eose, ws, &filter)
 						if err != nil {
 							// fail everything if any filter is rejected
 							reason := err.Error()
