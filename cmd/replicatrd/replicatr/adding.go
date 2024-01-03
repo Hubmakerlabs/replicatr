@@ -6,19 +6,19 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
-	"github.com/nbd-wtf/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
 
 // AddEvent sends an event through then normal add pipeline, as if it was
 // received from a websocket.
-func (rl *Relay) AddEvent(ctx Ctx, evt Event) (e error) {
+func (rl *Relay) AddEvent(ctx Ctx, evt *Event) (e error) {
 	if evt == nil {
 		e = err.New("error: event is nil")
 		rl.E.Ln(e)
 		return
 	}
-	for _, rejectors := range rl.RejectEvent {
-		if reject, msg := rejectors(ctx, evt); reject {
+	for _, rej := range rl.RejectEvent {
+		if reject, msg := rej(ctx, evt); reject {
 			if msg == "" {
 				e = err.New("blocked: no reason")
 				rl.E.Ln(e)
@@ -36,8 +36,11 @@ func (rl *Relay) AddEvent(ctx Ctx, evt Event) (e error) {
 		if evt.Kind == 0 || evt.Kind == 3 || (10000 <= evt.Kind && evt.Kind < 20000) {
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
-				var ch chan *nostr.Event
-				ch, e = query(ctx, &nostr.Filter{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}})
+				var ch chan *Event
+				ch, e = query(ctx, &Filter{
+					Authors: tag.T{evt.PubKey},
+					Kinds:   []int{evt.Kind},
+				})
 				if rl.E.Chk(e) {
 					continue
 				}
@@ -52,11 +55,11 @@ func (rl *Relay) AddEvent(ctx Ctx, evt Event) (e error) {
 			d := evt.Tags.GetFirst([]string{"d", ""})
 			if d != nil {
 				for _, query := range rl.QueryEvents {
-					var ch chan *nostr.Event
-					if ch, e = query(ctx, &nostr.Filter{
-						Authors: []string{evt.PubKey},
+					var ch chan *Event
+					if ch, e = query(ctx, &Filter{
+						Authors: tag.T{evt.PubKey},
 						Kinds:   []int{evt.Kind},
-						Tags:    nostr.TagMap{"d": []string{d.Value()}},
+						Tags:    TagMap{"d": []string{d.Value()}},
 					}); rl.E.Chk(e) {
 						continue
 					}

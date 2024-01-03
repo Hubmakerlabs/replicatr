@@ -19,7 +19,7 @@ import (
 )
 
 // ServeHTTP implements http.Handler interface.
-func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (rl *Relay) ServeHTTP(w ResponseWriter, r *Request) {
 	if rl.ServiceURL == "" {
 		rl.ServiceURL = getServiceBaseURL(r)
 	}
@@ -32,9 +32,9 @@ func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
+func (rl *Relay) HandleWebsocket(w ResponseWriter, r *Request) {
 	var e error
-	var conn *websocket.Conn
+	var conn *Conn
 	conn, e = rl.upgrader.Upgrade(w, r, nil)
 	if rl.E.Chk(e) {
 		rl.E.F("failed to upgrade websocket: %v\n", e)
@@ -49,7 +49,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	ws := &WebSocket{
 		conn:      conn,
 		Request:   r,
-		Challenge: hex.EncodeToString(challenge),
+		Challenge: encodeToHex(challenge),
 	}
 	ctx, cancel := context.WithCancel(
 		context.WithValue(
@@ -81,12 +81,12 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 		return
 	}
 	switch env := envelope.(type) {
-	case *nostr.EventEnvelope:
+	case *EventEnvelope:
 		// check id
 		hash := sha256.Sum256(env.Event.Serialize())
 		id := hex.EncodeToString(hash[:])
 		if id != env.Event.ID {
-			rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+			rl.E.Chk(ws.WriteJSON(OKEnvelope{
 				EventID: env.Event.ID,
 				OK:      false,
 				Reason:  "invalid: id is computed incorrectly",
@@ -96,14 +96,14 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 		// check signature
 		var ok bool
 		if ok, e = env.Event.CheckSignature(); rl.E.Chk(e) {
-			rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+			rl.E.Chk(ws.WriteJSON(OKEnvelope{
 				EventID: env.Event.ID,
 				OK:      false,
 				Reason:  "error: failed to verify signature"},
 			))
 			return
 		} else if !ok {
-			rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+			rl.E.Chk(ws.WriteJSON(OKEnvelope{
 				EventID: env.Event.ID,
 				OK:      false,
 				Reason:  "invalid: signature is invalid"},
@@ -127,14 +127,14 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 		} else {
 			ok = true
 		}
-		rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+		rl.E.Chk(ws.WriteJSON(OKEnvelope{
 			EventID: env.Event.ID,
 			OK:      ok,
 			Reason:  reason,
 		}))
-	case *nostr.CountEnvelope:
+	case *CountEnvelope:
 		if rl.CountEvents == nil {
-			rl.E.Chk(ws.WriteJSON(nostr.ClosedEnvelope{
+			rl.E.Chk(ws.WriteJSON(ClosedEnvelope{
 				SubscriptionID: env.SubscriptionID,
 				Reason:         "unsupported: this relay does not support NIP-45"},
 			))
@@ -144,11 +144,11 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 		for _, filter := range env.Filters {
 			total += rl.handleCountRequest(ctx, ws, &filter)
 		}
-		rl.E.Chk(ws.WriteJSON(nostr.CountEnvelope{
+		rl.E.Chk(ws.WriteJSON(CountEnvelope{
 			SubscriptionID: env.SubscriptionID,
 			Count:          &total,
 		}))
-	case *nostr.ReqEnvelope:
+	case *ReqEnvelope:
 		eose := sync.WaitGroup{}
 		eose.Add(len(env.Filters))
 		// a context just for the "stored events" request handler
@@ -164,7 +164,7 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 				if strings.HasPrefix(reason, "auth-required:") {
 					RequestAuth(ctx)
 				}
-				rl.E.Chk(ws.WriteJSON(nostr.ClosedEnvelope{
+				rl.E.Chk(ws.WriteJSON(ClosedEnvelope{
 					SubscriptionID: env.SubscriptionID,
 					Reason:         reason},
 				))
@@ -177,12 +177,12 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 			// we can cancel the context and fire the EOSE message
 			eose.Wait()
 			cancelReqCtx(nil)
-			rl.E.Chk(ws.WriteJSON(nostr.EOSEEnvelope(env.SubscriptionID)))
+			rl.E.Chk(ws.WriteJSON(EOSEEnvelope(env.SubscriptionID)))
 		}()
 		setListener(env.SubscriptionID, ws, env.Filters, cancelReqCtx)
-	case *nostr.CloseEnvelope:
+	case *CloseEnvelope:
 		removeListenerId(ws, string(*env))
-	case *nostr.AuthEnvelope:
+	case *AuthEnvelope:
 		wsBaseUrl := strings.Replace(rl.ServiceURL, "http", "ws", 1)
 		if pubkey, ok := nip42.ValidateAuthEvent(&env.Event, ws.Challenge, wsBaseUrl); ok {
 			ws.AuthedPublicKey = pubkey
@@ -192,12 +192,12 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 				ws.Authed = nil
 			}
 			ws.authLock.Unlock()
-			rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+			rl.E.Chk(ws.WriteJSON(OKEnvelope{
 				EventID: env.Event.ID,
 				OK:      true},
 			))
 		} else {
-			rl.E.Chk(ws.WriteJSON(nostr.OKEnvelope{
+			rl.E.Chk(ws.WriteJSON(OKEnvelope{
 				EventID: env.Event.ID,
 				OK:      false,
 				Reason:  "error: failed to authenticate"},
@@ -205,7 +205,7 @@ func (rl *Relay) processMessages(message []byte, ctx Ctx, ws *WebSocket) {
 		}
 	}
 }
-func (rl *Relay) readMessages(ctx Ctx, kill func(), ws *WebSocket, conn *websocket.Conn, r *http.Request) {
+func (rl *Relay) readMessages(ctx Ctx, kill func(), ws *WebSocket, conn *Conn, r *Request) {
 	defer kill()
 	conn.SetReadLimit(rl.MaxMessageSize)
 	rl.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))

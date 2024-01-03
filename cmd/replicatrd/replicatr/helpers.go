@@ -3,7 +3,6 @@ package replicatr
 import (
 	"encoding/hex"
 	"hash/maphash"
-	"net/http"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -21,12 +20,12 @@ func pointerHasher[V any](_ maphash.Seed, k *V) uint64 {
 	return uint64(uintptr(unsafe.Pointer(k)))
 }
 
-func isOlder(prev, next Event) bool {
+func isOlder(prev, next *Event) bool {
 	p, n := prev.CreatedAt, next.CreatedAt
 	return p < n || (p == n && prev.ID > next.ID)
 }
 
-func getServiceBaseURL(r *http.Request) string {
+func getServiceBaseURL(r *Request) string {
 	host := r.Header.Get("X-Forwarded-Host")
 	if host == "" {
 		host = r.Host

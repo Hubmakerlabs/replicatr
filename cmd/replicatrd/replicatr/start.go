@@ -1,7 +1,6 @@
 package replicatr
 
 import (
-	"context"
 	"errors"
 	"net"
 	"net/http"
@@ -44,9 +43,8 @@ func (rl *Relay) Start(host string, port int, started ...chan bool) (e error) {
 }
 
 // Shutdown sends a websocket close control message to all connected clients.
-func (rl *Relay) Shutdown(ctx context.Context) {
-	rl.httpServer.Shutdown(ctx)
-
+func (rl *Relay) Shutdown(ctx Ctx) {
+	rl.Log.E.Chk(rl.httpServer.Shutdown(ctx))
 	rl.clients.Range(func(conn *websocket.Conn, _ struct{}) bool {
 		rl.E.Chk(conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second)))
 		rl.E.Chk(conn.Close())
