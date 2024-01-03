@@ -1,7 +1,7 @@
-package nostr
+package event
 
 // SetExtra sets an out-of-the-spec value under the given key into the event object.
-func (evt *Event) SetExtra(key string, value any) {
+func (evt *T) SetExtra(key string, value any) {
 	if evt.extra == nil {
 		evt.extra = make(map[string]any)
 	}
@@ -9,7 +9,7 @@ func (evt *Event) SetExtra(key string, value any) {
 }
 
 // RemoveExtra removes an out-of-the-spec value under the given key from the event object.
-func (evt *Event) RemoveExtra(key string) {
+func (evt *T) RemoveExtra(key string) {
 	if evt.extra == nil {
 		return
 	}
@@ -18,14 +18,14 @@ func (evt *Event) RemoveExtra(key string) {
 
 // GetExtra tries to get a value under the given key that may be present in the event object
 // but is hidden in the basic type since it is out of the spec.
-func (evt Event) GetExtra(key string) any {
+func (evt T) GetExtra(key string) any {
 	ival, _ := evt.extra[key]
 	return ival
 }
 
-// GetExtraString is like [Event.GetExtra], but only works if the value is a string,
+// GetExtraString is like [T.GetExtra], but only works if the value is a string,
 // otherwise returns the zero-value.
-func (evt Event) GetExtraString(key string) string {
+func (evt T) GetExtraString(key string) string {
 	ival, ok := evt.extra[key]
 	if !ok {
 		return ""
@@ -37,9 +37,9 @@ func (evt Event) GetExtraString(key string) string {
 	return val
 }
 
-// GetExtraNumber is like [Event.GetExtra], but only works if the value is a float64,
+// GetExtraNumber is like [T.GetExtra], but only works if the value is a float64,
 // otherwise returns the zero-value.
-func (evt Event) GetExtraNumber(key string) float64 {
+func (evt T) GetExtraNumber(key string) float64 {
 	ival, ok := evt.extra[key]
 	if !ok {
 		return 0
@@ -57,9 +57,9 @@ func (evt Event) GetExtraNumber(key string) float64 {
 	return 0
 }
 
-// GetExtraBoolean is like [Event.GetExtra], but only works if the value is a boolean,
+// GetExtraBoolean is like [T.GetExtra], but only works if the value is a boolean,
 // otherwise returns the zero-value.
-func (evt Event) GetExtraBoolean(key string) bool {
+func (evt T) GetExtraBoolean(key string) bool {
 	ival, ok := evt.extra[key]
 	if !ok {
 		return false

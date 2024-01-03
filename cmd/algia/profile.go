@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
 	"github.com/urfave/cli/v2"
 
@@ -44,7 +45,7 @@ func doProfile(cCtx *cli.Context) (e error) {
 
 	// get set-metadata
 	filter := nostr.Filter{
-		Kinds:   []int{nostr.KindProfileMetadata},
+		Kinds:   []int{event.KindProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
 	}

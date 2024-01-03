@@ -5,10 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
 
-func Unmarshal(data []byte, evt *nostr.Event) (err error) {
+func Unmarshal(data []byte, evt *event.T) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("failed to decode binary: %v", r)
@@ -18,7 +20,7 @@ func Unmarshal(data []byte, evt *nostr.Event) (err error) {
 	evt.ID = hex.EncodeToString(data[0:32])
 	evt.PubKey = hex.EncodeToString(data[32:64])
 	evt.Sig = hex.EncodeToString(data[64:128])
-	evt.CreatedAt = nostr.Timestamp(binary.BigEndian.Uint32(data[128:132]))
+	evt.CreatedAt = timestamp.Timestamp(binary.BigEndian.Uint32(data[128:132]))
 	evt.Kind = int(binary.BigEndian.Uint16(data[132:134]))
 	contentLength := int(binary.BigEndian.Uint16(data[134:136]))
 	evt.Content = string(data[136 : 136+contentLength])
@@ -27,12 +29,12 @@ func Unmarshal(data []byte, evt *nostr.Event) (err error) {
 
 	nTags := binary.BigEndian.Uint16(data[curr : curr+2])
 	curr++
-	evt.Tags = make(nostr.Tags, nTags)
+	evt.Tags = make(tags.Tags, nTags)
 
 	for t := range evt.Tags {
 		curr++
 		nItems := int(data[curr])
-		tag := make(nostr.Tag, nItems)
+		tag := make(tags.Tag, nItems)
 		for i := range tag {
 			curr = curr + 1
 			itemSize := int(binary.BigEndian.Uint16(data[curr : curr+2]))
@@ -48,7 +50,7 @@ func Unmarshal(data []byte, evt *nostr.Event) (err error) {
 	return err
 }
 
-func Marshal(evt *nostr.Event) ([]byte, error) {
+func Marshal(evt *event.T) ([]byte, error) {
 	content := []byte(evt.Content)
 	buf := make([]byte, 32+32+64+4+2+2+len(content)+65536 /* blergh */)
 

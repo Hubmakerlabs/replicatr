@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/mailru/easyjson"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 )
 
 func TestBasicNsonParse(t *testing.T) {
 	for _, jevt := range nsonTestEvents {
-		evt := &nostr.Event{}
+		evt := &event.T{}
 		if err := Unmarshal(jevt, evt); err != nil {
 			t.Fatalf("error unmarshalling nson: %s", err)
 		}
@@ -20,7 +20,7 @@ func TestBasicNsonParse(t *testing.T) {
 
 func TestNsonPartialGet(t *testing.T) {
 	for _, jevt := range nsonTestEvents {
-		evt := &nostr.Event{}
+		evt := &event.T{}
 		if err := Unmarshal(jevt, evt); err != nil {
 			t.Fatalf("error unmarshalling nson: %s", err)
 		}
@@ -50,7 +50,7 @@ func TestNsonPartialGet(t *testing.T) {
 
 func TestNsonEncode(t *testing.T) {
 	for _, jevt := range normalEvents {
-		pevt := &nostr.Event{}
+		pevt := &event.T{}
 		if err := json.Unmarshal([]byte(jevt), pevt); err != nil {
 			t.Fatalf("failed to decode normal json: %s", err)
 		}
@@ -59,7 +59,7 @@ func TestNsonEncode(t *testing.T) {
 			t.Fatalf("failed to encode nson: %s", err)
 		}
 
-		evt := &nostr.Event{}
+		evt := &event.T{}
 		if err := Unmarshal(nevt, evt); err != nil {
 			t.Fatalf("error unmarshalling nson: %s", err)
 		}
@@ -68,8 +68,8 @@ func TestNsonEncode(t *testing.T) {
 	}
 }
 
-func checkParsedCorrectly(t *testing.T, evt *nostr.Event, jevt string) (isBad bool) {
-	var canonical nostr.Event
+func checkParsedCorrectly(t *testing.T, evt *event.T, jevt string) (isBad bool) {
+	var canonical event.T
 	err := json.Unmarshal([]byte(jevt), &canonical)
 	if err != nil {
 		t.Fatalf("error unmarshalling normal json: %s", err)
@@ -147,9 +147,9 @@ var normalEvents = []string{
 }
 
 func BenchmarkNSONEncoding(b *testing.B) {
-	events := make([]*nostr.Event, len(normalEvents))
+	events := make([]*event.T, len(normalEvents))
 	for i, jevt := range normalEvents {
-		evt := &nostr.Event{}
+		evt := &event.T{}
 		json.Unmarshal([]byte(jevt), evt)
 		events[i] = evt
 	}
@@ -174,7 +174,7 @@ func BenchmarkNSONEncoding(b *testing.B) {
 func BenchmarkNSONDecoding(b *testing.B) {
 	events := make([]string, len(normalEvents))
 	for i, jevt := range normalEvents {
-		evt := &nostr.Event{}
+		evt := &event.T{}
 		json.Unmarshal([]byte(jevt), evt)
 		nevt, _ := Marshal(evt)
 		events[i] = nevt
@@ -183,7 +183,7 @@ func BenchmarkNSONDecoding(b *testing.B) {
 	b.Run("easyjson.Unmarshal", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, nevt := range events {
-				evt := &nostr.Event{}
+				evt := &event.T{}
 				err := easyjson.Unmarshal([]byte(nevt), evt)
 				if err != nil {
 					b.Fatalf("failed to unmarshal: %s", err)
@@ -195,7 +195,7 @@ func BenchmarkNSONDecoding(b *testing.B) {
 	b.Run("nson.Unmarshal", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, nevt := range events {
-				evt := &nostr.Event{}
+				evt := &event.T{}
 				err := Unmarshal(nevt, evt)
 				if err != nil {
 					b.Fatalf("failed to unmarshal: %s", err)
@@ -207,7 +207,7 @@ func BenchmarkNSONDecoding(b *testing.B) {
 	b.Run("easyjson.Unmarshal+sig", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, nevt := range events {
-				evt := &nostr.Event{}
+				evt := &event.T{}
 				err := easyjson.Unmarshal([]byte(nevt), evt)
 				if err != nil {
 					b.Fatalf("failed to unmarshal: %s", err)
@@ -220,7 +220,7 @@ func BenchmarkNSONDecoding(b *testing.B) {
 	b.Run("nson.Unmarshal+sig", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, nevt := range events {
-				evt := &nostr.Event{}
+				evt := &event.T{}
 				err := Unmarshal(nevt, evt)
 				if err != nil {
 					b.Fatalf("failed to unmarshal: %s", err)

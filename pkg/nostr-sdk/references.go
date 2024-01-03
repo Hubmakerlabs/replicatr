@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 )
 
@@ -21,7 +22,7 @@ type Reference struct {
 var mentionRegex = regexp.MustCompile(`\bnostr:((note|npub|naddr|nevent|nprofile)1\w+)\b|#\[(\d+)\]`)
 
 // ParseReferences parses both NIP-08 and NIP-27 references in a single unifying interface.
-func ParseReferences(evt *nostr.Event) []*Reference {
+func ParseReferences(evt *event.T) []*Reference {
 	var references []*Reference
 	content := evt.Content
 

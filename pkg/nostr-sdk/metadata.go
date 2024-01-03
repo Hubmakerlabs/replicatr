@@ -6,12 +6,13 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 )
 
 type ProfileMetadata struct {
 	PubKey string       `json:"-"` // must always be set otherwise things will break
-	Event  *nostr.Event `json:"-"` // may be empty if a profile metadata event wasn't found
+	Event  *event.T `json:"-"` // may be empty if a profile metadata event wasn't found
 
 	// every one of these may be empty
 	Name        string `json:"name,omitempty"`
@@ -51,14 +52,14 @@ func FetchProfileMetadata(ctx context.Context, pool *nostr.SimplePool, pubkey st
 
 	ch := pool.SubManyEose(ctx, relays, nostr.Filters{
 		{
-			Kinds:   []int{nostr.KindProfileMetadata},
+			Kinds:   []int{event.KindProfileMetadata},
 			Authors: []string{pubkey},
 			Limit:   1,
 		},
 	})
 
 	for ie := range ch {
-		if m, err := ParseMetadata(ie.Event); err == nil {
+		if m, err := ParseMetadata(ie.T); err == nil {
 			return m
 		}
 	}
@@ -66,7 +67,7 @@ func FetchProfileMetadata(ctx context.Context, pool *nostr.SimplePool, pubkey st
 	return ProfileMetadata{PubKey: pubkey}
 }
 
-func ParseMetadata(event *nostr.Event) (meta ProfileMetadata, err error) {
+func ParseMetadata(event *event.T) (meta ProfileMetadata, err error) {
 	if event.Kind != 0 {
 		err = fmt.Errorf("event %s is kind %d, not 0", event.ID, event.Kind)
 	} else if err := json.Unmarshal([]byte(event.Content), &meta); err != nil {

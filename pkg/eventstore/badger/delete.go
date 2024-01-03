@@ -5,13 +5,13 @@ import (
 	"encoding/hex"
 	"log"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/dgraph-io/badger/v4"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 )
 
 var serialDelete uint32 = 0
 
-func (b *BadgerBackend) DeleteEvent(ctx context.Context, evt *nostr.Event) (e error) {
+func (b *BadgerBackend) DeleteEvent(ctx context.Context, evt *event.T) (e error) {
 	deletionHappened := false
 
 	err := b.Update(func(txn *badger.Txn) (e error) {

@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"golang.org/x/exp/slices"
 )
 
@@ -38,7 +38,7 @@ func getTagIndexPrefix(tagValue string) ([]byte, int) {
 	return k, offset
 }
 
-func getIndexKeysForEvent(evt *nostr.Event, idx []byte) [][]byte {
+func getIndexKeysForEvent(evt *event.T, idx []byte) [][]byte {
 	keys := make([][]byte, 0, 18)
 
 	// indexes

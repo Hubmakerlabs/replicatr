@@ -5,11 +5,13 @@ import (
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 )
 
 func TestParseReferences(t *testing.T) {
-	evt := nostr.Event{
-		Tags: nostr.Tags{
+	evt := event.T{
+		Tags: tags.Tags{
 			{"p", "c9d556c6d3978d112d30616d0d20aaa81410e3653911dd67787b5aaf9b36ade8", "wss://nostr.com"},
 			{"e", "a84c5de86efc2ec2cff7bad077c4171e09146b633b7ad117fffe088d9579ac33", "wss://other.com", "reply"},
 			{"e", "31d7c2875b5fc8e6f9c8f9dc1f84de1b6b91d1947ea4c59225e55c325d330fa8", ""},

@@ -1,7 +1,7 @@
 package replicatr
 
 import (
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"golang.org/x/exp/slices"
 )
 
@@ -93,7 +93,7 @@ func RestrictToSpecifiedKinds(kinds ...uint16) func(Ctx, *Event) (bool, string) 
 
 func PreventTimestampsInThePast(thresholdSeconds Timestamp) func(Ctx, *Event) (bool, string) {
 	return func(ctx Ctx, event *Event) (reject bool, msg string) {
-		if nostr.Now()-event.CreatedAt > thresholdSeconds {
+		if timestamp.Now()-event.CreatedAt > thresholdSeconds {
 			return true, "event too old"
 		}
 		return false, ""
@@ -102,7 +102,7 @@ func PreventTimestampsInThePast(thresholdSeconds Timestamp) func(Ctx, *Event) (b
 
 func PreventTimestampsInTheFuture(thresholdSeconds Timestamp) func(Ctx, *Event) (bool, string) {
 	return func(ctx Ctx, event *Event) (reject bool, msg string) {
-		if event.CreatedAt-nostr.Now() > thresholdSeconds {
+		if event.CreatedAt-timestamp.Now() > thresholdSeconds {
 			return true, "event too much in the future"
 		}
 		return false, ""

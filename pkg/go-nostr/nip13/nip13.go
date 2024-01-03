@@ -9,7 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	nostr "github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
 
 var (
@@ -42,7 +44,7 @@ func Difficulty(eventID string) int {
 // Check reports whether the event ID demonstrates a sufficient proof of work difficulty.
 // Note that Check performs no validation other than counting leading zero bits
 // in an event ID. It is up to the callers to verify the event with other methods,
-// such as [nostr.Event.CheckSignature].
+// such as [nostr.T.CheckSignature].
 func Check(eventID string, minDifficulty int) error {
 	if Difficulty(eventID) < minDifficulty {
 		return ErrDifficultyTooLow
@@ -56,17 +58,17 @@ func Check(eventID string, minDifficulty int) error {
 //
 // Upon success, the returned event always contains a "nonce" tag with the target difficulty
 // commitment, and an updated event.CreatedAt.
-func Generate(event *nostr.Event, targetDifficulty int, timeout time.Duration) (*nostr.Event, error) {
-	tag := nostr.Tag{"nonce", "", strconv.Itoa(targetDifficulty)}
-	event.Tags = append(event.Tags, tag)
+func Generate(evt *event.T, targetDifficulty int, timeout time.Duration) (*event.T, error) {
+	tag := tags.Tag{"nonce", "", strconv.Itoa(targetDifficulty)}
+	evt.Tags = append(evt.Tags, tag)
 	var nonce uint64
 	start := time.Now()
 	for {
 		nonce++
 		tag[1] = strconv.FormatUint(nonce, 10)
-		event.CreatedAt = nostr.Now()
-		if Difficulty(event.GetID()) >= targetDifficulty {
-			return event, nil
+		evt.CreatedAt = timestamp.Now()
+		if Difficulty(evt.GetID()) >= targetDifficulty {
+			return evt, nil
 		}
 		// benchmarks show one iteration is approx 3000ns on i7-8565U @ 1.8GHz.
 		// so, check every 3ms; arbitrary

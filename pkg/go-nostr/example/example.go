@@ -10,7 +10,9 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
 
 func main() {
@@ -41,7 +43,7 @@ func main() {
 		// this filters for messages tagged with the user, mainly replies.
 		t["p"] = []string{v.(string)}
 		filters = []nostr.Filter{{
-			Kinds: []int{nostr.KindTextNote},
+			Kinds: []int{event.KindTextNote},
 			Tags:  t,
 			// limit = 3, get the three most recent notes
 			Limit: 3,
@@ -55,7 +57,7 @@ func main() {
 	sub, _ := relay.Subscribe(ctx, filters)
 
 	// we will append the returned events to this slice
-	evs := make([]nostr.Event, 0)
+	evs := make([]event.T, 0)
 
 	go func() {
 		<-sub.EndOfStoredEvents
@@ -86,7 +88,7 @@ func main() {
 	}
 
 	var sk string
-	ev := nostr.Event{}
+	ev := event.T{}
 	if _, s, e := nip19.Decode(nsec); e == nil {
 		sk = s.(string)
 	} else {
@@ -101,8 +103,8 @@ func main() {
 		panic(e)
 	}
 
-	ev.CreatedAt = nostr.Now()
-	ev.Kind = nostr.KindTextNote
+	ev.CreatedAt = timestamp.Now()
+	ev.Kind = event.KindTextNote
 	var content string
 	fmt.Fprintln(os.Stderr, "enter content of note, ending with an empty newline (ctrl+d):")
 	for {

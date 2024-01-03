@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/mailru/easyjson"
 	jwriter "github.com/mailru/easyjson/jwriter"
 	"github.com/tidwall/gjson"
@@ -57,13 +58,7 @@ type Envelope interface {
 	String() string
 }
 
-type EventEnvelope struct {
-	SubscriptionID *string
-	Event
-}
-
 var (
-	_ Envelope = (*EventEnvelope)(nil)
 	_ Envelope = (*ReqEnvelope)(nil)
 	_ Envelope = (*CountEnvelope)(nil)
 	_ Envelope = (*NoticeEnvelope)(nil)
@@ -72,33 +67,6 @@ var (
 	_ Envelope = (*OKEnvelope)(nil)
 	_ Envelope = (*AuthEnvelope)(nil)
 )
-
-func (_ EventEnvelope) Label() string { return "EVENT" }
-
-func (v *EventEnvelope) UnmarshalJSON(data []byte) error {
-	r := gjson.ParseBytes(data)
-	arr := r.Array()
-	switch len(arr) {
-	case 2:
-		return easyjson.Unmarshal([]byte(arr[1].Raw), &v.Event)
-	case 3:
-		v.SubscriptionID = &arr[1].Str
-		return easyjson.Unmarshal([]byte(arr[2].Raw), &v.Event)
-	default:
-		return fmt.Errorf("failed to decode EVENT envelope")
-	}
-}
-
-func (v EventEnvelope) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	w.RawString(`["EVENT",`)
-	if v.SubscriptionID != nil {
-		w.RawString(`"` + *v.SubscriptionID + `",`)
-	}
-	v.MarshalEasyJSON(&w)
-	w.RawString(`]`)
-	return w.BuildBytes()
-}
 
 type ReqEnvelope struct {
 	SubscriptionID string
@@ -356,7 +324,7 @@ func (v OKEnvelope) MarshalJSON() ([]byte, error) {
 
 type AuthEnvelope struct {
 	Challenge *string
-	Event     Event
+	Event     event.T
 }
 
 func (_ AuthEnvelope) Label() string { return "AUTH" }

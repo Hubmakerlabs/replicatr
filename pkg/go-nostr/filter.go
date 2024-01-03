@@ -3,6 +3,8 @@ package nostr
 import (
 	"encoding/json"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/mailru/easyjson"
 	"golang.org/x/exp/slices"
 )
@@ -14,8 +16,8 @@ type Filter struct {
 	Kinds   []int      `json:"kinds,omitempty"`
 	Authors []string   `json:"authors,omitempty"`
 	Tags    TagMap     `json:"-,omitempty"`
-	Since   *Timestamp `json:"since,omitempty"`
-	Until   *Timestamp `json:"until,omitempty"`
+	Since   *timestamp.Timestamp `json:"since,omitempty"`
+	Until   *timestamp.Timestamp `json:"until,omitempty"`
 	Limit   int        `json:"limit,omitempty"`
 	Search  string     `json:"search,omitempty"`
 }
@@ -27,9 +29,9 @@ func (eff Filters) String() string {
 	return string(j)
 }
 
-func (eff Filters) Match(event *Event) bool {
+func (eff Filters) Match(evt *event.T) bool {
 	for _, filter := range eff {
-		if filter.Matches(event) {
+		if filter.Matches(evt) {
 			return true
 		}
 	}
@@ -41,34 +43,34 @@ func (ef Filter) String() string {
 	return string(j)
 }
 
-func (ef Filter) Matches(event *Event) bool {
-	if event == nil {
+func (ef Filter) Matches(evt *event.T) bool {
+	if evt == nil {
 		return false
 	}
 
-	if ef.IDs != nil && !slices.Contains(ef.IDs, event.ID) {
+	if ef.IDs != nil && !slices.Contains(ef.IDs, evt.ID) {
 		return false
 	}
 
-	if ef.Kinds != nil && !slices.Contains(ef.Kinds, event.Kind) {
+	if ef.Kinds != nil && !slices.Contains(ef.Kinds, evt.Kind) {
 		return false
 	}
 
-	if ef.Authors != nil && !slices.Contains(ef.Authors, event.PubKey) {
+	if ef.Authors != nil && !slices.Contains(ef.Authors, evt.PubKey) {
 		return false
 	}
 
 	for f, v := range ef.Tags {
-		if v != nil && !event.Tags.ContainsAny(f, v) {
+		if v != nil && !evt.Tags.ContainsAny(f, v) {
 			return false
 		}
 	}
 
-	if ef.Since != nil && event.CreatedAt < *ef.Since {
+	if ef.Since != nil && evt.CreatedAt < *ef.Since {
 		return false
 	}
 
-	if ef.Until != nil && event.CreatedAt > *ef.Until {
+	if ef.Until != nil && evt.CreatedAt > *ef.Until {
 		return false
 	}
 

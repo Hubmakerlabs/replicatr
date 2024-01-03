@@ -3,6 +3,10 @@ package nostr
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
 
 func TestEventParsingAndVerifying(t *testing.T) {
@@ -14,7 +18,7 @@ func TestEventParsingAndVerifying(t *testing.T) {
 	}
 
 	for _, raw := range rawEvents {
-		var ev Event
+		var ev event.T
 		if err := json.Unmarshal([]byte(raw), &ev); err != nil {
 			t.Errorf("failed to parse event json: %v", err)
 		}
@@ -40,13 +44,13 @@ func TestEventParsingAndVerifying(t *testing.T) {
 }
 
 func TestEventSerialization(t *testing.T) {
-	events := []Event{
+	events := []event.T{
 		{
 			ID:        "92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
 			PubKey:    "e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
-			Kind:      KindEncryptedDirectMessage,
-			CreatedAt: Timestamp(1671028682),
-			Tags:      Tags{Tag{"p", "f8340b2bde651576b75af61aa26c80e13c65029f00f7f64004eece679bf7059f"}},
+			Kind:      event.KindEncryptedDirectMessage,
+			CreatedAt: timestamp.Timestamp(1671028682),
+			Tags:      tags.Tags{{"p", "f8340b2bde651576b75af61aa26c80e13c65029f00f7f64004eece679bf7059f"}},
 			Content:   "you say yes, I say no",
 			Sig:       "ed08d2dd5b0f7b6a3cdc74643d4adee3158ddede9cc848e8cd97630c097001acc2d052d2d3ec2b7ac4708b2314b797106d1b3c107322e61b5e5cc2116e099b79",
 		},
@@ -59,7 +63,7 @@ func TestEventSerialization(t *testing.T) {
 			t.Error("failed to serialize this event")
 		}
 
-		var re Event
+		var re event.T
 		if err := json.Unmarshal(b, &re); err != nil {
 			t.Log(string(b))
 			t.Error("failed to re parse event just serialized")
@@ -87,11 +91,11 @@ func TestEventSerialization(t *testing.T) {
 }
 
 func TestEventSerializationWithExtraFields(t *testing.T) {
-	evt := Event{
+	evt := event.T{
 		ID:        "92570b321da503eac8014b23447301eb3d0bbdfbace0d11a4e4072e72bb7205d",
 		PubKey:    "e9142f724955c5854de36324dab0434f97b15ec6b33464d56ebe491e3f559d1b",
-		Kind:      KindReaction,
-		CreatedAt: Timestamp(1671028682),
+		Kind:      event.KindReaction,
+		CreatedAt: timestamp.Timestamp(1671028682),
 		Content:   "there is an extra field here",
 		Sig:       "ed08d2dd5b0f7b6a3cdc74643d4adee3158ddede9cc848e8cd97630c097001acc2d052d2d3ec2b7ac4708b2314b797106d1b3c107322e61b5e5cc2116e099b79",
 	}
@@ -106,7 +110,7 @@ func TestEventSerializationWithExtraFields(t *testing.T) {
 		t.Error("failed to serialize this event")
 	}
 
-	var re Event
+	var re event.T
 	if err := json.Unmarshal(b, &re); err != nil {
 		t.Log(string(b))
 		t.Error("failed to re parse event just serialized")
@@ -136,9 +140,9 @@ func TestEventSerializationWithExtraFields(t *testing.T) {
 	}
 }
 
-func mustSignEvent(t *testing.T, privkey string, event *Event) {
+func mustSignEvent(t *testing.T, privkey string, evt *event.T) {
 	t.Helper()
-	if err := event.Sign(privkey); err != nil {
-		t.Fatalf("event.Sign: %v", err)
+	if err := evt.Sign(privkey); err != nil {
+		t.Fatalf("evt.Sign: %v", err)
 	}
 }

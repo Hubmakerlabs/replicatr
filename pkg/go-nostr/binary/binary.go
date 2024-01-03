@@ -4,7 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
 
 func UnmarshalBinary(data []byte, evt *Event) (err error) {
@@ -17,7 +18,7 @@ func UnmarshalBinary(data []byte, evt *Event) (err error) {
 	copy(evt.ID[:], data[0:32])
 	copy(evt.PubKey[:], data[32:64])
 	copy(evt.Sig[:], data[64:128])
-	evt.CreatedAt = nostr.Timestamp(binary.BigEndian.Uint32(data[128:132]))
+	evt.CreatedAt = timestamp.Timestamp(binary.BigEndian.Uint32(data[128:132]))
 	evt.Kind = binary.BigEndian.Uint16(data[132:134])
 	contentLength := int(binary.BigEndian.Uint16(data[134:136]))
 	evt.Content = string(data[136 : 136+contentLength])
@@ -26,12 +27,12 @@ func UnmarshalBinary(data []byte, evt *Event) (err error) {
 
 	nTags := binary.BigEndian.Uint16(data[curr : curr+2])
 	curr++
-	evt.Tags = make(nostr.Tags, nTags)
+	evt.Tags = make(tags.Tags, nTags)
 
 	for t := range evt.Tags {
 		curr = curr + 1
 		nItems := int(data[curr])
-		tag := make(nostr.Tag, nItems)
+		tag := make(tags.Tag, nItems)
 		for i := range tag {
 			curr = curr + 1
 			itemSize := int(binary.BigEndian.Uint16(data[curr : curr+2]))

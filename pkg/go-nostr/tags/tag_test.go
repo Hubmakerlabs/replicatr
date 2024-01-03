@@ -1,4 +1,4 @@
-package nostr
+package tags
 
 import (
 	"testing"

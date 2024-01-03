@@ -11,6 +11,9 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/connection"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -226,25 +229,25 @@ func (r *Relay) Connect(ctx context.Context) error {
 					continue
 				} else {
 					// check if the event matches the desired filter, ignore otherwise
-					if !subscription.Filters.Match(&env.Event) {
-						fmt.Printf("{%s} filter does not match: %v ~ %v\n", r.URL, subscription.Filters, env.Event)
+					if !subscription.Filters.Match(&env.T) {
+						fmt.Printf("{%s} filter does not match: %v ~ %v\n", r.URL, subscription.Filters, env.T)
 						continue
 					}
 
 					// check signature, ignore invalid, except from trusted (AssumeValid) relays
 					if !r.AssumeValid {
-						if ok, err := env.Event.CheckSignature(); !ok {
+						if ok, err := env.T.CheckSignature(); !ok {
 							errmsg := ""
 							if err != nil {
 								errmsg = err.Error()
 							}
-							fmt.Printf("{%s} bad signature on %s; %s\n", r.URL, env.Event.ID, errmsg)
+							fmt.Printf("{%s} bad signature on %s; %s\n", r.URL, env.T.ID, errmsg)
 							continue
 						}
 					}
 
 					// dispatch this to the internal .events channel of the subscription
-					subscription.dispatchEvent(&env.Event)
+					subscription.dispatchEvent(&env.T)
 				}
 			case *EOSEEnvelope:
 				if subscription, ok := r.Subscriptions.Load(string(*env)); ok {
@@ -283,18 +286,18 @@ func (r *Relay) Write(msg []byte) <-chan error {
 }
 
 // Publish sends an "EVENT" command to the relay r as in NIP-01 and waits for an OK response.
-func (r *Relay) Publish(ctx context.Context, event Event) error {
-	return r.publish(ctx, event.ID, &EventEnvelope{Event: event})
+func (r *Relay) Publish(ctx context.Context, event event.T) error {
+	return r.publish(ctx, event.ID, &EventEnvelope{T: event})
 }
 
 // Auth sends an "AUTH" command client->relay as in NIP-42 and waits for an OK response.
-func (r *Relay) Auth(ctx context.Context, sign func(event *Event) error) error {
-	authEvent := Event{
-		CreatedAt: Now(),
-		Kind:      KindClientAuthentication,
-		Tags: Tags{
-			Tag{"relay", r.URL},
-			Tag{"challenge", r.challenge},
+func (r *Relay) Auth(ctx context.Context, sign func(event *event.T) error) error {
+	authEvent := event.T{
+		CreatedAt: timestamp.Now(),
+		Kind:      event.KindClientAuthentication,
+		Tags: tags.Tags{
+			tags.Tag{"relay", r.URL},
+			tags.Tag{"challenge", r.challenge},
 		},
 		Content: "",
 	}
@@ -386,7 +389,7 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filters Filters, opts .
 		Context:           ctx,
 		cancel:            cancel,
 		counter:           int(current),
-		Events:            make(chan *Event),
+		Events:            make(chan *event.T),
 		EndOfStoredEvents: make(chan struct{}),
 		ClosedReason:      make(chan string, 1),
 		Filters:           filters,
@@ -408,7 +411,7 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filters Filters, opts .
 	return sub
 }
 
-func (r *Relay) QuerySync(ctx context.Context, filter Filter, opts ...SubscriptionOption) ([]*Event, error) {
+func (r *Relay) QuerySync(ctx context.Context, filter Filter, opts ...SubscriptionOption) ([]*event.T, error) {
 	sub, err := r.Subscribe(ctx, Filters{filter}, opts...)
 	if err != nil {
 		return nil, err
@@ -423,7 +426,7 @@ func (r *Relay) QuerySync(ctx context.Context, filter Filter, opts ...Subscripti
 		defer cancel()
 	}
 
-	var events []*Event
+	var events []*event.T
 	for {
 		select {
 		case evt := <-sub.Events:

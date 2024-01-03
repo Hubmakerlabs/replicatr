@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/mailru/easyjson"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 )
 
 func BenchmarkBinaryEncoding(b *testing.B) {
-	events := make([]*nostr.Event, len(normalEvents))
+	events := make([]*event.T, len(normalEvents))
 	binaryEvents := make([]*Event, len(normalEvents))
 	for i, jevt := range normalEvents {
-		evt := &nostr.Event{}
+		evt := &event.T{}
 		json.Unmarshal([]byte(jevt), evt)
 		events[i] = evt
 		binaryEvents[i] = BinaryEvent(evt)
@@ -46,7 +46,7 @@ func BenchmarkBinaryEncoding(b *testing.B) {
 func BenchmarkBinaryDecoding(b *testing.B) {
 	events := make([][]byte, len(normalEvents))
 	for i, jevt := range normalEvents {
-		evt := &nostr.Event{}
+		evt := &event.T{}
 		json.Unmarshal([]byte(jevt), evt)
 		bevt, _ := Marshal(evt)
 		events[i] = bevt
@@ -55,7 +55,7 @@ func BenchmarkBinaryDecoding(b *testing.B) {
 	b.Run("easyjson.Unmarshal", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, jevt := range normalEvents {
-				evt := &nostr.Event{}
+				evt := &event.T{}
 				err := easyjson.Unmarshal([]byte(jevt), evt)
 				if err != nil {
 					b.Fatalf("failed to unmarshal: %s", err)
@@ -67,7 +67,7 @@ func BenchmarkBinaryDecoding(b *testing.B) {
 	b.Run("binary.Unmarshal", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, bevt := range events {
-				evt := &nostr.Event{}
+				evt := &event.T{}
 				err := Unmarshal(bevt, evt)
 				if err != nil {
 					b.Fatalf("failed to unmarshal: %s", err)
@@ -91,7 +91,7 @@ func BenchmarkBinaryDecoding(b *testing.B) {
 	b.Run("easyjson.Unmarshal+sig", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, nevt := range normalEvents {
-				evt := &nostr.Event{}
+				evt := &event.T{}
 				err := easyjson.Unmarshal([]byte(nevt), evt)
 				if err != nil {
 					b.Fatalf("failed to unmarshal: %s", err)
@@ -104,7 +104,7 @@ func BenchmarkBinaryDecoding(b *testing.B) {
 	b.Run("binary.Unmarshal+sig", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, bevt := range events {
-				evt := &nostr.Event{}
+				evt := &event.T{}
 				err := Unmarshal(bevt, evt)
 				if err != nil {
 					b.Fatalf("failed to unmarshal: %s", err)

@@ -1,8 +1,10 @@
 package nip10
 
-import "github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+import (
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+)
 
-func GetThreadRoot(tags nostr.Tags) *nostr.Tag {
+func GetThreadRoot(tags tags.Tags) *tags.Tag {
 	for _, tag := range tags {
 		if len(tag) >= 4 && tag[0] == "e" && tag[3] == "root" {
 			return &tag
@@ -12,12 +14,12 @@ func GetThreadRoot(tags nostr.Tags) *nostr.Tag {
 	return tags.GetFirst([]string{"e", ""})
 }
 
-func GetImmediateReply(tags nostr.Tags) *nostr.Tag {
-	var root *nostr.Tag
-	var lastE *nostr.Tag
+func GetImmediateReply(t tags.Tags) *tags.Tag {
+	var root *tags.Tag
+	var lastE *tags.Tag
 
-	for i := 0; i <= len(tags)-1; i++ {
-		tag := tags[i]
+	for i := 0; i <= len(t)-1; i++ {
+		tag := t[i]
 
 		if len(tag) < 2 {
 			continue

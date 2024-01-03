@@ -10,6 +10,9 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/urfave/cli/v2"
 
@@ -91,11 +94,11 @@ func pay(cfg *Config, invoice string) (e error) {
 		return err
 	}
 
-	ev := nostr.Event{
+	ev := event.T{
 		PubKey:    pub,
-		CreatedAt: nostr.Now(),
-		Kind:      nostr.KindNWCWalletRequest,
-		Tags:      nostr.Tags{nostr.Tag{"p", wallet}},
+		CreatedAt: timestamp.Now(),
+		Kind:      event.KindNWCWalletRequest,
+		Tags:      tags.Tags{tags.Tag{"p", wallet}},
 		Content:   content,
 	}
 	err = ev.Sign(secret)
@@ -108,7 +111,7 @@ func pay(cfg *Config, invoice string) (e error) {
 			"p": []string{pub},
 			"e": []string{ev.ID},
 		},
-		Kinds: []int{nostr.KindNWCWalletInfo, nostr.KindNWCWalletResponse, nostr.KindNWCWalletRequest},
+		Kinds: []int{event.KindNWCWalletInfo, event.KindNWCWalletResponse, event.KindNWCWalletRequest},
 		Limit: 1,
 	}}
 	sub, err := relay.Subscribe(context.Background(), filters)
@@ -148,7 +151,7 @@ func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
 
 	// get set-metadata
 	filter := nostr.Filter{
-		Kinds:   []int{nostr.KindProfileMetadata},
+		Kinds:   []int{event.KindProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
 	}
@@ -207,8 +210,8 @@ func doZap(cCtx *cli.Context) (e error) {
 	}
 
 	receipt := ""
-	zr := nostr.Event{}
-	zr.Tags = nostr.Tags{}
+	zr := event.T{}
+	zr.Tags = tags.Tags{}
 
 	if pub, err := nostr.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
@@ -219,8 +222,8 @@ func doZap(cCtx *cli.Context) (e error) {
 		return err
 	}
 
-	zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"amount", fmt.Sprint(amount * 1000)})
-	relays := nostr.Tag{"relays"}
+	zr.Tags = zr.Tags.AppendUnique(tags.Tag{"amount", fmt.Sprint(amount * 1000)})
+	relays := tags.Tag{"relays"}
 	for k, v := range cfg.Relays {
 		if v.Write {
 			relays = append(relays, k)
@@ -231,25 +234,25 @@ func doZap(cCtx *cli.Context) (e error) {
 		switch prefix {
 		case "nevent":
 			receipt = s.(nostr.EventPointer).Author
-			zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"p", receipt})
-			zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"e", s.(nostr.EventPointer).ID})
+			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})
+			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"e", s.(nostr.EventPointer).ID})
 		case "note":
 			evs := cfg.Events(nostr.Filter{IDs: []string{s.(string)}})
 			if len(evs) != 0 {
 				receipt = evs[0].PubKey
-				zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"p", receipt})
+				zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})
 			}
-			zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"e", s.(string)})
+			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"e", s.(string)})
 		case "npub":
 			receipt = s.(string)
-			zr.Tags = zr.Tags.AppendUnique(nostr.Tag{"p", receipt})
+			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})
 		default:
 			return errors.New("invalid argument")
 		}
 	}
 
-	zr.Kind = nostr.KindZapRequest // 9734
-	zr.CreatedAt = nostr.Now()
+	zr.Kind = event.KindZapRequest // 9734
+	zr.CreatedAt = timestamp.Now()
 	zr.Content = comment
 	if err := zr.Sign(sk); err != nil {
 		return err

@@ -5,12 +5,12 @@ import (
 	"encoding/hex"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
-	"github.com/dgraph-io/badger/v4"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *BadgerBackend) SaveEvent(ctx context.Context, evt *nostr.Event) (e error) {
+func (b *BadgerBackend) SaveEvent(ctx context.Context, evt *event.T) (e error) {
 	return b.Update(func(txn *badger.Txn) (e error) {
 		// query event by id to ensure we don't save duplicates
 		id, _ := hex.DecodeString(evt.ID)

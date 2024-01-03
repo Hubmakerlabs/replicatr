@@ -1,7 +1,7 @@
 package nip29
 
 import (
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"golang.org/x/exp/slices"
 )
 
@@ -25,19 +25,19 @@ const (
 type KindRange []int
 
 var ModerationEventKinds = KindRange{
-	nostr.KindSimpleGroupAddUser,
-	nostr.KindSimpleGroupRemoveUser,
-	nostr.KindSimpleGroupEditMetadata,
-	nostr.KindSimpleGroupAddPermission,
-	nostr.KindSimpleGroupRemovePermission,
-	nostr.KindSimpleGroupDeleteEvent,
-	nostr.KindSimpleGroupEditGroupStatus,
+	event.KindSimpleGroupAddUser,
+	event.KindSimpleGroupRemoveUser,
+	event.KindSimpleGroupEditMetadata,
+	event.KindSimpleGroupAddPermission,
+	event.KindSimpleGroupRemovePermission,
+	event.KindSimpleGroupDeleteEvent,
+	event.KindSimpleGroupEditGroupStatus,
 }
 
 var MetadataEventKinds = KindRange{
-	nostr.KindSimpleGroupMetadata,
-	nostr.KindSimpleGroupAdmins,
-	nostr.KindSimpleGroupMembers,
+	event.KindSimpleGroupMetadata,
+	event.KindSimpleGroupAdmins,
+	event.KindSimpleGroupMembers,
 }
 
 func (kr KindRange) Includes(kind int) bool {

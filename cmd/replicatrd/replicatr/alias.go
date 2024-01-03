@@ -6,7 +6,9 @@ import (
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip11"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/notice"
 	"github.com/fasthttp/websocket"
@@ -17,11 +19,10 @@ import (
 type (
 	Ctx             = context.Context
 	Info            = nip11.RelayInformationDocument
-	Event           = nostr.Event
+	Event           = event.T
 	Filter          = nostr.Filter
 	Filters         = nostr.Filters
 	TagMap          = nostr.TagMap
-	EventEnvelope   = nostr.EventEnvelope
 	OKEnvelope      = nostr.OKEnvelope
 	EventID         = eventid.EventID
 	CountEnvelope   = nostr.CountEnvelope
@@ -38,5 +39,5 @@ type (
 	WaitGroup       = sync.WaitGroup
 	CancelCauseFunc = context.CancelCauseFunc
 	ListenerMap     = *xsync.MapOf[string, *Listener]
-	Timestamp       = nostr.Timestamp
+	Timestamp       = timestamp.Timestamp
 )

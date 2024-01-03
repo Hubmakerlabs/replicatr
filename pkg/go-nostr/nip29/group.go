@@ -3,7 +3,9 @@ package nip29
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
 
 type Group struct {
@@ -15,46 +17,46 @@ type Group struct {
 	Private bool
 	Closed  bool
 
-	LastMetadataUpdate nostr.Timestamp
+	LastMetadataUpdate timestamp.Timestamp
 }
 
-func (group Group) ToMetadataEvent() *nostr.Event {
-	evt := &nostr.Event{
+func (group Group) ToMetadataEvent() *event.T {
+	evt := &event.T{
 		Kind:      39000,
 		CreatedAt: group.LastMetadataUpdate,
 		Content:   group.About,
-		Tags: nostr.Tags{
-			nostr.Tag{"d", group.ID},
+		Tags: tags.Tags{
+			tags.Tag{"d", group.ID},
 		},
 	}
 	if group.Name != "" {
-		evt.Tags = append(evt.Tags, nostr.Tag{"name", group.Name})
+		evt.Tags = append(evt.Tags, tags.Tag{"name", group.Name})
 	}
 	if group.About != "" {
-		evt.Tags = append(evt.Tags, nostr.Tag{"about", group.Name})
+		evt.Tags = append(evt.Tags, tags.Tag{"about", group.Name})
 	}
 	if group.Picture != "" {
-		evt.Tags = append(evt.Tags, nostr.Tag{"picture", group.Picture})
+		evt.Tags = append(evt.Tags, tags.Tag{"picture", group.Picture})
 	}
 
 	// status
 	if group.Private {
-		evt.Tags = append(evt.Tags, nostr.Tag{"private"})
+		evt.Tags = append(evt.Tags, tags.Tag{"private"})
 	} else {
-		evt.Tags = append(evt.Tags, nostr.Tag{"public"})
+		evt.Tags = append(evt.Tags, tags.Tag{"public"})
 	}
 	if group.Closed {
-		evt.Tags = append(evt.Tags, nostr.Tag{"closed"})
+		evt.Tags = append(evt.Tags, tags.Tag{"closed"})
 	} else {
-		evt.Tags = append(evt.Tags, nostr.Tag{"open"})
+		evt.Tags = append(evt.Tags, tags.Tag{"open"})
 	}
 
 	return evt
 }
 
-func (group *Group) MergeInMetadataEvent(evt *nostr.Event) error {
-	if evt.Kind != nostr.KindSimpleGroupMetadata {
-		return fmt.Errorf("expected kind %d, got %d", nostr.KindSimpleGroupMetadata, evt.Kind)
+func (group *Group) MergeInMetadataEvent(evt *event.T) error {
+	if evt.Kind != event.KindSimpleGroupMetadata {
+		return fmt.Errorf("expected kind %d, got %d", event.KindSimpleGroupMetadata, evt.Kind)
 	}
 
 	if evt.CreatedAt <= group.LastMetadataUpdate {

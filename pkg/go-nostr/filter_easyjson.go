@@ -5,6 +5,7 @@ package nostr
 import (
 	json "encoding/json"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -113,9 +114,9 @@ func easyjson4d398eaaDecodeGithubComNbdWtfGoNostr(in *jlexer.Lexer, out *Filter)
 				out.Since = nil
 			} else {
 				if out.Since == nil {
-					out.Since = new(Timestamp)
+					out.Since = new(timestamp.Timestamp)
 				}
-				*out.Since = Timestamp(in.Int64())
+				*out.Since = timestamp.Timestamp(in.Int64())
 			}
 		case "until":
 			if in.IsNull() {
@@ -123,9 +124,9 @@ func easyjson4d398eaaDecodeGithubComNbdWtfGoNostr(in *jlexer.Lexer, out *Filter)
 				out.Until = nil
 			} else {
 				if out.Until == nil {
-					out.Until = new(Timestamp)
+					out.Until = new(timestamp.Timestamp)
 				}
-				*out.Until = Timestamp(in.Int64())
+				*out.Until = timestamp.Timestamp(in.Int64())
 			}
 		case "limit":
 			out.Limit = int(in.Int())
