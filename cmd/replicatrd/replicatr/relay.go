@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
@@ -23,29 +24,51 @@ const (
 	MaxMessageSize  int64 = 512000 // ???
 )
 
+// aliases so we can swap out to another package with only here changed
 type (
-	Ctx                       = context.Context
-	Filter                    = *nostr.Filter
-	Event                     = *nostr.Event
-	Info                      = *nip11.RelayInformationDocument
-	Filters                   = nostr.Filters
-	RejectEvent               func(ctx Ctx, event Event) (reject bool, msg string)
-	RejectFilter              func(ctx Ctx, filter Filter) (reject bool, msg string)
-	OverwriteFilter           func(ctx Ctx, filter Filter)
-	OverwriteDeletionOutcome  func(ctx Ctx, target Event, del Event) (accept bool, msg string)
-	OverwriteResponseEvent    func(ctx Ctx, event Event)
-	Events                    func(ctx Ctx, event Event) error
+	Ctx             = context.Context
+	Info            = nip11.RelayInformationDocument
+	Event           = nostr.Event
+	Filter          = nostr.Filter
+	Filters         = nostr.Filters
+	TagMap          = nostr.TagMap
+	EventEnvelope   = nostr.EventEnvelope
+	OKEnvelope      = nostr.OKEnvelope
+	CountEnvelope   = nostr.CountEnvelope
+	ClosedEnvelope  = nostr.ClosedEnvelope
+	ReqEnvelope     = nostr.ReqEnvelope
+	EOSEEnvelope    = nostr.EOSEEnvelope
+	CloseEnvelope   = nostr.CloseEnvelope
+	AuthEnvelope    = nostr.AuthEnvelope
+	NoticeEnvelope  = nostr.NoticeEnvelope
+	Conn            = websocket.Conn
+	Request         = http.Request
+	ResponseWriter  = http.ResponseWriter
+	Mutex           = sync.Mutex
+	WaitGroup       = sync.WaitGroup
+	CancelCauseFunc = context.CancelCauseFunc
+	ListenerMap     = *xsync.MapOf[string, *Listener]
+)
+
+// function types used in the relay state
+type (
+	RejectEvent               func(ctx Ctx, event *Event) (reject bool, msg string)
+	RejectFilter              func(ctx Ctx, filter *Filter) (reject bool, msg string)
+	OverwriteFilter           func(ctx Ctx, filter *Filter)
+	OverwriteDeletionOutcome  func(ctx Ctx, target *Event, del *Event) (accept bool, msg string)
+	OverwriteResponseEvent    func(ctx Ctx, event *Event)
+	Events                    func(ctx Ctx, event *Event) error
 	Hook                      func(ctx Ctx)
-	OverwriteRelayInformation func(ctx Ctx, r *http.Request, info Info) Info
-	QueryEvents               func(ctx Ctx, filter Filter) (eventC chan Event, e error)
-	CountEvents               func(ctx Ctx, filter Filter) (c int64, e error)
-	OnEventSaved              func(ctx Ctx, event Event)
+	OverwriteRelayInformation func(ctx Ctx, r *Request, info *Info) *Info
+	QueryEvents               func(ctx Ctx, filter *Filter) (eventC chan *Event, e error)
+	CountEvents               func(ctx Ctx, filter *Filter) (c int64, e error)
+	OnEventSaved              func(ctx Ctx, event *Event)
 )
 
 func NewRelay(appName string) (r *Relay) {
 	r = &Relay{
 		Log: log2.New(os.Stderr, appName, 0),
-		Info: &nip11.RelayInformationDocument{
+		Info: &Info{
 			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/khatru",
 			Version:       "n/a",
 			SupportedNIPs: make([]int, 0),
@@ -83,7 +106,7 @@ type Relay struct {
 	OnDisconnect             []Hook
 	OnEventSaved             []OnEventSaved
 	// editing info will affect
-	Info Info
+	Info *Info
 	*log2.Log
 	// for establishing websockets
 	upgrader websocket.Upgrader

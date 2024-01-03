@@ -1,7 +1,6 @@
 package replicatr
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/nbd-wtf/go-nostr"
@@ -9,16 +8,17 @@ import (
 )
 
 type Listener struct {
-	filters nostr.Filters
-	cancel  context.CancelCauseFunc
+	filters Filters
+	cancel  CancelCauseFunc
 }
 
-var listeners = xsync.NewTypedMapOf[*WebSocket, *xsync.MapOf[string, *Listener]](pointerHasher[WebSocket])
+var listeners = xsync.NewTypedMapOf[*WebSocket,
+	ListenerMap](pointerHasher[WebSocket])
 
-func GetListeningFilters() (respFilters nostr.Filters) {
-	respFilters = make(nostr.Filters, 0, listeners.Size()*2)
+func GetListeningFilters() (respFilters Filters) {
+	respFilters = make(Filters, 0, listeners.Size()*2)
 	// here we go through all the existing listeners
-	listeners.Range(func(_ *WebSocket, subs *xsync.MapOf[string, *Listener]) bool {
+	listeners.Range(func(_ *WebSocket, subs ListenerMap) bool {
 		subs.Range(func(_ string, listener *Listener) bool {
 			for _, listenerFilter := range listener.filters {
 				for _, respFilter := range respFilters {
@@ -40,8 +40,8 @@ func GetListeningFilters() (respFilters nostr.Filters) {
 	return
 }
 
-func setListener(id string, ws *WebSocket, f Filters, c context.CancelCauseFunc) {
-	subs, _ := listeners.LoadOrCompute(ws, func() *xsync.MapOf[string, *Listener] {
+func setListener(id string, ws *WebSocket, f Filters, c CancelCauseFunc) {
+	subs, _ := listeners.LoadOrCompute(ws, func() ListenerMap {
 		return xsync.NewMapOf[*Listener]()
 	})
 	subs.Store(id, &Listener{filters: f, cancel: c})
@@ -64,13 +64,16 @@ func removeListenerId(ws *WebSocket, id string) {
 // (no need to cancel contexts as they are all inherited from the main connection context)
 func removeListener(ws *WebSocket) { listeners.Delete(ws) }
 
-func notifyListeners(event Event) {
-	listeners.Range(func(ws *WebSocket, subs *xsync.MapOf[string, *Listener]) bool {
+func notifyListeners(event *Event) {
+	listeners.Range(func(ws *WebSocket, subs ListenerMap) bool {
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(event) {
 				return true
 			}
-			log.E.Chk(ws.WriteJSON(nostr.EventEnvelope{SubscriptionID: &id, Event: *event}))
+			log.E.Chk(ws.WriteJSON(EventEnvelope{
+				SubscriptionID: &id,
+				Event:          *event},
+			))
 			return true
 		})
 		return true

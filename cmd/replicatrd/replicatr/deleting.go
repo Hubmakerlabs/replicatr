@@ -3,17 +3,17 @@ package replicatr
 import (
 	"fmt"
 
-	"github.com/nbd-wtf/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
 
-func (rl *Relay) handleDeleteRequest(ctx Ctx, evt Event) (e error) {
+func (rl *Relay) handleDeleteRequest(ctx Ctx, evt *Event) (e error) {
 	// event deletion -- nip09
-	for _, tag := range evt.Tags {
-		if len(tag) >= 2 && tag[0] == "e" {
+	for _, t := range evt.Tags {
+		if len(t) >= 2 && t[0] == "e" {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
-				var ch chan *nostr.Event
-				if ch, e = query(ctx, &nostr.Filter{IDs: []string{tag[1]}}); rl.E.Chk(e) {
+				var ch chan *Event
+				if ch, e = query(ctx, &Filter{IDs: tag.T{t[1]}}); rl.E.Chk(e) {
 					continue
 				}
 				target := <-ch
