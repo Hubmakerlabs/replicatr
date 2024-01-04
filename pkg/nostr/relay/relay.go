@@ -497,11 +497,11 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filters filters.T,
 	return
 }
 
-func (r *Relay) QuerySync(ctx context.Context, filter *filter.T,
+func (r *Relay) QuerySync(ctx context.Context, f *filter.T,
 	opts ...SubscriptionOption) (evs []*event.T, e error) {
 
 	var sub *Subscription
-	if sub, e = r.Subscribe(ctx, filters.T{filter}, opts...); fails(e) {
+	if sub, e = r.Subscribe(ctx, filters.T{f}, opts...); fails(e) {
 		return
 	}
 	defer sub.Unsub()

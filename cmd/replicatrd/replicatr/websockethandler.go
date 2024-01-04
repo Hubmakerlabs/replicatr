@@ -124,8 +124,8 @@ func (rl *Relay) websocketProcessMessages(message []byte, ctx Ctx, ws *WebSocket
 			return
 		}
 		var total int64
-		for _, filter := range env.Filters {
-			total += rl.handleCountRequest(ctx, ws, &filter)
+		for _, f := range env.Filters {
+			total += rl.handleCountRequest(ctx, ws, &f)
 		}
 		rl.E.Chk(ws.WriteJSON(CountEnvelope{
 			SubscriptionID: env.SubscriptionID,
@@ -139,8 +139,8 @@ func (rl *Relay) websocketProcessMessages(message []byte, ctx Ctx, ws *WebSocket
 		// expose subscription id in the context
 		reqCtx = context.WithValue(reqCtx, subscriptionIdKey, env.SubscriptionID)
 		// handle each filter separately -- dispatching events as they're loaded from databases
-		for _, filter := range env.Filters {
-			e = rl.handleFilter(reqCtx, env.SubscriptionID, &eose, ws, &filter)
+		for _, f := range env.Filters {
+			e = rl.handleFilter(reqCtx, env.SubscriptionID, &eose, ws, &f)
 			if rl.E.Chk(e) {
 				// fail everything if any filter is rejected
 				reason := e.Error()

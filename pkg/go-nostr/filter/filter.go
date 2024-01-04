@@ -31,8 +31,8 @@ func (eff Filters) String() string {
 }
 
 func (eff Filters) Match(evt *event.T) bool {
-	for _, filter := range eff {
-		if filter.Matches(evt) {
+	for _, f := range eff {
+		if f.Matches(evt) {
 			return true
 		}
 	}

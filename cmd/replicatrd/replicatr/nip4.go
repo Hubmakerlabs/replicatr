@@ -6,15 +6,15 @@ import (
 
 // RejectKind4Snoopers prevents reading NIP-04 messages from people not
 // involved in the conversation.
-func RejectKind4Snoopers(ctx Ctx, filter *Filter) (bool, string) {
+func RejectKind4Snoopers(ctx Ctx, f *Filter) (bool, string) {
 	// prevent kind-4 events from being returned to unauthed users, only when
 	// authentication is a thing
-	if !slices.Contains(filter.Kinds, 4) {
+	if !slices.Contains(f.Kinds, 4) {
 		return false, ""
 	}
 	ws := GetConnection(ctx)
-	s := filter.Authors
-	r, _ := filter.Tags["p"]
+	s := f.Authors
+	r, _ := f.Tags["p"]
 	switch {
 	case ws.AuthedPublicKey == "":
 		// not authenticated

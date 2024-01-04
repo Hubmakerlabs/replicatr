@@ -27,11 +27,11 @@ func (s *System) ExpandQueriesByAuthorAndRelays(
 			relayURLs := s.FetchOutboxRelays(ctx, pubkey)
 			c := 0
 			for _, r := range relayURLs {
-				var relay *relay.Relay
-				if relay, e = s.Pool.EnsureRelay(r); log.E.Chk(e) {
+				var rl *relay.Relay
+				if rl, e = s.Pool.EnsureRelay(r); log.E.Chk(e) {
 					continue
 				}
-				relaysForPubkey[pubkey] = append(relaysForPubkey[pubkey], relay)
+				relaysForPubkey[pubkey] = append(relaysForPubkey[pubkey], rl)
 				c++
 				if c == 3 {
 					return
@@ -42,11 +42,11 @@ func (s *System) ExpandQueriesByAuthorAndRelays(
 	wg.Wait()
 	filters = make(map[*relay.Relay]*filter.T, n) // { [relay]: filter }
 	for pubkey, relays := range relaysForPubkey {
-		for _, relay := range relays {
-			flt, ok := filters[relay]
+		for _, rl := range relays {
+			flt, ok := filters[rl]
 			if !ok {
 				flt = f.Clone()
-				filters[relay] = flt
+				filters[rl] = flt
 			}
 			flt.Authors = append(flt.Authors, pubkey)
 		}

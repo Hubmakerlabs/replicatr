@@ -31,12 +31,12 @@ type ResponseEnvelope struct {
 //
 // The caller must sign the embedded event before sending it back to
 // authenticate.
-func New(ac *ChallengeEnvelope, relay string) (ae *ResponseEnvelope) {
+func New(ac *ChallengeEnvelope, rl string) (ae *ResponseEnvelope) {
 	ae = &ResponseEnvelope{
 		&event.T{
 			Kind: kind.ClientAuthentication,
 			Tags: tags.T{
-				{"relay", relay},
+				{"relay", rl},
 				{"challenge", ac.Challenge},
 			},
 		},

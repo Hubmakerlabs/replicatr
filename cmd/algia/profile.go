@@ -21,11 +21,11 @@ func doProfile(cCtx *cli.Context) (e error) {
 	j := cCtx.Bool("json")
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
-	relay := cfg.FindRelay(context.Background(), RelayPerms{Read: true})
-	if relay == nil {
+	rl := cfg.FindRelay(context.Background(), RelayPerms{Read: true})
+	if rl == nil {
 		return errors.New("cannot connect relays")
 	}
-	defer relay.Close()
+	defer rl.Close()
 
 	var pub string
 	if user == "" {

@@ -27,10 +27,10 @@ type queryEvent struct {
 	query int
 }
 
-func (b BadgerBackend) QueryEvents(ctx context.Context, filter *filter.Filter) (chan *event.T, error) {
+func (b BadgerBackend) QueryEvents(ctx context.Context, f *filter.Filter) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
-	queries, extraFilter, since, err := prepareQueries(filter)
+	queries, extraFilter, since, err := prepareQueries(f)
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +99,8 @@ func (b BadgerBackend) QueryEvents(ctx context.Context, filter *filter.Filter) (
 
 			// max number of events we'll return
 			limit := b.MaxLimit
-			if filter.Limit > 0 && filter.Limit < limit {
-				limit = filter.Limit
+			if f.Limit > 0 && f.Limit < limit {
+				limit = f.Limit
 			}
 
 			// receive results and ensure we only return the most recent ones always

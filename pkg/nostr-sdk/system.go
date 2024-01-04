@@ -45,9 +45,9 @@ func (sys System) FetchRelays(ctx context.Context, pubkey string) []Relay {
 func (sys System) FetchOutboxRelays(ctx context.Context, pubkey string) []string {
 	relays := sys.FetchRelays(ctx, pubkey)
 	result := make([]string, 0, len(relays))
-	for _, relay := range relays {
-		if relay.Outbox {
-			result = append(result, relay.URL)
+	for _, rl := range relays {
+		if rl.Outbox {
+			result = append(result, rl.URL)
 		}
 	}
 	return result
@@ -108,11 +108,11 @@ func (sys System) FetchUserEvents(ctx context.Context, filt filter.Filter) (map[
 	results := make(map[string][]*event.T)
 	wg := sync.WaitGroup{}
 	wg.Add(len(filters))
-	for relay, ff := range filters {
-		go func(relay *relays.Relay, f filter.Filter) {
+	for rl, ff := range filters {
+		go func(rl *relays.Relay, f filter.Filter) {
 			defer wg.Done()
 			f.Limit = f.Limit * len(f.Authors) // hack
-			sub, err := relay.Subscribe(ctx, filter.Filters{filt})
+			sub, err := rl.Subscribe(ctx, filter.Filters{filt})
 			if err != nil {
 				return
 			}
@@ -124,7 +124,7 @@ func (sys System) FetchUserEvents(ctx context.Context, filt filter.Filter) (map[
 					return
 				}
 			}
-		}(relay, ff)
+		}(rl, ff)
 	}
 	wg.Wait()
 

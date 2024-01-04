@@ -75,11 +75,11 @@ func pay(cfg *Config, invoice string) (e error) {
 		return err
 	}
 
-	relay, err := relays.RelayConnect(context.Background(), host)
+	rl, err := relays.RelayConnect(context.Background(), host)
 	if err != nil {
 		return err
 	}
-	defer relay.Close()
+	defer rl.Close()
 
 	ss, err := nip04.ComputeSharedSecret(wallet, secret)
 	if err != nil {
@@ -117,12 +117,12 @@ func pay(cfg *Config, invoice string) (e error) {
 		Kinds: []int{event.KindNWCWalletInfo, event.KindNWCWalletResponse, event.KindNWCWalletRequest},
 		Limit: 1,
 	}}
-	sub, err := relay.Subscribe(context.Background(), filters)
+	sub, err := rl.Subscribe(context.Background(), filters)
 	if err != nil {
 		return err
 	}
 
-	err = relay.Publish(context.Background(), ev)
+	err = rl.Publish(context.Background(), ev)
 	if err != nil {
 		return err
 	}
@@ -146,20 +146,20 @@ func pay(cfg *Config, invoice string) (e error) {
 
 // ZapInfo is
 func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
-	relay := cfg.FindRelay(context.Background(), RelayPerms{Read: true})
-	if relay == nil {
+	rl := cfg.FindRelay(context.Background(), RelayPerms{Read: true})
+	if rl == nil {
 		return nil, errors.New("cannot connect relays")
 	}
-	defer relay.Close()
+	defer rl.Close()
 
 	// get set-metadata
-	filter := filter.Filter{
+	f := filter.Filter{
 		Kinds:   []int{event.KindProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
 	}
 
-	evs := cfg.Events(filter)
+	evs := cfg.Events(f)
 	if len(evs) == 0 {
 		return nil, errors.New("cannot find user")
 	}

@@ -1,16 +1,16 @@
 package replicatr
 
 func (rl *Relay) handleCountRequest(ctx Ctx, ws *WebSocket,
-	filter *Filter) (subtotal int64) {
+	f *Filter) (subtotal int64) {
 
 	// overwrite the filter (for example, to eliminate some kinds or tags that
 	// we know we don't support)
 	for _, ovw := range rl.OverwriteCountFilter {
-		ovw(ctx, filter)
+		ovw(ctx, f)
 	}
 	// then check if we'll reject this filter
 	for _, reject := range rl.RejectCountFilter {
-		if rej, msg := reject(ctx, filter); rej {
+		if rej, msg := reject(ctx, f); rej {
 			rl.E.Chk(ws.WriteJSON(&NoticeEnvelope{Text: msg}))
 			return 0
 		}
@@ -19,7 +19,7 @@ func (rl *Relay) handleCountRequest(ctx Ctx, ws *WebSocket,
 	var e error
 	var res int64
 	for _, count := range rl.CountEvents {
-		if res, e = count(ctx, filter); rl.E.Chk(e) {
+		if res, e = count(ctx, f); rl.E.Chk(e) {
 			rl.E.Chk(ws.WriteJSON(&NoticeEnvelope{Text: e.Error()}))
 		}
 		subtotal += res

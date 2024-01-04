@@ -183,8 +183,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					var total int64
-					for _, filter := range env.T {
-						total += rl.handleCountRequest(ctx, ws, filter)
+					for _, f := range env.T {
+						total += rl.handleCountRequest(ctx, ws, f)
 					}
 					rl.D.Chk(ws.WriteJSON(countresponse.Envelope{
 						SubscriptionID: env.SubscriptionID,
@@ -200,9 +200,9 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						env.SubscriptionID)
 					// handle each filter separately -- dispatching events as
 					// they're loaded from databases
-					for _, filter := range env.T {
+					for _, f := range env.T {
 						e = rl.handleRequest(reqCtx, env.SubscriptionID,
-							&ee, ws, filter)
+							&ee, ws, f)
 						if e != nil {
 							// fail everything if any filter is rejected
 							reason := e.Error()

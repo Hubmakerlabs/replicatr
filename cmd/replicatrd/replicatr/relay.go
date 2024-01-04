@@ -23,16 +23,16 @@ const (
 // function types used in the relay state
 type (
 	RejectEvent               func(ctx Ctx, event *Event) (reject bool, msg string)
-	RejectFilter              func(ctx Ctx, filter *Filter) (reject bool, msg string)
-	OverwriteFilter           func(ctx Ctx, filter *Filter)
+	RejectFilter              func(ctx Ctx, f *Filter) (reject bool, msg string)
+	OverwriteFilter           func(ctx Ctx, f *Filter)
 	OverwriteDeletionOutcome  func(ctx Ctx, target *Event, del *Event) (accept bool, msg string)
-	OverwriteResponseEvent    func(ctx Ctx, event *Event)
-	Events                    func(ctx Ctx, event *Event) error
+	OverwriteResponseEvent    func(ctx Ctx, ev *Event)
+	Events                    func(ctx Ctx, ev *Event) error
 	Hook                      func(ctx Ctx)
 	OverwriteRelayInformation func(ctx Ctx, r *Request, info *Info) *Info
-	QueryEvents               func(ctx Ctx, filter *Filter) (eventC chan *Event, e error)
-	CountEvents               func(ctx Ctx, filter *Filter) (c int64, e error)
-	OnEventSaved              func(ctx Ctx, event *Event)
+	QueryEvents               func(ctx Ctx, f *Filter) (eventC chan *Event, e error)
+	CountEvents               func(ctx Ctx, f *Filter) (c int64, e error)
+	OnEventSaved              func(ctx Ctx, ev *Event)
 )
 
 type Relay struct {

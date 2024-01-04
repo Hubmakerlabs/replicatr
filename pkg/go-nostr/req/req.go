@@ -42,9 +42,9 @@ func (v ReqEnvelope) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	w.RawString(`["REQ",`)
 	w.RawString(`"` + v.SubscriptionID + `"`)
-	for _, filter := range v.Filters {
+	for _, f := range v.Filters {
 		w.RawString(`,`)
-		filter.MarshalEasyJSON(&w)
+		f.MarshalEasyJSON(&w)
 	}
 	w.RawString(`]`)
 	return w.BuildBytes()

@@ -22,7 +22,7 @@ func main() {
 
 	// connect to relay
 	url := "wss://nostr.zebedee.cloud"
-	relay, err := relays.RelayConnect(ctx, url)
+	rl, err := relays.RelayConnect(ctx, url)
 	if err != nil {
 		panic(err)
 	}
@@ -56,7 +56,7 @@ func main() {
 
 	// create a subscription and submit to relay
 	// results will be returned on the sub.Events channel
-	sub, _ := relay.Subscribe(ctx, filters)
+	sub, _ := rl.Subscribe(ctx, filters)
 
 	// we will append the returned events to this slice
 	evs := make([]event.T, 0)
@@ -122,12 +122,12 @@ func main() {
 	ev.Sign(sk)
 	for _, url := range []string{"wss://nostr.zebedee.cloud"} {
 		ctx := context.WithValue(context.Background(), "url", url)
-		relay, e := relays.RelayConnect(ctx, url)
+		rl, e := relays.RelayConnect(ctx, url)
 		if e != nil {
 			fmt.Println(e)
 			continue
 		}
 		fmt.Println("posting to: ", url)
-		relay.Publish(ctx, ev)
+		rl.Publish(ctx, ev)
 	}
 }

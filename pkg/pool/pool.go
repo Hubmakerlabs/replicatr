@@ -96,12 +96,12 @@ func (p *SimplePool) subMany(ctx context.Context, urls []string, filters filters
 	pending.Add(int64(initial))
 	for _, url := range urls {
 		go func(nm string) {
-			relay, err := p.EnsureRelay(nm)
+			rl, err := p.EnsureRelay(nm)
 			if err != nil {
 				return
 			}
 
-			sub, _ := relay.Subscribe(ctx, filters)
+			sub, _ := rl.Subscribe(ctx, filters)
 			if sub == nil {
 				return
 			}
@@ -113,7 +113,7 @@ func (p *SimplePool) subMany(ctx context.Context, urls []string, filters filters
 				}
 				if !stop {
 					select {
-					case events <- IncomingEvent{T: evt, Relay: relay}:
+					case events <- IncomingEvent{T: evt, Relay: rl}:
 					case <-ctx.Done():
 						return
 					}
@@ -159,14 +159,14 @@ func (p *SimplePool) subManyEose(ctx context.Context, urls []string, filters fil
 		go func(nm string) {
 			defer wg.Done()
 
-			relay, err := p.EnsureRelay(nm)
+			rl, err := p.EnsureRelay(nm)
 			if err != nil {
 				return
 			}
 
-			sub, err := relay.Subscribe(ctx, filters)
+			sub, err := rl.Subscribe(ctx, filters)
 			if sub == nil {
-				log.E.F("error subscribing to %s with %v: %s", relay, filters, err)
+				log.E.F("error subscribing to %s with %v: %s", rl, filters, err)
 				return
 			}
 
@@ -187,7 +187,7 @@ func (p *SimplePool) subManyEose(ctx context.Context, urls []string, filters fil
 					}
 					if !stop {
 						select {
-						case events <- IncomingEvent{T: evt, Relay: relay}:
+						case events <- IncomingEvent{T: evt, Relay: rl}:
 						case <-ctx.Done():
 							return
 						}

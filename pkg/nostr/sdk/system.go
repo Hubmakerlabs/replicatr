@@ -46,9 +46,9 @@ func (s *System) FetchRelays(ctx context.Context, pubkey string) []Relay {
 func (s *System) FetchOutboxRelays(ctx context.Context, pubkey string) []string {
 	relays := s.FetchRelays(ctx, pubkey)
 	result := make([]string, 0, len(relays))
-	for _, relay := range relays {
-		if relay.Outbox {
-			result = append(result, relay.URL)
+	for _, rl := range relays {
+		if rl.Outbox {
+			result = append(result, rl.URL)
 		}
 	}
 	return result
