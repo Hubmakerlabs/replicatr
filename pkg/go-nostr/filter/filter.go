@@ -1,8 +1,6 @@
 package filter
 
 import (
-	"encoding/json"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/mailru/easyjson"
@@ -10,41 +8,25 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-type Filters []Filter
-
-type Filter struct {
-	IDs     []string   `json:"ids,omitempty"`
-	Kinds   []int      `json:"kinds,omitempty"`
-	Authors []string   `json:"authors,omitempty"`
-	Tags    TagMap     `json:"-,omitempty"`
+type T struct {
+	IDs     []string             `json:"ids,omitempty"`
+	Kinds   []int                `json:"kinds,omitempty"`
+	Authors []string             `json:"authors,omitempty"`
+	Tags    TagMap               `json:"-,omitempty"`
 	Since   *timestamp.Timestamp `json:"since,omitempty"`
 	Until   *timestamp.Timestamp `json:"until,omitempty"`
-	Limit   int        `json:"limit,omitempty"`
-	Search  string     `json:"search,omitempty"`
+	Limit   int                  `json:"limit,omitempty"`
+	Search  string               `json:"search,omitempty"`
 }
 
 type TagMap map[string][]string
 
-func (eff Filters) String() string {
-	j, _ := json.Marshal(eff)
-	return string(j)
-}
-
-func (eff Filters) Match(evt *event.T) bool {
-	for _, f := range eff {
-		if f.Matches(evt) {
-			return true
-		}
-	}
-	return false
-}
-
-func (ef Filter) String() string {
+func (ef T) String() string {
 	j, _ := easyjson.Marshal(ef)
 	return string(j)
 }
 
-func (ef Filter) Matches(evt *event.T) bool {
+func (ef T) Matches(evt *event.T) bool {
 	if evt == nil {
 		return false
 	}
@@ -78,7 +60,7 @@ func (ef Filter) Matches(evt *event.T) bool {
 	return true
 }
 
-func FilterEqual(a Filter, b Filter) bool {
+func FilterEqual(a T, b T) bool {
 	if !similar(a.Kinds, b.Kinds) {
 		return false
 	}
@@ -120,8 +102,8 @@ func FilterEqual(a Filter, b Filter) bool {
 	return true
 }
 
-func (ef Filter) Clone() Filter {
-	clone := Filter{
+func (ef T) Clone() T {
+	clone := T{
 		IDs:     slices.Clone(ef.IDs),
 		Authors: slices.Clone(ef.Authors),
 		Kinds:   slices.Clone(ef.Kinds),

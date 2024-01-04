@@ -15,7 +15,7 @@ type Source struct {
 	Paragraphs []string `json:"paragraphs"`
 }
 
-var outputTemplate string = `package quotes
+var outputTemplate = `package quotes
 
 type Source struct {
 	Source     string   

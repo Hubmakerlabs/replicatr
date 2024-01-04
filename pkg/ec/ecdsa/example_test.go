@@ -10,6 +10,7 @@ package ecdsa_test
 import (
 	"encoding/hex"
 	"fmt"
+
 	"github.com/dchest/blake256"
 	"mleku.online/git/ec/ecdsa"
 	"mleku.online/git/ec/secp"

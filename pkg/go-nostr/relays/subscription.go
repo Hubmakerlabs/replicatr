@@ -10,7 +10,7 @@ import (
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/close"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/count"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/req"
 )
 
@@ -19,7 +19,7 @@ type Subscription struct {
 	counter int
 
 	Relay   *Relay
-	Filters filter.Filters
+	Filters filters.T
 
 	// for this to be treated as a COUNT and not a REQ this must be set
 	countResult chan int64
@@ -153,7 +153,7 @@ func (sub *Subscription) Close() {
 
 // Sub sets sub.T and then calls sub.Fire(ctx).
 // The subscription will be closed if the context expires.
-func (sub *Subscription) Sub(_ context.Context, filters filter.Filters) {
+func (sub *Subscription) Sub(_ context.Context, filters filters.T) {
 	sub.Filters = filters
 	sub.Fire()
 }

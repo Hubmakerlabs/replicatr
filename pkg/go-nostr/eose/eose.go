@@ -38,4 +38,3 @@ func (v EOSEEnvelope) MarshalJSON() ([]byte, error) {
 	w.RawString(`]`)
 	return w.BuildBytes()
 }
-

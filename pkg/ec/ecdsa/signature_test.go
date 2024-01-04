@@ -12,10 +12,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"errors"
-	"github.com/dchest/blake256"
 	"math/rand"
 	"testing"
 	"time"
+
+	"github.com/dchest/blake256"
 
 	"mleku.online/git/ec/secp"
 )

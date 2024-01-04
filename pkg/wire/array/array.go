@@ -9,11 +9,12 @@ package array
 import (
 	"bytes"
 	"fmt"
+	"reflect"
+	"time"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 	log2 "mleku.online/git/log"
-	"reflect"
-	"time"
 )
 
 var (

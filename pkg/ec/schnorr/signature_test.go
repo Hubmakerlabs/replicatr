@@ -8,10 +8,11 @@ package schnorr
 import (
 	"encoding/hex"
 	"errors"
-	"mleku.online/git/ec"
 	"strings"
 	"testing"
 	"testing/quick"
+
+	"mleku.online/git/ec"
 
 	"github.com/davecgh/go-spew/spew"
 	secp_ecdsa "mleku.online/git/ec/secp"

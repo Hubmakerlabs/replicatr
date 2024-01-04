@@ -56,4 +56,3 @@ func (rl *Relay) handleFilter(ctx Ctx, id string,
 	}
 	return nil
 }
-

@@ -7,6 +7,7 @@ package schnorr
 
 import (
 	"fmt"
+
 	"mleku.online/git/ec"
 	secp "mleku.online/git/ec/secp"
 )

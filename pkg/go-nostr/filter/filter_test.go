@@ -11,7 +11,7 @@ import (
 
 func TestFilterUnmarshal(t *testing.T) {
 	raw := `{"ids": ["abc"],"#e":["zzz"],"#something":["nothing","bab"],"since":1644254609,"search":"test"}`
-	var f Filter
+	var f T
 	if err := json.Unmarshal([]byte(raw), &f); err != nil {
 		t.Errorf("failed to parse filter json: %v", err)
 	}
@@ -26,7 +26,7 @@ func TestFilterUnmarshal(t *testing.T) {
 
 func TestFilterMarshal(t *testing.T) {
 	until := timestamp.Timestamp(12345678)
-	filterj, err := json.Marshal(Filter{
+	filterj, err := json.Marshal(T{
 		Kinds: []int{event.KindTextNote, event.KindRecommendServer, event.KindEncryptedDirectMessage},
 		Tags:  TagMap{"fruit": {"banana", "mango"}},
 		Until: &until,
@@ -42,7 +42,7 @@ func TestFilterMarshal(t *testing.T) {
 }
 
 func TestFilterMatchingLive(t *testing.T) {
-	var f Filter
+	var f T
 	var evt event.T
 
 	json.Unmarshal([]byte(`{"kinds":[1],"authors":["a8171781fd9e90ede3ea44ddca5d3abf828fe8eedeb0f3abb0dd3e563562e1fc","1d80e5588de010d137a67c42b03717595f5f510e73e42cfc48f31bae91844d59","ed4ca520e9929dfe9efdadf4011b53d30afd0678a09aa026927e60e7a45d9244"],"since":1677033299}`), &f)
@@ -55,28 +55,28 @@ func TestFilterMatchingLive(t *testing.T) {
 
 func TestFilterEquality(t *testing.T) {
 	if !FilterEqual(
-		Filter{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}},
-		Filter{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}},
+		T{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}},
+		T{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}},
 	) {
 		t.Error("kinds filters should be equal")
 	}
 
 	if !FilterEqual(
-		Filter{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}, Tags: TagMap{"letter": {"a", "b"}}},
-		Filter{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}, Tags: TagMap{"letter": {"b", "a"}}},
+		T{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}, Tags: TagMap{"letter": {"a", "b"}}},
+		T{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion}, Tags: TagMap{"letter": {"b", "a"}}},
 	) {
 		t.Error("kind+tags filters should be equal")
 	}
 
 	tm := timestamp.Now()
 	if !FilterEqual(
-		Filter{
+		T{
 			Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion},
 			Tags:  TagMap{"letter": {"a", "b"}, "fruit": {"banana"}},
 			Since: &tm,
 			IDs:   []string{"aaaa", "bbbb"},
 		},
-		Filter{
+		T{
 			Kinds: []int{event.KindDeletion, event.KindEncryptedDirectMessage},
 			Tags:  TagMap{"letter": {"a", "b"}, "fruit": {"banana"}},
 			Since: &tm,
@@ -87,8 +87,8 @@ func TestFilterEquality(t *testing.T) {
 	}
 
 	if FilterEqual(
-		Filter{Kinds: []int{event.KindTextNote, event.KindEncryptedDirectMessage, event.KindDeletion}},
-		Filter{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion, event.KindRepost}},
+		T{Kinds: []int{event.KindTextNote, event.KindEncryptedDirectMessage, event.KindDeletion}},
+		T{Kinds: []int{event.KindEncryptedDirectMessage, event.KindDeletion, event.KindRepost}},
 	) {
 		t.Error("kinds filters shouldn't be equal")
 	}
@@ -96,7 +96,7 @@ func TestFilterEquality(t *testing.T) {
 
 func TestFilterClone(t *testing.T) {
 	ts := timestamp.Now() - 60*60
-	flt := Filter{
+	flt := T{
 		Kinds: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
 		Tags:  TagMap{"letter": {"a", "b"}, "fruit": {"banana"}},
 		Since: &ts,

@@ -109,7 +109,7 @@ func pay(cfg *Config, invoice string) (e error) {
 		return err
 	}
 
-	filters := []filter.Filter{{
+	filters := []filter.T{{
 		Tags: filter.TagMap{
 			"p": []string{pub},
 			"e": []string{ev.ID},
@@ -153,7 +153,7 @@ func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
 	defer rl.Close()
 
 	// get set-metadata
-	f := filter.Filter{
+	f := filter.T{
 		Kinds:   []int{event.KindProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
@@ -240,7 +240,7 @@ func doZap(cCtx *cli.Context) (e error) {
 			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})
 			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"e", s.(pointers.EventPointer).ID})
 		case "note":
-			evs := cfg.Events(filter.Filter{IDs: []string{s.(string)}})
+			evs := cfg.Events(filter.T{IDs: []string{s.(string)}})
 			if len(evs) != 0 {
 				receipt = evs[0].PubKey
 				zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})

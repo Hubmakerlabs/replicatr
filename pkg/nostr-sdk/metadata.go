@@ -6,13 +6,13 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pools"
 )
 
 type ProfileMetadata struct {
-	PubKey string       `json:"-"` // must always be set otherwise things will break
+	PubKey string   `json:"-"` // must always be set otherwise things will break
 	Event  *event.T `json:"-"` // may be empty if a profile metadata event wasn't found
 
 	// every one of these may be empty
@@ -51,7 +51,7 @@ func FetchProfileMetadata(ctx context.Context, pool *pools.SimplePool, pubkey st
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	ch := pool.SubManyEose(ctx, relays, filter.Filters{
+	ch := pool.SubManyEose(ctx, relays, filters.T{
 		{
 			Kinds:   []int{event.KindProfileMetadata},
 			Authors: []string{pubkey},

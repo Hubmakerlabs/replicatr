@@ -10,21 +10,21 @@ import (
 //
 // todo: change the string slices into tag type
 type T struct {
-	Name           string       `json:"name"`
-	Description    string       `json:"description"`
-	PubKey         string       `json:"pubkey"`
-	Contact        string       `json:"contact"`
-	SupportedNIPs  number.List  `json:"supported_nips"`
-	Software       string       `json:"software"`
-	Version        string   `json:"version"`
-	Limitation     *Limits  `json:"limitation,omitempty"`
-	RelayCountries []string `json:"relay_countries,omitempty"`
-	LanguageTags   []string     `json:"language_tags,omitempty"`
-	Tags           []string     `json:"tags,omitempty"`
-	PostingPolicy  string       `json:"posting_policy,omitempty"`
-	PaymentsURL    string `json:"payments_url,omitempty"`
-	Fees           *Fees  `json:"fees,omitempty"`
-	Icon           string `json:"icon"`
+	Name           string      `json:"name"`
+	Description    string      `json:"description"`
+	PubKey         string      `json:"pubkey"`
+	Contact        string      `json:"contact"`
+	SupportedNIPs  number.List `json:"supported_nips"`
+	Software       string      `json:"software"`
+	Version        string      `json:"version"`
+	Limitation     *Limits     `json:"limitation,omitempty"`
+	RelayCountries []string    `json:"relay_countries,omitempty"`
+	LanguageTags   []string    `json:"language_tags,omitempty"`
+	Tags           []string    `json:"tags,omitempty"`
+	PostingPolicy  string      `json:"posting_policy,omitempty"`
+	PaymentsURL    string      `json:"payments_url,omitempty"`
+	Fees           *Fees       `json:"fees,omitempty"`
+	Icon           string      `json:"icon"`
 }
 
 func (ri *T) ToObject() (o object.T) {

@@ -20,6 +20,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/notice"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
@@ -371,7 +372,7 @@ func (r *Relay) publish(ctx context.Context, id string, env envelopes.Envelope) 
 //
 // Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.Context` will be canceled at some point.
 // Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) Subscribe(ctx context.Context, filters filter.Filters, opts ...SubscriptionOption) (*Subscription, error) {
+func (r *Relay) Subscribe(ctx context.Context, filters filters.T, opts ...SubscriptionOption) (*Subscription, error) {
 	sub := r.PrepareSubscription(ctx, filters, opts...)
 
 	if err := sub.Fire(); err != nil {
@@ -385,7 +386,7 @@ func (r *Relay) Subscribe(ctx context.Context, filters filter.Filters, opts ...S
 //
 // Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.Context` will be canceled at some point.
 // Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) PrepareSubscription(ctx context.Context, filters filter.Filters, opts ...SubscriptionOption) *Subscription {
+func (r *Relay) PrepareSubscription(ctx context.Context, filters filters.T, opts ...SubscriptionOption) *Subscription {
 	if r.Connection == nil {
 		panic(fmt.Errorf("must call .Connect() first before calling .Subscribe()"))
 	}
@@ -420,8 +421,8 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filters filter.Filters,
 	return sub
 }
 
-func (r *Relay) QuerySync(ctx context.Context, f filter.Filter, opts ...SubscriptionOption) ([]*event.T, error) {
-	sub, err := r.Subscribe(ctx, filter.Filters{f}, opts...)
+func (r *Relay) QuerySync(ctx context.Context, f filter.T, opts ...SubscriptionOption) ([]*event.T, error) {
+	sub, err := r.Subscribe(ctx, filters.T{f}, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -452,7 +453,7 @@ func (r *Relay) QuerySync(ctx context.Context, f filter.Filter, opts ...Subscrip
 	}
 }
 
-func (r *Relay) Count(ctx context.Context, filters filter.Filters, opts ...SubscriptionOption) (int64, error) {
+func (r *Relay) Count(ctx context.Context, filters filters.T, opts ...SubscriptionOption) (int64, error) {
 	sub := r.PrepareSubscription(ctx, filters, opts...)
 	sub.countResult = make(chan int64)
 

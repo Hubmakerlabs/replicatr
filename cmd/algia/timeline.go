@@ -15,6 +15,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
@@ -50,7 +51,7 @@ func doDMList(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	f := filter.Filter{
+	f := filter.T{
 		Kinds:   []int{event.KindEncryptedDirectMessage},
 		Authors: []string{npub},
 	}
@@ -135,7 +136,7 @@ func doDMTimeline(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	f := filter.Filter{
+	f := filter.T{
 		Kinds:   []int{event.KindEncryptedDirectMessage},
 		Authors: []string{npub, pub},
 		Tags:    filter.TagMap{"p": []string{npub, pub}},
@@ -273,8 +274,8 @@ func doPost(cCtx *cli.Context) (e error) {
 
 	ev.Tags = tags.Tags{}
 
-	for _, entry := range extractLinks(ev.Content) {
-		ev.Tags = ev.Tags.AppendUnique(tags.Tag{"r", entry.text})
+	for _, link := range extractLinks(ev.Content) {
+		ev.Tags = ev.Tags.AppendUnique(tags.Tag{"r", link.text})
 	}
 
 	for _, u := range cCtx.StringSlice("emoji") {
@@ -284,10 +285,10 @@ func doPost(cCtx *cli.Context) (e error) {
 		}
 		ev.Tags = ev.Tags.AppendUnique(tags.Tag{"emoji", tok[0], tok[1]})
 	}
-	for _, entry := range extractEmojis(ev.Content) {
-		name := strings.Trim(entry.text, ":")
-		if icon, ok := cfg.Emojis[name]; ok {
-			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"emoji", name, icon})
+	for _, em := range extractEmojis(ev.Content) {
+		emoji := strings.Trim(em.text, ":")
+		if icon, ok := cfg.Emojis[emoji]; ok {
+			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"emoji", emoji, icon})
 		}
 	}
 
@@ -390,8 +391,8 @@ func doReply(cCtx *cli.Context) (e error) {
 
 	ev.Tags = tags.Tags{}
 
-	for _, entry := range extractLinks(ev.Content) {
-		ev.Tags = ev.Tags.AppendUnique(tags.Tag{"r", entry.text})
+	for _, link := range extractLinks(ev.Content) {
+		ev.Tags = ev.Tags.AppendUnique(tags.Tag{"r", link.text})
 	}
 
 	for _, u := range cCtx.StringSlice("emoji") {
@@ -401,10 +402,10 @@ func doReply(cCtx *cli.Context) (e error) {
 		}
 		ev.Tags = ev.Tags.AppendUnique(tags.Tag{"emoji", tok[0], tok[1]})
 	}
-	for _, entry := range extractEmojis(ev.Content) {
-		name := strings.Trim(entry.text, ":")
-		if icon, ok := cfg.Emojis[name]; ok {
-			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"emoji", name, icon})
+	for _, em := range extractEmojis(ev.Content) {
+		emoji := strings.Trim(em.text, ":")
+		if icon, ok := cfg.Emojis[emoji]; ok {
+			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"emoji", emoji, icon})
 		}
 	}
 
@@ -475,7 +476,7 @@ func doRepost(cCtx *cli.Context) (e error) {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
 	ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id})
-	f := filter.Filter{
+	f := filter.T{
 		Kinds: []int{event.KindTextNote},
 		IDs:   []string{id},
 	}
@@ -536,7 +537,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	if err != nil {
 		return err
 	}
-	f := filter.Filter{
+	f := filter.T{
 		Kinds:   []int{event.KindRepost},
 		Authors: []string{pub},
 		Tags:    filter.TagMap{"e": []string{id}},
@@ -607,7 +608,7 @@ func doLike(cCtx *cli.Context) (e error) {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
 	ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id})
-	f := filter.Filter{
+	f := filter.T{
 		Kinds: []int{event.KindTextNote},
 		IDs:   []string{id},
 	}
@@ -680,7 +681,7 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	if err != nil {
 		return err
 	}
-	f := filter.Filter{
+	f := filter.T{
 		Kinds:   []int{event.KindReaction},
 		Authors: []string{pub},
 		Tags:    filter.TagMap{"e": []string{id}},
@@ -793,7 +794,7 @@ func doSearch(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	f := filter.Filter{
+	f := filter.T{
 		Kinds:  []int{event.KindTextNote},
 		Search: strings.Join(cCtx.Args().Slice(), " "),
 		Limit:  n,
@@ -854,13 +855,13 @@ func doStream(cCtx *cli.Context) (e error) {
 	}
 
 	since := timestamp.Now()
-	ff := filter.Filter{
+	ff := filter.T{
 		Kinds:   kinds,
 		Authors: follows,
 		Since:   &since,
 	}
 
-	sub, err := rl.Subscribe(context.Background(), filter.Filters{ff})
+	sub, err := rl.Subscribe(context.Background(), filters.T{ff})
 	if err != nil {
 		return err
 	}
@@ -910,7 +911,7 @@ func doTimeline(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	f := filter.Filter{
+	f := filter.T{
 		Kinds:   []int{event.KindTextNote},
 		Authors: follows,
 		Limit:   n,

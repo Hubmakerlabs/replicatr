@@ -42,11 +42,11 @@ type RelayPerms struct {
 type Config struct {
 	Relays     map[string]RelayPerms `json:"relays"`
 	Follows    map[string]Profile    `json:"follows"`
-	PrivateKey string             `json:"privatekey"`
-	Updated    time.Time          `json:"updated"`
-	Emojis     map[string]string  `json:"emojis"`
-	NwcURI     string             `json:"nwc-uri"`
-	NwcPub     string             `json:"nwc-pub"`
+	PrivateKey string                `json:"privatekey"`
+	Updated    time.Time             `json:"updated"`
+	Emojis     map[string]string     `json:"emojis"`
+	NwcURI     string                `json:"nwc-uri"`
+	NwcPub     string                `json:"nwc-pub"`
 	verbose    bool
 	tempRelay  bool
 	sk         string
@@ -55,7 +55,7 @@ type Config struct {
 // Event is
 type Event struct {
 	Event   *event.T `json:"event"`
-	Profile Profile      `json:"profile"`
+	Profile Profile  `json:"profile"`
 }
 
 // Profile is
@@ -148,7 +148,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		m := map[string]struct{}{}
 
 		cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
-			evs, err := rl.QuerySync(ctx, filter.Filter{Kinds: []int{event.KindContactList}, Authors: []string{pub}, Limit: 1})
+			evs, err := rl.QuerySync(ctx, filter.T{Kinds: []int{event.KindContactList}, Authors: []string{pub}, Limit: 1})
 			if err != nil {
 				return true
 			}
@@ -192,7 +192,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 
 				// get follower's descriptions
 				cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
-					evs, err := rl.QuerySync(ctx, filter.Filter{
+					evs, err := rl.QuerySync(ctx, filter.T{
 						Kinds:   []int{event.KindProfileMetadata},
 						Authors: follows[i:end], // Use the updated end index
 					})
@@ -383,7 +383,7 @@ func (cfg *Config) PrintEvents(evs []*event.T, followsMap map[string]Profile, j,
 }
 
 // Events is
-func (cfg *Config) Events(f filter.Filter) []*event.T {
+func (cfg *Config) Events(f filter.T) []*event.T {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map

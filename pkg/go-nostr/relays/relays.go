@@ -11,4 +11,3 @@ func MustRelayConnect(url string) *Relay {
 	}
 	return rl
 }
-

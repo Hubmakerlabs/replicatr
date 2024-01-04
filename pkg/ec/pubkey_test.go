@@ -284,7 +284,7 @@ func TestPublicKeyIsEqual(t *testing.T) {
 func TestIsCompressed(t *testing.T) {
 	for _, test := range pubKeyTests {
 		isCompressed := IsCompressedPubKey(test.key)
-		wantCompressed := (test.format == pubkeyCompressed)
+		wantCompressed := test.format == pubkeyCompressed
 		if isCompressed != wantCompressed {
 			t.Fatalf("%s (%x) pubkey: unexpected compressed result, "+
 				"got %v, want %v", test.name, test.key,

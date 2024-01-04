@@ -19,4 +19,3 @@ func (rl *Relay) ServeHTTP(w ResponseWriter, r *Request) {
 		rl.serveMux.ServeHTTP(w, r)
 	}
 }
-

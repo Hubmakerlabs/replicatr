@@ -3,6 +3,7 @@ package binary
 import (
 	"encoding/binary"
 	"fmt"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"

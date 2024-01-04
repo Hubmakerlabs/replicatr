@@ -9,6 +9,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	filters2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pools"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk/cache"
@@ -75,7 +76,7 @@ func (sys System) fetchProfileMetadata(ctx context.Context, pubkey string) (pm P
 	}
 
 	if sys.Store != nil {
-		res, _ := sys.StoreRelay().QuerySync(ctx, &filter.Filter{Kinds: []int{0}, Authors: []string{pubkey}})
+		res, _ := sys.StoreRelay().QuerySync(ctx, &filter.T{Kinds: []int{0}, Authors: []string{pubkey}})
 		if len(res) != 0 {
 			if m, err := ParseMetadata(res[0]); err == nil {
 				m.PubKey = pubkey
@@ -99,7 +100,7 @@ func (sys System) fetchProfileMetadata(ctx context.Context, pubkey string) (pm P
 }
 
 // FetchUserEvents fetches events from each users' outbox relays, grouping queries when possible.
-func (sys System) FetchUserEvents(ctx context.Context, filt filter.Filter) (map[string][]*event.T, error) {
+func (sys System) FetchUserEvents(ctx context.Context, filt filter.T) (map[string][]*event.T, error) {
 	filters, err := sys.ExpandQueriesByAuthorAndRelays(ctx, filt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to expand queries: %w", err)
@@ -109,10 +110,10 @@ func (sys System) FetchUserEvents(ctx context.Context, filt filter.Filter) (map[
 	wg := sync.WaitGroup{}
 	wg.Add(len(filters))
 	for rl, ff := range filters {
-		go func(rl *relays.Relay, f filter.Filter) {
+		go func(rl *relays.Relay, f filter.T) {
 			defer wg.Done()
 			f.Limit = f.Limit * len(f.Authors) // hack
-			sub, err := rl.Subscribe(ctx, filter.Filters{filt})
+			sub, err := rl.Subscribe(ctx, filters2.T{filt})
 			if err != nil {
 				return
 			}

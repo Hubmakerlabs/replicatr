@@ -63,14 +63,14 @@ const (
 	//
 	// The two's complement of the group order is:
 	// 0x00000000 00000000 00000000 00000001 45512319 50b75fc4 402da173 2fc9bebf
-	orderComplementWordZero  uint32 = (^orderWordZero) + 1
-	orderComplementWordOne   uint32 = ^orderWordOne
-	orderComplementWordTwo   uint32 = ^orderWordTwo
-	orderComplementWordThree uint32 = ^orderWordThree
-	//orderComplementWordFour  uint32 = ^orderWordFour  // unused
-	//orderComplementWordFive  uint32 = ^orderWordFive  // unused
-	//orderComplementWordSix   uint32 = ^orderWordSix   // unused
-	//orderComplementWordSeven uint32 = ^orderWordSeven // unused
+	orderComplementWordZero  = (^orderWordZero) + 1
+	orderComplementWordOne   = ^orderWordOne
+	orderComplementWordTwo   = ^orderWordTwo
+	orderComplementWordThree = ^orderWordThree
+	// orderComplementWordFour  uint32 = ^orderWordFour  // unused
+	// orderComplementWordFive  uint32 = ^orderWordFive  // unused
+	// orderComplementWordSix   uint32 = ^orderWordSix   // unused
+	// orderComplementWordSeven uint32 = ^orderWordSeven // unused
 
 	// These fields provide convenient access to each of the words of the
 	// secp256k1 curve group order N / 2 to improve code readability and avoid

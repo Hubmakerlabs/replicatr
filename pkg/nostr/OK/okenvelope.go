@@ -107,7 +107,7 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 		return fmt.Errorf("event ID in ok envelope invalid length: %d '%s'",
 			len(eventID)-1, string(eventID))
 	}
-	eventID = eventID[:len(eventID)]
+	eventID = eventID[:]
 	// check that it's actually hexadecimal
 	const hexChars = "0123456789abcdefABCDEF"
 	tmp := make([]byte, 64)
@@ -141,7 +141,7 @@ next:
 	if isOK, e = buf.ReadUntil(','); fails(e) {
 		return fmt.Errorf("did not find OK value in ok envelope")
 	}
-	isOK = isOK[:len(isOK)]
+	isOK = isOK[:]
 	// determine the value encoded
 	l := len(isOK)
 	var isBool bool

@@ -1,10 +1,11 @@
 package text
 
 import (
+	"testing"
+
 	"github.com/minio/sha256-simd"
 	"lukechampine.com/frand"
 	log2 "mleku.online/git/log"
-	"testing"
 )
 
 func GenRandString(l int, src *frand.RNG) (str string) {

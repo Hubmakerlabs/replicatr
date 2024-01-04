@@ -124,7 +124,7 @@ func (rl *Relay) websocketProcessMessages(message []byte, ctx Ctx, ws *WebSocket
 			return
 		}
 		var total int64
-		for _, f := range env.Filters {
+		for _, f := range env.T {
 			total += rl.handleCountRequest(ctx, ws, &f)
 		}
 		rl.E.Chk(ws.WriteJSON(CountEnvelope{
@@ -133,13 +133,13 @@ func (rl *Relay) websocketProcessMessages(message []byte, ctx Ctx, ws *WebSocket
 		}))
 	case *ReqEnvelope:
 		eose := WaitGroup{}
-		eose.Add(len(env.Filters))
+		eose.Add(len(env.T))
 		// a context just for the "stored events" request handler
 		reqCtx, cancelReqCtx := context.WithCancelCause(ctx)
 		// expose subscription id in the context
 		reqCtx = context.WithValue(reqCtx, subscriptionIdKey, env.SubscriptionID)
 		// handle each filter separately -- dispatching events as they're loaded from databases
-		for _, f := range env.Filters {
+		for _, f := range env.T {
 			e = rl.handleFilter(reqCtx, env.SubscriptionID, &eose, ws, &f)
 			if rl.E.Chk(e) {
 				// fail everything if any filter is rejected
@@ -162,7 +162,7 @@ func (rl *Relay) websocketProcessMessages(message []byte, ctx Ctx, ws *WebSocket
 			cancelReqCtx(nil)
 			rl.E.Chk(ws.WriteJSON(EOSEEnvelope(env.SubscriptionID)))
 		}()
-		setListener(env.SubscriptionID, ws, env.Filters, cancelReqCtx)
+		setListener(env.SubscriptionID, ws, env.T, cancelReqCtx)
 	case *CloseEnvelope:
 		removeListenerId(ws, string(*env))
 	case *AuthEnvelope:
