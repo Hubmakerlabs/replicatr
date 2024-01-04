@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -27,7 +27,7 @@ type queryEvent struct {
 	query int
 }
 
-func (b BadgerBackend) QueryEvents(ctx context.Context, filter *nostr.Filter) (chan *event.T, error) {
+func (b BadgerBackend) QueryEvents(ctx context.Context, filter *filter.Filter) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
 	queries, extraFilter, since, err := prepareQueries(filter)
@@ -193,18 +193,18 @@ func (pq *priorityQueue) Pop() any {
 	return item
 }
 
-func prepareQueries(filter *nostr.Filter) (
+func prepareQueries(f *filter.Filter) (
 	queries []query,
-	extraFilter *nostr.Filter,
+	extraFilter *filter.Filter,
 	since uint32,
 	err error,
 ) {
 	var index byte
 
-	if len(filter.IDs) > 0 {
+	if len(f.IDs) > 0 {
 		index = indexIdPrefix
-		queries = make([]query, len(filter.IDs))
-		for i, idHex := range filter.IDs {
+		queries = make([]query, len(f.IDs))
+		for i, idHex := range f.IDs {
 			prefix := make([]byte, 1+8)
 			prefix[0] = index
 			if len(idHex) != 64 {
@@ -214,11 +214,11 @@ func prepareQueries(filter *nostr.Filter) (
 			copy(prefix[1:], idPrefix8)
 			queries[i] = query{i: i, prefix: prefix, skipTimestamp: true}
 		}
-	} else if len(filter.Authors) > 0 {
-		if len(filter.Kinds) == 0 {
+	} else if len(f.Authors) > 0 {
+		if len(f.Kinds) == 0 {
 			index = indexPubkeyPrefix
-			queries = make([]query, len(filter.Authors))
-			for i, pubkeyHex := range filter.Authors {
+			queries = make([]query, len(f.Authors))
+			for i, pubkeyHex := range f.Authors {
 				if len(pubkeyHex) != 64 {
 					return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 				}
@@ -230,10 +230,10 @@ func prepareQueries(filter *nostr.Filter) (
 			}
 		} else {
 			index = indexPubkeyKindPrefix
-			queries = make([]query, len(filter.Authors)*len(filter.Kinds))
+			queries = make([]query, len(f.Authors)*len(f.Kinds))
 			i := 0
-			for _, pubkeyHex := range filter.Authors {
-				for _, kind := range filter.Kinds {
+			for _, pubkeyHex := range f.Authors {
+				for _, kind := range f.Kinds {
 					if len(pubkeyHex) != 64 {
 						return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 					}
@@ -247,11 +247,11 @@ func prepareQueries(filter *nostr.Filter) (
 				}
 			}
 		}
-		extraFilter = &nostr.Filter{Tags: filter.Tags}
-	} else if len(filter.Tags) > 0 {
+		extraFilter = &filter.Filter{Tags: f.Tags}
+	} else if len(f.Tags) > 0 {
 		// determine the size of the queries array by inspecting all tags sizes
 		size := 0
-		for _, values := range filter.Tags {
+		for _, values := range f.Tags {
 			size += len(values)
 		}
 		if size == 0 {
@@ -260,9 +260,9 @@ func prepareQueries(filter *nostr.Filter) (
 
 		queries = make([]query, size)
 
-		extraFilter = &nostr.Filter{Kinds: filter.Kinds}
+		extraFilter = &filter.Filter{Kinds: f.Kinds}
 		i := 0
-		for _, values := range filter.Tags {
+		for _, values := range f.Tags {
 			for _, value := range values {
 				// get key prefix (with full length) and offset where to write the last parts
 				k, offset := getTagIndexPrefix(value)
@@ -273,10 +273,10 @@ func prepareQueries(filter *nostr.Filter) (
 				i++
 			}
 		}
-	} else if len(filter.Kinds) > 0 {
+	} else if len(f.Kinds) > 0 {
 		index = indexKindPrefix
-		queries = make([]query, len(filter.Kinds))
-		for i, kind := range filter.Kinds {
+		queries = make([]query, len(f.Kinds))
+		for i, kind := range f.Kinds {
 			prefix := make([]byte, 1+2)
 			prefix[0] = index
 			binary.BigEndian.PutUint16(prefix[1:], uint16(kind))
@@ -292,8 +292,8 @@ func prepareQueries(filter *nostr.Filter) (
 	}
 
 	var until uint32 = 4294967295
-	if filter.Until != nil {
-		if fu := uint32(*filter.Until); fu < until {
+	if f.Until != nil {
+		if fu := uint32(*f.Until); fu < until {
 			until = fu + 1
 		}
 	}
@@ -303,8 +303,8 @@ func prepareQueries(filter *nostr.Filter) (
 	}
 
 	// this is where we'll end the iteration
-	if filter.Since != nil {
-		if fs := uint32(*filter.Since); fs > since {
+	if f.Since != nil {
+		if fs := uint32(*f.Since); fs > since {
 			since = fs
 		}
 	}

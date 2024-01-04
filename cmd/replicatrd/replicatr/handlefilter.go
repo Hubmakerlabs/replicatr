@@ -3,7 +3,7 @@ package replicatr
 import (
 	err "errors"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	event2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 )
 
@@ -46,7 +46,7 @@ func (rl *Relay) handleFilter(ctx Ctx, id string,
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(ctx, event)
 				}
-				rl.E.Chk(ws.WriteJSON(nostr.EventEnvelope{
+				rl.E.Chk(ws.WriteJSON(event2.EventEnvelope{
 					SubscriptionID: &id,
 					T:              *event,
 				}))

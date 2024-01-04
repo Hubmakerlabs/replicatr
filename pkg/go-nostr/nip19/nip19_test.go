@@ -3,8 +3,8 @@ package nip19
 import (
 	"testing"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
 )
 
 func TestEncodeNpub(t *testing.T) {
@@ -55,7 +55,7 @@ func TestDecodeNprofile(t *testing.T) {
 	if prefix != "nprofile" {
 		t.Error("what")
 	}
-	pp, ok := data.(nostr.ProfilePointer)
+	pp, ok := data.(pointers.ProfilePointer)
 	if !ok {
 		t.Error("value returned of wrong type")
 	}
@@ -80,7 +80,7 @@ func TestDecodeOtherNprofile(t *testing.T) {
 	if prefix != "nprofile" {
 		t.Error("what")
 	}
-	pp, ok := data.(nostr.ProfilePointer)
+	pp, ok := data.(pointers.ProfilePointer)
 	if !ok {
 		t.Error("value returned of wrong type")
 	}
@@ -133,7 +133,7 @@ func TestEncodeDecodeNaddr(t *testing.T) {
 	if prefix != "naddr" {
 		t.Error("returned invalid prefix")
 	}
-	ep := data.(nostr.EntityPointer)
+	ep := data.(pointers.EntityPointer)
 	if ep.PublicKey != "3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d" {
 		t.Error("returned wrong pubkey")
 	}
@@ -156,7 +156,7 @@ func TestDecodeNaddrWithoutRelays(t *testing.T) {
 	if prefix != "naddr" {
 		t.Error("returned invalid prefix")
 	}
-	ep := data.(nostr.EntityPointer)
+	ep := data.(pointers.EntityPointer)
 	if ep.PublicKey != "7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194" {
 		t.Error("returned wrong pubkey")
 	}
@@ -190,7 +190,7 @@ func TestEncodeDecodeNEventTestEncodeDecodeNEvent(t *testing.T) {
 		t.Errorf("should have 'nevent' prefix, not '%s'", prefix)
 	}
 
-	ep, ok := res.(nostr.EventPointer)
+	ep, ok := res.(pointers.EventPointer)
 	if !ok {
 		t.Errorf("'%s' should be an nevent, not %v", nevent, res)
 	}

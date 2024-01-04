@@ -3,7 +3,7 @@ package replicatr
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
@@ -24,7 +24,7 @@ func GetListeningFilters() (respFilters Filters) {
 				for _, respFilter := range respFilters {
 					// check if this filter specifically is already added to
 					// respFilters
-					if nostr.FilterEqual(listenerFilter, respFilter) {
+					if filter.FilterEqual(listenerFilter, respFilter) {
 						goto next
 					}
 				}

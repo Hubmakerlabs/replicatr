@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pools"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 )
 
@@ -15,11 +17,11 @@ type Relay struct {
 	Outbox bool
 }
 
-func FetchRelaysForPubkey(ctx context.Context, pool *nostr.SimplePool, pubkey string, relays ...string) []Relay {
+func FetchRelaysForPubkey(ctx context.Context, pool *pools.SimplePool, pubkey string, relays ...string) []Relay {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	ch := pool.SubManyEose(ctx, relays, nostr.Filters{
+	ch := pool.SubManyEose(ctx, relays, filter.Filters{
 		{
 			Kinds: []int{
 				event.KindRelayListMetadata,
@@ -53,7 +55,7 @@ func ParseRelaysFromKind10002(evt *event.T) []Relay {
 	result := make([]Relay, 0, len(evt.Tags))
 	for _, tag := range evt.Tags {
 		if u := tag.Value(); u != "" && tag[0] == "r" {
-			if !nostr.IsValidRelayURL(u) {
+			if !relays.IsValidRelayURL(u) {
 				continue
 			}
 			u := normalize.URL(u)
@@ -90,7 +92,7 @@ func ParseRelaysFromKind3(evt *event.T) []Relay {
 	results := make([]Relay, len(items))
 	i := 0
 	for u, item := range items {
-		if !nostr.IsValidRelayURL(u) {
+		if !relays.IsValidRelayURL(u) {
 			continue
 		}
 		u := normalize.URL(u)

@@ -5,18 +5,18 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
 )
 
 type Reference struct {
 	Text    string
 	Start   int
 	End     int
-	Profile *nostr.ProfilePointer
-	Event   *nostr.EventPointer
-	Entity  *nostr.EntityPointer
+	Profile *pointers.ProfilePointer
+	Event   *pointers.EventPointer
+	Entity  *pointers.EntityPointer
 }
 
 var mentionRegex = regexp.MustCompile(`\bnostr:((note|npub|naddr|nevent|nprofile)1\w+)\b|#\[(\d+)\]`)
@@ -40,19 +40,19 @@ func ParseReferences(evt *event.T) []*Reference {
 			if prefix, data, err := nip19.Decode(nip19code); err == nil {
 				switch prefix {
 				case "npub":
-					reference.Profile = &nostr.ProfilePointer{
+					reference.Profile = &pointers.ProfilePointer{
 						PublicKey: data.(string), Relays: []string{},
 					}
 				case "nprofile":
-					pp := data.(nostr.ProfilePointer)
+					pp := data.(pointers.ProfilePointer)
 					reference.Profile = &pp
 				case "note":
-					reference.Event = &nostr.EventPointer{ID: data.(string), Relays: []string{}}
+					reference.Event = &pointers.EventPointer{ID: data.(string), Relays: []string{}}
 				case "nevent":
-					evp := data.(nostr.EventPointer)
+					evp := data.(pointers.EventPointer)
 					reference.Event = &evp
 				case "naddr":
-					addr := data.(nostr.EntityPointer)
+					addr := data.(pointers.EntityPointer)
 					reference.Entity = &addr
 				}
 			}
@@ -71,7 +71,7 @@ func ParseReferences(evt *event.T) []*Reference {
 					if len(tag) > 2 && tag[2] != "" {
 						relays = append(relays, tag[2])
 					}
-					reference.Profile = &nostr.ProfilePointer{
+					reference.Profile = &pointers.ProfilePointer{
 						PublicKey: tag[1],
 						Relays:    relays,
 					}
@@ -80,7 +80,7 @@ func ParseReferences(evt *event.T) []*Reference {
 					if len(tag) > 2 && tag[2] != "" {
 						relays = append(relays, tag[2])
 					}
-					reference.Event = &nostr.EventPointer{
+					reference.Event = &pointers.EventPointer{
 						ID:     tag[1],
 						Relays: relays,
 					}
@@ -91,7 +91,7 @@ func ParseReferences(evt *event.T) []*Reference {
 						if len(tag) > 2 && tag[2] != "" {
 							relays = append(relays, tag[2])
 						}
-						reference.Entity = &nostr.EntityPointer{
+						reference.Entity = &pointers.EntityPointer{
 							Identifier: parts[2],
 							PublicKey:  parts[1],
 							Kind:       kind,

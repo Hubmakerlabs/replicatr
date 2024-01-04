@@ -5,23 +5,24 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 )
 
 func (sys *System) ExpandQueriesByAuthorAndRelays(
 	ctx context.Context,
-	filter nostr.Filter,
-) (map[*nostr.Relay]nostr.Filter, error) {
-	n := len(filter.Authors)
+	f filter.Filter,
+) (map[*relays.Relay]filter.Filter, error) {
+	n := len(f.Authors)
 	if n == 0 {
-		return nil, fmt.Errorf("no authors in filter")
+		return nil, fmt.Errorf("no authors in f")
 	}
 
-	relaysForPubkey := make(map[string][]*nostr.Relay, n)
+	relaysForPubkey := make(map[string][]*relays.Relay, n)
 
 	wg := sync.WaitGroup{}
 	wg.Add(n)
-	for _, pubkey := range filter.Authors {
+	for _, pubkey := range f.Authors {
 		go func(pubkey string) {
 			defer wg.Done()
 			relayURLs := sys.FetchOutboxRelays(ctx, pubkey)
@@ -41,12 +42,12 @@ func (sys *System) ExpandQueriesByAuthorAndRelays(
 	}
 	wg.Wait()
 
-	filterForRelay := make(map[*nostr.Relay]nostr.Filter, n) // { [relay]: filter }
+	filterForRelay := make(map[*relays.Relay]filter.Filter, n) // { [relay]: f }
 	for pubkey, relays := range relaysForPubkey {
 		for _, relay := range relays {
 			flt, ok := filterForRelay[relay]
 			if !ok {
-				flt = filter.Clone()
+				flt = f.Clone()
 				filterForRelay[relay] = flt
 			}
 			flt.Authors = append(flt.Authors, pubkey)

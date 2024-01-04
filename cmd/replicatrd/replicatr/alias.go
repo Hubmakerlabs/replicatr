@@ -5,9 +5,16 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/OK"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/auth"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/close"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/closed"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/count"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip11"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/req"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/notice"
@@ -20,17 +27,17 @@ type (
 	Ctx             = context.Context
 	Info            = nip11.RelayInformationDocument
 	Event           = event.T
-	Filter          = nostr.Filter
-	Filters         = nostr.Filters
-	TagMap          = nostr.TagMap
-	OKEnvelope      = nostr.OKEnvelope
+	Filter          = filter.Filter
+	Filters         = filter.Filters
+	TagMap          = filter.TagMap
+	OKEnvelope      = OK.OKEnvelope
 	EventID         = eventid.EventID
-	CountEnvelope   = nostr.CountEnvelope
-	ClosedEnvelope  = nostr.ClosedEnvelope
-	ReqEnvelope     = nostr.ReqEnvelope
-	EOSEEnvelope    = nostr.EOSEEnvelope
-	CloseEnvelope   = nostr.CloseEnvelope
-	AuthEnvelope    = nostr.AuthEnvelope
+	CountEnvelope   = count.CountEnvelope
+	ClosedEnvelope  = closed.ClosedEnvelope
+	ReqEnvelope     = req.ReqEnvelope
+	EOSEEnvelope    = eose.EOSEEnvelope
+	CloseEnvelope   = close2.CloseEnvelope
+	AuthEnvelope    = auth.AuthEnvelope
 	NoticeEnvelope  = notice.Envelope
 	Conn            = websocket.Conn
 	Request         = http.Request

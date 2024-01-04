@@ -4,17 +4,17 @@ import (
 	"context"
 	"encoding/hex"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip05"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
 )
 
 // InputToProfile turns any npub/nprofile/hex/nip05 input into a ProfilePointer (or nil).
-func InputToProfile(ctx context.Context, input string) *nostr.ProfilePointer {
+func InputToProfile(ctx context.Context, input string) *pointers.ProfilePointer {
 	// handle if it is a hex string
 	if len(input) == 64 {
 		if _, err := hex.DecodeString(input); err == nil {
-			return &nostr.ProfilePointer{PublicKey: input}
+			return &pointers.ProfilePointer{PublicKey: input}
 		}
 	}
 
@@ -23,9 +23,9 @@ func InputToProfile(ctx context.Context, input string) *nostr.ProfilePointer {
 	switch prefix {
 	case "npub":
 		input = data.(string)
-		return &nostr.ProfilePointer{PublicKey: input}
+		return &pointers.ProfilePointer{PublicKey: input}
 	case "nprofile":
-		pp := data.(nostr.ProfilePointer)
+		pp := data.(pointers.ProfilePointer)
 		return &pp
 	}
 
@@ -39,11 +39,11 @@ func InputToProfile(ctx context.Context, input string) *nostr.ProfilePointer {
 }
 
 // InputToEventPointer turns any note/nevent/hex input into a EventPointer (or nil).
-func InputToEventPointer(input string) *nostr.EventPointer {
+func InputToEventPointer(input string) *pointers.EventPointer {
 	// handle if it is a hex string
 	if len(input) == 64 {
 		if _, err := hex.DecodeString(input); err == nil {
-			return &nostr.EventPointer{ID: input}
+			return &pointers.EventPointer{ID: input}
 		}
 	}
 
@@ -52,9 +52,9 @@ func InputToEventPointer(input string) *nostr.EventPointer {
 	switch prefix {
 	case "note":
 		input = data.(string)
-		return &nostr.EventPointer{ID: input}
+		return &pointers.EventPointer{ID: input}
 	case "nevent":
-		ep := data.(nostr.EventPointer)
+		ep := data.(pointers.EventPointer)
 		return &ep
 	}
 

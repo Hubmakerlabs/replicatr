@@ -72,8 +72,7 @@ func TestNestedSubscriptions(t *testing.T) {
 	// fetch 2 replies to a note
 	sub, err := rl.Subscribe(context.Background(), filters.T{{
 		Kinds: kinds.T{kind.TextNote},
-		Tags:  filter.TagMap{"e":
-			[]string{"0e34a74f8547e3b95d52a2543719b109fd0312aba144e2ef95cba043f42fe8c5"}},
+		Tags:  filter.TagMap{"e": []string{"0e34a74f8547e3b95d52a2543719b109fd0312aba144e2ef95cba043f42fe8c5"}},
 		Limit: 3,
 	}})
 	if err != nil {

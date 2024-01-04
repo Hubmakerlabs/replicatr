@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
@@ -145,7 +145,7 @@ func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventR
 		result = "ack"
 		harmless = true
 	case "get_public_key":
-		pubkey, err := nostr.GetPublicKey(p.secretKey)
+		pubkey, err := keys.GetPublicKey(p.secretKey)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to derive public key: %w", err)
 			break
@@ -181,7 +181,7 @@ func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventR
 			break
 		}
 		thirdPartyPubkey := req.Params[0]
-		if !nostr.IsValidPublicKeyHex(thirdPartyPubkey) {
+		if !keys.IsValidPublicKeyHex(thirdPartyPubkey) {
 			resultErr = fmt.Errorf("first argument to 'nip04_encrypt' is not a pubkey string")
 			break
 		}
@@ -203,7 +203,7 @@ func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventR
 			break
 		}
 		thirdPartyPubkey := req.Params[0]
-		if !nostr.IsValidPublicKeyHex(thirdPartyPubkey) {
+		if !keys.IsValidPublicKeyHex(thirdPartyPubkey) {
 			resultErr = fmt.Errorf("first argument to 'nip04_decrypt' is not a pubkey string")
 			break
 		}

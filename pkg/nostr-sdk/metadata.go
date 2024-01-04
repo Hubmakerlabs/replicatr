@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pools"
 )
 
 type ProfileMetadata struct {
@@ -46,11 +47,11 @@ func (p ProfileMetadata) ShortName() string {
 	return npub[0:7] + "…" + npub[58:]
 }
 
-func FetchProfileMetadata(ctx context.Context, pool *nostr.SimplePool, pubkey string, relays ...string) ProfileMetadata {
+func FetchProfileMetadata(ctx context.Context, pool *pools.SimplePool, pubkey string, relays ...string) ProfileMetadata {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	ch := pool.SubManyEose(ctx, relays, nostr.Filters{
+	ch := pool.SubManyEose(ctx, relays, filter.Filters{
 		{
 			Kinds:   []int{event.KindProfileMetadata},
 			Authors: []string{pubkey},

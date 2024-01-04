@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
 	"github.com/btcsuite/btcd/btcutil/bech32"
 )
 
@@ -29,7 +29,7 @@ func Decode(bech32string string) (prefix string, value any, err error) {
 
 		return prefix, hex.EncodeToString(data[0:32]), nil
 	case "nprofile":
-		var result nostr.ProfilePointer
+		var result pointers.ProfilePointer
 		curr := 0
 		for {
 			t, v := readTLVEntry(data[curr:])
@@ -57,7 +57,7 @@ func Decode(bech32string string) (prefix string, value any, err error) {
 			curr = curr + 2 + len(v)
 		}
 	case "nevent":
-		var result nostr.EventPointer
+		var result pointers.EventPointer
 		curr := 0
 		for {
 			t, v := readTLVEntry(data[curr:])
@@ -92,7 +92,7 @@ func Decode(bech32string string) (prefix string, value any, err error) {
 			curr = curr + 2 + len(v)
 		}
 	case "naddr":
-		var result nostr.EntityPointer
+		var result pointers.EntityPointer
 		curr := 0
 		for {
 			t, v := readTLVEntry(data[curr:])
