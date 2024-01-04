@@ -45,7 +45,7 @@ func doProfile(cCtx *cli.Context) (e error) {
 	}
 
 	// get set-metadata
-	f := filter.Filter{
+	f := filter.T{
 		Kinds:   []int{event.KindProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,

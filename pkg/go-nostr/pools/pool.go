@@ -10,6 +10,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
@@ -92,16 +93,16 @@ func (pool *SimplePool) EnsureRelay(url string) (*relays.Relay, error) {
 
 // SubMany opens a subscription with the given filters to multiple relays
 // the subscriptions only end when the context is canceled
-func (pool *SimplePool) SubMany(ctx context.Context, urls []string, filters filter.Filters) chan IncomingEvent {
+func (pool *SimplePool) SubMany(ctx context.Context, urls []string, filters filters.T) chan IncomingEvent {
 	return pool.subMany(ctx, urls, filters, true)
 }
 
 // SubManyNonUnique is like SubMany, but returns duplicate events if they come from different relays
-func (pool *SimplePool) SubManyNonUnique(ctx context.Context, urls []string, filters filter.Filters) chan IncomingEvent {
+func (pool *SimplePool) SubManyNonUnique(ctx context.Context, urls []string, filters filters.T) chan IncomingEvent {
 	return pool.subMany(ctx, urls, filters, false)
 }
 
-func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters filter.Filters, unique bool) chan IncomingEvent {
+func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters filters.T, unique bool) chan IncomingEvent {
 	ctx, cancel := context.WithCancel(ctx)
 	_ = cancel // do this so `go vet` will stop complaining
 	events := make(chan IncomingEvent)
@@ -214,16 +215,16 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters filt
 }
 
 // SubManyEose is like SubMany, but it stops subscriptions and closes the channel when gets a EOSE
-func (pool *SimplePool) SubManyEose(ctx context.Context, urls []string, filters filter.Filters) chan IncomingEvent {
+func (pool *SimplePool) SubManyEose(ctx context.Context, urls []string, filters filters.T) chan IncomingEvent {
 	return pool.subManyEose(ctx, urls, filters, true)
 }
 
 // SubManyEoseNonUnique is like SubManyEose, but returns duplicate events if they come from different relays
-func (pool *SimplePool) SubManyEoseNonUnique(ctx context.Context, urls []string, filters filter.Filters) chan IncomingEvent {
+func (pool *SimplePool) SubManyEoseNonUnique(ctx context.Context, urls []string, filters filters.T) chan IncomingEvent {
 	return pool.subManyEose(ctx, urls, filters, false)
 }
 
-func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters filter.Filters, unique bool) chan IncomingEvent {
+func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters filters.T, unique bool) chan IncomingEvent {
 	ctx, cancel := context.WithCancel(ctx)
 
 	events := make(chan IncomingEvent)
@@ -298,10 +299,10 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 }
 
 // QuerySingle returns the first event returned by the first relay, cancels everything else.
-func (pool *SimplePool) QuerySingle(ctx context.Context, urls []string, f filter.Filter) *IncomingEvent {
+func (pool *SimplePool) QuerySingle(ctx context.Context, urls []string, f filter.T) *IncomingEvent {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	for ievt := range pool.SubManyEose(ctx, urls, filter.Filters{f}) {
+	for ievt := range pool.SubManyEose(ctx, urls, filters.T{f}) {
 		return &ievt
 	}
 	return nil

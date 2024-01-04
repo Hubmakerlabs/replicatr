@@ -15,8 +15,9 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"mleku.online/git/ec/secp"
 	"os"
+
+	"mleku.online/git/ec/secp"
 )
 
 // curveParams houses the secp256k1 curve parameters for convenient access.

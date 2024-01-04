@@ -11,6 +11,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	filters2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
@@ -38,13 +39,13 @@ func main() {
 	}
 
 	// create filters
-	var filters filter.Filters
+	var filters filters2.T
 	if _, v, err := nip19.Decode(npub); err == nil {
 		t := make(map[string][]string)
 		// making a "p" tag for the above public key.
 		// this filters for messages tagged with the user, mainly replies.
 		t["p"] = []string{v.(string)}
-		filters = []filter.Filter{{
+		filters = []filter.T{{
 			Kinds: []int{event.KindTextNote},
 			Tags:  t,
 			// limit = 3, get the three most recent notes

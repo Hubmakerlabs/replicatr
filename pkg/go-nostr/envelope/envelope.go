@@ -54,4 +54,3 @@ func ParseMessage(message []byte) envelopes.Envelope {
 	}
 	return v
 }
-

@@ -11,8 +11,8 @@ import (
 
 func (sys *System) ExpandQueriesByAuthorAndRelays(
 	ctx context.Context,
-	f filter.Filter,
-) (map[*relays.Relay]filter.Filter, error) {
+	f filter.T,
+) (map[*relays.Relay]filter.T, error) {
 	n := len(f.Authors)
 	if n == 0 {
 		return nil, fmt.Errorf("no authors in f")
@@ -42,7 +42,7 @@ func (sys *System) ExpandQueriesByAuthorAndRelays(
 	}
 	wg.Wait()
 
-	filterForRelay := make(map[*relays.Relay]filter.Filter, n) // { [relay]: f }
+	filterForRelay := make(map[*relays.Relay]filter.T, n) // { [relay]: f }
 	for pubkey, relays := range relaysForPubkey {
 		for _, rl := range relays {
 			flt, ok := filterForRelay[rl]

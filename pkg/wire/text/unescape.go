@@ -1,10 +1,11 @@
 package text
 
 import (
-	log2 "mleku.online/git/log"
 	"unicode"
 	"unicode/utf16"
 	"unicode/utf8"
+
+	log2 "mleku.online/git/log"
 )
 
 var (

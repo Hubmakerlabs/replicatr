@@ -16,10 +16,11 @@ package object
 import (
 	"bytes"
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 // Objector is an interface for types that can be converted to object.T - a

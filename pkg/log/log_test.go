@@ -2,8 +2,9 @@ package log_test
 
 import (
 	"errors"
-	l "mleku.online/git/log"
 	"testing"
+
+	l "mleku.online/git/log"
 )
 
 var (

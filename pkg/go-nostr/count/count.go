@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/envelopes"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jwriter"
 	"github.com/tidwall/gjson"
@@ -15,7 +15,7 @@ var _ envelopes.Envelope = (*CountEnvelope)(nil)
 
 type CountEnvelope struct {
 	SubscriptionID string
-	filter.Filters
+	filters.T
 	Count *int64
 }
 
@@ -45,12 +45,12 @@ func (v *CountEnvelope) UnmarshalJSON(data []byte) error {
 		return nil
 	}
 
-	v.Filters = make(filter.Filters, len(arr)-2)
+	v.T = make(filters.T, len(arr)-2)
 	f := 0
 	for i := 2; i < len(arr); i++ {
 		item := []byte(arr[i].Raw)
 
-		if err := easyjson.Unmarshal(item, &v.Filters[f]); err != nil {
+		if err := easyjson.Unmarshal(item, &v.T[f]); err != nil {
 			return fmt.Errorf("%w -- on filter %d", err, f)
 		}
 
@@ -67,7 +67,7 @@ func (v CountEnvelope) MarshalJSON() ([]byte, error) {
 	if v.Count != nil {
 		w.RawString(fmt.Sprintf(`{"count":%d}`, *v.Count))
 	} else {
-		for _, f := range v.Filters {
+		for _, f := range v.T {
 			w.RawString(`,`)
 			f.MarshalEasyJSON(&w)
 		}
@@ -75,4 +75,3 @@ func (v CountEnvelope) MarshalJSON() ([]byte, error) {
 	w.RawString(`]`)
 	return w.BuildBytes()
 }
-

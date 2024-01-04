@@ -27,7 +27,7 @@ type queryEvent struct {
 	query int
 }
 
-func (b BadgerBackend) QueryEvents(ctx context.Context, f *filter.Filter) (chan *event.T, error) {
+func (b BadgerBackend) QueryEvents(ctx context.Context, f *filter.T) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
 	queries, extraFilter, since, err := prepareQueries(f)
@@ -193,9 +193,9 @@ func (pq *priorityQueue) Pop() any {
 	return item
 }
 
-func prepareQueries(f *filter.Filter) (
+func prepareQueries(f *filter.T) (
 	queries []query,
-	extraFilter *filter.Filter,
+	extraFilter *filter.T,
 	since uint32,
 	err error,
 ) {
@@ -247,7 +247,7 @@ func prepareQueries(f *filter.Filter) (
 				}
 			}
 		}
-		extraFilter = &filter.Filter{Tags: f.Tags}
+		extraFilter = &filter.T{Tags: f.Tags}
 	} else if len(f.Tags) > 0 {
 		// determine the size of the queries array by inspecting all tags sizes
 		size := 0
@@ -260,7 +260,7 @@ func prepareQueries(f *filter.Filter) (
 
 		queries = make([]query, size)
 
-		extraFilter = &filter.Filter{Kinds: f.Kinds}
+		extraFilter = &filter.T{Kinds: f.Kinds}
 		i := 0
 		for _, values := range f.Tags {
 			for _, value := range values {

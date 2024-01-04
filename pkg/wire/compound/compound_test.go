@@ -2,10 +2,11 @@ package compound
 
 import (
 	"encoding/json"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 )
 
 var literal2 = object.T{

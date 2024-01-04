@@ -222,7 +222,7 @@ func parseEventMessage(t *testing.T, raw []json.RawMessage) event.T {
 	return evt
 }
 
-func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string, filters []filter.Filter) {
+func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string, filters []filter.T) {
 	t.Helper()
 	if len(raw) < 3 {
 		t.Fatalf("len(raw) = %d; want at least 3", len(raw))
@@ -236,9 +236,9 @@ func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string
 	if err := json.Unmarshal(raw[1], &id); err != nil {
 		t.Errorf("json.Unmarshal sub id: %v", err)
 	}
-	var ff []filter.Filter
+	var ff []filter.T
 	for i, b := range raw[2:] {
-		var f filter.Filter
+		var f filter.T
 		if err := json.Unmarshal(b, &f); err != nil {
 			t.Errorf("json.Unmarshal filter %d: %v", i, err)
 		}

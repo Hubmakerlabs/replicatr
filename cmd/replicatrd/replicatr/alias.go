@@ -13,6 +13,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip11"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/req"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
@@ -27,8 +28,8 @@ type (
 	Ctx             = context.Context
 	Info            = nip11.RelayInformationDocument
 	Event           = event.T
-	Filter          = filter.Filter
-	Filters         = filter.Filters
+	Filter          = filter.T
+	Filters         = filters.T
 	TagMap          = filter.TagMap
 	OKEnvelope      = OK.OKEnvelope
 	EventID         = eventid.EventID

@@ -2,8 +2,9 @@ package text
 
 import (
 	"fmt"
-	log2 "mleku.online/git/log"
 	"testing"
+
+	log2 "mleku.online/git/log"
 )
 
 func TestUnescapeByteString(t *testing.T) {

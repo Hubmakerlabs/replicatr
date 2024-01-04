@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pools"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
@@ -21,7 +21,7 @@ func FetchRelaysForPubkey(ctx context.Context, pool *pools.SimplePool, pubkey st
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	ch := pool.SubManyEose(ctx, relays, filter.Filters{
+	ch := pool.SubManyEose(ctx, relays, filters.T{
 		{
 			Kinds: []int{
 				event.KindRelayListMetadata,

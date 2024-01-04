@@ -19,7 +19,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson4d398eaaDecodeGithubComNbdWtfGoNostr(in *jlexer.Lexer, out *Filter) {
+func easyjson4d398eaaDecodeGithubComNbdWtfGoNostr(in *jlexer.Lexer, out *T) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -167,7 +167,7 @@ func easyjson4d398eaaDecodeGithubComNbdWtfGoNostr(in *jlexer.Lexer, out *Filter)
 	}
 }
 
-func easyjson4d398eaaEncodeGithubComNbdWtfGoNostr(out *jwriter.Writer, in Filter) {
+func easyjson4d398eaaEncodeGithubComNbdWtfGoNostr(out *jwriter.Writer, in T) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -287,25 +287,25 @@ func easyjson4d398eaaEncodeGithubComNbdWtfGoNostr(out *jwriter.Writer, in Filter
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v Filter) MarshalJSON() ([]byte, error) {
+func (v T) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjson4d398eaaEncodeGithubComNbdWtfGoNostr(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v Filter) MarshalEasyJSON(w *jwriter.Writer) {
+func (v T) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson4d398eaaEncodeGithubComNbdWtfGoNostr(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *Filter) UnmarshalJSON(data []byte) error {
+func (v *T) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjson4d398eaaDecodeGithubComNbdWtfGoNostr(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *Filter) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *T) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson4d398eaaDecodeGithubComNbdWtfGoNostr(l, v)
 }
