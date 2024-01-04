@@ -5,13 +5,13 @@ import (
 	"encoding/binary"
 	"log"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b BadgerBackend) CountEvents(ctx context.Context, filter *nostr.Filter) (int64, error) {
+func (b BadgerBackend) CountEvents(ctx context.Context, filter *filter.Filter) (int64, error) {
 	var count int64 = 0
 
 	queries, extraFilter, since, err := prepareQueries(filter)

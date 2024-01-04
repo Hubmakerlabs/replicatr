@@ -7,8 +7,10 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pools"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk/cache"
 )
 
@@ -16,7 +18,7 @@ type System struct {
 	RelaysCache      cache.Cache32[[]Relay]
 	FollowsCache     cache.Cache32[[]Follow]
 	MetadataCache    cache.Cache32[ProfileMetadata]
-	Pool             *nostr.SimplePool
+	Pool             *pools.SimplePool
 	RelayListRelays  []string
 	FollowListRelays []string
 	MetadataRelays   []string
@@ -73,7 +75,7 @@ func (sys System) fetchProfileMetadata(ctx context.Context, pubkey string) (pm P
 	}
 
 	if sys.Store != nil {
-		res, _ := sys.StoreRelay().QuerySync(ctx, &nostr.Filter{Kinds: []int{0}, Authors: []string{pubkey}})
+		res, _ := sys.StoreRelay().QuerySync(ctx, &filter.Filter{Kinds: []int{0}, Authors: []string{pubkey}})
 		if len(res) != 0 {
 			if m, err := ParseMetadata(res[0]); err == nil {
 				m.PubKey = pubkey
@@ -97,8 +99,8 @@ func (sys System) fetchProfileMetadata(ctx context.Context, pubkey string) (pm P
 }
 
 // FetchUserEvents fetches events from each users' outbox relays, grouping queries when possible.
-func (sys System) FetchUserEvents(ctx context.Context, filter nostr.Filter) (map[string][]*event.T, error) {
-	filters, err := sys.ExpandQueriesByAuthorAndRelays(ctx, filter)
+func (sys System) FetchUserEvents(ctx context.Context, filt filter.Filter) (map[string][]*event.T, error) {
+	filters, err := sys.ExpandQueriesByAuthorAndRelays(ctx, filt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to expand queries: %w", err)
 	}
@@ -106,11 +108,11 @@ func (sys System) FetchUserEvents(ctx context.Context, filter nostr.Filter) (map
 	results := make(map[string][]*event.T)
 	wg := sync.WaitGroup{}
 	wg.Add(len(filters))
-	for relay, filter := range filters {
-		go func(relay *nostr.Relay, filter nostr.Filter) {
+	for relay, ff := range filters {
+		go func(relay *relays.Relay, f filter.Filter) {
 			defer wg.Done()
-			filter.Limit = filter.Limit * len(filter.Authors) // hack
-			sub, err := relay.Subscribe(ctx, nostr.Filters{filter})
+			f.Limit = f.Limit * len(f.Authors) // hack
+			sub, err := relay.Subscribe(ctx, filter.Filters{filt})
 			if err != nil {
 				return
 			}
@@ -122,7 +124,7 @@ func (sys System) FetchUserEvents(ctx context.Context, filter nostr.Filter) (map
 					return
 				}
 			}
-		}(relay, filter)
+		}(relay, ff)
 	}
 	wg.Wait()
 

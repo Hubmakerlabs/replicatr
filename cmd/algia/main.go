@@ -15,10 +15,12 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/urfave/cli/v2"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/fatih/color"
 )
@@ -131,7 +133,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 	var mu sync.Mutex
 	var pub string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-		if pub, err = nostr.GetPublicKey(s.(string)); err != nil {
+		if pub, err = keys.GetPublicKey(s.(string)); err != nil {
 			return nil, err
 		}
 	} else {
@@ -145,8 +147,8 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		mu.Unlock()
 		m := map[string]struct{}{}
 
-		cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-			evs, err := relay.QuerySync(ctx, nostr.Filter{Kinds: []int{event.KindContactList}, Authors: []string{pub}, Limit: 1})
+		cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
+			evs, err := relay.QuerySync(ctx, filter.Filter{Kinds: []int{event.KindContactList}, Authors: []string{pub}, Limit: 1})
 			if err != nil {
 				return true
 			}
@@ -189,8 +191,8 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 				}
 
 				// get follower's descriptions
-				cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-					evs, err := relay.QuerySync(ctx, nostr.Filter{
+				cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
+					evs, err := relay.QuerySync(ctx, filter.Filter{
 						Kinds:   []int{event.KindProfileMetadata},
 						Authors: follows[i:end], // Use the updated end index
 					})
@@ -220,7 +222,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 }
 
 // FindRelay is
-func (cfg *Config) FindRelay(ctx context.Context, r Relay) *nostr.Relay {
+func (cfg *Config) FindRelay(ctx context.Context, r Relay) *relays.Relay {
 	for k, v := range cfg.Relays {
 		if r.Write && !v.Write {
 			continue
@@ -234,7 +236,7 @@ func (cfg *Config) FindRelay(ctx context.Context, r Relay) *nostr.Relay {
 		if cfg.verbose {
 			fmt.Printf("trying relay: %s\n", k)
 		}
-		relay, err := nostr.RelayConnect(ctx, k)
+		relay, err := relays.RelayConnect(ctx, k)
 		if err != nil {
 			if cfg.verbose {
 				fmt.Fprintln(os.Stderr, err.Error())
@@ -247,7 +249,7 @@ func (cfg *Config) FindRelay(ctx context.Context, r Relay) *nostr.Relay {
 }
 
 // Do is
-func (cfg *Config) Do(r Relay, f func(context.Context, *nostr.Relay) bool) {
+func (cfg *Config) Do(r Relay, f func(context.Context, *relays.Relay) bool) {
 	var wg sync.WaitGroup
 	ctx := context.Background()
 	for k, v := range cfg.Relays {
@@ -263,7 +265,7 @@ func (cfg *Config) Do(r Relay, f func(context.Context, *nostr.Relay) bool) {
 		wg.Add(1)
 		go func(wg *sync.WaitGroup, k string, v Relay) {
 			defer wg.Done()
-			relay, err := nostr.RelayConnect(ctx, k)
+			relay, err := relays.RelayConnect(ctx, k)
 			if err != nil {
 				if cfg.verbose {
 					fmt.Fprintln(os.Stderr, err)
@@ -308,7 +310,7 @@ func (cfg *Config) Decode(ev *event.T) (e error) {
 	var pub string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
 		sk = s.(string)
-		if pub, err = nostr.GetPublicKey(s.(string)); err != nil {
+		if pub, err = keys.GetPublicKey(s.(string)); err != nil {
 			return err
 		}
 	} else {
@@ -381,11 +383,11 @@ func (cfg *Config) PrintEvents(evs []*event.T, followsMap map[string]Profile, j,
 }
 
 // Events is
-func (cfg *Config) Events(filter nostr.Filter) []*event.T {
+func (cfg *Config) Events(filter filter.Filter) []*event.T {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
-	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		mu.Lock()
 		if found {
 			mu.Unlock()

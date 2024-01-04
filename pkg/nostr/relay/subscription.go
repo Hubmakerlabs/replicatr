@@ -16,8 +16,8 @@ import (
 )
 
 type Subscription struct {
-	label   string
-	counter int
+	Label   string
+	Counter int
 	Relay   *Relay
 	Filters filters.T
 	// for this to be treated as a COUNT and not a REQ this must be set
@@ -62,7 +62,7 @@ var _ SubscriptionOption = (WithLabel)("")
 // GetID return the Nostr subscription ID as given to the Relay it is a
 // concatenation of the label and a serial number.
 func (sub *Subscription) GetID() string {
-	return sub.label + ":" + strconv.Itoa(sub.counter)
+	return sub.Label + ":" + strconv.Itoa(sub.Counter)
 }
 
 func (sub *Subscription) Start() {
@@ -97,7 +97,7 @@ func (sub *Subscription) DispatchEvent(evt *event.T) {
 	}()
 }
 
-func (sub *Subscription) dispatchEose() {
+func (sub *Subscription) DispatchEose() {
 	if sub.Eosed.CompareAndSwap(false, true) {
 		go func() {
 			sub.Storedwg.Wait()

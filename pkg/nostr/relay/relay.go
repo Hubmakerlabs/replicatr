@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/connect"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countresponse"
@@ -75,7 +76,7 @@ func (s Status) String() string {
 type Relay struct {
 	URL                           string
 	RequestHeader                 http.Header // e.g. for origin header
-	Connection                    *Connection
+	Connection                    *connect.Connection
 	Subscriptions                 *xsync.MapOf[string, *Subscription]
 	Err                           error
 	ctx                           context.Context // will be canceled when the connection closes
@@ -188,8 +189,8 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 		ctx, cancel = context.WithTimeout(ctx, 7*time.Second)
 		defer cancel()
 	}
-	var conn *Connection
-	if conn, e = NewConnection(ctx, r.URL, r.RequestHeader); fails(e) {
+	var conn *connect.Connection
+	if conn, e = connect.NewConnection(ctx, r.URL, r.RequestHeader); fails(e) {
 		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, e)
 	}
 	r.Connection = conn
@@ -276,14 +277,14 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 				if env.SubscriptionID == "" {
 					continue
 				}
-				if subscription, ok := r.Subscriptions.Load(string(env.SubscriptionID)); !ok {
-					log.D.F("{%s} no subscription with id '%s'", r.URL, env.SubscriptionID)
+				if subscr, ok := r.Subscriptions.Load(string(env.SubscriptionID)); !ok {
+					log.D.F("{%s} no subscr with id '%s'", r.URL, env.SubscriptionID)
 					continue
 				} else {
 					// check if the event matches the desired filter, ignore otherwise
-					if !subscription.Filters.Match(env.Event) {
+					if !subscr.Filters.Match(env.Event) {
 						log.E.F("{%s} filter does not match: %v ~ %v",
-							r.URL, subscription.Filters, env.Event)
+							r.URL, subscr.Filters, env.Event)
 						continue
 					}
 					// check signature, ignore invalid, except from trusted (AssumeValid) relays
@@ -297,18 +298,18 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 							continue
 						}
 					}
-					// dispatch this to the internal .events channel of the subscription
-					subscription.DispatchEvent(env.Event)
+					// dispatch this to the internal .events channel of the subscr
+					subscr.DispatchEvent(env.Event)
 				}
 			case *eose.Envelope:
-				if subscription, ok := r.Subscriptions.Load(string(env.T)); ok {
-					subscription.dispatchEose()
+				if sub, ok := r.Subscriptions.Load(string(env.T)); ok {
+					sub.DispatchEose()
 				}
 			case *countresponse.Envelope:
-				if subscription, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok &&
+				if sub, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok &&
 					env.Count != 0 &&
-					subscription.CountResult != nil {
-					subscription.CountResult <- env.Count
+					sub.CountResult != nil {
+					sub.CountResult <- env.Count
 				}
 			case *OK.Envelope:
 				if okCallback, exist := r.okCallbacks.Load(string(env.EventID)); exist {
@@ -478,7 +479,7 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filters filters.T,
 		Relay:             r,
 		Context:           ctx,
 		Cancel:            cancel,
-		counter:           int(current),
+		Counter:           int(current),
 		Events:            make(chan *event.T),
 		EndOfStoredEvents: make(chan struct{}),
 		Filters:           filters,
@@ -486,7 +487,7 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filters filters.T,
 	for _, opt := range opts {
 		switch o := opt.(type) {
 		case WithLabel:
-			s.label = string(o)
+			s.Label = string(o)
 		}
 	}
 	id := s.GetID()

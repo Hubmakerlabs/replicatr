@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"regexp"
@@ -12,8 +13,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
@@ -42,12 +45,12 @@ func doDMList(cCtx *cli.Context) (e error) {
 	} else {
 		return err
 	}
-	if npub, err = nostr.GetPublicKey(sk); err != nil {
+	if npub, err = keys.GetPublicKey(sk); err != nil {
 		return err
 	}
 
 	// get timeline
-	filter := nostr.Filter{
+	filter := filter.Filter{
 		Kinds:   []int{event.KindEncryptedDirectMessage},
 		Authors: []string{npub},
 	}
@@ -112,7 +115,7 @@ func doDMTimeline(cCtx *cli.Context) (e error) {
 	} else {
 		return err
 	}
-	if npub, err = nostr.GetPublicKey(sk); err != nil {
+	if npub, err = keys.GetPublicKey(sk); err != nil {
 		return err
 	}
 
@@ -132,10 +135,10 @@ func doDMTimeline(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	filter := nostr.Filter{
+	filter := filter.Filter{
 		Kinds:   []int{event.KindEncryptedDirectMessage},
 		Authors: []string{npub, pub},
-		Tags:    nostr.TagMap{"p": []string{npub, pub}},
+		Tags:    filter.TagMap{"p": []string{npub, pub}},
 		Limit:   9999,
 	}
 
@@ -161,7 +164,7 @@ func doDMPost(cCtx *cli.Context) (e error) {
 		return err
 	}
 	ev := event.T{}
-	if npub, err := nostr.GetPublicKey(sk); err == nil {
+	if npub, err := keys.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(npub); err != nil {
 			return err
 		}
@@ -214,7 +217,7 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		err := relay.Publish(ctx, ev)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, relay.URL, err)
@@ -246,7 +249,7 @@ func doPost(cCtx *cli.Context) (e error) {
 		return err
 	}
 	ev := event.T{}
-	if pub, err := nostr.GetPublicKey(sk); err == nil {
+	if pub, err := keys.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -256,7 +259,7 @@ func doPost(cCtx *cli.Context) (e error) {
 	}
 
 	if stdin {
-		b, err := ioutil.ReadAll(os.Stdin)
+		b, err := io.ReadAll(os.Stdin)
 		if err != nil {
 			return err
 		}
@@ -321,7 +324,7 @@ func doPost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		err := relay.Publish(ctx, ev)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, relay.URL, err)
@@ -355,7 +358,7 @@ func doReply(cCtx *cli.Context) (e error) {
 		return err
 	}
 	ev := event.T{}
-	if pub, err := nostr.GetPublicKey(sk); err == nil {
+	if pub, err := keys.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -422,7 +425,7 @@ func doReply(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		if !quote {
 			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, relay.URL, "reply"})
 		} else {
@@ -457,7 +460,7 @@ func doRepost(cCtx *cli.Context) (e error) {
 	} else {
 		return err
 	}
-	if pub, err := nostr.GetPublicKey(sk); err == nil {
+	if pub, err := keys.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -472,7 +475,7 @@ func doRepost(cCtx *cli.Context) (e error) {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
 	ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id})
-	filter := nostr.Filter{
+	filter := filter.Filter{
 		Kinds: []int{event.KindTextNote},
 		IDs:   []string{id},
 	}
@@ -485,7 +488,7 @@ func doRepost(cCtx *cli.Context) (e error) {
 	first.Store(true)
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		if first.Load() {
 			evs, err := relay.QuerySync(ctx, filter)
 			if err != nil {
@@ -529,19 +532,19 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	} else {
 		return err
 	}
-	pub, err := nostr.GetPublicKey(sk)
+	pub, err := keys.GetPublicKey(sk)
 	if err != nil {
 		return err
 	}
-	filter := nostr.Filter{
+	f := filter.Filter{
 		Kinds:   []int{event.KindRepost},
 		Authors: []string{pub},
-		Tags:    nostr.TagMap{"e": []string{id}},
+		Tags:    filter.TagMap{"e": []string{id}},
 	}
 	var repostID string
 	var mu sync.Mutex
-	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-		evs, err := relay.QuerySync(ctx, filter)
+	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
+		evs, err := relay.QuerySync(ctx, f)
 		if err != nil {
 			return true
 		}
@@ -562,7 +565,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		err := relay.Publish(ctx, ev)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, relay.URL, err)
@@ -589,7 +592,7 @@ func doLike(cCtx *cli.Context) (e error) {
 	} else {
 		return err
 	}
-	if pub, err := nostr.GetPublicKey(sk); err == nil {
+	if pub, err := keys.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -604,7 +607,7 @@ func doLike(cCtx *cli.Context) (e error) {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
 	ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id})
-	filter := nostr.Filter{
+	filter := filter.Filter{
 		Kinds: []int{event.KindTextNote},
 		IDs:   []string{id},
 	}
@@ -628,7 +631,7 @@ func doLike(cCtx *cli.Context) (e error) {
 	first.Store(true)
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		if first.Load() {
 			evs, err := relay.QuerySync(ctx, filter)
 			if err != nil {
@@ -673,19 +676,19 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	} else {
 		return err
 	}
-	pub, err := nostr.GetPublicKey(sk)
+	pub, err := keys.GetPublicKey(sk)
 	if err != nil {
 		return err
 	}
-	filter := nostr.Filter{
+	f := filter.Filter{
 		Kinds:   []int{event.KindReaction},
 		Authors: []string{pub},
-		Tags:    nostr.TagMap{"e": []string{id}},
+		Tags:    filter.TagMap{"e": []string{id}},
 	}
 	var likeID string
 	var mu sync.Mutex
-	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *nostr.Relay) bool {
-		evs, err := relay.QuerySync(ctx, filter)
+	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
+		evs, err := relay.QuerySync(ctx, f)
 		if err != nil {
 			return true
 		}
@@ -706,7 +709,7 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		err := relay.Publish(ctx, ev)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, relay.URL, err)
@@ -733,7 +736,7 @@ func doDelete(cCtx *cli.Context) (e error) {
 	} else {
 		return err
 	}
-	if pub, err := nostr.GetPublicKey(sk); err == nil {
+	if pub, err := keys.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -755,7 +758,7 @@ func doDelete(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		err := relay.Publish(ctx, ev)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, relay.URL, err)
@@ -790,7 +793,7 @@ func doSearch(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	filter := nostr.Filter{
+	filter := filter.Filter{
 		Kinds:  []int{event.KindTextNote},
 		Search: strings.Join(cCtx.Args().Slice(), " "),
 		Limit:  n,
@@ -831,7 +834,7 @@ func doStream(cCtx *cli.Context) (e error) {
 	} else {
 		return err
 	}
-	pub, err := nostr.GetPublicKey(sk)
+	pub, err := keys.GetPublicKey(sk)
 	if err != nil {
 		return err
 	}
@@ -851,13 +854,13 @@ func doStream(cCtx *cli.Context) (e error) {
 	}
 
 	since := timestamp.Now()
-	filter := nostr.Filter{
+	ff := filter.Filter{
 		Kinds:   kinds,
 		Authors: follows,
 		Since:   &since,
 	}
 
-	sub, err := relay.Subscribe(context.Background(), nostr.Filters{filter})
+	sub, err := relay.Subscribe(context.Background(), filter.Filters{ff})
 	if err != nil {
 		return err
 	}
@@ -877,7 +880,7 @@ func doStream(cCtx *cli.Context) (e error) {
 				if err := evr.Sign(sk); err != nil {
 					return err
 				}
-				cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+				cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
 					relay.Publish(ctx, evr)
 					return true
 				})
@@ -907,7 +910,7 @@ func doTimeline(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	filter := nostr.Filter{
+	filter := filter.Filter{
 		Kinds:   []int{event.KindTextNote},
 		Authors: follows,
 		Limit:   n,
@@ -928,7 +931,7 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 		return err
 	}
 	ev := event.T{}
-	if pub, err := nostr.GetPublicKey(sk); err == nil {
+	if pub, err := keys.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -946,7 +949,7 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *nostr.Relay) bool {
+	cfg.Do(Relay{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		err := relay.Publish(ctx, ev)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, relay.URL, err)

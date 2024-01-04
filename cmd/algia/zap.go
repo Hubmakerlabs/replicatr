@@ -11,12 +11,15 @@ import (
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/urfave/cli/v2"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 )
@@ -67,12 +70,12 @@ func pay(cfg *Config, invoice string) (e error) {
 	wallet := uri.Host
 	host := uri.Query().Get("relay")
 	secret := uri.Query().Get("secret")
-	pub, err := nostr.GetPublicKey(secret)
+	pub, err := keys.GetPublicKey(secret)
 	if err != nil {
 		return err
 	}
 
-	relay, err := nostr.RelayConnect(context.Background(), host)
+	relay, err := relays.RelayConnect(context.Background(), host)
 	if err != nil {
 		return err
 	}
@@ -106,8 +109,8 @@ func pay(cfg *Config, invoice string) (e error) {
 		return err
 	}
 
-	filters := []nostr.Filter{{
-		Tags: nostr.TagMap{
+	filters := []filter.Filter{{
+		Tags: filter.TagMap{
 			"p": []string{pub},
 			"e": []string{ev.ID},
 		},
@@ -150,7 +153,7 @@ func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
 	defer relay.Close()
 
 	// get set-metadata
-	filter := nostr.Filter{
+	filter := filter.Filter{
 		Kinds:   []int{event.KindProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
@@ -213,7 +216,7 @@ func doZap(cCtx *cli.Context) (e error) {
 	zr := event.T{}
 	zr.Tags = tags.Tags{}
 
-	if pub, err := nostr.GetPublicKey(sk); err == nil {
+	if pub, err := keys.GetPublicKey(sk); err == nil {
 		if _, err := nip19.EncodePublicKey(pub); err != nil {
 			return err
 		}
@@ -233,11 +236,11 @@ func doZap(cCtx *cli.Context) (e error) {
 	if prefix, s, err := nip19.Decode(cCtx.Args().First()); err == nil {
 		switch prefix {
 		case "nevent":
-			receipt = s.(nostr.EventPointer).Author
+			receipt = s.(pointers.EventPointer).Author
 			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})
-			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"e", s.(nostr.EventPointer).ID})
+			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"e", s.(pointers.EventPointer).ID})
 		case "note":
-			evs := cfg.Events(nostr.Filter{IDs: []string{s.(string)}})
+			evs := cfg.Events(filter.Filter{IDs: []string{s.(string)}})
 			if len(evs) != 0 {
 				receipt = evs[0].PubKey
 				zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})

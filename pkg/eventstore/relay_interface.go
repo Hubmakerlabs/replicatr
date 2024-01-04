@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 )
 
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.
 type RelayInterface interface {
 	Publish(ctx context.Context, evt *event.T) error
-	QuerySync(ctx context.Context, filter *nostr.Filter, opts ...nostr.SubscriptionOption) ([]*event.T, error)
+	QuerySync(ctx context.Context, filter *filter.Filter, opts ...relay.SubscriptionOption) ([]*event.T, error)
 }
 
 type RelayWrapper struct {
@@ -26,7 +27,7 @@ func (w RelayWrapper) Publish(ctx context.Context, evt *event.T) (e error) {
 		return nil
 	} else if evt.Kind == 0 || evt.Kind == 3 || (10000 <= evt.Kind && evt.Kind < 20000) {
 		// replaceable event, delete before storing
-		ch, err := w.Store.QueryEvents(ctx, &nostr.Filter{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}})
+		ch, err := w.Store.QueryEvents(ctx, &filter.Filter{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}})
 		if err != nil {
 			return fmt.Errorf("failed to query before replacing: %w", err)
 		}
@@ -39,7 +40,7 @@ func (w RelayWrapper) Publish(ctx context.Context, evt *event.T) (e error) {
 		// parameterized replaceable event, delete before storing
 		d := evt.Tags.GetFirst([]string{"d", ""})
 		if d != nil {
-			ch, err := w.Store.QueryEvents(ctx, &nostr.Filter{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}, Tags: nostr.TagMap{"d": []string{d.Value()}}})
+			ch, err := w.Store.QueryEvents(ctx, &filter.Filter{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}, Tags: filter.TagMap{"d": []string{d.Value()}}})
 			if err != nil {
 				return fmt.Errorf("failed to query before parameterized replacing: %w", err)
 			}
@@ -58,7 +59,7 @@ func (w RelayWrapper) Publish(ctx context.Context, evt *event.T) (e error) {
 	return nil
 }
 
-func (w RelayWrapper) QuerySync(ctx context.Context, filter *nostr.Filter, opts ...nostr.SubscriptionOption) ([]*event.T, error) {
+func (w RelayWrapper) QuerySync(ctx context.Context, filter *filter.Filter, opts ...relay.SubscriptionOption) ([]*event.T, error) {
 	ch, err := w.Store.QueryEvents(ctx, filter)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query: %w", err)

@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
 	"github.com/urfave/cli/v2"
 
@@ -29,7 +30,7 @@ func doProfile(cCtx *cli.Context) (e error) {
 	var pub string
 	if user == "" {
 		if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-			if pub, err = nostr.GetPublicKey(s.(string)); err != nil {
+			if pub, err = keys.GetPublicKey(s.(string)); err != nil {
 				return err
 			}
 		} else {
@@ -44,13 +45,13 @@ func doProfile(cCtx *cli.Context) (e error) {
 	}
 
 	// get set-metadata
-	filter := nostr.Filter{
+	f := filter.Filter{
 		Kinds:   []int{event.KindProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
 	}
 
-	evs := cfg.Events(filter)
+	evs := cfg.Events(f)
 	if len(evs) == 0 {
 		return errors.New("cannot find user")
 	}

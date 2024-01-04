@@ -9,9 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
 
@@ -20,7 +22,7 @@ func main() {
 
 	// connect to relay
 	url := "wss://nostr.zebedee.cloud"
-	relay, err := nostr.RelayConnect(ctx, url)
+	relay, err := relays.RelayConnect(ctx, url)
 	if err != nil {
 		panic(err)
 	}
@@ -36,13 +38,13 @@ func main() {
 	}
 
 	// create filters
-	var filters nostr.Filters
+	var filters filter.Filters
 	if _, v, err := nip19.Decode(npub); err == nil {
 		t := make(map[string][]string)
 		// making a "p" tag for the above public key.
 		// this filters for messages tagged with the user, mainly replies.
 		t["p"] = []string{v.(string)}
-		filters = []nostr.Filter{{
+		filters = []filter.Filter{{
 			Kinds: []int{event.KindTextNote},
 			Tags:  t,
 			// limit = 3, get the three most recent notes
@@ -92,9 +94,9 @@ func main() {
 	if _, s, e := nip19.Decode(nsec); e == nil {
 		sk = s.(string)
 	} else {
-		sk = nostr.GeneratePrivateKey()
+		sk = keys.GeneratePrivateKey()
 	}
-	if pub, e := nostr.GetPublicKey(sk); e == nil {
+	if pub, e := keys.GetPublicKey(sk); e == nil {
 		ev.PubKey = pub
 		if npub, e := nip19.EncodePublicKey(pub); e == nil {
 			fmt.Fprintln(os.Stderr, "using:", npub)
@@ -120,7 +122,7 @@ func main() {
 	ev.Sign(sk)
 	for _, url := range []string{"wss://nostr.zebedee.cloud"} {
 		ctx := context.WithValue(context.Background(), "url", url)
-		relay, e := nostr.RelayConnect(ctx, url)
+		relay, e := relays.RelayConnect(ctx, url)
 		if e != nil {
 			fmt.Println(e)
 			continue

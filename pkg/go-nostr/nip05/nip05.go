@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
 )
 
 type (
@@ -21,7 +21,7 @@ type WellKnownResponse struct {
 	Relays key2RelaysMap `json:"relays"` // NIP-35
 }
 
-func QueryIdentifier(ctx context.Context, fullname string) (*nostr.ProfilePointer, error) {
+func QueryIdentifier(ctx context.Context, fullname string) (*pointers.ProfilePointer, error) {
 	spl := strings.Split(fullname, "@")
 
 	var name, domain string
@@ -64,18 +64,18 @@ func QueryIdentifier(ctx context.Context, fullname string) (*nostr.ProfilePointe
 
 	pubkey, ok := result.Names[name]
 	if !ok {
-		return &nostr.ProfilePointer{}, nil
+		return &pointers.ProfilePointer{}, nil
 	}
 
 	if len(pubkey) == 64 {
 		if _, err := hex.DecodeString(pubkey); err != nil {
-			return &nostr.ProfilePointer{}, nil
+			return &pointers.ProfilePointer{}, nil
 		}
 	}
 
 	relays, _ := result.Relays[pubkey]
 
-	return &nostr.ProfilePointer{
+	return &pointers.ProfilePointer{
 		PublicKey: pubkey,
 		Relays:    relays,
 	}, nil
