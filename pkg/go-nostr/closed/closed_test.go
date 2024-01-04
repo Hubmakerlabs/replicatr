@@ -10,7 +10,7 @@ func TestClosedEnvelopeEncodingAndDecoding(t *testing.T) {
 		`["CLOSED","_","error: something went wrong"]`,
 		`["CLOSED",":1","auth-required: take a selfie and send it to the CIA"]`,
 	} {
-		var env ClosedEnvelope
+		var env Envelope
 		json.Unmarshal([]byte(src), &env)
 		if env.SubscriptionID != "_" && env.SubscriptionID != ":1" {
 			t.Error("failed to decode CLOSED")

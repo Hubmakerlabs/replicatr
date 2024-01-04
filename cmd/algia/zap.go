@@ -146,7 +146,7 @@ func pay(cfg *Config, invoice string) (e error) {
 
 // ZapInfo is
 func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
-	relay := cfg.FindRelay(context.Background(), Relay{Read: true})
+	relay := cfg.FindRelay(context.Background(), RelayPerms{Read: true})
 	if relay == nil {
 		return nil, errors.New("cannot connect relays")
 	}

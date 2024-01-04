@@ -35,7 +35,7 @@ func TestParseMessage(t *testing.T) {
 		{
 			Name:             "CLOSED envelope",
 			Message:          []byte(`["CLOSED",":1","error: we are broken"]`),
-			ExpectedEnvelope: &closed.ClosedEnvelope{SubscriptionID: ":1", Reason: "error: we are broken"},
+			ExpectedEnvelope: &closed.Envelope{SubscriptionID: ":1", Reason: "error: we are broken"},
 		},
 		{
 			Name:             "AUTH envelope",
