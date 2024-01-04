@@ -45,13 +45,13 @@ func ValidateAuthEvent(evt *event.T, challenge string, relayURL string) (pubkey 
 		return "", false
 	}
 
-	expected, err := parseURL(relayURL)
-	if err != nil {
+	expected, e := parseURL(relayURL)
+	if e != nil {
 		return "", false
 	}
 
-	found, err := parseURL(evt.Tags.GetFirst([]string{"relay", ""}).Value())
-	if err != nil {
+	found, e := parseURL(evt.Tags.GetFirst([]string{"relay", ""}).Value())
+	if e != nil {
 		return "", false
 	}
 

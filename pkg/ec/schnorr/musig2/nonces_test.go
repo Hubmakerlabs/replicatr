@@ -42,8 +42,8 @@ func TestMusig2NonceGenTestVectors(t *testing.T) {
 	testVectorPath := path.Join(
 		testVectorBaseDir, nonceGenTestVectorsFileName,
 	)
-	testVectorBytes, err := os.ReadFile(testVectorPath)
-	require.NoError(t, err)
+	testVectorBytes, e := os.ReadFile(testVectorPath)
+	require.NoError(t, e)
 
 	var testCases nonceGenTestCases
 	require.NoError(t, json.Unmarshal(testVectorBytes, &testCases))
@@ -63,9 +63,9 @@ func TestMusig2NonceGenTestVectors(t *testing.T) {
 		}
 
 		t.Run(fmt.Sprintf("test_case=%v", i), func(t *testing.T) {
-			nonce, err := GenNonces(withCustomOptions(customOpts))
-			if err != nil {
-				t.Fatalf("err gen nonce aux bytes %v", err)
+			nonce, e := GenNonces(withCustomOptions(customOpts))
+			if e != nil {
+				t.Fatalf("err gen nonce aux bytes %v", e)
 			}
 
 			expectedBytes, _ := hex.DecodeString(testCase.Expected)
@@ -118,8 +118,8 @@ func TestMusig2AggregateNoncesTestVectors(t *testing.T) {
 	testVectorPath := path.Join(
 		testVectorBaseDir, nonceAggTestVectorsFileName,
 	)
-	testVectorBytes, err := os.ReadFile(testVectorPath)
-	require.NoError(t, err)
+	testVectorBytes, e := os.ReadFile(testVectorPath)
+	require.NoError(t, e)
 
 	var testCases nonceAggTestCases
 	require.NoError(t, json.Unmarshal(testVectorBytes, &testCases))
@@ -141,8 +141,8 @@ func TestMusig2AggregateNoncesTestVectors(t *testing.T) {
 		}
 
 		t.Run(fmt.Sprintf("valid_case=%v", i), func(t *testing.T) {
-			aggregatedNonce, err := AggregateNonces(testNonces)
-			require.NoError(t, err)
+			aggregatedNonce, e := AggregateNonces(testNonces)
+			require.NoError(t, e)
 
 			var expectedNonce [PubNonceSize]byte
 			copy(expectedNonce[:], mustParseHex(testCase.Expected))
@@ -158,8 +158,8 @@ func TestMusig2AggregateNoncesTestVectors(t *testing.T) {
 		}
 
 		t.Run(fmt.Sprintf("invalid_case=%v", i), func(t *testing.T) {
-			_, err := AggregateNonces(testNonces)
-			require.True(t, err != nil)
+			_, e := AggregateNonces(testNonces)
+			require.True(t, e != nil)
 			require.Equal(t, testCase.ExpectedErr, err.Error())
 		})
 	}

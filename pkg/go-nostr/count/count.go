@@ -40,7 +40,7 @@ func (v *CountEnvelope) UnmarshalJSON(data []byte) error {
 	var countResult struct {
 		Count *int64 `json:"count"`
 	}
-	if err := json.Unmarshal([]byte(arr[2].Raw), &countResult); err == nil && countResult.Count != nil {
+	if e := json.Unmarshal([]byte(arr[2].Raw), &countResult); e == nil && countResult.Count != nil {
 		v.Count = countResult.Count
 		return nil
 	}
@@ -50,8 +50,8 @@ func (v *CountEnvelope) UnmarshalJSON(data []byte) error {
 	for i := 2; i < len(arr); i++ {
 		item := []byte(arr[i].Raw)
 
-		if err := easyjson.Unmarshal(item, &v.T[f]); err != nil {
-			return fmt.Errorf("%w -- on filter %d", err, f)
+		if e := easyjson.Unmarshal(item, &v.T[f]); e != nil {
+			return fmt.Errorf("%w -- on filter %d", e, f)
 		}
 
 		f++

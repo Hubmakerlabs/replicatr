@@ -69,7 +69,7 @@ func QueryIdentifier(ctx context.Context, fullname string) (pp *pointers.Profile
 		return &pointers.Profile{}, nil
 	}
 	if len(pubkey) == 64 {
-		if _, err := hex.DecodeString(pubkey); err != nil {
+		if _, e := hex.DecodeString(pubkey); e != nil {
 			return &pointers.Profile{}, nil
 		}
 	}

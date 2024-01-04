@@ -131,7 +131,7 @@ type cryptoRandAdapter struct {
 // Read implements the io.Reader interface for the crypto/rand package.  By
 // default, we always use the crypto/rand reader, but the caller is able to
 // specify their own generation, which can be useful for deterministic tests.
-func (c *cryptoRandAdapter) Read(p []byte) (n int, err error) {
+func (c *cryptoRandAdapter) Read(p []byte) (n int, e error) {
 	return rand.Read(p)
 }
 
@@ -239,12 +239,12 @@ func uint64Writer(w io.Writer, b []byte) (e error) {
 func writeBytesPrefix(w io.Writer, b []byte, lenWriter lengthWriter) (e error) {
 	// Write out the length of the byte first, followed by the set of bytes
 	// itself.
-	if err := lenWriter(w, b); err != nil {
-		return err
+	if e := lenWriter(w, b); e != nil {
+		return e
 	}
 
-	if _, err := w.Write(b); err != nil {
-		return err
+	if _, e := w.Write(b); e != nil {
+		return e
 	}
 
 	return nil
@@ -265,19 +265,19 @@ func genNonceAuxBytes(rand []byte, pubkey []byte, i int,
 	var w bytes.Buffer
 
 	// First, write out the randomness generated in the prior step.
-	if _, err := w.Write(rand); err != nil {
+	if _, e := w.Write(rand); e != nil {
 		return nil, err
 	}
 
 	// Next, we'll write out: len(pk) || pk
-	err := writeBytesPrefix(&w, pubkey, uint8Writer)
-	if err != nil {
+	e := writeBytesPrefix(&w, pubkey, uint8Writer)
+	if e != nil {
 		return nil, err
 	}
 
 	// Next, we'll write out: len(aggpk) || aggpk.
-	err = writeBytesPrefix(&w, opts.combinedKey, uint8Writer)
-	if err != nil {
+	e = writeBytesPrefix(&w, opts.combinedKey, uint8Writer)
+	if e != nil {
 		return nil, err
 	}
 
@@ -285,7 +285,7 @@ func genNonceAuxBytes(rand []byte, pubkey []byte, i int,
 	// If the message isn't present, then we'll just write out a single
 	// uint8 of a zero byte: m_prefixed = bytes(1, 0).
 	case opts.msg == nil:
-		if _, err := w.Write([]byte{0x00}); err != nil {
+		if _, e := w.Write([]byte{0x00}); e != nil {
 			return nil, err
 		}
 
@@ -295,26 +295,26 @@ func genNonceAuxBytes(rand []byte, pubkey []byte, i int,
 	case len(opts.msg) == 0:
 		fallthrough
 	default:
-		if _, err := w.Write([]byte{0x01}); err != nil {
+		if _, e := w.Write([]byte{0x01}); e != nil {
 			return nil, err
 		}
 
-		err = writeBytesPrefix(&w, opts.msg, uint64Writer)
-		if err != nil {
+		e = writeBytesPrefix(&w, opts.msg, uint64Writer)
+		if e != nil {
 			return nil, err
 		}
 	}
 
 	// Finally we'll write out the auxiliary input.
-	err = writeBytesPrefix(&w, opts.auxInput, uint32Writer)
-	if err != nil {
+	e = writeBytesPrefix(&w, opts.auxInput, uint32Writer)
+	if e != nil {
 		return nil, err
 	}
 
 	// Next we'll write out the interaction/index number which will
 	// uniquely generate two nonces given the rest of the possibly static
 	// parameters.
-	if err := binary.Write(&w, byteOrder, uint8(i)); err != nil {
+	if e := binary.Write(&w, byteOrder, uint8(i)); e != nil {
 		return nil, err
 	}
 
@@ -339,7 +339,7 @@ func GenNonces(options ...NonceGenOption) (*Nonces, error) {
 	// First, we'll start out by generating 32 random bytes drawn from our
 	// CSPRNG.
 	var randBytes [32]byte
-	if _, err := opts.randReader.Read(randBytes[:]); err != nil {
+	if _, e := opts.randReader.Read(randBytes[:]); e != nil {
 		return nil, err
 	}
 
@@ -355,12 +355,12 @@ func GenNonces(options ...NonceGenOption) (*Nonces, error) {
 
 	// Using our randomness, pubkey and the set of optional params, generate our
 	// two secret nonces: k1 and k2.
-	k1, err := genNonceAuxBytes(randBytes[:], opts.publicKey, 0, opts)
-	if err != nil {
+	k1, e := genNonceAuxBytes(randBytes[:], opts.publicKey, 0, opts)
+	if e != nil {
 		return nil, err
 	}
-	k2, err := genNonceAuxBytes(randBytes[:], opts.publicKey, 1, opts)
-	if err != nil {
+	k2, e := genNonceAuxBytes(randBytes[:], opts.publicKey, 1, opts)
+	if e != nil {
 		return nil, err
 	}
 
@@ -401,8 +401,8 @@ func AggregateNonces(pubNonces [][PubNonceSize]byte) ([PubNonceSize]byte,
 			// decode.
 			var nonceJ btcec.JacobianPoint
 
-			nonceJ, err := btcec.ParseJacobian(slicer(pubNonceBytes))
-			if err != nil {
+			nonceJ, e := btcec.ParseJacobian(slicer(pubNonceBytes))
+			if e != nil {
 				return btcec.JacobianPoint{}, err
 			}
 
@@ -426,17 +426,17 @@ func AggregateNonces(pubNonces [][PubNonceSize]byte) ([PubNonceSize]byte,
 	// aggregate the first nonce of all the parties, and the other that
 	// aggregates the second nonce of all the parties.
 	var finalNonce [PubNonceSize]byte
-	combinedNonce1, err := combineNonces(func(n [PubNonceSize]byte) []byte {
+	combinedNonce1, e := combineNonces(func(n [PubNonceSize]byte) []byte {
 		return n[:btcec.PubKeyBytesLenCompressed]
 	})
-	if err != nil {
+	if e != nil {
 		return finalNonce, err
 	}
 
-	combinedNonce2, err := combineNonces(func(n [PubNonceSize]byte) []byte {
+	combinedNonce2, e := combineNonces(func(n [PubNonceSize]byte) []byte {
 		return n[btcec.PubKeyBytesLenCompressed:]
 	})
-	if err != nil {
+	if e != nil {
 		return finalNonce, err
 	}
 

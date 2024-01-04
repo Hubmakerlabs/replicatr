@@ -22,11 +22,11 @@ const (
 // the BIP-340 32-byte format.
 func ParsePubKey(pubKeyStr []byte) (*btcec.PublicKey, error) {
 	if pubKeyStr == nil {
-		err := fmt.Errorf("nil pubkey byte string")
+		e := fmt.Errorf("nil pubkey byte string")
 		return nil, err
 	}
 	if len(pubKeyStr) != PubKeyBytesLen {
-		err := fmt.Errorf("bad pubkey byte string size (want %v, have %v)",
+		e := fmt.Errorf("bad pubkey byte string size (want %v, have %v)",
 			PubKeyBytesLen, len(pubKeyStr))
 		return nil, err
 	}

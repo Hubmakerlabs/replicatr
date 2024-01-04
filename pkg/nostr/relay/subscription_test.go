@@ -26,12 +26,12 @@ func TestSubscribe(t *testing.T) {
 	rl := MustRelayConnect(RELAY)
 	defer rl.Close()
 
-	sub, err := rl.Subscribe(context.Background(),
+	sub, e := rl.Subscribe(context.Background(),
 		filters.T{
 			{Kinds: kinds.T{kind.TextNote}, Limit: 2},
 		})
-	if err != nil {
-		t.Errorf("subscription failed: %v", err)
+	if e != nil {
+		t.Errorf("subscription failed: %v", e)
 		return
 	}
 
@@ -70,13 +70,13 @@ func TestNestedSubscriptions(t *testing.T) {
 	n := atomic.Uint32{}
 
 	// fetch 2 replies to a note
-	sub, err := rl.Subscribe(context.Background(), filters.T{{
+	sub, e := rl.Subscribe(context.Background(), filters.T{{
 		Kinds: kinds.T{kind.TextNote},
 		Tags:  filter.TagMap{"e": []string{"0e34a74f8547e3b95d52a2543719b109fd0312aba144e2ef95cba043f42fe8c5"}},
 		Limit: 3,
 	}})
-	if err != nil {
-		t.Errorf("subscription 1 failed: %v", err)
+	if e != nil {
+		t.Errorf("subscription 1 failed: %v", e)
 		return
 	}
 
@@ -84,9 +84,9 @@ func TestNestedSubscriptions(t *testing.T) {
 		select {
 		case event := <-sub.Events:
 			// now fetch author of this
-			sub, err := rl.Subscribe(context.Background(), filters.T{{Kinds: kinds.T{kind.SetMetadata}, Authors: []string{event.PubKey}, Limit: 1}})
-			if err != nil {
-				t.Errorf("subscription 2 failed: %v", err)
+			sub, e := rl.Subscribe(context.Background(), filters.T{{Kinds: kinds.T{kind.SetMetadata}, Authors: []string{event.PubKey}, Limit: 1}})
+			if e != nil {
+				t.Errorf("subscription 2 failed: %v", e)
 				return
 			}
 

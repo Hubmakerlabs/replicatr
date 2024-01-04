@@ -11,7 +11,7 @@ import (
 )
 
 // Fetch fetches the NIP-11 RelayInformationDocument.
-func Fetch(ctx context.Context, u string) (info *RelayInformationDocument, err error) {
+func Fetch(ctx context.Context, u string) (info *RelayInformationDocument, e error) {
 	if _, ok := ctx.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		var cancel context.CancelFunc
@@ -23,8 +23,8 @@ func Fetch(ctx context.Context, u string) (info *RelayInformationDocument, err e
 	if !strings.HasPrefix(u, "http") && !strings.HasPrefix(u, "ws") {
 		u = "wss://" + u
 	}
-	p, err := url.Parse(u)
-	if err != nil {
+	p, e := url.Parse(u)
+	if e != nil {
 		return nil, fmt.Errorf("cannot parse url: %s", u)
 	}
 	if p.Scheme == "ws" {
@@ -34,21 +34,21 @@ func Fetch(ctx context.Context, u string) (info *RelayInformationDocument, err e
 	}
 	p.Path = strings.TrimRight(p.Path, "/")
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, p.String(), nil)
+	req, e := http.NewRequestWithContext(ctx, http.MethodGet, p.String(), nil)
 
 	// add the NIP-11 header
 	req.Header.Add("Accept", "application/nostr+json")
 
 	// send the request
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+	resp, e := http.DefaultClient.Do(req)
+	if e != nil {
+		return nil, fmt.Errorf("request failed: %w", e)
 	}
 	defer resp.Body.Close()
 
 	info = &RelayInformationDocument{}
-	if err := json.NewDecoder(resp.Body).Decode(info); err != nil {
-		return nil, fmt.Errorf("invalid json: %w", err)
+	if e := json.NewDecoder(resp.Body).Decode(info); e != nil {
+		return nil, fmt.Errorf("invalid json: %w", e)
 	}
 
 	return info, nil

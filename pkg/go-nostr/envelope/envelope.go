@@ -49,7 +49,7 @@ func ParseMessage(message []byte) envelopes.Envelope {
 		return nil
 	}
 
-	if err := v.UnmarshalJSON(message); err != nil {
+	if e := v.UnmarshalJSON(message); e != nil {
 		return nil
 	}
 	return v

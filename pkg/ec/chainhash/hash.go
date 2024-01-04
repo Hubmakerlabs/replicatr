@@ -127,13 +127,13 @@ func (hash *Hash) UnmarshalJSON(input []byte) (e error) {
 	}
 
 	var sh string
-	err := json.Unmarshal(input, &sh)
-	if err != nil {
-		return err
+	e := json.Unmarshal(input, &sh)
+	if e != nil {
+		return e
 	}
-	newHash, err := NewHashFromStr(sh)
-	if err != nil {
-		return err
+	newHash, e := NewHashFromStr(sh)
+	if e != nil {
+		return e
 	}
 
 	return hash.SetBytes(newHash[:])
@@ -143,8 +143,8 @@ func (hash *Hash) UnmarshalJSON(input []byte) (e error) {
 // the number of bytes passed in is not HashSize.
 func NewHash(newHash []byte) (*Hash, error) {
 	var sh Hash
-	err := sh.SetBytes(newHash)
-	if err != nil {
+	e := sh.SetBytes(newHash)
+	if e != nil {
 		return nil, err
 	}
 	return &sh, err
@@ -184,8 +184,8 @@ func TaggedHash(tag []byte, msgs ...[]byte) *Hash {
 // result in zero padding at the end of the Hash.
 func NewHashFromStr(hash string) (*Hash, error) {
 	ret := new(Hash)
-	err := Decode(ret, hash)
-	if err != nil {
+	e := Decode(ret, hash)
+	if e != nil {
 		return nil, err
 	}
 	return ret, nil
@@ -212,10 +212,10 @@ func Decode(dst *Hash, src string) (e error) {
 
 	// Hex decode the source bytes to a temporary destination.
 	var reversedHash Hash
-	_, err := hex.Decode(reversedHash[HashSize-hex.DecodedLen(len(srcBytes)):],
+	_, e := hex.Decode(reversedHash[HashSize-hex.DecodedLen(len(srcBytes)):],
 		srcBytes)
-	if err != nil {
-		return err
+	if e != nil {
+		return e
 	}
 
 	// Reverse copy from the temporary hash to destination.  Because the
@@ -231,9 +231,9 @@ func Decode(dst *Hash, src string) (e error) {
 // (i.e. represented as a bytes array) to a destination.
 func decodeLegacy(dst *Hash, src []byte) (e error) {
 	var hashBytes []byte
-	err := json.Unmarshal(src, &hashBytes)
-	if err != nil {
-		return err
+	e := json.Unmarshal(src, &hashBytes)
+	if e != nil {
+		return e
 	}
 	if len(hashBytes) != HashSize {
 		return ErrHashStrSize

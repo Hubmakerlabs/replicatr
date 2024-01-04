@@ -13,7 +13,7 @@ import (
 func InputToProfile(ctx context.Context, input string) *pointers.ProfilePointer {
 	// handle if it is a hex string
 	if len(input) == 64 {
-		if _, err := hex.DecodeString(input); err == nil {
+		if _, e := hex.DecodeString(input); e == nil {
 			return &pointers.ProfilePointer{PublicKey: input}
 		}
 	}
@@ -42,7 +42,7 @@ func InputToProfile(ctx context.Context, input string) *pointers.ProfilePointer 
 func InputToEventPointer(input string) *pointers.EventPointer {
 	// handle if it is a hex string
 	if len(input) == 64 {
-		if _, err := hex.DecodeString(input); err == nil {
+		if _, e := hex.DecodeString(input); e == nil {
 			return &pointers.EventPointer{ID: input}
 		}
 	}

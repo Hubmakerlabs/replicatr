@@ -593,9 +593,9 @@ func Sign(secKey *secp256k1.SecretKey, hash []byte) (*Signature, error) {
 			nil, iteration)
 
 		// Steps 4-10.
-		sig, err := schnorrSign(secKeyScalar, k, hash)
+		sig, e := schnorrSign(secKeyScalar, k, hash)
 		k.Zero()
-		if err != nil {
+		if e != nil {
 			// Try again with a new nonce.
 			continue
 		}

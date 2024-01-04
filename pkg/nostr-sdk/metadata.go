@@ -60,7 +60,7 @@ func FetchProfileMetadata(ctx context.Context, pool *pools.SimplePool, pubkey st
 	})
 
 	for ie := range ch {
-		if m, err := ParseMetadata(ie.T); err == nil {
+		if m, e := ParseMetadata(ie.T); e == nil {
 			return m
 		}
 	}
@@ -68,18 +68,18 @@ func FetchProfileMetadata(ctx context.Context, pool *pools.SimplePool, pubkey st
 	return ProfileMetadata{PubKey: pubkey}
 }
 
-func ParseMetadata(event *event.T) (meta ProfileMetadata, err error) {
+func ParseMetadata(event *event.T) (meta ProfileMetadata, e error) {
 	if event.Kind != 0 {
-		err = fmt.Errorf("event %s is kind %d, not 0", event.ID, event.Kind)
-	} else if err := json.Unmarshal([]byte(event.Content), &meta); err != nil {
+		e = fmt.Errorf("event %s is kind %d, not 0", event.ID, event.Kind)
+	} else if e := json.Unmarshal([]byte(event.Content), &meta); e != nil {
 		cont := event.Content
 		if len(cont) > 100 {
 			cont = cont[0:99]
 		}
-		err = fmt.Errorf("failed to parse metadata (%s) from event %s: %w", cont, event.ID, err)
+		e = fmt.Errorf("failed to parse metadata (%s) from event %s: %w", cont, event.ID, e)
 	}
 
 	meta.PubKey = event.PubKey
 	meta.Event = event
-	return meta, err
+	return meta, e
 }

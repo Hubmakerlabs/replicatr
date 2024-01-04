@@ -181,8 +181,8 @@ func DecodeSignature(encoded string) (sig *schnorr.Signature, e error) {
 }
 
 func GetPublicKey(sk string) (string, error) {
-	b, err := hex.DecodeString(sk)
-	if err != nil {
+	b, e := hex.DecodeString(sk)
+	if e != nil {
 		return "", err
 	}
 

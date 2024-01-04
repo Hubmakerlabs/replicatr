@@ -40,8 +40,8 @@ func shortUint64(idOrPubkey string) uint64 {
 	if length < 8 {
 		return 0
 	}
-	b, err := hex.DecodeString(idOrPubkey[length-8:])
-	if err != nil {
+	b, e := hex.DecodeString(idOrPubkey[length-8:])
+	if e != nil {
 		return 0
 	}
 	return uint64(binary.BigEndian.Uint32(b))

@@ -13,10 +13,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
-func Unmarshal(data []byte, evt *event.T) (err error) {
+func Unmarshal(data []byte, evt *event.T) (e error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("failed to decode binary: %v", r)
+			e = fmt.Errorf("failed to decode binary: %v", r)
 		}
 	}()
 
@@ -50,7 +50,7 @@ func Unmarshal(data []byte, evt *event.T) (err error) {
 		evt.Tags[t] = tag
 	}
 
-	return err
+	return e
 }
 
 func Marshal(evt *event.T) ([]byte, error) {

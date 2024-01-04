@@ -47,15 +47,15 @@ const (
 
 var ErrNotNSON = fmt.Errorf("not nson")
 
-func UnmarshalBytes(data []byte, evt *event.T) (err error) {
+func UnmarshalBytes(data []byte, evt *event.T) (e error) {
 	return Unmarshal(unsafe.String(unsafe.SliceData(data), len(data)), evt)
 }
 
 // Unmarshal turns a NSON string into a nostr.T struct.
-func Unmarshal(data string, evt *event.T) (err error) {
+func Unmarshal(data string, evt *event.T) (e error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("failed to decode nson: %v", r)
+			e = fmt.Errorf("failed to decode nson: %v", r)
 		}
 	}()
 
@@ -109,11 +109,11 @@ func Unmarshal(data string, evt *event.T) (err error) {
 		evt.Tags[t] = tag
 	}
 
-	return err
+	return e
 }
 
 func MarshalBytes(evt *event.T) ([]byte, error) {
-	v, err := Marshal(evt)
+	v, e := Marshal(evt)
 	return unsafe.Slice(unsafe.StringData(v), len(v)), err
 }
 

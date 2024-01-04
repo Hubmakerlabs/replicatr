@@ -204,13 +204,13 @@ func TestParsePubKey(t *testing.T) {
 
 	for _, test := range tests {
 		pubKeyBytes := hexToBytes(test.key)
-		pubKey, err := ParsePubKey(pubKeyBytes)
-		if !errors.Is(err, test.err) {
+		pubKey, e := ParsePubKey(pubKeyBytes)
+		if !errors.Is(err, test.e) {
 			t.Errorf("%s mismatched err -- got %v, want %v", test.name, err,
-				test.err)
+				test.e)
 			continue
 		}
-		if err != nil {
+		if e != nil {
 			continue
 		}
 
@@ -397,9 +397,9 @@ func TestPublicKeyAsJacobian(t *testing.T) {
 		pubKeyBytes := hexToBytes(test.pubKey)
 		wantX := hexToFieldVal(test.wantX)
 		wantY := hexToFieldVal(test.wantY)
-		pubKey, err := ParsePubKey(pubKeyBytes)
-		if err != nil {
-			t.Errorf("%s: failed to parse public key: %v", test.name, err)
+		pubKey, e := ParsePubKey(pubKeyBytes)
+		if e != nil {
+			t.Errorf("%s: failed to parse public key: %v", test.name, e)
 			continue
 		}
 

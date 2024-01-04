@@ -29,12 +29,12 @@ func doProfile(cCtx *cli.Context) (e error) {
 
 	var pub string
 	if user == "" {
-		if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-			if pub, err = keys.GetPublicKey(s.(string)); err != nil {
-				return err
+		if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
+			if pub, e = keys.GetPublicKey(s.(string)); e != nil {
+				return e
 			}
 		} else {
-			return err
+			return e
 		}
 	} else {
 		if pp := sdk.InputToProfile(context.TODO(), user); pp != nil {
@@ -61,13 +61,13 @@ func doProfile(cCtx *cli.Context) (e error) {
 		return nil
 	}
 	var profile Profile
-	err := json.Unmarshal([]byte(evs[0].Content), &profile)
-	if err != nil {
-		return err
+	e = json.Unmarshal([]byte(evs[0].Content), &profile)
+	if e != nil {
+		return e
 	}
-	npub, err := nip19.EncodePublicKey(pub)
-	if err != nil {
-		return err
+	npub, e := nip19.EncodePublicKey(pub)
+	if e != nil {
+		return e
 	}
 	fmt.Printf("Pubkey: %v\n", npub)
 	fmt.Printf("Name: %v\n", profile.Name)

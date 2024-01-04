@@ -20,16 +20,16 @@ var (
 )
 
 func hexToBytes(s string) []byte {
-	b, err := hex.DecodeString(s)
-	if err != nil {
+	b, e := hex.DecodeString(s)
+	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	return b
 }
 
 func hexToModNScalar(s string) *btcec.ModNScalar {
-	b, err := hex.DecodeString(s)
-	if err != nil {
+	b, e := hex.DecodeString(s)
+	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var scalar btcec.ModNScalar
@@ -40,16 +40,16 @@ func hexToModNScalar(s string) *btcec.ModNScalar {
 }
 
 func genSigner(t *testing.B) signer {
-	privKey, err := btcec.NewSecretKey()
-	if err != nil {
-		t.Fatalf("unable to gen priv key: %v", err)
+	privKey, e := btcec.NewSecretKey()
+	if e != nil {
+		t.Fatalf("unable to gen priv key: %v", e)
 	}
 
 	pubKey := privKey.PubKey()
 
-	nonces, err := GenNonces(WithPublicKey(pubKey))
-	if err != nil {
-		t.Fatalf("unable to gen nonces: %v", err)
+	nonces, e := GenNonces(WithPublicKey(pubKey))
+	if e != nil {
+		t.Fatalf("unable to gen nonces: %v", e)
 	}
 
 	return signer{
@@ -79,9 +79,9 @@ func BenchmarkPartialSign(b *testing.B) {
 					signers[i] = genSigner(b)
 				}
 
-				combinedNonce, err := AggregateNonces(signers.pubNonces())
-				if err != nil {
-					b.Fatalf("unable to generate combined nonce: %v", err)
+				combinedNonce, e := AggregateNonces(signers.pubNonces())
+				if e != nil {
+					b.Fatalf("unable to generate combined nonce: %v", e)
 				}
 
 				var sig *PartialSignature
@@ -104,12 +104,12 @@ func BenchmarkPartialSign(b *testing.B) {
 					b.ReportAllocs()
 
 					for i := 0; i < b.N; i++ {
-						sig, err = Sign(
+						sig, e = Sign(
 							signers[0].nonces.SecNonce, signers[0].privKey,
 							combinedNonce, keys, msg, signOpts...,
 						)
-						if err != nil {
-							b.Fatalf("unable to generate sig: %v", err)
+						if e != nil {
+							b.Fatalf("unable to generate sig: %v", e)
 						}
 					}
 
@@ -138,12 +138,12 @@ func BenchmarkPartialVerify(b *testing.B) {
 				signers[i] = genSigner(b)
 			}
 
-			combinedNonce, err := AggregateNonces(
+			combinedNonce, e := AggregateNonces(
 				signers.pubNonces(),
 			)
-			if err != nil {
+			if e != nil {
 				b.Fatalf("unable to generate combined "+
-					"nonce: %v", err)
+					"nonce: %v", e)
 			}
 
 			var sig *PartialSignature
@@ -154,12 +154,12 @@ func BenchmarkPartialVerify(b *testing.B) {
 			b.ReportAllocs()
 			b.ResetTimer()
 
-			sig, err = Sign(
+			sig, e = Sign(
 				signers[0].nonces.SecNonce, signers[0].privKey,
 				combinedNonce, signers.keys(), msg,
 			)
-			if err != nil {
-				b.Fatalf("unable to generate sig: %v", err)
+			if e != nil {
+				b.Fatalf("unable to generate sig: %v", e)
 			}
 
 			keys := signers.keys()
@@ -205,9 +205,9 @@ func BenchmarkCombineSigs(b *testing.B) {
 			signers[i] = genSigner(b)
 		}
 
-		combinedNonce, err := AggregateNonces(signers.pubNonces())
-		if err != nil {
-			b.Fatalf("unable to generate combined nonce: %v", err)
+		combinedNonce, e := AggregateNonces(signers.pubNonces())
+		if e != nil {
+			b.Fatalf("unable to generate combined nonce: %v", e)
 		}
 
 		var msg [32]byte
@@ -216,13 +216,13 @@ func BenchmarkCombineSigs(b *testing.B) {
 		var finalNonce *btcec.PublicKey
 		for i := range signers {
 			signer := signers[i]
-			partialSig, err := Sign(
+			partialSig, e := Sign(
 				signer.nonces.SecNonce, signer.privKey,
 				combinedNonce, signers.keys(), msg,
 			)
-			if err != nil {
+			if e != nil {
 				b.Fatalf("unable to generate partial sig: %v",
-					err)
+					e)
 			}
 
 			signers[i].partialSig = partialSig
@@ -263,9 +263,9 @@ func BenchmarkAggregateNonces(b *testing.B) {
 			b.ResetTimer()
 			b.ReportAllocs()
 
-			pubNonce, err := AggregateNonces(nonces)
-			if err != nil {
-				b.Fatalf("unable to generate nonces: %v", err)
+			pubNonce, e := AggregateNonces(nonces)
+			if e != nil {
+				b.Fatalf("unable to generate nonces: %v", e)
 			}
 
 			testNonce = pubNonce

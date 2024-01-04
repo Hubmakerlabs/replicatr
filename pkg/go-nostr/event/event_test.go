@@ -16,8 +16,8 @@ func TestEventEnvelopeEncodingAndDecoding(t *testing.T) {
 
 	for _, raw := range eventEnvelopes {
 		var env EventEnvelope
-		if err := json.Unmarshal([]byte(raw), &env); err != nil {
-			t.Errorf("failed to parse event envelope json: %v", err)
+		if e := json.Unmarshal([]byte(raw), &env); e != nil {
+			t.Errorf("failed to parse event envelope json: %v", e)
 		}
 
 		if env.GetID() != env.ID {
@@ -28,9 +28,9 @@ func TestEventEnvelopeEncodingAndDecoding(t *testing.T) {
 			t.Error("signature verification failed when it should have succeeded")
 		}
 
-		asjson, err := json.Marshal(env)
-		if err != nil {
-			t.Errorf("failed to re marshal event as json: %v", err)
+		asjson, e := json.Marshal(env)
+		if e != nil {
+			t.Errorf("failed to re marshal event as json: %v", e)
 		}
 
 		if string(asjson) != raw {
@@ -50,8 +50,8 @@ func TestEventParsingAndVerifying(t *testing.T) {
 
 	for _, raw := range rawEvents {
 		var ev T
-		if err := json.Unmarshal([]byte(raw), &ev); err != nil {
-			t.Errorf("failed to parse event json: %v", err)
+		if e := json.Unmarshal([]byte(raw), &ev); e != nil {
+			t.Errorf("failed to parse event json: %v", e)
 		}
 
 		if ev.GetID() != ev.ID {
@@ -62,9 +62,9 @@ func TestEventParsingAndVerifying(t *testing.T) {
 			t.Error("signature verification failed when it should have succeeded")
 		}
 
-		asjson, err := json.Marshal(ev)
-		if err != nil {
-			t.Errorf("failed to re marshal event as json: %v", err)
+		asjson, e := json.Marshal(ev)
+		if e != nil {
+			t.Errorf("failed to re marshal event as json: %v", e)
 		}
 
 		if string(asjson) != raw {
@@ -88,14 +88,14 @@ func TestEventSerialization(t *testing.T) {
 	}
 
 	for _, evt := range events {
-		b, err := json.Marshal(evt)
-		if err != nil {
+		b, e := json.Marshal(evt)
+		if e != nil {
 			t.Log(evt)
 			t.Error("failed to serialize this event")
 		}
 
 		var re T
-		if err := json.Unmarshal(b, &re); err != nil {
+		if e := json.Unmarshal(b, &re); e != nil {
 			t.Log(string(b))
 			t.Error("failed to re parse event just serialized")
 		}
@@ -135,14 +135,14 @@ func TestEventSerializationWithExtraFields(t *testing.T) {
 	evt.SetExtra("elet", 77)
 	evt.SetExtra("malf", "hello")
 
-	b, err := json.Marshal(evt)
-	if err != nil {
+	b, e := json.Marshal(evt)
+	if e != nil {
 		t.Log(evt)
 		t.Error("failed to serialize this event")
 	}
 
 	var re T
-	if err := json.Unmarshal(b, &re); err != nil {
+	if e := json.Unmarshal(b, &re); e != nil {
 		t.Log(string(b))
 		t.Error("failed to re parse event just serialized")
 	}
@@ -173,7 +173,7 @@ func TestEventSerializationWithExtraFields(t *testing.T) {
 
 func mustSignEvent(t *testing.T, privkey string, evt *T) {
 	t.Helper()
-	if err := evt.Sign(privkey); err != nil {
-		t.Fatalf("evt.Sign: %v", err)
+	if e := evt.Sign(privkey); e != nil {
+		t.Fatalf("evt.Sign: %v", e)
 	}
 }

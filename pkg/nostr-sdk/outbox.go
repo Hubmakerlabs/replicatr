@@ -28,8 +28,8 @@ func (sys *System) ExpandQueriesByAuthorAndRelays(
 			relayURLs := sys.FetchOutboxRelays(ctx, pubkey)
 			c := 0
 			for _, r := range relayURLs {
-				rl, err := sys.Pool.EnsureRelay(r)
-				if err != nil {
+				rl, e := sys.Pool.EnsureRelay(r)
+				if e != nil {
 					continue
 				}
 				relaysForPubkey[pubkey] = append(relaysForPubkey[pubkey], rl)

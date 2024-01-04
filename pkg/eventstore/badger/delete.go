@@ -3,7 +3,6 @@ package badger
 import (
 	"context"
 	"encoding/hex"
-	"log"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/dgraph-io/badger/v4"
@@ -14,7 +13,7 @@ var serialDelete uint32 = 0
 func (b *BadgerBackend) DeleteEvent(ctx context.Context, evt *event.T) (e error) {
 	deletionHappened := false
 
-	err := b.Update(func(txn *badger.Txn) (e error) {
+	e = b.Update(func(txn *badger.Txn) (e error) {
 		idx := make([]byte, 1, 5)
 		idx[0] = rawEventStorePrefix
 
@@ -43,24 +42,24 @@ func (b *BadgerBackend) DeleteEvent(ctx context.Context, evt *event.T) (e error)
 
 		// calculate all index keys we have for this event and delete them
 		for _, k := range getIndexKeysForEvent(evt, idx[1:]) {
-			if err := txn.Delete(k); err != nil {
-				return err
+			if e := txn.Delete(k); e != nil {
+				return e
 			}
 		}
 
 		// delete the raw event
 		return txn.Delete(idx)
 	})
-	if err != nil {
-		return err
+	if e != nil {
+		return e
 	}
 
 	// after deleting, run garbage collector (sometimes)
 	if deletionHappened {
 		serialDelete = (serialDelete + 1) % 256
 		if serialDelete == 0 {
-			if err := b.RunValueLogGC(0.8); err != nil && err != badger.ErrNoRewrite {
-				log.Println("badger gc errored:" + err.Error())
+			if e := b.RunValueLogGC(0.8); e != nil && e != badger.ErrNoRewrite {
+				log.D.Ln("badger gc error:" + e.Error())
 			}
 		}
 	}

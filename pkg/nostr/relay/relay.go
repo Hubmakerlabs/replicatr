@@ -246,7 +246,7 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 			buf.Reset()
 			if e := conn.ReadMessage(r.ctx, buf); fails(e) {
 				r.Err = e
-				r.Close()
+				log.E.Chk(r.Close())
 				break
 			}
 			message := buf.Bytes()

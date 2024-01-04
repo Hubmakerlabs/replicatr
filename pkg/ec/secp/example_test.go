@@ -21,32 +21,32 @@ import (
 // recipient's secret key.
 func Example_encryptDecryptMessage() {
 	newAEAD := func(key []byte) (cipher.AEAD, error) {
-		block, err := aes.NewCipher(key)
-		if err != nil {
+		block, e := aes.NewCipher(key)
+		if e != nil {
 			return nil, err
 		}
 		return cipher.NewGCM(block)
 	}
 
 	// Decode the hex-encoded pubkey of the recipient.
-	pubKeyBytes, err := hex.DecodeString("04115c42e757b2efb7671c578530ec191a1" +
+	pubKeyBytes, e := hex.DecodeString("04115c42e757b2efb7671c578530ec191a1" +
 		"359381e6a71127a9d37c486fd30dae57e76dc58f693bd7e7010358ce6b165e483a29" +
 		"21010db67ac11b1b51b651953d2") // uncompressed pubkey
-	if err != nil {
-		fmt.Println(err)
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
-	pubKey, err := secp.ParsePubKey(pubKeyBytes)
-	if err != nil {
-		fmt.Println(err)
+	pubKey, e := secp.ParsePubKey(pubKeyBytes)
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
 
 	// Derive an ephemeral public/secret keypair for performing ECDHE with
 	// the recipient.
-	ephemeralSecKey, err := secp.GenerateSecretKey()
-	if err != nil {
-		fmt.Println(err)
+	ephemeralSecKey, e := secp.GenerateSecretKey()
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
 	ephemeralPubKey := ephemeralSecKey.PubKey().SerializeCompressed()
@@ -70,9 +70,9 @@ func Example_encryptDecryptMessage() {
 	// the nonce is intentionally initialized to all zeros so it acts like the
 	// first (and only) use of a counter.
 	plaintext := []byte("test message")
-	aead, err := newAEAD(cipherKey[:])
-	if err != nil {
-		fmt.Println(err)
+	aead, e := newAEAD(cipherKey[:])
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
 	nonce := make([]byte, aead.NonceSize())
@@ -85,10 +85,10 @@ func Example_encryptDecryptMessage() {
 	// ciphertext shared by the sender.
 
 	// Decode the hex-encoded secret key.
-	pkBytes, err := hex.DecodeString("a11b0a4e1a132305652ee7a8eb7848f6ad" +
+	pkBytes, e := hex.DecodeString("a11b0a4e1a132305652ee7a8eb7848f6ad" +
 		"5ea381e3ce20a2c086a2e388230811")
-	if err != nil {
-		fmt.Println(err)
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
 	secKey := secp.SecKeyFromBytes(pkBytes)
@@ -98,9 +98,9 @@ func Example_encryptDecryptMessage() {
 	// brevity.
 	pubKeyLen := binary.LittleEndian.Uint32(ciphertext[:4])
 	senderPubKeyBytes := ciphertext[4 : 4+pubKeyLen]
-	senderPubKey, err := secp.ParsePubKey(senderPubKeyBytes)
-	if err != nil {
-		fmt.Println(err)
+	senderPubKey, e := secp.ParsePubKey(senderPubKeyBytes)
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
 
@@ -110,16 +110,16 @@ func Example_encryptDecryptMessage() {
 		senderPubKey))
 
 	// Open the sealed message.
-	aead, err = newAEAD(recoveredCipherKey[:])
-	if err != nil {
-		fmt.Println(err)
+	aead, e = newAEAD(recoveredCipherKey[:])
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
 	nonce = make([]byte, aead.NonceSize())
-	recoveredPlaintext, err := aead.Open(nil, nonce, ciphertext[4+pubKeyLen:],
+	recoveredPlaintext, e := aead.Open(nil, nonce, ciphertext[4+pubKeyLen:],
 		senderPubKeyBytes)
-	if err != nil {
-		fmt.Println(err)
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
 

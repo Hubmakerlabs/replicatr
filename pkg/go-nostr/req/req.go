@@ -29,8 +29,8 @@ func (v *ReqEnvelope) UnmarshalJSON(data []byte) error {
 	v.T = make(filters.T, len(arr)-2)
 	f := 0
 	for i := 2; i < len(arr); i++ {
-		if err := easyjson.Unmarshal([]byte(arr[i].Raw), &v.T[f]); err != nil {
-			return fmt.Errorf("%w -- on filter %d", err, f)
+		if e := easyjson.Unmarshal([]byte(arr[i].Raw), &v.T[f]); e != nil {
+			return fmt.Errorf("%w -- on filter %d", e, f)
 		}
 		f++
 	}

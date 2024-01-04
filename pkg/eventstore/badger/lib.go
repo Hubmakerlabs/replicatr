@@ -32,18 +32,18 @@ type BadgerBackend struct {
 }
 
 func (b *BadgerBackend) Init() (e error) {
-	db, err := badger.Open(badger.DefaultOptions(b.Path))
-	if err != nil {
-		return err
+	db, e := badger.Open(badger.DefaultOptions(b.Path))
+	if e != nil {
+		return e
 	}
 	b.DB = db
-	b.seq, err = db.GetSequence([]byte("events"), 1000)
-	if err != nil {
-		return err
+	b.seq, e = db.GetSequence([]byte("events"), 1000)
+	if e != nil {
+		return e
 	}
 
-	if err := b.runMigrations(); err != nil {
-		return fmt.Errorf("error running migrations: %w", err)
+	if e := b.runMigrations(); e != nil {
+		return fmt.Errorf("error running migrations: %w", e)
 	}
 
 	if b.MaxLimit == 0 {
@@ -53,12 +53,12 @@ func (b *BadgerBackend) Init() (e error) {
 	return nil
 }
 
-func (b BadgerBackend) Close() {
-	b.DB.Close()
-	b.seq.Release()
+func (b *BadgerBackend) Close() {
+	log.E.Chk(b.DB.Close())
+	log.E.Chk(b.seq.Release())
 }
 
-func (b BadgerBackend) Serial() []byte {
+func (b *BadgerBackend) Serial() []byte {
 	v, _ := b.seq.Next()
 	vb := make([]byte, 5)
 	vb[0] = rawEventStorePrefix

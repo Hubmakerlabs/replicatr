@@ -413,8 +413,8 @@ var MainNetParams = Params{
 // it panics on an error since it will only (and must only) be called with
 // hard-coded, and therefore known good, hashes.
 func newHashFromStr(hexStr string) *chainhash.Hash {
-	hash, err := chainhash.NewHashFromStr(hexStr)
-	if err != nil {
+	hash, e := chainhash.NewHashFromStr(hexStr)
+	if e != nil {
 		// Ordinarily I don't like panics in library code since it
 		// can take applications down without them having a chance to
 		// recover which is extremely annoying, however an exception is
@@ -422,7 +422,7 @@ func newHashFromStr(hexStr string) *chainhash.Hash {
 		// is if there is an error in the hard-coded hashes.  Thus it
 		// will only ever potentially panic on init and therefore is
 		// 100% predictable.
-		panic(err)
+		panic(e)
 	}
 	return hash
 }

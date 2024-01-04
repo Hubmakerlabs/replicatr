@@ -72,9 +72,9 @@ type Profile struct {
 func configDir() (string, error) {
 	switch runtime.GOOS {
 	case "darwin":
-		dir, err := os.UserHomeDir()
-		if err != nil {
-			return "", err
+		dir, e := os.UserHomeDir()
+		if e != nil {
+			return "", e
 		}
 		return filepath.Join(dir, ".config"), nil
 	default:
@@ -83,9 +83,9 @@ func configDir() (string, error) {
 }
 
 func loadConfig(profile string) (*Config, error) {
-	dir, err := configDir()
-	if err != nil {
-		return nil, err
+	dir, e := configDir()
+	if e != nil {
+		return nil, e
 	}
 	dir = filepath.Join(dir, "algia")
 
@@ -93,9 +93,9 @@ func loadConfig(profile string) (*Config, error) {
 	if profile == "" {
 		fp = filepath.Join(dir, "config.json")
 	} else if profile == "?" {
-		names, err := filepath.Glob(filepath.Join(dir, "config-*.json"))
-		if err != nil {
-			return nil, err
+		names, e := filepath.Glob(filepath.Join(dir, "config-*.json"))
+		if e != nil {
+			return nil, e
 		}
 		for _, name := range names {
 			name = filepath.Base(name)
@@ -108,14 +108,14 @@ func loadConfig(profile string) (*Config, error) {
 	}
 	os.MkdirAll(filepath.Dir(fp), 0700)
 
-	b, err := ioutil.ReadFile(fp)
-	if err != nil {
-		return nil, err
+	b, e := ioutil.ReadFile(fp)
+	if e != nil {
+		return nil, e
 	}
 	var cfg Config
-	err = json.Unmarshal(b, &cfg)
-	if err != nil {
-		return nil, err
+	e = json.Unmarshal(b, &cfg)
+	if e != nil {
+		return nil, e
 	}
 	if len(cfg.Relays) == 0 {
 		cfg.Relays = map[string]RelayPerms{}
@@ -132,12 +132,12 @@ func loadConfig(profile string) (*Config, error) {
 func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 	var mu sync.Mutex
 	var pub string
-	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
-		if pub, err = keys.GetPublicKey(s.(string)); err != nil {
-			return nil, err
+	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
+		if pub, e = keys.GetPublicKey(s.(string)); e != nil {
+			return nil, e
 		}
 	} else {
-		return nil, err
+		return nil, e
 	}
 
 	// get followers
@@ -148,14 +148,14 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		m := map[string]struct{}{}
 
 		cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
-			evs, err := rl.QuerySync(ctx, filter.T{Kinds: []int{event.KindContactList}, Authors: []string{pub}, Limit: 1})
-			if err != nil {
+			evs, e := rl.QuerySync(ctx, filter.T{Kinds: []int{event.KindContactList}, Authors: []string{pub}, Limit: 1})
+			if e != nil {
 				return true
 			}
 			for _, ev := range evs {
 				var rm map[string]RelayPerms
 				if cfg.tempRelay == false {
-					if err := json.Unmarshal([]byte(ev.Content), &rm); err == nil {
+					if e := json.Unmarshal([]byte(ev.Content), &rm); e == nil {
 						for k, v1 := range cfg.Relays {
 							if v2, ok := rm[k]; ok {
 								v2.Search = v1.Search
@@ -192,17 +192,17 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 
 				// get follower's descriptions
 				cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
-					evs, err := rl.QuerySync(ctx, filter.T{
+					evs, e := rl.QuerySync(ctx, filter.T{
 						Kinds:   []int{event.KindProfileMetadata},
 						Authors: follows[i:end], // Use the updated end index
 					})
-					if err != nil {
+					if e != nil {
 						return true
 					}
 					for _, ev := range evs {
 						var profile Profile
-						err := json.Unmarshal([]byte(ev.Content), &profile)
-						if err == nil {
+						e := json.Unmarshal([]byte(ev.Content), &profile)
+						if e == nil {
 							mu.Lock()
 							cfg.Follows[ev.PubKey] = profile
 							mu.Unlock()
@@ -214,8 +214,8 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		}
 
 		cfg.Updated = time.Now()
-		if err := cfg.save(profile); err != nil {
-			return nil, err
+		if e := cfg.save(profile); e != nil {
+			return nil, e
 		}
 	}
 	return cfg.Follows, nil
@@ -236,10 +236,10 @@ func (cfg *Config) FindRelay(ctx context.Context, r RelayPerms) *relays.Relay {
 		if cfg.verbose {
 			fmt.Printf("trying relay: %s\n", k)
 		}
-		rl, err := relays.RelayConnect(ctx, k)
-		if err != nil {
+		rl, e := relays.RelayConnect(ctx, k)
+		if e != nil {
 			if cfg.verbose {
-				fmt.Fprintln(os.Stderr, err.Error())
+				fmt.Fprintln(os.Stderr, e.Error())
 			}
 			continue
 		}
@@ -265,10 +265,10 @@ func (cfg *Config) Do(r RelayPerms, f func(context.Context, *relays.Relay) bool)
 		wg.Add(1)
 		go func(wg *sync.WaitGroup, k string, v RelayPerms) {
 			defer wg.Done()
-			rl, err := relays.RelayConnect(ctx, k)
-			if err != nil {
+			rl, e := relays.RelayConnect(ctx, k)
+			if e != nil {
 				if cfg.verbose {
-					fmt.Fprintln(os.Stderr, err)
+					fmt.Fprintln(os.Stderr, e)
 				}
 				return
 			}
@@ -285,9 +285,9 @@ func (cfg *Config) save(profile string) (e error) {
 	if cfg.tempRelay {
 		return nil
 	}
-	dir, err := configDir()
-	if err != nil {
-		return err
+	dir, e := configDir()
+	if e != nil {
+		return e
 	}
 	dir = filepath.Join(dir, "algia")
 
@@ -297,9 +297,9 @@ func (cfg *Config) save(profile string) (e error) {
 	} else {
 		fp = filepath.Join(dir, "config-"+profile+".json")
 	}
-	b, err := json.MarshalIndent(&cfg, "", "  ")
-	if err != nil {
-		return err
+	b, e := json.MarshalIndent(&cfg, "", "  ")
+	if e != nil {
+		return e
 	}
 	return ioutil.WriteFile(fp, b, 0644)
 }
@@ -308,13 +308,13 @@ func (cfg *Config) save(profile string) (e error) {
 func (cfg *Config) Decode(ev *event.T) (e error) {
 	var sk string
 	var pub string
-	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
+	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
 		sk = s.(string)
-		if pub, err = keys.GetPublicKey(s.(string)); err != nil {
-			return err
+		if pub, e = keys.GetPublicKey(s.(string)); e != nil {
+			return e
 		}
 	} else {
-		return err
+		return e
 	}
 	tag := ev.Tags.GetFirst([]string{"p"})
 	if tag == nil {
@@ -328,13 +328,13 @@ func (cfg *Config) Decode(ev *event.T) (e error) {
 	} else {
 		sp = ev.PubKey
 	}
-	ss, err := nip04.ComputeSharedSecret(sp, sk)
-	if err != nil {
-		return err
+	ss, e := nip04.ComputeSharedSecret(sp, sk)
+	if e != nil {
+		return e
 	}
-	content, err := nip04.Decrypt(ev.Content, ss)
-	if err != nil {
-		return err
+	content, e := nip04.Decrypt(ev.Content, ss)
+	if e != nil {
+		return e
 	}
 	ev.Content = content
 	return nil
@@ -394,14 +394,14 @@ func (cfg *Config) Events(f filter.T) []*event.T {
 			return false
 		}
 		mu.Unlock()
-		evs, err := rl.QuerySync(ctx, f)
-		if err != nil {
+		evs, e := rl.QuerySync(ctx, f)
+		if e != nil {
 			return true
 		}
 		for _, ev := range evs {
 			if _, ok := m.Load(ev.ID); !ok {
 				if ev.Kind == event.KindEncryptedDirectMessage {
-					if err := cfg.Decode(ev); err != nil {
+					if e := cfg.Decode(ev); e != nil {
 						continue
 					}
 				}
@@ -666,9 +666,9 @@ func main() {
 				return nil
 			}
 			profile := cCtx.String("a")
-			cfg, err := loadConfig(profile)
-			if err != nil {
-				return err
+			cfg, e := loadConfig(profile)
+			if e != nil {
+				return e
 			}
 			cCtx.App.Metadata = map[string]any{
 				"config": cfg,
@@ -689,8 +689,8 @@ func main() {
 		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+	if e := app.Run(os.Args); e != nil {
+		fmt.Fprintln(os.Stderr, e)
 		os.Exit(1)
 	}
 }

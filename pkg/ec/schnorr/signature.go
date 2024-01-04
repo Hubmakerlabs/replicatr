@@ -141,9 +141,9 @@ func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (e error) {
 	// P = lift_x(int(pk))
 	//
 	// Fail if P is not a point on the curve
-	pubKey, err := ParsePubKey(pubKeyBytes)
-	if err != nil {
-		return err
+	pubKey, e := ParsePubKey(pubKeyBytes)
+	if e != nil {
+		return e
 	}
 	if !pubKey.IsOnCurve() {
 		str := "pubkey point is not on curve"
@@ -331,7 +331,7 @@ func schnorrSign(privKey, nonce *btcec.ModNScalar, pubKey *btcec.PublicKey,
 	//
 	// If Verify(bytes(P), m, sig) fails, abort.
 	if !opts.fastSign {
-		if err := schnorrVerify(sig, hash, pBytes); err != nil {
+		if e := schnorrVerify(sig, hash, pBytes); e != nil {
 			return nil, err
 		}
 	}
@@ -508,9 +508,9 @@ func Sign(privKey *btcec.SecretKey, hash []byte,
 			return nil, signatureError(ecdsa_schnorr.ErrSchnorrHashValue, str)
 		}
 
-		sig, err := schnorrSign(&privKeyScalar, &kPrime, pub, hash, opts)
+		sig, e := schnorrSign(&privKeyScalar, &kPrime, pub, hash, opts)
 		kPrime.Zero()
-		if err != nil {
+		if e != nil {
 			return nil, err
 		}
 
@@ -532,9 +532,9 @@ func Sign(privKey *btcec.SecretKey, hash []byte,
 			privKeyBytes[:], hash, rfc6979ExtraDataV0[:], nil, iteration,
 		)
 		// Steps 10-15.
-		sig, err := schnorrSign(&privKeyScalar, k, pub, hash, opts)
+		sig, e := schnorrSign(&privKeyScalar, k, pub, hash, opts)
 		k.Zero()
-		if err != nil {
+		if e != nil {
 			// Try again with a new nonce.
 			continue
 		}

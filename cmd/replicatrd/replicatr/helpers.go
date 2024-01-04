@@ -8,8 +8,8 @@ import (
 	"unsafe"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/auth"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/sebest/xff"
-	log2 "mleku.online/git/log"
 )
 
 const (
@@ -17,11 +17,8 @@ const (
 	subscriptionIdKey
 )
 
-var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log, fails = log2.GetStd()
+var hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 
 func RequestAuth(ctx Ctx) {
 	ws := GetConnection(ctx)

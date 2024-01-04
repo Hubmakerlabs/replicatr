@@ -69,10 +69,10 @@ func TestSignatureParsing(t *testing.T) {
 	}}
 
 	for _, test := range tests {
-		_, err := ParseSignature(hexToBytes(test.sig))
-		if !errors.Is(err, test.err) {
+		_, e := ParseSignature(hexToBytes(test.sig))
+		if !errors.Is(err, test.e) {
 			t.Errorf("%s mismatched err -- got %v, want %v", test.name, err,
-				test.err)
+				test.e)
 			continue
 		}
 	}
@@ -289,9 +289,9 @@ func TestSchnorrSignAndVerify(t *testing.T) {
 		}
 
 		// Sign the hash of the message with the given secret key and nonce.
-		gotSig, err := schnorrSign(secKey, nonce, hash)
-		if err != nil {
-			t.Errorf("%s: unexpected error when signing: %v", test.name, err)
+		gotSig, e := schnorrSign(secKey, nonce, hash)
+		if e != nil {
+			t.Errorf("%s: unexpected error when signing: %v", test.name, e)
 			continue
 		}
 
@@ -305,9 +305,9 @@ func TestSchnorrSignAndVerify(t *testing.T) {
 
 		// Ensure the produced signature verifies as well.
 		pubKey := secp256k1.NewSecretKey(hexToModNScalar(test.key)).PubKey()
-		err = schnorrVerify(gotSig, hash, pubKey)
-		if err != nil {
-			t.Errorf("%s: signature failed to verify: %v", test.name, err)
+		e = schnorrVerify(gotSig, hash, pubKey)
+		if e != nil {
+			t.Errorf("%s: signature failed to verify: %v", test.name, e)
 			continue
 		}
 	}
@@ -330,8 +330,8 @@ func TestSchnorrSignAndVerifyRandom(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		// Generate a random secret key.
 		var buf [32]byte
-		if _, err := rng.Read(buf[:]); err != nil {
-			t.Fatalf("failed to read random secret key: %v", err)
+		if _, e := rng.Read(buf[:]); e != nil {
+			t.Fatalf("failed to read random secret key: %v", e)
 		}
 		var secKeyScalar secp256k1.ModNScalar
 		secKeyScalar.SetBytes(&buf)
@@ -339,15 +339,15 @@ func TestSchnorrSignAndVerifyRandom(t *testing.T) {
 
 		// Generate a random hash to sign.
 		var hash [32]byte
-		if _, err := rng.Read(hash[:]); err != nil {
-			t.Fatalf("failed to read random hash: %v", err)
+		if _, e := rng.Read(hash[:]); e != nil {
+			t.Fatalf("failed to read random hash: %v", e)
 		}
 
 		// Sign the hash with the secret key and then ensure the produced
 		// signature is valid for the hash and public key associated with the
 		// secret key.
-		sig, err := Sign(secKey, hash[:])
-		if err != nil {
+		sig, e := Sign(secKey, hash[:])
+		if e != nil {
 			t.Fatalf("failed to sign\nsecret key: %x\nhash: %x",
 				secKey.Serialize(), hash)
 		}
@@ -366,9 +366,9 @@ func TestSchnorrSignAndVerifyRandom(t *testing.T) {
 		randByte := rng.Intn(len(badSigBytes))
 		randBit := rng.Intn(7)
 		badSigBytes[randByte] ^= 1 << randBit
-		badSig, err := ParseSignature(badSigBytes)
-		if err != nil {
-			t.Fatalf("failed to create bad signature: %v", err)
+		badSig, e := ParseSignature(badSigBytes)
+		if e != nil {
+			t.Fatalf("failed to create bad signature: %v", e)
 		}
 		if badSig.Verify(hash[:], pubKey) {
 			t.Fatalf("verified bad signature\nsig: %x\nhash: %x\n"+
@@ -531,22 +531,22 @@ func TestVerifyErrors(t *testing.T) {
 		// Create the serialized signature from the bytes and attempt to parse
 		// it to ensure the cases where the r and s components exceed the
 		// allowed range is caught.
-		sig, err := ParseSignature(hexToBytes(test.sigR + test.sigS))
-		if err != nil {
-			if !errors.Is(err, test.err) {
+		sig, e := ParseSignature(hexToBytes(test.sigR + test.sigS))
+		if e != nil {
+			if !errors.Is(err, test.e) {
 				t.Errorf("%s: mismatched err -- got %v, want %v", test.name,
 					err,
-					test.err)
+					test.e)
 			}
 
 			continue
 		}
 
 		// Ensure the expected error is hit.
-		err = schnorrVerifyBlake256(sig, hash, pubKey)
-		if !errors.Is(err, test.err) {
+		e = schnorrVerifyBlake256(sig, hash, pubKey)
+		if !errors.Is(err, test.e) {
 			t.Errorf("%s: mismatched err -- got %v, want %v", test.name, err,
-				test.err)
+				test.e)
 			continue
 		}
 	}

@@ -1,7 +1,7 @@
 package replicatr
 
 import (
-	err "errors"
+	"errors"
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
@@ -13,18 +13,18 @@ import (
 // received from a websocket.
 func (rl *Relay) AddEvent(ctx Ctx, evt *Event) (e error) {
 	if evt == nil {
-		e = err.New("error: event is nil")
+		e = errors.New("error: event is nil")
 		rl.E.Ln(e)
 		return
 	}
 	for _, rej := range rl.RejectEvent {
 		if reject, msg := rej(ctx, evt); reject {
 			if msg == "" {
-				e = err.New("blocked: no reason")
+				e = errors.New("blocked: no reason")
 				rl.E.Ln(e)
 				return
 			} else {
-				e = err.New(normalize.OKMessage(msg, "blocked"))
+				e = errors.New(normalize.OKMessage(msg, "blocked"))
 				rl.E.Ln(e)
 				return
 			}
@@ -75,7 +75,7 @@ func (rl *Relay) AddEvent(ctx Ctx, evt *Event) (e error) {
 		for _, store := range rl.StoreEvent {
 			if saveErr := store(ctx, evt); rl.E.Chk(saveErr) {
 				switch {
-				case err.Is(saveErr, eventstore.ErrDupEvent):
+				case errors.Is(saveErr, eventstore.ErrDupEvent):
 					return nil
 				default:
 					return fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))

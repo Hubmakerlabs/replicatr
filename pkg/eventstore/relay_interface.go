@@ -27,42 +27,42 @@ func (w RelayWrapper) Publish(ctx context.Context, evt *event.T) (e error) {
 		return nil
 	} else if evt.Kind == 0 || evt.Kind == 3 || (10000 <= evt.Kind && evt.Kind < 20000) {
 		// replaceable event, delete before storing
-		ch, err := w.Store.QueryEvents(ctx, &filter.T{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}})
-		if err != nil {
-			return fmt.Errorf("failed to query before replacing: %w", err)
+		ch, e := w.Store.QueryEvents(ctx, &filter.T{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}})
+		if e != nil {
+			return fmt.Errorf("failed to query before replacing: %w", e)
 		}
 		if previous := <-ch; previous != nil && isOlder(previous, evt) {
-			if err := w.Store.DeleteEvent(ctx, previous); err != nil {
-				return fmt.Errorf("failed to delete event for replacing: %w", err)
+			if e := w.Store.DeleteEvent(ctx, previous); e != nil {
+				return fmt.Errorf("failed to delete event for replacing: %w", e)
 			}
 		}
 	} else if 30000 <= evt.Kind && evt.Kind < 40000 {
 		// parameterized replaceable event, delete before storing
 		d := evt.Tags.GetFirst([]string{"d", ""})
 		if d != nil {
-			ch, err := w.Store.QueryEvents(ctx, &filter.T{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}, Tags: filter.TagMap{"d": []string{d.Value()}}})
-			if err != nil {
-				return fmt.Errorf("failed to query before parameterized replacing: %w", err)
+			ch, e := w.Store.QueryEvents(ctx, &filter.T{Authors: []string{evt.PubKey}, Kinds: []int{evt.Kind}, Tags: filter.TagMap{"d": []string{d.Value()}}})
+			if e != nil {
+				return fmt.Errorf("failed to query before parameterized replacing: %w", e)
 			}
 			if previous := <-ch; previous != nil && isOlder(previous, evt) {
-				if err := w.Store.DeleteEvent(ctx, previous); err != nil {
-					return fmt.Errorf("failed to delete event for parameterized replacing: %w", err)
+				if e := w.Store.DeleteEvent(ctx, previous); e != nil {
+					return fmt.Errorf("failed to delete event for parameterized replacing: %w", e)
 				}
 			}
 		}
 	}
 
-	if err := w.SaveEvent(ctx, evt); err != nil && err != ErrDupEvent {
-		return fmt.Errorf("failed to save: %w", err)
+	if e := w.SaveEvent(ctx, evt); e != nil && e != ErrDupEvent {
+		return fmt.Errorf("failed to save: %w", e)
 	}
 
 	return nil
 }
 
 func (w RelayWrapper) QuerySync(ctx context.Context, f *filter.T, opts ...relay.SubscriptionOption) ([]*event.T, error) {
-	ch, err := w.Store.QueryEvents(ctx, f)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query: %w", err)
+	ch, e := w.Store.QueryEvents(ctx, f)
+	if e != nil {
+		return nil, fmt.Errorf("failed to query: %w", e)
 	}
 
 	n := f.Limit

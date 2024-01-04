@@ -11,13 +11,13 @@ func TestEncryptionAndDecryption(t *testing.T) {
 	sharedSecret := make([]byte, 32)
 	message := "hello hello"
 
-	ciphertext, err := Encrypt(message, sharedSecret)
-	if err != nil {
+	ciphertext, e := Encrypt(message, sharedSecret)
+	if e != nil {
 		t.Errorf("failed to encrypt: %s", err.Error())
 	}
 
-	plaintext, err := Decrypt(ciphertext, sharedSecret)
-	if err != nil {
+	plaintext, e := Decrypt(ciphertext, sharedSecret)
+	if e != nil {
 		t.Errorf("failed to decrypt: %s", err.Error())
 	}
 
@@ -32,13 +32,13 @@ func TestEncryptionAndDecryptionWithMultipleLengths(t *testing.T) {
 	for i := 0; i < 150; i++ {
 		message := strings.Repeat("a", i)
 
-		ciphertext, err := Encrypt(message, sharedSecret)
-		if err != nil {
+		ciphertext, e := Encrypt(message, sharedSecret)
+		if e != nil {
 			t.Errorf("failed to encrypt: %s", err.Error())
 		}
 
-		plaintext, err := Decrypt(ciphertext, sharedSecret)
-		if err != nil {
+		plaintext, e := Decrypt(ciphertext, sharedSecret)
+		if e != nil {
 			t.Errorf("failed to decrypt: %s", err.Error())
 		}
 

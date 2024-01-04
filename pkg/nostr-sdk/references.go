@@ -37,7 +37,7 @@ func ParseReferences(evt *event.T) []*Reference {
 			// didn't find a NIP-10 #[0] reference, so it's a NIP-27 mention
 			nip19code := content[ref[2]:ref[3]]
 
-			if prefix, data, err := nip19.Decode(nip19code); err == nil {
+			if prefix, data, e := nip19.Decode(nip19code); e == nil {
 				switch prefix {
 				case "npub":
 					reference.Profile = &pointers.ProfilePointer{
@@ -60,8 +60,8 @@ func ParseReferences(evt *event.T) []*Reference {
 			// it's a NIP-10 mention.
 			// parse the number, get data from event tags.
 			n := content[ref[6]:ref[7]]
-			idx, err := strconv.Atoi(n)
-			if err != nil || len(evt.Tags) <= idx {
+			idx, e := strconv.Atoi(n)
+			if e != nil || len(evt.Tags) <= idx {
 				continue
 			}
 			if tag := evt.Tags[idx]; tag != nil && len(tag) >= 2 {

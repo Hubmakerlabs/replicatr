@@ -96,8 +96,8 @@ func NewRelay(ctx context.Context, url string, opts ...RelayOption) *Relay {
 // To close the connection, call r.Close().
 func RelayConnect(ctx context.Context, url string, opts ...RelayOption) (*Relay, error) {
 	r := NewRelay(context.Background(), url, opts...)
-	err := r.Connect(ctx)
-	return r, err
+	e := r.Connect(ctx)
+	return r, e
 }
 
 // When instantiating relay connections, some options may be passed.
@@ -149,9 +149,9 @@ func (r *Relay) Connect(ctx context.Context) error {
 		defer cancel()
 	}
 
-	conn, err := connection.NewConnection(ctx, r.URL, r.RequestHeader)
-	if err != nil {
-		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, err)
+	conn, e := connection.NewConnection(ctx, r.URL, r.RequestHeader)
+	if e != nil {
+		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, e)
 	}
 	r.Connection = conn
 
@@ -179,16 +179,16 @@ func (r *Relay) Connect(ctx context.Context) error {
 		for {
 			select {
 			case <-ticker.C:
-				err := wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil)
-				if err != nil {
-					fmt.Printf("{%s} error writing ping: %v; closing websocket", r.URL, err)
+				e := wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil)
+				if e != nil {
+					fmt.Printf("{%s} error writing ping: %v; closing websocket", r.URL, e)
 					r.Close() // this should trigger a context cancelation
 					return
 				}
 			case writeRequest := <-r.writeQueue:
 				// all write requests will go through this to prevent races
-				if err := r.Connection.WriteMessage(writeRequest.msg); err != nil {
-					writeRequest.answer <- err
+				if e := r.Connection.WriteMessage(writeRequest.msg); e != nil {
+					writeRequest.answer <- e
 				}
 				close(writeRequest.answer)
 			case <-r.connectionContext.Done():
@@ -204,8 +204,8 @@ func (r *Relay) Connect(ctx context.Context) error {
 
 		for {
 			buf.Reset()
-			if err := conn.ReadMessage(r.connectionContext, buf); err != nil {
-				r.ConnectionError = err
+			if e := conn.ReadMessage(r.connectionContext, buf); e != nil {
+				r.ConnectionError = e
 				r.Close()
 				break
 			}
@@ -246,10 +246,10 @@ func (r *Relay) Connect(ctx context.Context) error {
 
 					// check signature, ignore invalid, except from trusted (AssumeValid) relays
 					if !r.AssumeValid {
-						if ok, err := env.T.CheckSignature(); !ok {
+						if ok, e := env.T.CheckSignature(); !ok {
 							errmsg := ""
-							if err != nil {
-								errmsg = err.Error()
+							if e != nil {
+								errmsg = e.Error()
 							}
 							fmt.Printf("{%s} bad signature on %s; %s\n", r.URL, env.T.ID, errmsg)
 							continue
@@ -311,8 +311,8 @@ func (r *Relay) Auth(ctx context.Context, sign func(event *event.T) error) error
 		},
 		Content: "",
 	}
-	if err := sign(&authEvent); err != nil {
-		return fmt.Errorf("error signing auth event: %w", err)
+	if e := sign(&authEvent); e != nil {
+		return fmt.Errorf("error signing auth event: %w", e)
 	}
 
 	return r.publish(ctx, authEvent.ID, &auth.Envelope{Event: authEvent})
@@ -320,7 +320,7 @@ func (r *Relay) Auth(ctx context.Context, sign func(event *event.T) error) error
 
 // publish can be used both for EVENT and for AUTH
 func (r *Relay) publish(ctx context.Context, id string, env envelopes.Envelope) error {
-	var err error
+	var e error
 	var cancel context.CancelFunc
 
 	if _, ok := ctx.Deadline(); !ok {
@@ -338,7 +338,7 @@ func (r *Relay) publish(ctx context.Context, id string, env envelopes.Envelope) 
 	r.okCallbacks.Store(id, func(ok bool, reason string) {
 		gotOk = true
 		if !ok {
-			err = fmt.Errorf("msg: %s", reason)
+			e = fmt.Errorf("msg: %s", reason)
 		}
 		cancel()
 	})
@@ -347,8 +347,8 @@ func (r *Relay) publish(ctx context.Context, id string, env envelopes.Envelope) 
 	// publish event
 	envb, _ := env.MarshalJSON()
 	fmt.Printf("{%s} sending %v\n", r.URL, string(envb))
-	if err := <-r.Write(envb); err != nil {
-		return err
+	if e := <-r.Write(envb); e != nil {
+		return e
 	}
 
 	for {
@@ -356,12 +356,12 @@ func (r *Relay) publish(ctx context.Context, id string, env envelopes.Envelope) 
 		case <-ctx.Done():
 			// this will be called when we get an OK or when the context has been canceled
 			if gotOk {
-				return err
+				return e
 			}
 			return ctx.Err()
 		case <-r.connectionContext.Done():
 			// this is caused when we lose connectivity
-			return err
+			return e
 		}
 	}
 }
@@ -375,8 +375,8 @@ func (r *Relay) publish(ctx context.Context, id string, env envelopes.Envelope) 
 func (r *Relay) Subscribe(ctx context.Context, filters filters.T, opts ...SubscriptionOption) (*Subscription, error) {
 	sub := r.PrepareSubscription(ctx, filters, opts...)
 
-	if err := sub.Fire(); err != nil {
-		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", filters, r.URL, err)
+	if e := sub.Fire(); e != nil {
+		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", filters, r.URL, e)
 	}
 
 	return sub, nil
@@ -422,9 +422,9 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filters filters.T, opts
 }
 
 func (r *Relay) QuerySync(ctx context.Context, f filter.T, opts ...SubscriptionOption) ([]*event.T, error) {
-	sub, err := r.Subscribe(ctx, filters.T{f}, opts...)
-	if err != nil {
-		return nil, err
+	sub, e := r.Subscribe(ctx, filters.T{f}, opts...)
+	if e != nil {
+		return nil, e
 	}
 
 	defer sub.Unsub()
@@ -457,8 +457,8 @@ func (r *Relay) Count(ctx context.Context, filters filters.T, opts ...Subscripti
 	sub := r.PrepareSubscription(ctx, filters, opts...)
 	sub.countResult = make(chan int64)
 
-	if err := sub.Fire(); err != nil {
-		return 0, err
+	if e := sub.Fire(); e != nil {
+		return 0, e
 	}
 
 	defer sub.Unsub()

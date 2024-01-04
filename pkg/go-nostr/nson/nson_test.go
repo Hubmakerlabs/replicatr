@@ -11,8 +11,8 @@ import (
 func TestBasicNsonParse(t *testing.T) {
 	for _, jevt := range nsonTestEvents {
 		evt := &event.T{}
-		if err := Unmarshal(jevt, evt); err != nil {
-			t.Fatalf("error unmarshalling nson: %s", err)
+		if e := Unmarshal(jevt, evt); e != nil {
+			t.Fatalf("error unmarshalling nson: %s", e)
 		}
 		checkParsedCorrectly(t, evt, jevt)
 	}
@@ -21,8 +21,8 @@ func TestBasicNsonParse(t *testing.T) {
 func TestNsonPartialGet(t *testing.T) {
 	for _, jevt := range nsonTestEvents {
 		evt := &event.T{}
-		if err := Unmarshal(jevt, evt); err != nil {
-			t.Fatalf("error unmarshalling nson: %s", err)
+		if e := Unmarshal(jevt, evt); e != nil {
+			t.Fatalf("error unmarshalling nson: %s", e)
 		}
 
 		wrapper := New(jevt)
@@ -51,17 +51,17 @@ func TestNsonPartialGet(t *testing.T) {
 func TestNsonEncode(t *testing.T) {
 	for _, jevt := range normalEvents {
 		pevt := &event.T{}
-		if err := json.Unmarshal([]byte(jevt), pevt); err != nil {
-			t.Fatalf("failed to decode normal json: %s", err)
+		if e := json.Unmarshal([]byte(jevt), pevt); e != nil {
+			t.Fatalf("failed to decode normal json: %s", e)
 		}
-		nevt, err := Marshal(pevt)
-		if err != nil {
-			t.Fatalf("failed to encode nson: %s", err)
+		nevt, e := Marshal(pevt)
+		if e != nil {
+			t.Fatalf("failed to encode nson: %s", e)
 		}
 
 		evt := &event.T{}
-		if err := Unmarshal(nevt, evt); err != nil {
-			t.Fatalf("error unmarshalling nson: %s", err)
+		if e := Unmarshal(nevt, evt); e != nil {
+			t.Fatalf("error unmarshalling nson: %s", e)
 		}
 		checkParsedCorrectly(t, pevt, jevt)
 		checkParsedCorrectly(t, evt, jevt)
@@ -70,9 +70,9 @@ func TestNsonEncode(t *testing.T) {
 
 func checkParsedCorrectly(t *testing.T, evt *event.T, jevt string) (isBad bool) {
 	var canonical event.T
-	err := json.Unmarshal([]byte(jevt), &canonical)
-	if err != nil {
-		t.Fatalf("error unmarshalling normal json: %s", err)
+	e := json.Unmarshal([]byte(jevt), &canonical)
+	if e != nil {
+		t.Fatalf("error unmarshalling normal json: %s", e)
 	}
 
 	if evt.ID != canonical.ID {
@@ -184,9 +184,9 @@ func BenchmarkNSONDecoding(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, nevt := range events {
 				evt := &event.T{}
-				err := easyjson.Unmarshal([]byte(nevt), evt)
-				if err != nil {
-					b.Fatalf("failed to unmarshal: %s", err)
+				e := easyjson.Unmarshal([]byte(nevt), evt)
+				if e != nil {
+					b.Fatalf("failed to unmarshal: %s", e)
 				}
 			}
 		}
@@ -196,9 +196,9 @@ func BenchmarkNSONDecoding(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, nevt := range events {
 				evt := &event.T{}
-				err := Unmarshal(nevt, evt)
-				if err != nil {
-					b.Fatalf("failed to unmarshal: %s", err)
+				e := Unmarshal(nevt, evt)
+				if e != nil {
+					b.Fatalf("failed to unmarshal: %s", e)
 				}
 			}
 		}
@@ -208,9 +208,9 @@ func BenchmarkNSONDecoding(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, nevt := range events {
 				evt := &event.T{}
-				err := easyjson.Unmarshal([]byte(nevt), evt)
-				if err != nil {
-					b.Fatalf("failed to unmarshal: %s", err)
+				e := easyjson.Unmarshal([]byte(nevt), evt)
+				if e != nil {
+					b.Fatalf("failed to unmarshal: %s", e)
 				}
 				evt.CheckSignature()
 			}
@@ -221,9 +221,9 @@ func BenchmarkNSONDecoding(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, nevt := range events {
 				evt := &event.T{}
-				err := Unmarshal(nevt, evt)
-				if err != nil {
-					b.Fatalf("failed to unmarshal: %s", err)
+				e := Unmarshal(nevt, evt)
+				if e != nil {
+					b.Fatalf("failed to unmarshal: %s", e)
 				}
 				evt.CheckSignature()
 			}

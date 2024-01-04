@@ -327,16 +327,16 @@ func deriveEndomorphismParams() [2]endomorphismParams {
 }
 
 func main() {
-	if _, err := os.Stat(".git"); err != nil {
+	if _, e := os.Stat(".git"); e != nil {
 		fmt.Printf("File exists\n")
 		_, _ = fmt.Fprintln(os.Stderr,
 			"This generator must be run with working directory at the root of"+
 				" the repository")
 		os.Exit(1)
 	}
-	fi, err := os.Create("secp256k1/compressedbytepoints.go")
-	if err != nil {
-		log.Fatal(err)
+	fi, e := os.Create("secp256k1/compressedbytepoints.go")
+	if e != nil {
+		log.Fatal(e)
 	}
 	defer fi.Close()
 
@@ -344,8 +344,8 @@ func main() {
 	serialized := serializedBytePoints()
 	var compressed bytes.Buffer
 	w := zlib.NewWriter(&compressed)
-	if _, err := w.Write(serialized); err != nil {
-		fmt.Println(err)
+	if _, e := w.Write(serialized); e != nil {
+		fmt.Println(e)
 		os.Exit(1)
 	}
 	w.Close()

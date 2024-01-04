@@ -39,8 +39,8 @@ func randFieldVal(t *testing.T, rng *rand.Rand) *FieldVal {
 	t.Helper()
 
 	var buf [32]byte
-	if _, err := rng.Read(buf[:]); err != nil {
-		t.Fatalf("failed to read random: %v", err)
+	if _, e := rng.Read(buf[:]); e != nil {
+		t.Fatalf("failed to read random: %v", e)
 	}
 
 	// Create and return a field value.
@@ -55,8 +55,8 @@ func randIntAndFieldVal(t *testing.T, rng *rand.Rand) (*big.Int, *FieldVal) {
 	t.Helper()
 
 	var buf [32]byte
-	if _, err := rng.Read(buf[:]); err != nil {
-		t.Fatalf("failed to read random: %v", err)
+	if _, e := rng.Read(buf[:]); e != nil {
+		t.Fatalf("failed to read random: %v", e)
 	}
 
 	// Create and return both a big integer and a field value.

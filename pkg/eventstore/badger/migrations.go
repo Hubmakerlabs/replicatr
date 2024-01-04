@@ -2,6 +2,7 @@ package badger
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/dgraph-io/badger/v4"
@@ -11,16 +12,17 @@ func (b *BadgerBackend) runMigrations() (e error) {
 	return b.Update(func(txn *badger.Txn) (e error) {
 		var version uint16
 
-		item, err := txn.Get([]byte{dbVersionKey})
-		if err == badger.ErrKeyNotFound {
+		var item *badger.Item
+		item, e = txn.Get([]byte{dbVersionKey})
+		if errors.Is(e, badger.ErrKeyNotFound) {
 			version = 0
-		} else if err != nil {
-			return err
+		} else if e != nil {
+			return
 		} else {
-			item.Value(func(val []byte) (e error) {
+			log.E.Chk(item.Value(func(val []byte) (e error) {
 				version = binary.BigEndian.Uint16(val)
 				return nil
-			})
+			}))
 		}
 
 		// do the migrations in increasing steps (there is no rollback)
@@ -45,10 +47,15 @@ func (b *BadgerBackend) runMigrations() (e error) {
 			}
 
 			if hasAnyEntries {
-				return fmt.Errorf("your database is at version %d, but in order to migrate up to version 3 you must manually export all the events and then import again: run an old version of this software, export the data, then delete the database files, run the new version, import the data back in.", version)
+				return fmt.Errorf("your database is at version %d, but " +
+					"in order to migrate up to version 3 you must " +
+					"manually export all the events and then import " +
+					"again: run an old version of this software, export " +
+					"the data, then delete the database files, run the " +
+					"new version, import the data back in", version)
 			}
 
-			b.bumpVersion(txn, 3)
+			log.E.Chk(b.bumpVersion(txn, 3))
 		}
 
 		if version < 4 {

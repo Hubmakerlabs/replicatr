@@ -14,9 +14,9 @@ func TestBinaryPartialGet(t *testing.T) {
 	for _, jevt := range normalEvents {
 		evt := &event.T{}
 		json.Unmarshal([]byte(jevt), &evt)
-		bevt, err := Marshal(evt)
-		if err != nil {
-			t.Fatalf("error marshalling binary: %s", err)
+		bevt, e := Marshal(evt)
+		if e != nil {
+			t.Fatalf("error marshalling binary: %s", e)
 		}
 
 		if id := hex.EncodeToString(bevt[0:32]); id != evt.ID {
@@ -43,16 +43,16 @@ func TestBinaryPartialGet(t *testing.T) {
 func TestBinaryEncode(t *testing.T) {
 	for _, jevt := range normalEvents {
 		pevt := &event.T{}
-		if err := json.Unmarshal([]byte(jevt), pevt); err != nil {
-			t.Fatalf("failed to decode normal json: %s", err)
+		if e := json.Unmarshal([]byte(jevt), pevt); e != nil {
+			t.Fatalf("failed to decode normal json: %s", e)
 		}
-		bevt, err := Marshal(pevt)
-		if err != nil {
-			t.Fatalf("failed to encode binary: %s", err)
+		bevt, e := Marshal(pevt)
+		if e != nil {
+			t.Fatalf("failed to encode binary: %s", e)
 		}
 		evt := &event.T{}
-		if err := Unmarshal(bevt, evt); err != nil {
-			t.Fatalf("error unmarshalling binary: %s", err)
+		if e := Unmarshal(bevt, evt); e != nil {
+			t.Fatalf("error unmarshalling binary: %s", e)
 		}
 		checkParsedCorrectly(t, pevt, jevt)
 		checkParsedCorrectly(t, evt, jevt)
@@ -61,9 +61,9 @@ func TestBinaryEncode(t *testing.T) {
 
 func checkParsedCorrectly(t *testing.T, evt *event.T, jevt string) (isBad bool) {
 	var canonical event.T
-	err := json.Unmarshal([]byte(jevt), &canonical)
-	if err != nil {
-		t.Fatalf("error unmarshalling normal json: %s", err)
+	e := json.Unmarshal([]byte(jevt), &canonical)
+	if e != nil {
+		t.Fatalf("error unmarshalling normal json: %s", e)
 	}
 
 	if evt.ID != canonical.ID {

@@ -14,9 +14,9 @@ func BenchmarkSecretKeyGenerate(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := GenerateSecretKey()
-		if err != nil {
-			b.Fatal(err)
+		_, e := GenerateSecretKey()
+		if e != nil {
+			b.Fatal(e)
 		}
 	}
 }

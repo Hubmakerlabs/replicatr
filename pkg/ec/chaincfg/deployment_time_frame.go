@@ -89,8 +89,8 @@ func (m *MedianTimeDeploymentStarter) HasStarted(blkHeader *wire.BlockHeader) (b
 		return true, nil
 	}
 
-	medianTime, err := m.blockClock.PastMedianTime(blkHeader)
-	if err != nil {
+	medianTime, e := m.blockClock.PastMedianTime(blkHeader)
+	if e != nil {
 		return false, err
 	}
 
@@ -132,8 +132,8 @@ func (m *MedianTimeDeploymentEnder) HasEnded(blkHeader *wire.BlockHeader) (bool,
 		return false, nil
 	}
 
-	medianTime, err := m.blockClock.PastMedianTime(blkHeader)
-	if err != nil {
+	medianTime, e := m.blockClock.PastMedianTime(blkHeader)
+	if e != nil {
 		return false, err
 	}
 

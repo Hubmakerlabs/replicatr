@@ -150,8 +150,8 @@ func (c *Connection) ReadMessage(ctx context.Context, buf io.Writer) (e error) {
 			break
 		}
 
-		if err := c.reader.Discard(); err != nil {
-			return fmt.Errorf("failed to discard: %w", err)
+		if e := c.reader.Discard(); e != nil {
+			return fmt.Errorf("failed to discard: %w", e)
 		}
 	}
 
@@ -161,8 +161,8 @@ func (c *Connection) ReadMessage(ctx context.Context, buf io.Writer) (e error) {
 			return fmt.Errorf("failed to read message: %w", e)
 		}
 	} else {
-		if _, err := io.Copy(buf, c.reader); err != nil {
-			return fmt.Errorf("failed to read message: %w", err)
+		if _, e := io.Copy(buf, c.reader); e != nil {
+			return fmt.Errorf("failed to read message: %w", e)
 		}
 	}
 

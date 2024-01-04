@@ -38,8 +38,8 @@ func TestPublish(t *testing.T) {
 		Tags:      tags.T{[]string{"foo", "bar"}},
 		PubKey:    pub,
 	}
-	if err := textNote.Sign(priv); err != nil {
-		t.Fatalf("textNote.Sign: %v", err)
+	if e := textNote.Sign(priv); e != nil {
+		t.Fatalf("textNote.Sign: %v", e)
 	}
 
 	// fake relay server
@@ -51,8 +51,8 @@ func TestPublish(t *testing.T) {
 		mu.Unlock()
 		// verify the client sent exactly the textNote
 		var raw []json.RawMessage
-		if err := websocket.JSON.Receive(conn, &raw); err != nil {
-			t.Errorf("websocket.JSON.Receive: %v", err)
+		if e := websocket.JSON.Receive(conn, &raw); e != nil {
+			t.Errorf("websocket.JSON.Receive: %v", e)
 		}
 		event := parseEventMessage(t, raw)
 		if !bytes.Equal(event.Serialize(), textNote.Serialize()) {
@@ -60,8 +60,8 @@ func TestPublish(t *testing.T) {
 		}
 		// send back an ok nip-20 command result
 		res := []any{"OK", textNote.ID, true, ""}
-		if err := websocket.JSON.Send(conn, res); err != nil {
-			t.Errorf("websocket.JSON.Send: %v", err)
+		if e := websocket.JSON.Send(conn, res); e != nil {
+			t.Errorf("websocket.JSON.Send: %v", e)
 		}
 	})
 	defer ws.Close()
@@ -87,8 +87,8 @@ func TestPublishBlocked(t *testing.T) {
 	ws := newWebsocketServer(func(conn *websocket.Conn) {
 		// discard received message; not interested
 		var raw []json.RawMessage
-		if err := websocket.JSON.Receive(conn, &raw); err != nil {
-			t.Errorf("websocket.JSON.Receive: %v", err)
+		if e := websocket.JSON.Receive(conn, &raw); e != nil {
+			t.Errorf("websocket.JSON.Receive: %v", e)
 		}
 		// send back a not ok nip-20 command result
 		res := []any{"OK", textNote.ID, false, "blocked"}
@@ -120,9 +120,9 @@ func TestPublishWriteFailed(t *testing.T) {
 	rl := MustRelayConnect(ws.URL)
 	// Force brief period of time so that publish always fails on closed socket.
 	time.Sleep(1 * time.Millisecond)
-	status, err := rl.Publish(context.Background(), textNote)
+	status, e := rl.Publish(context.Background(), textNote)
 	if status != PublishStatusFailed {
-		t.Errorf("published status is %d, not %d, err: %v", status, PublishStatusFailed, err)
+		t.Errorf("published status is %d, not %d, err: %v", status, PublishStatusFailed, e)
 	}
 }
 
@@ -141,9 +141,9 @@ func TestConnectContext(t *testing.T) {
 	// relay client
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	r, err := RelayConnect(ctx, ws.URL)
-	if err != nil {
-		t.Fatalf("RelayConnectContext: %v", err)
+	r, e := RelayConnect(ctx, ws.URL)
+	if e != nil {
+		t.Fatalf("RelayConnectContext: %v", e)
 	}
 	defer r.Close()
 
@@ -162,9 +162,9 @@ func TestConnectContextCanceled(t *testing.T) {
 	// relay client
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // make ctx expired
-	_, err := RelayConnect(ctx, ws.URL)
+	_, e := RelayConnect(ctx, ws.URL)
 	if !errors.Is(err, context.Canceled) {
-		t.Errorf("RelayConnectContext returned %v error; want context.Canceled", err)
+		t.Errorf("RelayConnectContext returned %v error; want context.Canceled", e)
 	}
 }
 
@@ -179,9 +179,9 @@ func TestConnectWithOrigin(t *testing.T) {
 	r.RequestHeader = http.Header{"origin": {"https://example.com"}}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	err := r.Connect(ctx)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
+	e := r.Connect(ctx)
+	if e != nil {
+		t.Errorf("unexpected error: %v", e)
 	}
 }
 
@@ -206,16 +206,16 @@ var anyOriginHandshake = func(conf *websocket.Config, r *http.Request) (e error)
 func makeKeyPair(t *testing.T) (priv, pub string) {
 	t.Helper()
 	privkey := GeneratePrivateKey()
-	pubkey, err := nip19.GetPublicKey(privkey)
-	if err != nil {
-		t.Fatalf("GetPublicKey(%q): %v", privkey, err)
+	pubkey, e := nip19.GetPublicKey(privkey)
+	if e != nil {
+		t.Fatalf("GetPublicKey(%q): %v", privkey, e)
 	}
 	return privkey, pubkey
 }
 
 func MustRelayConnect(url string) *Relay {
-	rl, err := RelayConnect(context.Background(), url)
-	if err != nil {
+	rl, e := RelayConnect(context.Background(), url)
+	if e != nil {
 		panic(err.Error())
 	}
 	return rl
@@ -232,8 +232,8 @@ func parseEventMessage(t *testing.T, raw []json.RawMessage) (evt *event.T) {
 		t.Errorf("typ = %q; want EVENT", typ)
 	}
 	evt = &event.T{}
-	if err := json.Unmarshal(raw[1], evt); err != nil {
-		t.Errorf("json.Unmarshal(`%s`): %v", string(raw[1]), err)
+	if e := json.Unmarshal(raw[1], evt); e != nil {
+		t.Errorf("json.Unmarshal(`%s`): %v", string(raw[1]), e)
 	}
 	return evt
 }
@@ -251,13 +251,13 @@ func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string
 		t.Errorf("typ = %q; want REQ", typ)
 	}
 	var id string
-	if err := json.Unmarshal(raw[1], &id); err != nil {
-		t.Errorf("json.Unmarshal sub id: %v", err)
+	if e := json.Unmarshal(raw[1], &id); e != nil {
+		t.Errorf("json.Unmarshal sub id: %v", e)
 	}
 	for i, b := range raw[2:] {
 		f := &filter.T{}
-		if err := json.Unmarshal(b, f); err != nil {
-			t.Errorf("json.Unmarshal filter %d: %v", i, err)
+		if e := json.Unmarshal(b, f); e != nil {
+			t.Errorf("json.Unmarshal filter %d: %v", i, e)
 		}
 		ff = append(ff, f)
 	}
@@ -269,7 +269,7 @@ func GeneratePrivateKey() string {
 	one := new(big.Int).SetInt64(1)
 
 	b := make([]byte, params.BitSize/8+8)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
+	if _, e := io.ReadFull(rand.Reader, b); e != nil {
 		return ""
 	}
 
