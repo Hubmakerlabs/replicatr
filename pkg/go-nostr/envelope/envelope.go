@@ -43,7 +43,7 @@ func ParseMessage(message []byte) envelopes.Envelope {
 	case bytes.Contains(label, []byte("CLOSED")):
 		v = &closed.ClosedEnvelope{}
 	case bytes.Contains(label, []byte("CLOSE")):
-		x := close2.CloseEnvelope("")
+		x := close2.Envelope("")
 		v = &x
 	default:
 		return nil
