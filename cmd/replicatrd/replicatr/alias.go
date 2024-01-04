@@ -36,7 +36,7 @@ type (
 	ClosedEnvelope  = closed.ClosedEnvelope
 	ReqEnvelope     = req.ReqEnvelope
 	EOSEEnvelope    = eose.EOSEEnvelope
-	CloseEnvelope   = close2.CloseEnvelope
+	CloseEnvelope   = close2.Envelope
 	AuthEnvelope    = auth.Envelope
 	NoticeEnvelope  = notice.Envelope
 	Conn            = websocket.Conn

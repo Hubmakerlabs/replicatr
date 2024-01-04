@@ -144,7 +144,7 @@ func (sub *Subscription) Unsub() {
 func (sub *Subscription) Close() {
 	if sub.Relay.IsConnected() {
 		id := sub.GetID()
-		closeMsg := close2.CloseEnvelope(id)
+		closeMsg := close2.Envelope(id)
 		closeb, _ := (&closeMsg).MarshalJSON()
 		fmt.Printf("{%s} sending %v", sub.Relay.URL, string(closeb))
 		<-sub.Relay.Write(closeb)
