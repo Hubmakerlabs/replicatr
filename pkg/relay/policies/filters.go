@@ -10,10 +10,10 @@ import (
 )
 
 // NoComplexFilters disallows filters with more than 2 tags.
-func NoComplexFilters(ctx context.Context, filter filter.T) (reject bool, msg string) {
-	items := len(filter.Tags) + len(filter.Kinds)
+func NoComplexFilters(ctx context.Context, f filter.T) (reject bool, msg string) {
+	items := len(f.Tags) + len(f.Kinds)
 
-	if items > 4 && len(filter.Tags) > 2 {
+	if items > 4 && len(f.Tags) > 2 {
 		return true, "too many things to filter for"
 	}
 
@@ -21,9 +21,9 @@ func NoComplexFilters(ctx context.Context, filter filter.T) (reject bool, msg st
 }
 
 // NoEmptyFilters disallows filters that don't have at least a tag, a kind, an author or an id.
-func NoEmptyFilters(ctx context.Context, filter filter.T) (reject bool, msg string) {
-	c := len(filter.Kinds) + len(filter.IDs) + len(filter.Authors)
-	for _, tagItems := range filter.Tags {
+func NoEmptyFilters(ctx context.Context, f filter.T) (reject bool, msg string) {
+	c := len(f.Kinds) + len(f.IDs) + len(f.Authors)
+	for _, tagItems := range f.Tags {
 		c += len(tagItems)
 	}
 	if c == 0 {
@@ -34,41 +34,41 @@ func NoEmptyFilters(ctx context.Context, filter filter.T) (reject bool, msg stri
 
 // AntiSyncBots tries to prevent people from syncing kind:1s from this relay to else by always
 // requiring an author parameter at least.
-func AntiSyncBots(ctx context.Context, filter filter.T) (reject bool, msg string) {
-	return (len(filter.Kinds) == 0 || slices.Contains(filter.Kinds, 1)) &&
-		len(filter.Authors) == 0, "an author must be specified to get their kind:1 notes"
+func AntiSyncBots(ctx context.Context, f filter.T) (reject bool, msg string) {
+	return (len(f.Kinds) == 0 || slices.Contains(f.Kinds, 1)) &&
+		len(f.Authors) == 0, "an author must be specified to get their kind:1 notes"
 }
 
-func NoSearchQueries(ctx context.Context, filter filter.T) (reject bool, msg string) {
-	if filter.Search != "" {
+func NoSearchQueries(ctx context.Context, f filter.T) (reject bool, msg string) {
+	if f.Search != "" {
 		return true, "search is not supported"
 	}
 	return false, ""
 }
 
-func RemoveSearchQueries(ctx context.Context, filter *filter.T) {
-	filter.Search = ""
+func RemoveSearchQueries(ctx context.Context, f *filter.T) {
+	f.Search = ""
 }
 
 func RemoveAllButKinds(kinds ...uint16) func(context.Context, *filter.T) {
-	return func(ctx context.Context, filter *filter.T) {
-		if n := len(filter.Kinds); n > 0 {
+	return func(ctx context.Context, f *filter.T) {
+		if n := len(f.Kinds); n > 0 {
 			newKinds := make(kinds2.T, 0, n)
 			for i := 0; i < n; i++ {
-				if k := filter.Kinds[i]; slices.Contains(kinds, uint16(k)) {
+				if k := f.Kinds[i]; slices.Contains(kinds, uint16(k)) {
 					newKinds = append(newKinds, k)
 				}
 			}
-			filter.Kinds = newKinds
+			f.Kinds = newKinds
 		}
 	}
 }
 
 func RemoveAllButTags(tagNames ...string) func(context.Context, *filter.T) {
-	return func(ctx context.Context, filter *filter.T) {
-		for tagName := range filter.Tags {
+	return func(ctx context.Context, f *filter.T) {
+		for tagName := range f.Tags {
 			if !slices.Contains(tagNames, tagName) {
-				delete(filter.Tags, tagName)
+				delete(f.Tags, tagName)
 			}
 		}
 	}

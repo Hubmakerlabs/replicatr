@@ -50,12 +50,12 @@ func doDMList(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	filter := filter.Filter{
+	f := filter.Filter{
 		Kinds:   []int{event.KindEncryptedDirectMessage},
 		Authors: []string{npub},
 	}
 
-	evs := cfg.Events(filter)
+	evs := cfg.Events(f)
 	type entry struct {
 		name   string
 		pubkey string
@@ -135,14 +135,14 @@ func doDMTimeline(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	filter := filter.Filter{
+	f := filter.Filter{
 		Kinds:   []int{event.KindEncryptedDirectMessage},
 		Authors: []string{npub, pub},
 		Tags:    filter.TagMap{"p": []string{npub, pub}},
 		Limit:   9999,
 	}
 
-	evs := cfg.Events(filter)
+	evs := cfg.Events(f)
 	cfg.PrintEvents(evs, followsMap, j, extra)
 	return nil
 }
@@ -217,10 +217,10 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
-		err := relay.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+		err := rl.Publish(ctx, ev)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, relay.URL, err)
+			fmt.Fprintln(os.Stderr, rl.URL, err)
 		} else {
 			success.Add(1)
 		}
@@ -324,10 +324,10 @@ func doPost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
-		err := relay.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+		err := rl.Publish(ctx, ev)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, relay.URL, err)
+			fmt.Fprintln(os.Stderr, rl.URL, err)
 		} else {
 			success.Add(1)
 		}
@@ -425,18 +425,18 @@ func doReply(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
 		if !quote {
-			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, relay.URL, "reply"})
+			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, rl.URL, "reply"})
 		} else {
-			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, relay.URL, "mention"})
+			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, rl.URL, "mention"})
 		}
 		if err := ev.Sign(sk); err != nil {
 			return true
 		}
-		err := relay.Publish(ctx, ev)
+		err := rl.Publish(ctx, ev)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, relay.URL, err)
+			fmt.Fprintln(os.Stderr, rl.URL, err)
 		} else {
 			success.Add(1)
 		}
@@ -475,7 +475,7 @@ func doRepost(cCtx *cli.Context) (e error) {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
 	ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id})
-	filter := filter.Filter{
+	f := filter.Filter{
 		Kinds: []int{event.KindTextNote},
 		IDs:   []string{id},
 	}
@@ -488,9 +488,9 @@ func doRepost(cCtx *cli.Context) (e error) {
 	first.Store(true)
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
 		if first.Load() {
-			evs, err := relay.QuerySync(ctx, filter)
+			evs, err := rl.QuerySync(ctx, f)
 			if err != nil {
 				return true
 			}
@@ -502,9 +502,9 @@ func doRepost(cCtx *cli.Context) (e error) {
 				return true
 			}
 		}
-		err := relay.Publish(ctx, ev)
+		err := rl.Publish(ctx, ev)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, relay.URL, err)
+			fmt.Fprintln(os.Stderr, rl.URL, err)
 		} else {
 			success.Add(1)
 		}
@@ -543,8 +543,8 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 	var repostID string
 	var mu sync.Mutex
-	cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
-		evs, err := relay.QuerySync(ctx, f)
+	cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
+		evs, err := rl.QuerySync(ctx, f)
 		if err != nil {
 			return true
 		}
@@ -565,10 +565,10 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
-		err := relay.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+		err := rl.Publish(ctx, ev)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, relay.URL, err)
+			fmt.Fprintln(os.Stderr, rl.URL, err)
 		} else {
 			success.Add(1)
 		}
@@ -607,7 +607,7 @@ func doLike(cCtx *cli.Context) (e error) {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
 	ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id})
-	filter := filter.Filter{
+	f := filter.Filter{
 		Kinds: []int{event.KindTextNote},
 		IDs:   []string{id},
 	}
@@ -631,9 +631,9 @@ func doLike(cCtx *cli.Context) (e error) {
 	first.Store(true)
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
 		if first.Load() {
-			evs, err := relay.QuerySync(ctx, filter)
+			evs, err := rl.QuerySync(ctx, f)
 			if err != nil {
 				return true
 			}
@@ -646,9 +646,9 @@ func doLike(cCtx *cli.Context) (e error) {
 			}
 			return true
 		}
-		err := relay.Publish(ctx, ev)
+		err := rl.Publish(ctx, ev)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, relay.URL, err)
+			fmt.Fprintln(os.Stderr, rl.URL, err)
 		} else {
 			success.Add(1)
 		}
@@ -687,8 +687,8 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 	var likeID string
 	var mu sync.Mutex
-	cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
-		evs, err := relay.QuerySync(ctx, f)
+	cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
+		evs, err := rl.QuerySync(ctx, f)
 		if err != nil {
 			return true
 		}
@@ -709,10 +709,10 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
-		err := relay.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+		err := rl.Publish(ctx, ev)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, relay.URL, err)
+			fmt.Fprintln(os.Stderr, rl.URL, err)
 		} else {
 			success.Add(1)
 		}
@@ -758,10 +758,10 @@ func doDelete(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
-		err := relay.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+		err := rl.Publish(ctx, ev)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, relay.URL, err)
+			fmt.Fprintln(os.Stderr, rl.URL, err)
 		} else {
 			success.Add(1)
 		}
@@ -793,13 +793,13 @@ func doSearch(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	filter := filter.Filter{
+	f := filter.Filter{
 		Kinds:  []int{event.KindTextNote},
 		Search: strings.Join(cCtx.Args().Slice(), " "),
 		Limit:  n,
 	}
 
-	evs := cfg.Events(filter)
+	evs := cfg.Events(f)
 	cfg.PrintEvents(evs, followsMap, j, extra)
 	return nil
 }
@@ -822,11 +822,11 @@ func doStream(cCtx *cli.Context) (e error) {
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
 
-	relay := cfg.FindRelay(context.Background(), RelayPerms{Read: true})
-	if relay == nil {
+	rl := cfg.FindRelay(context.Background(), RelayPerms{Read: true})
+	if rl == nil {
 		return errors.New("cannot connect relays")
 	}
-	defer relay.Close()
+	defer rl.Close()
 
 	var sk string
 	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
@@ -860,7 +860,7 @@ func doStream(cCtx *cli.Context) (e error) {
 		Since:   &since,
 	}
 
-	sub, err := relay.Subscribe(context.Background(), filter.Filters{ff})
+	sub, err := rl.Subscribe(context.Background(), filter.Filters{ff})
 	if err != nil {
 		return err
 	}
@@ -880,8 +880,8 @@ func doStream(cCtx *cli.Context) (e error) {
 				if err := evr.Sign(sk); err != nil {
 					return err
 				}
-				cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
-					relay.Publish(ctx, evr)
+				cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+					rl.Publish(ctx, evr)
 					return true
 				})
 			}
@@ -910,13 +910,13 @@ func doTimeline(cCtx *cli.Context) (e error) {
 	}
 
 	// get timeline
-	filter := filter.Filter{
+	f := filter.Filter{
 		Kinds:   []int{event.KindTextNote},
 		Authors: follows,
 		Limit:   n,
 	}
 
-	evs := cfg.Events(filter)
+	evs := cfg.Events(f)
 	cfg.PrintEvents(evs, followsMap, j, extra)
 	return nil
 }
@@ -949,10 +949,10 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, relay *relays.Relay) bool {
-		err := relay.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+		err := rl.Publish(ctx, ev)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, relay.URL, err)
+			fmt.Fprintln(os.Stderr, rl.URL, err)
 		} else {
 			success.Add(1)
 		}

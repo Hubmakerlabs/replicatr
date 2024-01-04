@@ -11,10 +11,10 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b BadgerBackend) CountEvents(ctx context.Context, filter *filter.Filter) (int64, error) {
+func (b BadgerBackend) CountEvents(ctx context.Context, f *filter.Filter) (int64, error) {
 	var count int64 = 0
 
-	queries, extraFilter, since, err := prepareQueries(filter)
+	queries, extraFilter, since, err := prepareQueries(f)
 	if err != nil {
 		return 0, err
 	}

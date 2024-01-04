@@ -12,7 +12,7 @@ import (
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.
 type RelayInterface interface {
 	Publish(ctx context.Context, evt *event.T) error
-	QuerySync(ctx context.Context, filter *filter.Filter, opts ...relay.SubscriptionOption) ([]*event.T, error)
+	QuerySync(ctx context.Context, f *filter.Filter, opts ...relay.SubscriptionOption) ([]*event.T, error)
 }
 
 type RelayWrapper struct {
@@ -59,13 +59,13 @@ func (w RelayWrapper) Publish(ctx context.Context, evt *event.T) (e error) {
 	return nil
 }
 
-func (w RelayWrapper) QuerySync(ctx context.Context, filter *filter.Filter, opts ...relay.SubscriptionOption) ([]*event.T, error) {
-	ch, err := w.Store.QueryEvents(ctx, filter)
+func (w RelayWrapper) QuerySync(ctx context.Context, f *filter.Filter, opts ...relay.SubscriptionOption) ([]*event.T, error) {
+	ch, err := w.Store.QueryEvents(ctx, f)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query: %w", err)
 	}
 
-	n := filter.Limit
+	n := f.Limit
 	if n == 0 {
 		n = 500
 	}

@@ -72,21 +72,21 @@ func (pool *SimplePool) EnsureRelay(url string) (*relays.Relay, error) {
 
 	defer NamedLock(url)()
 
-	relay, ok := pool.Relays.Load(nm)
-	if ok && relay.IsConnected() {
+	rl, ok := pool.Relays.Load(nm)
+	if ok && rl.IsConnected() {
 		// already connected, unlock and return
-		return relay, nil
+		return rl, nil
 	} else {
 		var err error
 		// we use this ctx here so when the pool dies everything dies
 		ctx, cancel := context.WithTimeout(pool.Context, time.Second*15)
 		defer cancel()
-		if relay, err = relays.RelayConnect(ctx, nm); err != nil {
+		if rl, err = relays.RelayConnect(ctx, nm); err != nil {
 			return nil, fmt.Errorf("failed to connect: %w", err)
 		}
 
-		pool.Relays.Store(nm, relay)
-		return relay, nil
+		pool.Relays.Store(nm, rl)
+		return rl, nil
 	}
 }
 
@@ -133,14 +133,14 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters filt
 
 				var sub *relays.Subscription
 
-				relay, err := pool.EnsureRelay(nm)
+				rl, err := pool.EnsureRelay(nm)
 				if err != nil {
 					goto reconnect
 				}
 				hasAuthed = false
 
 			subscribe:
-				sub, err = relay.Subscribe(ctx, filters)
+				sub, err = rl.Subscribe(ctx, filters)
 				if err != nil {
 					goto reconnect
 				}
@@ -172,7 +172,7 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters filt
 							}
 						}
 						select {
-						case events <- IncomingEvent{T: evt, Relay: relay}:
+						case events <- IncomingEvent{T: evt, Relay: rl}:
 						case <-ctx.Done():
 						}
 					case <-ticker.C:
@@ -187,8 +187,8 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters filt
 						}
 					case reason := <-sub.ClosedReason:
 						if strings.HasPrefix(reason, "auth-required:") && pool.authHandler != nil && !hasAuthed {
-							// relay is requesting auth. if we can we will perform auth and try again
-							if err := relay.Auth(ctx, pool.authHandler); err == nil {
+							// rl is requesting auth. if we can we will perform auth and try again
+							if err := rl.Auth(ctx, pool.authHandler); err == nil {
 								hasAuthed = true // so we don't keep doing AUTH again and again
 								goto subscribe
 							}
@@ -242,7 +242,7 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 		go func(nm string) {
 			defer wg.Done()
 
-			relay, err := pool.EnsureRelay(nm)
+			rl, err := pool.EnsureRelay(nm)
 			if err != nil {
 				return
 			}
@@ -250,9 +250,9 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 			hasAuthed := false
 
 		subscribe:
-			sub, err := relay.Subscribe(ctx, filters)
+			sub, err := rl.Subscribe(ctx, filters)
 			if sub == nil {
-				fmt.Printf("error subscribing to %s with %v: %s", relay, filters, err)
+				fmt.Printf("error subscribing to %s with %v: %s", rl, filters, err)
 				return
 			}
 
@@ -265,7 +265,7 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 				case reason := <-sub.ClosedReason:
 					if strings.HasPrefix(reason, "auth-required:") && pool.authHandler != nil && !hasAuthed {
 						// relay is requesting auth. if we can we will perform auth and try again
-						err := relay.Auth(ctx, pool.authHandler)
+						err := rl.Auth(ctx, pool.authHandler)
 						if err == nil {
 							hasAuthed = true // so we don't keep doing AUTH again and again
 							goto subscribe
@@ -285,7 +285,7 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 					}
 
 					select {
-					case events <- IncomingEvent{T: evt, Relay: relay}:
+					case events <- IncomingEvent{T: evt, Relay: rl}:
 					case <-ctx.Done():
 						return
 					}

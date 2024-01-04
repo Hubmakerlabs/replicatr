@@ -44,22 +44,22 @@ func New() *Relay {
 type Relay struct {
 	ServiceURL string
 
-	RejectEvent               []func(ctx context.Context, event *event.T) (reject bool, msg string)
-	RejectFilter              []func(ctx context.Context, filter *filter.T) (reject bool, msg string)
-	RejectCountFilter         []func(ctx context.Context, filter *filter.T) (reject bool, msg string)
+	RejectEvent               []func(ctx context.Context, ev *event.T) (reject bool, msg string)
+	RejectFilter              []func(ctx context.Context, f *filter.T) (reject bool, msg string)
+	RejectCountFilter         []func(ctx context.Context, f *filter.T) (reject bool, msg string)
 	OverwriteDeletionOutcome  []func(ctx context.Context, target *event.T, deletion *event.T) (acceptDeletion bool, msg string)
-	OverwriteResponseEvent    []func(ctx context.Context, event *event.T)
-	OverwriteFilter           []func(ctx context.Context, filter *filter.T)
-	OverwriteCountFilter      []func(ctx context.Context, filter *filter.T)
+	OverwriteResponseEvent    []func(ctx context.Context, ev *event.T)
+	OverwriteFilter           []func(ctx context.Context, f *filter.T)
+	OverwriteCountFilter      []func(ctx context.Context, f *filter.T)
 	OverwriteRelayInformation []func(ctx context.Context, r *http.Request, info *relayinfo.T) *relayinfo.T
-	StoreEvent                []func(ctx context.Context, event *event.T) error
-	DeleteEvent               []func(ctx context.Context, event *event.T) error
-	QueryEvents               []func(ctx context.Context, filter *filter.T) (chan *event.T, error)
-	CountEvents               []func(ctx context.Context, filter *filter.T) (int64, error)
+	StoreEvent                []func(ctx context.Context, ev *event.T) error
+	DeleteEvent               []func(ctx context.Context, ev *event.T) error
+	QueryEvents               []func(ctx context.Context, f *filter.T) (chan *event.T, error)
+	CountEvents               []func(ctx context.Context, f *filter.T) (int64, error)
 	OnAuth                    []func(ctx context.Context, pubkey string)
 	OnConnect                 []func(ctx context.Context)
 	OnDisconnect              []func(ctx context.Context)
-	OnEventSaved              []func(ctx context.Context, event *event.T)
+	OnEventSaved              []func(ctx context.Context, ev *event.T)
 
 	// editing info will affect
 	Info *relayinfo.T

@@ -57,18 +57,18 @@ func ParseRelaysFromKind10002(evt *event.T) (r []Relay) {
 			if !IsValidRelayURL(u) {
 				continue
 			}
-			relay := Relay{
+			rl := Relay{
 				URL: normalize.URL(u),
 			}
 			if len(tag) == 2 {
-				relay.Inbox = true
-				relay.Outbox = true
+				rl.Inbox = true
+				rl.Outbox = true
 			} else if tag[2] == "write" {
-				relay.Outbox = true
+				rl.Outbox = true
 			} else if tag[2] == "read" {
-				relay.Inbox = true
+				rl.Inbox = true
 			}
-			r = append(r, relay)
+			r = append(r, rl)
 		}
 	}
 	return
@@ -90,16 +90,16 @@ func ParseRelaysFromKind3(evt *event.T) (r []Relay) {
 		if !IsValidRelayURL(u) {
 			continue
 		}
-		relay := Relay{
+		rl := Relay{
 			URL: normalize.URL(u),
 		}
 		if item.Read {
-			relay.Inbox = true
+			rl.Inbox = true
 		}
 		if item.Write {
-			relay.Outbox = true
+			rl.Outbox = true
 		}
-		r = append(r, relay)
+		r = append(r, rl)
 		i++
 	}
 	return r

@@ -27,7 +27,7 @@ type queryEvent struct {
 	query int
 }
 
-func (b *Backend) Q(queries []query, since uint32, extraFilter *filter.T, filter *filter.T,
+func (b *Backend) Q(queries []query, since uint32, extraFilter *filter.T, f *filter.T,
 	evChan chan *event.T) {
 
 	e := b.View(func(txn *badger.Txn) (e error) {
@@ -83,8 +83,8 @@ func (b *Backend) Q(queries []query, since uint32, extraFilter *filter.T, filter
 		}
 		// max number of events we'll return
 		limit := b.MaxLimit
-		if filter.Limit > 0 && filter.Limit < limit {
-			limit = filter.Limit
+		if f.Limit > 0 && f.Limit < limit {
+			limit = f.Limit
 		}
 		// receive results and ensure we only return the most recent ones always
 		emittedEvents := 0

@@ -13,15 +13,15 @@ import (
 )
 
 func (rl *Relay) handleRequest(ctx context.Context, id subscriptionid.T,
-	eose *sync.WaitGroup, ws *WebSocket, filter *filter.T) (e error) {
+	eose *sync.WaitGroup, ws *WebSocket, f *filter.T) (e error) {
 
 	defer eose.Done()
 	// overwrite the filter (for example, to eliminate some kinds or
 	// that we know we don't support)
 	for _, ovw := range rl.OverwriteFilter {
-		ovw(ctx, filter)
+		ovw(ctx, f)
 	}
-	if filter.Limit < 0 {
+	if f.Limit < 0 {
 		return errors.New("blocked: filter invalidated")
 	}
 	// then check if we'll reject this filter (we apply this after overwriting
@@ -29,7 +29,7 @@ func (rl *Relay) handleRequest(ctx context.Context, id subscriptionid.T,
 	// that we know we don't support, and then if the end result is an empty
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
-		if reject, msg := reject(ctx, filter); reject {
+		if reject, msg := reject(ctx, f); reject {
 			rl.D.Chk(ws.WriteJSON(notice.Envelope{Text: msg}))
 			return errors.New(OK.Message(OK.Blocked, msg))
 		}
@@ -39,7 +39,7 @@ func (rl *Relay) handleRequest(ctx context.Context, id subscriptionid.T,
 	eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
 		var ch chan *event.T
-		if ch, e = query(ctx, filter); rl.E.Chk(e) {
+		if ch, e = query(ctx, f); rl.E.Chk(e) {
 			rl.D.Chk(ws.WriteJSON(notice.Envelope{Text: e.Error()}))
 			eose.Done()
 			continue
@@ -57,14 +57,15 @@ func (rl *Relay) handleRequest(ctx context.Context, id subscriptionid.T,
 	return nil
 }
 
-func (rl *Relay) handleCountRequest(ctx context.Context, ws *WebSocket, filter *filter.T) int64 {
-	// overwrite the filter (for example, to eliminate some kinds or tags that we know we don't support)
+func (rl *Relay) handleCountRequest(ctx context.Context, ws *WebSocket, f *filter.T) int64 {
+	// overwrite the filter (for example, to eliminate some kinds or tags that
+	// we know we don't support)
 	for _, ovw := range rl.OverwriteCountFilter {
-		ovw(ctx, filter)
+		ovw(ctx, f)
 	}
 	// then check if we'll reject this filter
 	for _, reject := range rl.RejectCountFilter {
-		if rejecting, msg := reject(ctx, filter); rejecting {
+		if rejecting, msg := reject(ctx, f); rejecting {
 			rl.D.Chk(ws.WriteJSON(notice.Envelope{Text: msg}))
 			return 0
 		}
@@ -74,7 +75,7 @@ func (rl *Relay) handleCountRequest(ctx context.Context, ws *WebSocket, filter *
 	for _, count := range rl.CountEvents {
 		var e error
 		var res int64
-		if res, e = count(ctx, filter); rl.E.Chk(e) {
+		if res, e = count(ctx, f); rl.E.Chk(e) {
 			rl.D.Chk(ws.WriteJSON(notice.Envelope{Text: e.Error()}))
 		}
 		subtotal += res

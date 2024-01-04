@@ -147,8 +147,8 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		mu.Unlock()
 		m := map[string]struct{}{}
 
-		cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
-			evs, err := relay.QuerySync(ctx, filter.Filter{Kinds: []int{event.KindContactList}, Authors: []string{pub}, Limit: 1})
+		cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
+			evs, err := rl.QuerySync(ctx, filter.Filter{Kinds: []int{event.KindContactList}, Authors: []string{pub}, Limit: 1})
 			if err != nil {
 				return true
 			}
@@ -191,8 +191,8 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 				}
 
 				// get follower's descriptions
-				cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
-					evs, err := relay.QuerySync(ctx, filter.Filter{
+				cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
+					evs, err := rl.QuerySync(ctx, filter.Filter{
 						Kinds:   []int{event.KindProfileMetadata},
 						Authors: follows[i:end], // Use the updated end index
 					})
@@ -236,14 +236,14 @@ func (cfg *Config) FindRelay(ctx context.Context, r RelayPerms) *relays.Relay {
 		if cfg.verbose {
 			fmt.Printf("trying relay: %s\n", k)
 		}
-		relay, err := relays.RelayConnect(ctx, k)
+		rl, err := relays.RelayConnect(ctx, k)
 		if err != nil {
 			if cfg.verbose {
 				fmt.Fprintln(os.Stderr, err.Error())
 			}
 			continue
 		}
-		return relay
+		return rl
 	}
 	return nil
 }
@@ -383,18 +383,18 @@ func (cfg *Config) PrintEvents(evs []*event.T, followsMap map[string]Profile, j,
 }
 
 // Events is
-func (cfg *Config) Events(filter filter.Filter) []*event.T {
+func (cfg *Config) Events(f filter.Filter) []*event.T {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
-	cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
+	cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
 		mu.Lock()
 		if found {
 			mu.Unlock()
 			return false
 		}
 		mu.Unlock()
-		evs, err := relay.QuerySync(ctx, filter)
+		evs, err := rl.QuerySync(ctx, f)
 		if err != nil {
 			return true
 		}
@@ -406,7 +406,7 @@ func (cfg *Config) Events(filter filter.Filter) []*event.T {
 					}
 				}
 				m.LoadOrStore(ev.ID, ev)
-				if len(filter.IDs) == 1 {
+				if len(f.IDs) == 1 {
 					mu.Lock()
 					found = true
 					ctx.Done()
@@ -677,8 +677,8 @@ func main() {
 			relays := cCtx.String("relays")
 			if strings.TrimSpace(relays) != "" {
 				cfg.Relays = make(map[string]RelayPerms)
-				for _, relay := range strings.Split(relays, ",") {
-					cfg.Relays[relay] = RelayPerms{
+				for _, rl := range strings.Split(relays, ",") {
+					cfg.Relays[rl] = RelayPerms{
 						Read:  true,
 						Write: true,
 					}
