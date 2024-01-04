@@ -11,20 +11,20 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-var _ envelopes.Envelope = (*AuthEnvelope)(nil)
+var _ envelopes.Envelope = (*Envelope)(nil)
 
-type AuthEnvelope struct {
+type Envelope struct {
 	Challenge *string
 	Event     event.T
 }
 
-func (_ AuthEnvelope) Label() string { return "AUTH" }
-func (a AuthEnvelope) String() string {
+func (_ Envelope) Label() string { return "AUTH" }
+func (a Envelope) String() string {
 	v, _ := json.Marshal(a)
 	return string(v)
 }
 
-func (v *AuthEnvelope) UnmarshalJSON(data []byte) error {
+func (v *Envelope) UnmarshalJSON(data []byte) error {
 	r := gjson.ParseBytes(data)
 	arr := r.Array()
 	if len(arr) < 2 {
@@ -38,7 +38,7 @@ func (v *AuthEnvelope) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (v AuthEnvelope) MarshalJSON() ([]byte, error) {
+func (v Envelope) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	w.RawString(`["AUTH",`)
 	if v.Challenge != nil {

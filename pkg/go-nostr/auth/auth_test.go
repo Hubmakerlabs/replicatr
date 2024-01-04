@@ -12,7 +12,7 @@ func TestAuthEnvelopeEncodingAndDecoding(t *testing.T) {
 	}
 
 	for _, raw := range authEnvelopes {
-		var env AuthEnvelope
+		var env Envelope
 		if err := json.Unmarshal([]byte(raw), &env); err != nil {
 			t.Errorf("failed to parse auth envelope json: %v", err)
 		}
