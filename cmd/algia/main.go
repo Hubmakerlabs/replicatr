@@ -31,8 +31,8 @@ const version = "0.0.54"
 
 var revision = "HEAD"
 
-// Relay is
-type Relay struct {
+// RelayPerms is
+type RelayPerms struct {
 	Read   bool `json:"read"`
 	Write  bool `json:"write"`
 	Search bool `json:"search"`
@@ -40,8 +40,8 @@ type Relay struct {
 
 // Config is
 type Config struct {
-	Relays     map[string]Relay   `json:"relays"`
-	Follows    map[string]Profile `json:"follows"`
+	Relays     map[string]RelayPerms `json:"relays"`
+	Follows    map[string]Profile    `json:"follows"`
 	PrivateKey string             `json:"privatekey"`
 	Updated    time.Time          `json:"updated"`
 	Emojis     map[string]string  `json:"emojis"`
@@ -118,8 +118,8 @@ func loadConfig(profile string) (*Config, error) {
 		return nil, err
 	}
 	if len(cfg.Relays) == 0 {
-		cfg.Relays = map[string]Relay{}
-		cfg.Relays["wss://relay.nostr.band"] = Relay{
+		cfg.Relays = map[string]RelayPerms{}
+		cfg.Relays["wss://relay.nostr.band"] = RelayPerms{
 			Read:   true,
 			Write:  true,
 			Search: true,
@@ -147,13 +147,13 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 		mu.Unlock()
 		m := map[string]struct{}{}
 
-		cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
+		cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
 			evs, err := relay.QuerySync(ctx, filter.Filter{Kinds: []int{event.KindContactList}, Authors: []string{pub}, Limit: 1})
 			if err != nil {
 				return true
 			}
 			for _, ev := range evs {
-				var rm map[string]Relay
+				var rm map[string]RelayPerms
 				if cfg.tempRelay == false {
 					if err := json.Unmarshal([]byte(ev.Content), &rm); err == nil {
 						for k, v1 := range cfg.Relays {
@@ -191,7 +191,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 				}
 
 				// get follower's descriptions
-				cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
+				cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
 					evs, err := relay.QuerySync(ctx, filter.Filter{
 						Kinds:   []int{event.KindProfileMetadata},
 						Authors: follows[i:end], // Use the updated end index
@@ -222,7 +222,7 @@ func (cfg *Config) GetFollows(profile string) (map[string]Profile, error) {
 }
 
 // FindRelay is
-func (cfg *Config) FindRelay(ctx context.Context, r Relay) *relays.Relay {
+func (cfg *Config) FindRelay(ctx context.Context, r RelayPerms) *relays.Relay {
 	for k, v := range cfg.Relays {
 		if r.Write && !v.Write {
 			continue
@@ -249,7 +249,7 @@ func (cfg *Config) FindRelay(ctx context.Context, r Relay) *relays.Relay {
 }
 
 // Do is
-func (cfg *Config) Do(r Relay, f func(context.Context, *relays.Relay) bool) {
+func (cfg *Config) Do(r RelayPerms, f func(context.Context, *relays.Relay) bool) {
 	var wg sync.WaitGroup
 	ctx := context.Background()
 	for k, v := range cfg.Relays {
@@ -263,19 +263,19 @@ func (cfg *Config) Do(r Relay, f func(context.Context, *relays.Relay) bool) {
 			continue
 		}
 		wg.Add(1)
-		go func(wg *sync.WaitGroup, k string, v Relay) {
+		go func(wg *sync.WaitGroup, k string, v RelayPerms) {
 			defer wg.Done()
-			relay, err := relays.RelayConnect(ctx, k)
+			rl, err := relays.RelayConnect(ctx, k)
 			if err != nil {
 				if cfg.verbose {
 					fmt.Fprintln(os.Stderr, err)
 				}
 				return
 			}
-			if !f(ctx, relay) {
+			if !f(ctx, rl) {
 				ctx.Done()
 			}
-			relay.Close()
+			rl.Close()
 		}(&wg, k, v)
 	}
 	wg.Wait()
@@ -387,7 +387,7 @@ func (cfg *Config) Events(filter filter.Filter) []*event.T {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
-	cfg.Do(Relay{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
+	cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, relay *relays.Relay) bool {
 		mu.Lock()
 		if found {
 			mu.Unlock()
@@ -676,9 +676,9 @@ func main() {
 			cfg.verbose = cCtx.Bool("V")
 			relays := cCtx.String("relays")
 			if strings.TrimSpace(relays) != "" {
-				cfg.Relays = make(map[string]Relay)
+				cfg.Relays = make(map[string]RelayPerms)
 				for _, relay := range strings.Split(relays, ",") {
-					cfg.Relays[relay] = Relay{
+					cfg.Relays[relay] = RelayPerms{
 						Read:  true,
 						Write: true,
 					}

@@ -262,7 +262,7 @@ func (r *Relay) Connect(ctx context.Context) error {
 				if subscription, ok := r.Subscriptions.Load(string(*env)); ok {
 					subscription.dispatchEose()
 				}
-			case *closed.ClosedEnvelope:
+			case *closed.Envelope:
 				if subscription, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok {
 					subscription.dispatchClosed(env.Reason)
 				}

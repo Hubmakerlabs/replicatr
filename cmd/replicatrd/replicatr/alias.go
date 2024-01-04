@@ -33,7 +33,7 @@ type (
 	OKEnvelope      = OK.OKEnvelope
 	EventID         = eventid.EventID
 	CountEnvelope   = count.CountEnvelope
-	ClosedEnvelope  = closed.ClosedEnvelope
+	ClosedEnvelope  = closed.Envelope
 	ReqEnvelope     = req.ReqEnvelope
 	EOSEEnvelope    = eose.EOSEEnvelope
 	CloseEnvelope   = close2.Envelope
