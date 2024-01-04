@@ -63,38 +63,38 @@ type PayResponse struct {
 }
 
 func pay(cfg *Config, invoice string) (e error) {
-	uri, err := url.Parse(cfg.NwcURI)
-	if err != nil {
-		return err
+	uri, e := url.Parse(cfg.NwcURI)
+	if e != nil {
+		return e
 	}
 	wallet := uri.Host
 	host := uri.Query().Get("relay")
 	secret := uri.Query().Get("secret")
-	pub, err := keys.GetPublicKey(secret)
-	if err != nil {
-		return err
+	pub, e := keys.GetPublicKey(secret)
+	if e != nil {
+		return e
 	}
 
-	rl, err := relays.RelayConnect(context.Background(), host)
-	if err != nil {
-		return err
+	rl, e := relays.RelayConnect(context.Background(), host)
+	if e != nil {
+		return e
 	}
 	defer rl.Close()
 
-	ss, err := nip04.ComputeSharedSecret(wallet, secret)
-	if err != nil {
-		return err
+	ss, e := nip04.ComputeSharedSecret(wallet, secret)
+	if e != nil {
+		return e
 	}
 	var req PayRequest
 	req.Method = "pay_invoice"
 	req.Params.Invoice = invoice
-	b, err := json.Marshal(req)
-	if err != nil {
-		return err
+	b, e := json.Marshal(req)
+	if e != nil {
+		return e
 	}
-	content, err := nip04.Encrypt(string(b), ss)
-	if err != nil {
-		return err
+	content, e := nip04.Encrypt(string(b), ss)
+	if e != nil {
+		return e
 	}
 
 	ev := event.T{
@@ -104,9 +104,9 @@ func pay(cfg *Config, invoice string) (e error) {
 		Tags:      tags.Tags{tags.Tag{"p", wallet}},
 		Content:   content,
 	}
-	err = ev.Sign(secret)
-	if err != nil {
-		return err
+	e = ev.Sign(secret)
+	if e != nil {
+		return e
 	}
 
 	filters := []filter.T{{
@@ -117,25 +117,25 @@ func pay(cfg *Config, invoice string) (e error) {
 		Kinds: []int{event.KindNWCWalletInfo, event.KindNWCWalletResponse, event.KindNWCWalletRequest},
 		Limit: 1,
 	}}
-	sub, err := rl.Subscribe(context.Background(), filters)
-	if err != nil {
-		return err
+	sub, e := rl.Subscribe(context.Background(), filters)
+	if e != nil {
+		return e
 	}
 
-	err = rl.Publish(context.Background(), ev)
-	if err != nil {
-		return err
+	e = rl.Publish(context.Background(), ev)
+	if e != nil {
+		return e
 	}
 
 	er := <-sub.Events
-	content, err = nip04.Decrypt(er.Content, ss)
-	if err != nil {
-		return err
+	content, e = nip04.Decrypt(er.Content, ss)
+	if e != nil {
+		return e
 	}
 	var resp PayResponse
-	err = json.Unmarshal([]byte(content), &resp)
-	if err != nil {
-		return err
+	e = json.Unmarshal([]byte(content), &resp)
+	if e != nil {
+		return e
 	}
 	if resp.Err != nil {
 		return fmt.Errorf(resp.Err.Message)
@@ -165,29 +165,29 @@ func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
 	}
 
 	var profile Profile
-	err := json.Unmarshal([]byte(evs[0].Content), &profile)
-	if err != nil {
-		return nil, err
+	e := json.Unmarshal([]byte(evs[0].Content), &profile)
+	if e != nil {
+		return nil, e
 	}
 
 	tok := strings.SplitN(profile.Lud16, "@", 2)
-	if err != nil {
-		return nil, err
+	if e != nil {
+		return nil, e
 	}
 	if len(tok) != 2 {
 		return nil, errors.New("receipt address is not valid")
 	}
 
-	resp, err := http.Get("https://" + tok[1] + "/.well-known/lnurlp/" + tok[0])
-	if err != nil {
-		return nil, err
+	resp, e := http.Get("https://" + tok[1] + "/.well-known/lnurlp/" + tok[0])
+	if e != nil {
+		return nil, e
 	}
 	defer resp.Body.Close()
 
 	var lp Lnurlp
-	err = json.NewDecoder(resp.Body).Decode(&lp)
-	if err != nil {
-		return nil, err
+	e = json.NewDecoder(resp.Body).Decode(&lp)
+	if e != nil {
+		return nil, e
 	}
 	return &lp, nil
 }
@@ -206,23 +206,23 @@ func doZap(cCtx *cli.Context) (e error) {
 	cfg := cCtx.App.Metadata["config"].(*Config)
 
 	var sk string
-	if _, s, err := nip19.Decode(cfg.PrivateKey); err == nil {
+	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
 		sk = s.(string)
 	} else {
-		return err
+		return e
 	}
 
 	receipt := ""
 	zr := event.T{}
 	zr.Tags = tags.Tags{}
 
-	if pub, err := keys.GetPublicKey(sk); err == nil {
-		if _, err := nip19.EncodePublicKey(pub); err != nil {
-			return err
+	if pub, e := keys.GetPublicKey(sk); e == nil {
+		if _, e := nip19.EncodePublicKey(pub); e != nil {
+			return e
 		}
 		zr.PubKey = pub
 	} else {
-		return err
+		return e
 	}
 
 	zr.Tags = zr.Tags.AppendUnique(tags.Tag{"amount", fmt.Sprint(amount * 1000)})
@@ -233,7 +233,7 @@ func doZap(cCtx *cli.Context) (e error) {
 		}
 	}
 	zr.Tags = zr.Tags.AppendUnique(relays)
-	if prefix, s, err := nip19.Decode(cCtx.Args().First()); err == nil {
+	if prefix, s, e := nip19.Decode(cCtx.Args().First()); e == nil {
 		switch prefix {
 		case "nevent":
 			receipt = s.(pointers.EventPointer).Author
@@ -257,36 +257,36 @@ func doZap(cCtx *cli.Context) (e error) {
 	zr.Kind = event.KindZapRequest // 9734
 	zr.CreatedAt = timestamp.Now()
 	zr.Content = comment
-	if err := zr.Sign(sk); err != nil {
-		return err
+	if e := zr.Sign(sk); e != nil {
+		return e
 	}
-	b, err := zr.MarshalJSON()
-	if err != nil {
-		return err
+	b, e := zr.MarshalJSON()
+	if e != nil {
+		return e
 	}
 
-	zi, err := cfg.ZapInfo(receipt)
-	if err != nil {
-		return err
+	zi, e := cfg.ZapInfo(receipt)
+	if e != nil {
+		return e
 	}
-	u, err := url.Parse(zi.Callback)
-	if err != nil {
-		return err
+	u, e := url.Parse(zi.Callback)
+	if e != nil {
+		return e
 	}
 	param := url.Values{}
 	param.Set("amount", fmt.Sprint(amount*1000))
 	param.Set("nostr", string(b))
 	u.RawQuery = param.Encode()
-	resp, err := http.Get(u.String())
-	if err != nil {
-		return err
+	resp, e := http.Get(u.String())
+	if e != nil {
+		return e
 	}
 	defer resp.Body.Close()
 
 	var iv Invoice
-	err = json.NewDecoder(resp.Body).Decode(&iv)
-	if err != nil {
-		return err
+	e = json.NewDecoder(resp.Body).Decode(&iv)
+	if e != nil {
+		return e
 	}
 
 	if cfg.NwcURI == "" {

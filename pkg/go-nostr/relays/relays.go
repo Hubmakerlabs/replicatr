@@ -5,9 +5,9 @@ import (
 )
 
 func MustRelayConnect(url string) *Relay {
-	rl, err := RelayConnect(context.Background(), url)
-	if err != nil {
-		panic(err.Error())
+	rl, e := RelayConnect(context.Background(), url)
+	if e != nil {
+		panic(e.Error())
 	}
 	return rl
 }

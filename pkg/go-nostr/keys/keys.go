@@ -17,7 +17,7 @@ func GeneratePrivateKey() string {
 	one := new(big.Int).SetInt64(1)
 
 	b := make([]byte, params.BitSize/8+8)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
+	if _, e := io.ReadFull(rand.Reader, b); e != nil {
 		return ""
 	}
 
@@ -30,9 +30,9 @@ func GeneratePrivateKey() string {
 }
 
 func GetPublicKey(sk string) (string, error) {
-	b, err := hex.DecodeString(sk)
-	if err != nil {
-		return "", err
+	b, e := hex.DecodeString(sk)
+	if e != nil {
+		return "", e
 	}
 
 	_, pk := btcec.PrivKeyFromBytes(b)

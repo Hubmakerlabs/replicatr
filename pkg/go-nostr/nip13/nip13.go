@@ -32,7 +32,7 @@ func Difficulty(eventID string) int {
 			continue
 		}
 		var b [1]byte
-		if _, err := hex.Decode(b[:], []byte{eventID[i], eventID[i+1]}); err != nil {
+		if _, e := hex.Decode(b[:], []byte{eventID[i], eventID[i+1]}); e != nil {
 			return -1
 		}
 		zeros += bits.LeadingZeros8(b[0])

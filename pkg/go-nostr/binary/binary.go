@@ -8,10 +8,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
 
-func UnmarshalBinary(data []byte, evt *Event) (err error) {
+func UnmarshalBinary(data []byte, evt *Event) (e error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("failed to decode leaner: %v", r)
+			e = fmt.Errorf("failed to decode leaner: %v", r)
 		}
 	}()
 
@@ -45,7 +45,7 @@ func UnmarshalBinary(data []byte, evt *Event) (err error) {
 		evt.Tags[t] = tag
 	}
 
-	return err
+	return e
 }
 
 func MarshalBinary(evt *Event) []byte {

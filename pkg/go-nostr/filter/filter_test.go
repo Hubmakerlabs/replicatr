@@ -12,8 +12,8 @@ import (
 func TestFilterUnmarshal(t *testing.T) {
 	raw := `{"ids": ["abc"],"#e":["zzz"],"#something":["nothing","bab"],"since":1644254609,"search":"test"}`
 	var f T
-	if err := json.Unmarshal([]byte(raw), &f); err != nil {
-		t.Errorf("failed to parse filter json: %v", err)
+	if e := json.Unmarshal([]byte(raw), &f); e != nil {
+		t.Errorf("failed to parse filter json: %v", e)
 	}
 
 	if f.Since == nil || f.Since.Time().UTC().Format("2006-01-02") != "2022-02-07" ||
@@ -26,13 +26,13 @@ func TestFilterUnmarshal(t *testing.T) {
 
 func TestFilterMarshal(t *testing.T) {
 	until := timestamp.Timestamp(12345678)
-	filterj, err := json.Marshal(T{
+	filterj, e := json.Marshal(T{
 		Kinds: []int{event.KindTextNote, event.KindRecommendServer, event.KindEncryptedDirectMessage},
 		Tags:  TagMap{"fruit": {"banana", "mango"}},
 		Until: &until,
 	})
-	if err != nil {
-		t.Errorf("failed to marshal filter json: %v", err)
+	if e != nil {
+		t.Errorf("failed to marshal filter json: %v", e)
 	}
 
 	expected := `{"kinds":[1,2,4],"until":12345678,"#fruit":["banana","mango"]}`

@@ -31,8 +31,8 @@ import (
 // errors in the source code can be detected. It will only (and must only) be
 // called with hard-coded values.
 func hexToFieldVal(s string) *FieldVal {
-	b, err := hex.DecodeString(s)
-	if err != nil {
+	b, e := hex.DecodeString(s)
+	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var f FieldVal
@@ -55,8 +55,8 @@ func hexToModNScalar(s string) *ModNScalar {
 	if len(s)%2 != 0 {
 		s = "0" + s
 	}
-	b, err := hex.DecodeString(s)
-	if err != nil {
+	b, e := hex.DecodeString(s)
+	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var scalar ModNScalar

@@ -440,11 +440,11 @@ func AggregateKeys(keys []*btcec.PublicKey, sort bool,
 	// each one, until we have our final tweaked key, and the related
 	// accumulators.
 	for i := 1; i <= len(opts.tweaks); i++ {
-		finalKeyJ, parityAcc, tweakAcc, err = tweakKey(
+		finalKeyJ, parityAcc, tweakAcc, e = tweakKey(
 			finalKeyJ, parityAcc, opts.tweaks[i-1].Tweak, tweakAcc,
 			opts.tweaks[i-1].IsXOnly,
 		)
-		if err != nil {
+		if e != nil {
 			return nil, nil, nil, err
 		}
 	}

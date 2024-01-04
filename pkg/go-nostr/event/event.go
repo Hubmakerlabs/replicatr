@@ -122,24 +122,24 @@ func (evt *T) Serialize() []byte {
 // returns an error if the signature itself is invalid.
 func (evt T) CheckSignature() (bool, error) {
 	// read and check pubkey
-	pk, err := hex.DecodeString(evt.PubKey)
-	if err != nil {
-		return false, fmt.Errorf("event pubkey '%s' is invalid hex: %w", evt.PubKey, err)
+	pk, e := hex.DecodeString(evt.PubKey)
+	if e != nil {
+		return false, fmt.Errorf("event pubkey '%s' is invalid hex: %w", evt.PubKey, e)
 	}
 
-	pubkey, err := schnorr.ParsePubKey(pk)
-	if err != nil {
-		return false, fmt.Errorf("event has invalid pubkey '%s': %w", evt.PubKey, err)
+	pubkey, e := schnorr.ParsePubKey(pk)
+	if e != nil {
+		return false, fmt.Errorf("event has invalid pubkey '%s': %w", evt.PubKey, e)
 	}
 
 	// read signature
-	s, err := hex.DecodeString(evt.Sig)
-	if err != nil {
-		return false, fmt.Errorf("signature '%s' is invalid hex: %w", evt.Sig, err)
+	s, e := hex.DecodeString(evt.Sig)
+	if e != nil {
+		return false, fmt.Errorf("signature '%s' is invalid hex: %w", evt.Sig, e)
 	}
-	sig, err := schnorr.ParseSignature(s)
-	if err != nil {
-		return false, fmt.Errorf("failed to parse signature: %w", err)
+	sig, e := schnorr.ParseSignature(s)
+	if e != nil {
+		return false, fmt.Errorf("failed to parse signature: %w", e)
 	}
 
 	// check signature
@@ -149,9 +149,9 @@ func (evt T) CheckSignature() (bool, error) {
 
 // Sign signs an event with a given privateKey.
 func (evt *T) Sign(privateKey string, signOpts ...schnorr.SignOption) error {
-	s, err := hex.DecodeString(privateKey)
-	if err != nil {
-		return fmt.Errorf("Sign called with invalid private key '%s': %w", privateKey, err)
+	s, e := hex.DecodeString(privateKey)
+	if e != nil {
+		return fmt.Errorf("Sign called with invalid private key '%s': %w", privateKey, e)
 	}
 
 	if evt.Tags == nil {
@@ -163,9 +163,9 @@ func (evt *T) Sign(privateKey string, signOpts ...schnorr.SignOption) error {
 	evt.PubKey = hex.EncodeToString(pkBytes[1:])
 
 	h := sha256.Sum256(evt.Serialize())
-	sig, err := schnorr.Sign(sk, h[:], signOpts...)
-	if err != nil {
-		return err
+	sig, e := schnorr.Sign(sk, h[:], signOpts...)
+	if e != nil {
+		return e
 	}
 
 	evt.ID = hex.EncodeToString(h[:])

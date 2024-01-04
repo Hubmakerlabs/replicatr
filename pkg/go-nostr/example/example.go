@@ -23,24 +23,24 @@ func main() {
 
 	// connect to relay
 	url := "wss://nostr.zebedee.cloud"
-	rl, err := relays.RelayConnect(ctx, url)
-	if err != nil {
-		panic(err)
+	rl, e := relays.RelayConnect(ctx, url)
+	if e != nil {
+		panic(e)
 	}
 
 	reader := os.Stdin
 	var npub string
 	var b [64]byte
 	fmt.Fprintf(os.Stderr, "using %s\n----\nexample subscription for three most recent notes mentioning user\npaste npub key: ", url)
-	if n, err := reader.Read(b[:]); err == nil {
+	if n, e := reader.Read(b[:]); e == nil {
 		npub = strings.TrimSpace(fmt.Sprintf("%s", b[:n]))
 	} else {
-		panic(err)
+		panic(e)
 	}
 
 	// create filters
 	var filters filters2.T
-	if _, v, err := nip19.Decode(npub); err == nil {
+	if _, v, e := nip19.Decode(npub); e == nil {
 		t := make(map[string][]string)
 		// making a "p" tag for the above public key.
 		// this filters for messages tagged with the user, mainly replies.
@@ -71,7 +71,7 @@ func main() {
 	}
 
 	filename := "example_output.json"
-	if f, err := os.Create(filename); err == nil {
+	if f, e := os.Create(filename); e == nil {
 		fmt.Fprintf(os.Stderr, "returned events saved to %s\n", filename)
 		// encode the returned events in a file
 		enc := json.NewEncoder(f)
@@ -79,15 +79,15 @@ func main() {
 		enc.Encode(evs)
 		f.Close()
 	} else {
-		panic(err)
+		panic(e)
 	}
 
 	fmt.Fprintf(os.Stderr, "----\nexample publication of note.\npaste nsec key (leave empty to autogenerate): ")
 	var nsec string
-	if n, err := reader.Read(b[:]); err == nil {
+	if n, e := reader.Read(b[:]); e == nil {
 		nsec = strings.TrimSpace(fmt.Sprintf("%s", b[:n]))
 	} else {
-		panic(err)
+		panic(e)
 	}
 
 	var sk string
@@ -111,12 +111,12 @@ func main() {
 	var content string
 	fmt.Fprintln(os.Stderr, "enter content of note, ending with an empty newline (ctrl+d):")
 	for {
-		if n, err := reader.Read(b[:]); err == nil {
+		if n, e := reader.Read(b[:]); e == nil {
 			content = fmt.Sprintf("%s%s", content, fmt.Sprintf("%s", b[:n]))
-		} else if err == io.EOF {
+		} else if e == io.EOF {
 			break
 		} else {
-			panic(err)
+			panic(e)
 		}
 	}
 	ev.Content = strings.TrimSpace(content)

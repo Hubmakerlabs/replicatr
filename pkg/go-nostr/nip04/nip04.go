@@ -16,21 +16,21 @@ import (
 // ComputeSharedSecret returns a shared secret key used to encrypt messages.
 // The private and public keys should be hex encoded.
 // Uses the Diffie-Hellman key exchange (ECDH) (RFC 4753).
-func ComputeSharedSecret(pub string, sk string) (sharedSecret []byte, err error) {
-	privKeyBytes, err := hex.DecodeString(sk)
-	if err != nil {
-		return nil, fmt.Errorf("error decoding sender private key: %w", err)
+func ComputeSharedSecret(pub string, sk string) (sharedSecret []byte, e error) {
+	privKeyBytes, e := hex.DecodeString(sk)
+	if e != nil {
+		return nil, fmt.Errorf("error decoding sender private key: %w", e)
 	}
 	privKey, _ := btcec.PrivKeyFromBytes(privKeyBytes)
 
 	// adding 02 to signal that this is a compressed public key (33 bytes)
-	pubKeyBytes, err := hex.DecodeString("02" + pub)
-	if err != nil {
-		return nil, fmt.Errorf("error decoding hex string of receiver public key '%s': %w", "02"+pub, err)
+	pubKeyBytes, e := hex.DecodeString("02" + pub)
+	if e != nil {
+		return nil, fmt.Errorf("error decoding hex string of receiver public key '%s': %w", "02"+pub, e)
 	}
-	pubKey, err := btcec.ParsePubKey(pubKeyBytes)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing receiver public key '%s': %w", "02"+pub, err)
+	pubKey, e := btcec.ParsePubKey(pubKeyBytes)
+	if e != nil {
+		return nil, fmt.Errorf("error parsing receiver public key '%s': %w", "02"+pub, e)
 	}
 
 	return btcec.GenerateSharedSecret(privKey, pubKey), nil
@@ -43,14 +43,14 @@ func Encrypt(message string, key []byte) (string, error) {
 	// block size is 16 bytes
 	iv := make([]byte, 16)
 	// can probably use a less expensive lib since IV has to only be unique; not perfectly random; math/rand?
-	if _, err := rand.Read(iv); err != nil {
-		return "", fmt.Errorf("error creating initization vector: %w", err)
+	if _, e := rand.Read(iv); e != nil {
+		return "", fmt.Errorf("error creating initization vector: %w", e)
 	}
 
 	// automatically picks aes-256 based on key length (32 bytes)
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", fmt.Errorf("error creating block cipher: %w", err)
+	block, e := aes.NewCipher(key)
+	if e != nil {
+		return "", fmt.Errorf("error creating block cipher: %w", e)
 	}
 	mode := cipher.NewCBCEncrypter(block, iv)
 
@@ -81,19 +81,19 @@ func Decrypt(content string, key []byte) (string, error) {
 		return "", fmt.Errorf("error parsing encrypted message: no initialization vector")
 	}
 
-	ciphertext, err := base64.StdEncoding.DecodeString(parts[0])
-	if err != nil {
-		return "", fmt.Errorf("error decoding ciphertext from base64: %w", err)
+	ciphertext, e := base64.StdEncoding.DecodeString(parts[0])
+	if e != nil {
+		return "", fmt.Errorf("error decoding ciphertext from base64: %w", e)
 	}
 
-	iv, err := base64.StdEncoding.DecodeString(parts[1])
-	if err != nil {
-		return "", fmt.Errorf("error decoding iv from base64: %w", err)
+	iv, e := base64.StdEncoding.DecodeString(parts[1])
+	if e != nil {
+		return "", fmt.Errorf("error decoding iv from base64: %w", e)
 	}
 
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", fmt.Errorf("error creating block cipher: %w", err)
+	block, e := aes.NewCipher(key)
+	if e != nil {
+		return "", fmt.Errorf("error creating block cipher: %w", e)
 	}
 	mode := cipher.NewCBCDecrypter(block, iv)
 	plaintext := make([]byte, len(ciphertext))

@@ -15,9 +15,9 @@ import (
 
 // TestGenerateSecretKey ensures the key generation works as expected.
 func TestGenerateSecretKey(t *testing.T) {
-	sec, err := GenerateSecretKey()
-	if err != nil {
-		t.Errorf("failed to generate secret key: %s", err)
+	sec, e := GenerateSecretKey()
+	if e != nil {
+		t.Errorf("failed to generate secret key: %s", e)
 		return
 	}
 	pub := sec.PubKey()
@@ -29,9 +29,9 @@ func TestGenerateSecretKey(t *testing.T) {
 // TestGenerateSecretKeyFromRand ensures generating a secret key from a random
 // entropy source works as expected.
 func TestGenerateSecretKeyFromRand(t *testing.T) {
-	sec, err := GenerateSecretKeyFromRand(cryptorand.Reader)
-	if err != nil {
-		t.Errorf("failed to generate secret key: %s", err)
+	sec, e := GenerateSecretKeyFromRand(cryptorand.Reader)
+	if e != nil {
+		t.Errorf("failed to generate secret key: %s", e)
 		return
 	}
 	pub := sec.PubKey()
@@ -79,9 +79,9 @@ func TestGenerateSecretKeyCorners(t *testing.T) {
 	// Generate a secret key using the mock reader and ensure the resulting key
 	// is the expected one.  It should be the value "1" since the other values
 	// the sequence produces are invalid and thus should be rejected.
-	sec, err := GenerateSecretKeyFromRand(mockReader)
-	if err != nil {
-		t.Errorf("failed to generate secret key: %s", err)
+	sec, e := GenerateSecretKeyFromRand(mockReader)
+	if e != nil {
+		t.Errorf("failed to generate secret key: %s", e)
 		return
 	}
 	if !sec.Key.Equals(oneModN) {
@@ -101,7 +101,7 @@ func TestGenerateSecretKeyError(t *testing.T) {
 
 	// Generate a secret key using the mock reader and ensure the expected
 	// error is returned.
-	_, err := GenerateSecretKeyFromRand(mockReader)
+	_, e := GenerateSecretKeyFromRand(mockReader)
 	if !errors.Is(err, errDisabled) {
 		t.Fatalf("mismatched err -- got %v, want %v", err, errDisabled)
 		return

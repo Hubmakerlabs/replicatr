@@ -40,10 +40,10 @@ func QueryIdentifier(ctx context.Context, fullname string) (*pointers.ProfilePoi
 		return nil, fmt.Errorf("hostname doesn't have a dot")
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET",
+	req, e := http.NewRequestWithContext(ctx, "GET",
 		fmt.Sprintf("https://%s/.well-known/nostr.json?name=%s", domain, name), nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create a request: %w", err)
+	if e != nil {
+		return nil, fmt.Errorf("failed to create a request: %w", e)
 	}
 
 	client := &http.Client{
@@ -51,15 +51,15 @@ func QueryIdentifier(ctx context.Context, fullname string) (*pointers.ProfilePoi
 			return http.ErrUseLastResponse
 		},
 	}
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
+	res, e := client.Do(req)
+	if e != nil {
+		return nil, fmt.Errorf("request failed: %w", e)
 	}
 	defer res.Body.Close()
 
 	var result WellKnownResponse
-	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
-		return nil, fmt.Errorf("failed to decode json response: %w", err)
+	if e := json.NewDecoder(res.Body).Decode(&result); e != nil {
+		return nil, fmt.Errorf("failed to decode json response: %w", e)
 	}
 
 	pubkey, ok := result.Names[name]
@@ -68,7 +68,7 @@ func QueryIdentifier(ctx context.Context, fullname string) (*pointers.ProfilePoi
 	}
 
 	if len(pubkey) == 64 {
-		if _, err := hex.DecodeString(pubkey); err != nil {
+		if _, e := hex.DecodeString(pubkey); e != nil {
 			return &pointers.ProfilePointer{}, nil
 		}
 	}

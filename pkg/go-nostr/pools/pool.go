@@ -78,12 +78,12 @@ func (pool *SimplePool) EnsureRelay(url string) (*relays.Relay, error) {
 		// already connected, unlock and return
 		return rl, nil
 	} else {
-		var err error
+		var e error
 		// we use this ctx here so when the pool dies everything dies
 		ctx, cancel := context.WithTimeout(pool.Context, time.Second*15)
 		defer cancel()
-		if rl, err = relays.RelayConnect(ctx, nm); err != nil {
-			return nil, fmt.Errorf("failed to connect: %w", err)
+		if rl, e = relays.RelayConnect(ctx, nm); e != nil {
+			return nil, fmt.Errorf("failed to connect: %w", e)
 		}
 
 		pool.Relays.Store(nm, rl)
@@ -134,15 +134,15 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters filt
 
 				var sub *relays.Subscription
 
-				rl, err := pool.EnsureRelay(nm)
-				if err != nil {
+				rl, e := pool.EnsureRelay(nm)
+				if e != nil {
 					goto reconnect
 				}
 				hasAuthed = false
 
 			subscribe:
-				sub, err = rl.Subscribe(ctx, filters)
-				if err != nil {
+				sub, e = rl.Subscribe(ctx, filters)
+				if e != nil {
 					goto reconnect
 				}
 
@@ -189,7 +189,7 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters filt
 					case reason := <-sub.ClosedReason:
 						if strings.HasPrefix(reason, "auth-required:") && pool.authHandler != nil && !hasAuthed {
 							// rl is requesting auth. if we can we will perform auth and try again
-							if err := rl.Auth(ctx, pool.authHandler); err == nil {
+							if e := rl.Auth(ctx, pool.authHandler); e == nil {
 								hasAuthed = true // so we don't keep doing AUTH again and again
 								goto subscribe
 							}
@@ -243,17 +243,17 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 		go func(nm string) {
 			defer wg.Done()
 
-			rl, err := pool.EnsureRelay(nm)
-			if err != nil {
+			rl, e := pool.EnsureRelay(nm)
+			if e != nil {
 				return
 			}
 
 			hasAuthed := false
 
 		subscribe:
-			sub, err := rl.Subscribe(ctx, filters)
+			sub, e := rl.Subscribe(ctx, filters)
 			if sub == nil {
-				fmt.Printf("error subscribing to %s with %v: %s", rl, filters, err)
+				fmt.Printf("error subscribing to %s with %v: %s", rl, filters, e)
 				return
 			}
 
@@ -266,8 +266,8 @@ func (pool *SimplePool) subManyEose(ctx context.Context, urls []string, filters 
 				case reason := <-sub.ClosedReason:
 					if strings.HasPrefix(reason, "auth-required:") && pool.authHandler != nil && !hasAuthed {
 						// relay is requesting auth. if we can we will perform auth and try again
-						err := rl.Auth(ctx, pool.authHandler)
-						if err == nil {
+						e := rl.Auth(ctx, pool.authHandler)
+						if e == nil {
 							hasAuthed = true // so we don't keep doing AUTH again and again
 							goto subscribe
 						}

@@ -34,48 +34,48 @@ var D = []Source{
 
 func main() {
 	var jsons []string
-	err := filepath.Walk(".",
-		func(path string, info fs.FileInfo, err error) (e error) {
+	e := filepath.Walk(".",
+		func(path string, info fs.FileInfo, e error) (e error) {
 			if strings.HasSuffix(path, "json") {
 				jsons = append(jsons, path)
 			}
 			return
 		})
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, "error:", err)
+	if e != nil {
+		_, _ = fmt.Fprintln(os.Stderr, "error:", e)
 		os.Exit(1)
 	}
 	var quotes []Source
 	var data []byte
 	for i := range jsons {
-		data, err = os.ReadFile(jsons[i])
-		if err != nil {
-			_, _ = fmt.Fprintln(os.Stderr, "error:", err)
+		data, e = os.ReadFile(jsons[i])
+		if e != nil {
+			_, _ = fmt.Fprintln(os.Stderr, "error:", e)
 			continue
 		}
 		var src Source
-		err = json.Unmarshal(data, &src)
-		if err != nil {
-			_, _ = fmt.Fprintln(os.Stderr, "error:", err)
+		e = json.Unmarshal(data, &src)
+		if e != nil {
+			_, _ = fmt.Fprintln(os.Stderr, "error:", e)
 			continue
 		}
 		quotes = append(quotes, src)
 	}
 	outFile := "../quotes.go"
-	tmpl, err := template.New(outFile).Parse(outputTemplate)
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, "error:", err)
+	tmpl, e := template.New(outFile).Parse(outputTemplate)
+	if e != nil {
+		_, _ = fmt.Fprintln(os.Stderr, "error:", e)
 		os.Exit(1)
 	}
 	var fh *os.File
-	fh, err = os.Create("../quotes_for_test.go")
-	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, "error:", err)
+	fh, e = os.Create("../quotes_for_test.go")
+	if e != nil {
+		_, _ = fmt.Fprintln(os.Stderr, "error:", e)
 		os.Exit(1)
 	}
-	err = tmpl.Execute(fh, quotes)
-	if err != nil {
-		_, _ = fmt.Fprintln(fh, "error:", err)
+	e = tmpl.Execute(fh, quotes)
+	if e != nil {
+		_, _ = fmt.Fprintln(fh, "error:", e)
 		os.Exit(1)
 	}
 }

@@ -171,9 +171,9 @@ func (sub *Subscription) Fire() error {
 	fmt.Printf("{%s} sending %v", sub.Relay.URL, string(reqb))
 
 	sub.live.Store(true)
-	if err := <-sub.Relay.Write(reqb); err != nil {
+	if e := <-sub.Relay.Write(reqb); e != nil {
 		sub.cancel()
-		return fmt.Errorf("failed to write: %w", err)
+		return fmt.Errorf("failed to write: %w", e)
 	}
 
 	return nil

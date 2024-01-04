@@ -25,7 +25,7 @@ func TestCheck(t *testing.T) {
 		{42, ErrDifficultyTooLow},
 	}
 	for i, tc := range tests {
-		if err := Check(eventID, tc.minDifficulty); err != tc.wantErr {
+		if e := Check(eventID, tc.minDifficulty); e != tc.wantErr {
 			t.Errorf("%d: Check(%q, %d) returned %v; want err: %v", i, eventID, tc.minDifficulty, err, tc.wantErr)
 		}
 	}
@@ -37,9 +37,9 @@ func TestGenerateShort(t *testing.T) {
 		Content: "It's just me mining my own business",
 		PubKey:  "a48380f4cfcc1ad5378294fcac36439770f9c878dd880ffa94bb74ea54a6f243",
 	}
-	pow, err := Generate(event, 0, 3*time.Second)
-	if err != nil {
-		t.Fatal(err)
+	pow, e := Generate(event, 0, 3*time.Second)
+	if e != nil {
+		t.Fatal(e)
 	}
 	testNonceTag(t, pow, 0)
 }
@@ -57,12 +57,12 @@ func TestGenerateLong(t *testing.T) {
 				Content: "It's just me mining my own business",
 				PubKey:  "a48380f4cfcc1ad5378294fcac36439770f9c878dd880ffa94bb74ea54a6f243",
 			}
-			pow, err := Generate(event, difficulty, time.Minute)
-			if err != nil {
-				t.Fatal(err)
+			pow, e := Generate(event, difficulty, time.Minute)
+			if e != nil {
+				t.Fatal(e)
 			}
-			if err := Check(pow.GetID(), difficulty); err != nil {
-				t.Error(err)
+			if e := Check(pow.GetID(), difficulty); e != nil {
+				t.Error(e)
 			}
 			testNonceTag(t, pow, difficulty)
 		})
@@ -79,10 +79,10 @@ func testNonceTag(t *testing.T, event *event.T, commitment int) {
 	if tag[0] != "nonce" {
 		t.Errorf("tag[0] = %q; want 'nonce'", tag[0])
 	}
-	if n, err := strconv.ParseInt(tag[1], 10, 64); err != nil || n < 1 {
+	if n, e := strconv.ParseInt(tag[1], 10, 64); e != nil || n < 1 {
 		t.Errorf("tag[1] = %q; want an int greater than 0", tag[1])
 	}
-	if n, err := strconv.Atoi(tag[2]); err != nil || n != commitment {
+	if n, e := strconv.Atoi(tag[2]); e != nil || n != commitment {
 		t.Errorf("tag[2] = %q; want %d", tag[2], commitment)
 	}
 }
@@ -95,15 +95,15 @@ func TestGenerateTimeout(t *testing.T) {
 	}
 	done := make(chan error)
 	go func() {
-		_, err := Generate(event, 256, time.Millisecond)
+		_, e := Generate(event, 256, time.Millisecond)
 		done <- err
 	}()
 	select {
 	case <-time.After(time.Second):
 		t.Error("Generate took too long to timeout")
-	case err := <-done:
+	case e := <-done:
 		if !errors.Is(err, ErrGenerateTimeout) {
-			t.Errorf("Generate returned %v; want ErrGenerateTimeout", err)
+			t.Errorf("Generate returned %v; want ErrGenerateTimeout", e)
 		}
 	}
 }
@@ -121,8 +121,8 @@ func BenchmarkGenerateOneIteration(b *testing.B) {
 			Content: "It's just me mining my own business",
 			PubKey:  "a48380f4cfcc1ad5378294fcac36439770f9c878dd880ffa94bb74ea54a6f243",
 		}
-		if _, err := Generate(event, 0, time.Minute); err != nil {
-			b.Fatal(err)
+		if _, e := Generate(event, 0, time.Minute); e != nil {
+			b.Fatal(e)
 		}
 	}
 }
@@ -140,8 +140,8 @@ func BenchmarkGenerate(b *testing.B) {
 					Content: "It's just me mining my own business",
 					PubKey:  "a48380f4cfcc1ad5378294fcac36439770f9c878dd880ffa94bb74ea54a6f243",
 				}
-				if _, err := Generate(event, difficulty, time.Minute); err != nil {
-					b.Fatal(err)
+				if _, e := Generate(event, difficulty, time.Minute); e != nil {
+					b.Fatal(e)
 				}
 			}
 		})

@@ -4,6 +4,7 @@ package log
 import (
 	"fmt"
 	"io"
+	"os"
 	"runtime"
 	"strings"
 	"sync"
@@ -148,6 +149,12 @@ func New(writer io.Writer, appID string, _ int) (l *Log) {
 		getOnePrinter(writer, appID, Debug),
 		getOnePrinter(writer, appID, Trace),
 	}
+}
+
+func GetStd() (l *Log, fails Chk) {
+	l = New(os.Stderr, "", 0)
+	fails = l.D.Chk
+	return
 }
 
 func SetLogLevel(l Level) {

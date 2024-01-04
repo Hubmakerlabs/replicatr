@@ -50,13 +50,13 @@ var s256BytePoints = func() func() *bytePointTable {
 		// Decompress the pre-computed table used to accelerate scalar base
 		// multiplication.
 		decoder := base64.NewDecoder(base64.StdEncoding, strings.NewReader(bp))
-		r, err := zlib.NewReader(decoder)
-		if err != nil {
-			panic(err)
+		r, e := zlib.NewReader(decoder)
+		if e != nil {
+			panic(e)
 		}
-		serialized, err := io.ReadAll(r)
-		if err != nil {
-			panic(err)
+		serialized, e := io.ReadAll(r)
+		if e != nil {
+			panic(e)
 		}
 
 		// Deserialize the precomputed byte points and set the memory table to

@@ -20,8 +20,8 @@ import (
 // the source code can be detected. It will only (and must only) be called with
 // hard-coded values.
 func hexToBytes(s string) []byte {
-	b, err := hex.DecodeString(s)
-	if err != nil {
+	b, e := hex.DecodeString(s)
+	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	return b
@@ -32,8 +32,8 @@ func hexToBytes(s string) []byte {
 // constants so errors in the source code can be detected. It will only (and
 // must only) be called with hard-coded values.
 func hexToModNScalar(s string) *btcec.ModNScalar {
-	b, err := hex.DecodeString(s)
-	if err != nil {
+	b, e := hex.DecodeString(s)
+	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var scalar btcec.ModNScalar
@@ -48,8 +48,8 @@ func hexToModNScalar(s string) *btcec.ModNScalar {
 // errors in the source code can be detected. It will only (and must only) be
 // called with hard-coded values.
 func hexToFieldVal(s string) *btcec.FieldVal {
-	b, err := hex.DecodeString(s)
-	if err != nil {
+	b, e := hex.DecodeString(s)
+	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var f btcec.FieldVal
@@ -87,9 +87,9 @@ func BenchmarkSigVerify(b *testing.B) {
 
 	// Double sha256 of []byte{0x01, 0x02, 0x03, 0x04}
 	msgHash := sha256.Sum256([]byte("benchmark"))
-	sig, err := Sign(privKey, msgHash[:])
-	if err != nil {
-		b.Fatalf("unable to sign: %v", err)
+	sig, e := Sign(privKey, msgHash[:])
+	if e != nil {
+		b.Fatalf("unable to sign: %v", e)
 	}
 
 	if !sig.Verify(msgHash[:], pubKey) {
@@ -129,13 +129,13 @@ func BenchmarkSign(b *testing.B) {
 
 	var (
 		sig *Signature
-		err error
+		e error
 	)
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		sig, err = Sign(
+		sig, e = Sign(
 			privKey, msgHash, CustomNonce(auxBytes), FastSign(),
 		)
 	}
@@ -155,13 +155,13 @@ func BenchmarkSignRfc6979(b *testing.B) {
 
 	var (
 		sig *Signature
-		err error
+		e error
 	)
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		sig, err = Sign(privKey, msgHash, FastSign())
+		sig, e = Sign(privKey, msgHash, FastSign())
 	}
 
 	testSig = sig

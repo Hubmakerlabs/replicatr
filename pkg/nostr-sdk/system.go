@@ -78,7 +78,7 @@ func (sys System) fetchProfileMetadata(ctx context.Context, pubkey string) (pm P
 	if sys.Store != nil {
 		res, _ := sys.StoreRelay().QuerySync(ctx, &filter.T{Kinds: []int{0}, Authors: []string{pubkey}})
 		if len(res) != 0 {
-			if m, err := ParseMetadata(res[0]); err == nil {
+			if m, e := ParseMetadata(res[0]); e == nil {
 				m.PubKey = pubkey
 				m.Event = res[0]
 				sys.MetadataCache.SetWithTTL(pubkey, m, time.Hour*6)
@@ -101,9 +101,9 @@ func (sys System) fetchProfileMetadata(ctx context.Context, pubkey string) (pm P
 
 // FetchUserEvents fetches events from each users' outbox relays, grouping queries when possible.
 func (sys System) FetchUserEvents(ctx context.Context, filt filter.T) (map[string][]*event.T, error) {
-	filters, err := sys.ExpandQueriesByAuthorAndRelays(ctx, filt)
-	if err != nil {
-		return nil, fmt.Errorf("failed to expand queries: %w", err)
+	filters, e := sys.ExpandQueriesByAuthorAndRelays(ctx, filt)
+	if e != nil {
+		return nil, fmt.Errorf("failed to expand queries: %w", e)
 	}
 
 	results := make(map[string][]*event.T)
@@ -113,8 +113,8 @@ func (sys System) FetchUserEvents(ctx context.Context, filt filter.T) (map[strin
 		go func(rl *relays.Relay, f filter.T) {
 			defer wg.Done()
 			f.Limit = f.Limit * len(f.Authors) // hack
-			sub, err := rl.Subscribe(ctx, filters2.T{filt})
-			if err != nil {
+			sub, e := rl.Subscribe(ctx, filters2.T{filt})
+			if e != nil {
 				return
 			}
 			for {

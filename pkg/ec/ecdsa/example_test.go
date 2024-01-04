@@ -20,10 +20,10 @@ import (
 // is first parsed from raw bytes and serializing the generated signature.
 func ExampleSign() {
 	// Decode a hex-encoded secret key.
-	pkBytes, err := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2d4f87" +
+	pkBytes, e := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2d4f87" +
 		"20ee63e502ee2869afab7de234b80c")
-	if err != nil {
-		fmt.Println(err)
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
 	secKey := secp256k1.SecKeyFromBytes(pkBytes)
@@ -51,29 +51,29 @@ func ExampleSign() {
 // raw bytes.
 func ExampleSignature_Verify() {
 	// Decode hex-encoded serialized public key.
-	pubKeyBytes, err := hex.DecodeString("02a673638cb9587cb68ea08dbef685c" +
+	pubKeyBytes, e := hex.DecodeString("02a673638cb9587cb68ea08dbef685c" +
 		"6f2d2a751a8b3c6f2a7e9a4999e6e4bfaf5")
-	if err != nil {
-		fmt.Println(err)
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
-	pubKey, err := secp256k1.ParsePubKey(pubKeyBytes)
-	if err != nil {
-		fmt.Println(err)
+	pubKey, e := secp256k1.ParsePubKey(pubKeyBytes)
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
 
 	// Decode hex-encoded serialized signature.
-	sigBytes, err := hex.DecodeString("3045022100fcc0a8768cfbcefcf2cadd7cfb0" +
+	sigBytes, e := hex.DecodeString("3045022100fcc0a8768cfbcefcf2cadd7cfb0" +
 		"fb18ed08dd2e2ae84bef1a474a3d351b26f0302200fc1a350b45f46fa0010139130" +
 		"2818d748c2b22615511a3ffd5bb638bd777207")
-	if err != nil {
-		fmt.Println(err)
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
-	signature, err := ecdsa.ParseDERSignature(sigBytes)
-	if err != nil {
-		fmt.Println(err)
+	signature, e := ecdsa.ParseDERSignature(sigBytes)
+	if e != nil {
+		fmt.Println(e)
 		return
 	}
 

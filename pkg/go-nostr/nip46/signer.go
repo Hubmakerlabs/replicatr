@@ -32,12 +32,12 @@ type Session struct {
 func (s Session) ParseRequest(evt *event.T) (Request, error) {
 	var req Request
 
-	plain, err := nip04.Decrypt(evt.Content, s.SharedKey)
-	if err != nil {
-		return req, fmt.Errorf("failed to decrypt evt from %s: %w", evt.PubKey, err)
+	plain, e := nip04.Decrypt(evt.Content, s.SharedKey)
+	if e != nil {
+		return req, fmt.Errorf("failed to decrypt evt from %s: %w", evt.PubKey, e)
 	}
 
-	err = json.Unmarshal([]byte(plain), &req)
+	e = json.Unmarshal([]byte(plain), &req)
 	return req, err
 }
 
@@ -45,9 +45,9 @@ func (s Session) MakeResponse(
 	id string,
 	requester string,
 	result string,
-	err error,
+	e error,
 ) (resp Response, evt event.T, error error) {
-	if err != nil {
+	if e != nil {
 		resp = Response{
 			ID:    id,
 			Error: err.Error(),
@@ -60,9 +60,9 @@ func (s Session) MakeResponse(
 	}
 
 	jresp, _ := json.Marshal(resp)
-	ciphertext, err := nip04.Encrypt(string(jresp), s.SharedKey)
-	if err != nil {
-		return resp, evt, fmt.Errorf("failed to encrypt result: %w", err)
+	ciphertext, e := nip04.Encrypt(string(jresp), s.SharedKey)
+	if e != nil {
+		return resp, evt, fmt.Errorf("failed to encrypt result: %w", e)
 	}
 	evt.Content = ciphertext
 
@@ -101,9 +101,9 @@ func (p *Signer) GetSession(clientPubkey string) (Session, error) {
 		return p.sessions[idx], nil
 	}
 
-	shared, err := nip04.ComputeSharedSecret(clientPubkey, p.secretKey)
-	if err != nil {
-		return Session{}, fmt.Errorf("failed to compute shared secret: %w", err)
+	shared, e := nip04.ComputeSharedSecret(clientPubkey, p.secretKey)
+	if e != nil {
+		return Session{}, fmt.Errorf("failed to compute shared secret: %w", e)
 	}
 
 	session := Session{
@@ -121,20 +121,20 @@ func (p *Signer) GetSession(clientPubkey string) (Session, error) {
 	return session, nil
 }
 
-func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventResponse event.T, harmless bool, err error) {
+func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventResponse event.T, harmless bool, e error) {
 	if evt.Kind != event.KindNostrConnect {
 		return req, resp, eventResponse, false,
 			fmt.Errorf("evt kind is %d, but we expected %d", evt.Kind, event.KindNostrConnect)
 	}
 
-	session, err := p.GetSession(evt.PubKey)
-	if err != nil {
+	session, e := p.GetSession(evt.PubKey)
+	if e != nil {
 		return req, resp, eventResponse, false, err
 	}
 
-	req, err = session.ParseRequest(evt)
-	if err != nil {
-		return req, resp, eventResponse, false, fmt.Errorf("error parsing request: %w", err)
+	req, e = session.ParseRequest(evt)
+	if e != nil {
+		return req, resp, eventResponse, false, fmt.Errorf("error parsing request: %w", e)
 	}
 
 	var result string
@@ -145,9 +145,9 @@ func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventR
 		result = "ack"
 		harmless = true
 	case "get_public_key":
-		pubkey, err := keys.GetPublicKey(p.secretKey)
-		if err != nil {
-			resultErr = fmt.Errorf("failed to derive public key: %w", err)
+		pubkey, e := keys.GetPublicKey(p.secretKey)
+		if e != nil {
+			resultErr = fmt.Errorf("failed to derive public key: %w", e)
 			break
 		} else {
 			result = pubkey
@@ -159,14 +159,14 @@ func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventR
 			break
 		}
 		evt := event.T{}
-		err = easyjson.Unmarshal([]byte(req.Params[0]), &evt)
-		if err != nil {
-			resultErr = fmt.Errorf("failed to decode evt/2: %w", err)
+		e = easyjson.Unmarshal([]byte(req.Params[0]), &evt)
+		if e != nil {
+			resultErr = fmt.Errorf("failed to decode evt/2: %w", e)
 			break
 		}
-		err = evt.Sign(p.secretKey)
-		if err != nil {
-			resultErr = fmt.Errorf("failed to sign evt: %w", err)
+		e = evt.Sign(p.secretKey)
+		if e != nil {
+			resultErr = fmt.Errorf("failed to sign evt: %w", e)
 			break
 		}
 		jrevt, _ := easyjson.Marshal(evt)
@@ -186,14 +186,14 @@ func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventR
 			break
 		}
 		plaintext := req.Params[1]
-		sharedSecret, err := nip04.ComputeSharedSecret(thirdPartyPubkey, p.secretKey)
-		if err != nil {
-			resultErr = fmt.Errorf("failed to compute shared secret: %w", err)
+		sharedSecret, e := nip04.ComputeSharedSecret(thirdPartyPubkey, p.secretKey)
+		if e != nil {
+			resultErr = fmt.Errorf("failed to compute shared secret: %w", e)
 			break
 		}
-		ciphertext, err := nip04.Encrypt(plaintext, sharedSecret)
-		if err != nil {
-			resultErr = fmt.Errorf("failed to encrypt: %w", err)
+		ciphertext, e := nip04.Encrypt(plaintext, sharedSecret)
+		if e != nil {
+			resultErr = fmt.Errorf("failed to encrypt: %w", e)
 			break
 		}
 		result = ciphertext
@@ -208,14 +208,14 @@ func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventR
 			break
 		}
 		ciphertext := req.Params[1]
-		sharedSecret, err := nip04.ComputeSharedSecret(thirdPartyPubkey, p.secretKey)
-		if err != nil {
-			resultErr = fmt.Errorf("failed to compute shared secret: %w", err)
+		sharedSecret, e := nip04.ComputeSharedSecret(thirdPartyPubkey, p.secretKey)
+		if e != nil {
+			resultErr = fmt.Errorf("failed to compute shared secret: %w", e)
 			break
 		}
-		plaintext, err := nip04.Decrypt(ciphertext, sharedSecret)
-		if err != nil {
-			resultErr = fmt.Errorf("failed to encrypt: %w", err)
+		plaintext, e := nip04.Decrypt(ciphertext, sharedSecret)
+		if e != nil {
+			resultErr = fmt.Errorf("failed to encrypt: %w", e)
 			break
 		}
 		result = plaintext
@@ -224,13 +224,13 @@ func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventR
 			fmt.Errorf("unknown method '%s'", req.Method)
 	}
 
-	resp, eventResponse, err = session.MakeResponse(req.ID, evt.PubKey, result, resultErr)
-	if err != nil {
+	resp, eventResponse, e = session.MakeResponse(req.ID, evt.PubKey, result, resultErr)
+	if e != nil {
 		return req, resp, eventResponse, harmless, err
 	}
 
-	err = eventResponse.Sign(p.secretKey)
-	if err != nil {
+	e = eventResponse.Sign(p.secretKey)
+	if e != nil {
 		return req, resp, eventResponse, harmless, err
 	}
 

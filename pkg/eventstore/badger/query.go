@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"log"
 
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
@@ -30,13 +29,13 @@ type queryEvent struct {
 func (b BadgerBackend) QueryEvents(ctx context.Context, f *filter.T) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
-	queries, extraFilter, since, err := prepareQueries(f)
-	if err != nil {
-		return nil, err
+	queries, extraFilter, since, e := prepareQueries(f)
+	if e != nil {
+		return nil, e
 	}
 
 	go func() {
-		err := b.View(func(txn *badger.Txn) (e error) {
+		e := b.View(func(txn *badger.Txn) (e error) {
 			// iterate only through keys and in reverse order
 			opts := badger.IteratorOptions{
 				Reverse: true,
@@ -70,20 +69,20 @@ func (b BadgerBackend) QueryEvents(ctx context.Context, f *filter.T) (chan *even
 						copy(idx[1:], key[idxOffset:])
 
 						// fetch actual event
-						item, err := txn.Get(idx)
-						if err != nil {
-							if err == badger.ErrDiscardedTxn {
+						item, e := txn.Get(idx)
+						if e != nil {
+							if e == badger.ErrDiscardedTxn {
 								return
 							}
-							log.Printf("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s\n",
-								idx, q.prefix, key, err)
+							log.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s\n",
+								idx, q.prefix, key, e)
 							return
 						}
 						item.Value(func(val []byte) (e error) {
 							evt := &event.T{}
-							if err := nostr_binary.Unmarshal(val, evt); err != nil {
-								log.Printf("badger: value read error (id %x): %s\n", val[0:32], err)
-								return err
+							if e := nostr_binary.Unmarshal(val, evt); e != nil {
+								log.D.F("badger: value read error (id %x): %s\n", val[0:32], e)
+								return e
 							}
 
 							// check if this matches the other filters that were not part of the index
@@ -159,8 +158,8 @@ func (b BadgerBackend) QueryEvents(ctx context.Context, f *filter.T) (chan *even
 
 			return nil
 		})
-		if err != nil {
-			log.Printf("badger: query txn error: %s\n", err)
+		if e != nil {
+			log.D.F("badger: query txn error: %s\n", e)
 		}
 	}()
 
@@ -197,7 +196,7 @@ func prepareQueries(f *filter.T) (
 	queries []query,
 	extraFilter *filter.T,
 	since uint32,
-	err error,
+	e error,
 ) {
 	var index byte
 

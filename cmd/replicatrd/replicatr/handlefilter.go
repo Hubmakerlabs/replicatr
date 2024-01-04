@@ -1,7 +1,7 @@
 package replicatr
 
 import (
-	err "errors"
+	"errors"
 
 	event2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
@@ -17,7 +17,7 @@ func (rl *Relay) handleFilter(ctx Ctx, id string,
 		ovw(ctx, f)
 	}
 	if f.Limit < 0 {
-		e = err.New("blocked: filter invalidated")
+		e = errors.New("blocked: filter invalidated")
 		rl.E.Chk(e)
 		return
 	}
@@ -28,7 +28,7 @@ func (rl *Relay) handleFilter(ctx Ctx, id string,
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(ctx, f); rej {
 			rl.E.Chk(ws.WriteJSON(&NoticeEnvelope{Text: msg}))
-			return err.New(normalize.OKMessage(msg, "blocked"))
+			return errors.New(normalize.OKMessage(msg, "blocked"))
 		}
 	}
 	// run the functions to query events (generally just one,

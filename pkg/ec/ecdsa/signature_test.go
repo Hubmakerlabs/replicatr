@@ -26,8 +26,8 @@ import (
 // the source code can be detected. It will only (and must only) be called with
 // hard-coded values.
 func hexToBytes(s string) []byte {
-	b, err := hex.DecodeString(s)
-	if err != nil {
+	b, e := hex.DecodeString(s)
+	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	return b
@@ -205,10 +205,10 @@ func TestSignatureParsing(t *testing.T) {
 	}}
 
 	for _, test := range tests {
-		_, err := ParseDERSignature(test.sig)
-		if !errors.Is(err, test.err) {
+		_, e := ParseDERSignature(test.sig)
+		if !errors.Is(err, test.e) {
 			t.Errorf("%s mismatched err -- got %v, want %v", test.name, err,
-				test.err)
+				test.e)
 			continue
 		}
 	}
@@ -592,8 +592,8 @@ func TestSignAndVerifyRandom(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		// Generate a random secret key.
 		var buf [32]byte
-		if _, err := rng.Read(buf[:]); err != nil {
-			t.Fatalf("failed to read random secret key: %v", err)
+		if _, e := rng.Read(buf[:]); e != nil {
+			t.Fatalf("failed to read random secret key: %v", e)
 		}
 		var secKeyScalar secp256k1.ModNScalar
 		secKeyScalar.SetBytes(&buf)
@@ -601,8 +601,8 @@ func TestSignAndVerifyRandom(t *testing.T) {
 
 		// Generate a random hash to sign.
 		var hash [32]byte
-		if _, err := rng.Read(hash[:]); err != nil {
-			t.Fatalf("failed to read random hash: %v", err)
+		if _, e := rng.Read(hash[:]); e != nil {
+			t.Fatalf("failed to read random hash: %v", e)
 		}
 
 		// Sign the hash with the secret key and then ensure the produced
@@ -813,10 +813,10 @@ func TestSignAndRecoverCompact(t *testing.T) {
 			// Ensure the recovered public key and flag that indicates whether
 			// or not the signature was for a compressed public key are the
 			// expected values.
-			gotPubKey, gotCompressed, err := RecoverCompact(gotSig, hash)
-			if err != nil {
+			gotPubKey, gotCompressed, e := RecoverCompact(gotSig, hash)
+			if e != nil {
 				t.Errorf("%s: unexpected error when recovering: %v", test.name,
-					err)
+					e)
 				continue
 			}
 			if gotCompressed != compressed {
@@ -978,10 +978,10 @@ func TestRecoverCompactErrors(t *testing.T) {
 		sig := hexToBytes(test.sig)
 
 		// Ensure the expected error is hit.
-		_, _, err := RecoverCompact(sig, hash)
-		if !errors.Is(err, test.err) {
+		_, _, e := RecoverCompact(sig, hash)
+		if !errors.Is(err, test.e) {
 			t.Errorf("%s: mismatched err -- got %v, want %v", test.name, err,
-				test.err)
+				test.e)
 			continue
 		}
 	}
@@ -1006,8 +1006,8 @@ func TestSignAndRecoverCompactRandom(t *testing.T) {
 	for i := 0; i < 100; i++ {
 		// Generate a random secret key.
 		var buf [32]byte
-		if _, err := rng.Read(buf[:]); err != nil {
-			t.Fatalf("failed to read random secret key: %v", err)
+		if _, e := rng.Read(buf[:]); e != nil {
+			t.Fatalf("failed to read random secret key: %v", e)
 		}
 		var secKeyScalar secp256k1.ModNScalar
 		secKeyScalar.SetBytes(&buf)
@@ -1016,8 +1016,8 @@ func TestSignAndRecoverCompactRandom(t *testing.T) {
 
 		// Generate a random hash to sign.
 		var hash [32]byte
-		if _, err := rng.Read(hash[:]); err != nil {
-			t.Fatalf("failed to read random hash: %v", err)
+		if _, e := rng.Read(hash[:]); e != nil {
+			t.Fatalf("failed to read random hash: %v", e)
 		}
 
 		// Test compact signatures for both the compressed and uncompressed
@@ -1028,8 +1028,8 @@ func TestSignAndRecoverCompactRandom(t *testing.T) {
 			// signature.
 			gotSig := SignCompact(secKey, hash[:], compressed)
 
-			gotPubKey, gotCompressed, err := RecoverCompact(gotSig, hash[:])
-			if err != nil {
+			gotPubKey, gotCompressed, e := RecoverCompact(gotSig, hash[:])
+			if e != nil {
 				t.Fatalf("unexpected err: %v\nsig: %x\nhash: %x\nsecret key: %x",
 					err, gotSig, hash, secKey.Serialize())
 			}
@@ -1051,8 +1051,8 @@ func TestSignAndRecoverCompactRandom(t *testing.T) {
 			randByte := rng.Intn(len(badSig)-1) + 1
 			randBit := rng.Intn(7)
 			badSig[randByte] ^= 1 << randBit
-			badPubKey, _, err := RecoverCompact(badSig, hash[:])
-			if err == nil && badPubKey.IsEqual(wantPubKey) {
+			badPubKey, _, e := RecoverCompact(badSig, hash[:])
+			if e == nil && badPubKey.IsEqual(wantPubKey) {
 				t.Fatalf("recovered public key for bad sig: %x\nhash: %x\n"+
 					"secret key: %x", badSig, hash, secKey.Serialize())
 			}
@@ -1065,8 +1065,8 @@ func TestSignAndRecoverCompactRandom(t *testing.T) {
 			randByte = rng.Intn(len(badHash))
 			randBit = rng.Intn(7)
 			badHash[randByte] ^= 1 << randBit
-			badPubKey, _, err = RecoverCompact(gotSig, badHash[:])
-			if err == nil && badPubKey.IsEqual(wantPubKey) {
+			badPubKey, _, e = RecoverCompact(gotSig, badHash[:])
+			if e == nil && badPubKey.IsEqual(wantPubKey) {
 				t.Fatalf("recovered public key for bad hash: %x\nsig: %x\n"+
 					"secret key: %x", badHash, gotSig, secKey.Serialize())
 			}

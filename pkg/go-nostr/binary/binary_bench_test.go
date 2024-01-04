@@ -56,9 +56,9 @@ func BenchmarkBinaryDecoding(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, jevt := range normalEvents {
 				evt := &event.T{}
-				err := easyjson.Unmarshal([]byte(jevt), evt)
-				if err != nil {
-					b.Fatalf("failed to unmarshal: %s", err)
+				e := easyjson.Unmarshal([]byte(jevt), evt)
+				if e != nil {
+					b.Fatalf("failed to unmarshal: %s", e)
 				}
 			}
 		}
@@ -68,9 +68,9 @@ func BenchmarkBinaryDecoding(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, bevt := range events {
 				evt := &event.T{}
-				err := Unmarshal(bevt, evt)
-				if err != nil {
-					b.Fatalf("failed to unmarshal: %s", err)
+				e := Unmarshal(bevt, evt)
+				if e != nil {
+					b.Fatalf("failed to unmarshal: %s", e)
 				}
 			}
 		}
@@ -80,9 +80,9 @@ func BenchmarkBinaryDecoding(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, bevt := range events {
 				evt := &Event{}
-				err := UnmarshalBinary(bevt, evt)
-				if err != nil {
-					b.Fatalf("failed to unmarshal: %s", err)
+				e := UnmarshalBinary(bevt, evt)
+				if e != nil {
+					b.Fatalf("failed to unmarshal: %s", e)
 				}
 			}
 		}
@@ -92,9 +92,9 @@ func BenchmarkBinaryDecoding(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, nevt := range normalEvents {
 				evt := &event.T{}
-				err := easyjson.Unmarshal([]byte(nevt), evt)
-				if err != nil {
-					b.Fatalf("failed to unmarshal: %s", err)
+				e := easyjson.Unmarshal([]byte(nevt), evt)
+				if e != nil {
+					b.Fatalf("failed to unmarshal: %s", e)
 				}
 				evt.CheckSignature()
 			}
@@ -105,9 +105,9 @@ func BenchmarkBinaryDecoding(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			for _, bevt := range events {
 				evt := &event.T{}
-				err := Unmarshal(bevt, evt)
-				if err != nil {
-					b.Fatalf("failed to unmarshal: %s", err)
+				e := Unmarshal(bevt, evt)
+				if e != nil {
+					b.Fatalf("failed to unmarshal: %s", e)
 				}
 				evt.CheckSignature()
 			}

@@ -10,15 +10,15 @@ import (
 	"github.com/btcsuite/btcd/btcutil/bech32"
 )
 
-func Decode(bech32string string) (prefix string, value any, err error) {
-	prefix, bits5, err := bech32.DecodeNoLimit(bech32string)
-	if err != nil {
-		return "", nil, err
+func Decode(bech32string string) (prefix string, value any, e error) {
+	prefix, bits5, e := bech32.DecodeNoLimit(bech32string)
+	if e != nil {
+		return "", nil, e
 	}
 
-	data, err := bech32.ConvertBits(bits5, 5, 8, false)
-	if err != nil {
-		return prefix, nil, fmt.Errorf("failed translating data into 8 bits: %s", err.Error())
+	data, e := bech32.ConvertBits(bits5, 5, 8, false)
+	if e != nil {
+		return prefix, nil, fmt.Errorf("failed translating data into 8 bits: %s", e.Error())
 	}
 
 	switch prefix {
@@ -129,42 +129,42 @@ func Decode(bech32string string) (prefix string, value any, err error) {
 }
 
 func EncodePrivateKey(privateKeyHex string) (string, error) {
-	b, err := hex.DecodeString(privateKeyHex)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode private key hex: %w", err)
+	b, e := hex.DecodeString(privateKeyHex)
+	if e != nil {
+		return "", fmt.Errorf("failed to decode private key hex: %w", e)
 	}
 
-	bits5, err := bech32.ConvertBits(b, 8, 5, true)
-	if err != nil {
-		return "", err
+	bits5, e := bech32.ConvertBits(b, 8, 5, true)
+	if e != nil {
+		return "", e
 	}
 
 	return bech32.Encode("nsec", bits5)
 }
 
 func EncodePublicKey(publicKeyHex string) (string, error) {
-	b, err := hex.DecodeString(publicKeyHex)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode public key hex: %w", err)
+	b, e := hex.DecodeString(publicKeyHex)
+	if e != nil {
+		return "", fmt.Errorf("failed to decode public key hex: %w", e)
 	}
 
-	bits5, err := bech32.ConvertBits(b, 8, 5, true)
-	if err != nil {
-		return "", err
+	bits5, e := bech32.ConvertBits(b, 8, 5, true)
+	if e != nil {
+		return "", e
 	}
 
 	return bech32.Encode("npub", bits5)
 }
 
 func EncodeNote(eventIDHex string) (string, error) {
-	b, err := hex.DecodeString(eventIDHex)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode event id hex: %w", err)
+	b, e := hex.DecodeString(eventIDHex)
+	if e != nil {
+		return "", fmt.Errorf("failed to decode event id hex: %w", e)
 	}
 
-	bits5, err := bech32.ConvertBits(b, 8, 5, true)
-	if err != nil {
-		return "", err
+	bits5, e := bech32.ConvertBits(b, 8, 5, true)
+	if e != nil {
+		return "", e
 	}
 
 	return bech32.Encode("note", bits5)
@@ -172,9 +172,9 @@ func EncodeNote(eventIDHex string) (string, error) {
 
 func EncodeProfile(publicKeyHex string, relays []string) (string, error) {
 	buf := &bytes.Buffer{}
-	pubkey, err := hex.DecodeString(publicKeyHex)
-	if err != nil {
-		return "", fmt.Errorf("invalid pubkey '%s': %w", publicKeyHex, err)
+	pubkey, e := hex.DecodeString(publicKeyHex)
+	if e != nil {
+		return "", fmt.Errorf("invalid pubkey '%s': %w", publicKeyHex, e)
 	}
 	writeTLVEntry(buf, TLVDefault, pubkey)
 
@@ -182,9 +182,9 @@ func EncodeProfile(publicKeyHex string, relays []string) (string, error) {
 		writeTLVEntry(buf, TLVRelay, []byte(url))
 	}
 
-	bits5, err := bech32.ConvertBits(buf.Bytes(), 8, 5, true)
-	if err != nil {
-		return "", fmt.Errorf("failed to convert bits: %w", err)
+	bits5, e := bech32.ConvertBits(buf.Bytes(), 8, 5, true)
+	if e != nil {
+		return "", fmt.Errorf("failed to convert bits: %w", e)
 	}
 
 	return bech32.Encode("nprofile", bits5)
@@ -192,9 +192,9 @@ func EncodeProfile(publicKeyHex string, relays []string) (string, error) {
 
 func EncodeEvent(eventIDHex string, relays []string, author string) (string, error) {
 	buf := &bytes.Buffer{}
-	id, err := hex.DecodeString(eventIDHex)
-	if err != nil || len(id) != 32 {
-		return "", fmt.Errorf("invalid id '%s': %w", eventIDHex, err)
+	id, e := hex.DecodeString(eventIDHex)
+	if e != nil || len(id) != 32 {
+		return "", fmt.Errorf("invalid id '%s': %w", eventIDHex, e)
 	}
 	writeTLVEntry(buf, TLVDefault, id)
 
@@ -206,9 +206,9 @@ func EncodeEvent(eventIDHex string, relays []string, author string) (string, err
 		writeTLVEntry(buf, TLVAuthor, pubkey)
 	}
 
-	bits5, err := bech32.ConvertBits(buf.Bytes(), 8, 5, true)
-	if err != nil {
-		return "", fmt.Errorf("failed to convert bits: %w", err)
+	bits5, e := bech32.ConvertBits(buf.Bytes(), 8, 5, true)
+	if e != nil {
+		return "", fmt.Errorf("failed to convert bits: %w", e)
 	}
 
 	return bech32.Encode("nevent", bits5)
@@ -223,9 +223,9 @@ func EncodeEntity(publicKey string, kind int, identifier string, relays []string
 		writeTLVEntry(buf, TLVRelay, []byte(url))
 	}
 
-	pubkey, err := hex.DecodeString(publicKey)
-	if err != nil {
-		return "", fmt.Errorf("invalid pubkey '%s': %w", pubkey, err)
+	pubkey, e := hex.DecodeString(publicKey)
+	if e != nil {
+		return "", fmt.Errorf("invalid pubkey '%s': %w", pubkey, e)
 	}
 	writeTLVEntry(buf, TLVAuthor, pubkey)
 
@@ -233,9 +233,9 @@ func EncodeEntity(publicKey string, kind int, identifier string, relays []string
 	binary.BigEndian.PutUint32(kindBytes, uint32(kind))
 	writeTLVEntry(buf, TLVKind, kindBytes)
 
-	bits5, err := bech32.ConvertBits(buf.Bytes(), 8, 5, true)
-	if err != nil {
-		return "", fmt.Errorf("failed to convert bits: %w", err)
+	bits5, e := bech32.ConvertBits(buf.Bytes(), 8, 5, true)
+	if e != nil {
+		return "", fmt.Errorf("failed to convert bits: %w", e)
 	}
 
 	return bech32.Encode("naddr", bits5)

@@ -6,12 +6,20 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"golang.org/x/exp/slices"
 )
 
+var log, fails = log2.GetStd()
+var hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
+
 func getTagIndexPrefix(tagValue string) ([]byte, int) {
-	var k []byte   // the key with full length for created_at and idx at the end, but not filled with these
-	var offset int // the offset -- i.e. where the prefix ends and the created_at and idx would start
+	// the key with full length for created_at and idx at the end, but not
+	// filled with these
+	var k []byte
+	// the offset -- i.e. where the prefix ends and the created_at and idx would
+	// start
+	var offset int
 
 	if kind, pkb, d := eventstore.GetAddrTagElements(tagValue); len(pkb) == 32 {
 		// store value in the new special "a" tag index

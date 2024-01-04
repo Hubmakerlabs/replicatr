@@ -17,8 +17,8 @@ import (
 // constants so errors in the source code can be detected. It will only (and
 // must only) be called with hard-coded values.
 func hexToModNScalar(s string) *secp256k1.ModNScalar {
-	b, err := hex.DecodeString(s)
-	if err != nil {
+	b, e := hex.DecodeString(s)
+	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var scalar secp256k1.ModNScalar
@@ -33,8 +33,8 @@ func hexToModNScalar(s string) *secp256k1.ModNScalar {
 // errors in the source code can be detected. It will only (and must only) be
 // called with hard-coded values.
 func hexToFieldVal(s string) *secp256k1.FieldVal {
-	b, err := hex.DecodeString(s)
-	if err != nil {
+	b, e := hex.DecodeString(s)
+	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var f secp256k1.FieldVal
@@ -162,9 +162,9 @@ func BenchmarkRecoverCompact(b *testing.B) {
 	msgHash := hexToBytes("c301ba9de5d6053caad9f5eb46523f007702add2c62fa39de03146a36b8026b7")
 
 	// Ensure a valid compact signature is being benchmarked.
-	pubKey, wasCompressed, err := RecoverCompact(compactSig, msgHash)
-	if err != nil {
-		b.Fatalf("unexpected err: %v", err)
+	pubKey, wasCompressed, e := RecoverCompact(compactSig, msgHash)
+	if e != nil {
+		b.Fatalf("unexpected err: %v", e)
 	}
 	if !wasCompressed {
 		b.Fatal("recover claims uncompressed pubkey")

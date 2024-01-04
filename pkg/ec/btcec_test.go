@@ -580,8 +580,8 @@ func TestBaseMultVerify(t *testing.T) {
 	for bytes := 1; bytes < 40; bytes++ {
 		for i := 0; i < 30; i++ {
 			data := make([]byte, bytes)
-			_, err := rand.Read(data)
-			if err != nil {
+			_, e := rand.Read(data)
+			if e != nil {
 				t.Errorf("failed to read random data for %d", i)
 				continue
 			}
@@ -651,8 +651,8 @@ func TestScalarMultRand(t *testing.T) {
 	exponent := big.NewInt(1)
 	for i := 0; i < 1024; i++ {
 		data := make([]byte, 32)
-		_, err := rand.Read(data)
-		if err != nil {
+		_, e := rand.Read(data)
+		if e != nil {
 			t.Fatalf("failed to read random data at %d", i)
 			break
 		}
@@ -815,8 +815,8 @@ func TestSplitKRand(t *testing.T) {
 	s256 := S256()
 	for i := 0; i < 1024; i++ {
 		bytesK := make([]byte, 32)
-		_, err := rand.Read(bytesK)
-		if err != nil {
+		_, e := rand.Read(bytesK)
+		if e != nil {
 			t.Fatalf("failed to read random data at %d", i)
 			break
 		}
@@ -840,14 +840,14 @@ func TestSplitKRand(t *testing.T) {
 // Test this curve's usage with the ecdsa package.
 
 func testKeyGeneration(t *testing.T, c *KoblitzCurve, tag string) {
-	priv, err := NewSecretKey()
-	if err != nil {
-		t.Errorf("%s: error: %s", tag, err)
+	priv, e := NewSecretKey()
+	if e != nil {
+		t.Errorf("%s: error: %s", tag, e)
 		return
 	}
 	pub := priv.PubKey()
 	if !c.IsOnCurve(pub.X(), pub.Y()) {
-		t.Errorf("%s: public key invalid: %s", tag, err)
+		t.Errorf("%s: public key invalid: %s", tag, e)
 	}
 }
 

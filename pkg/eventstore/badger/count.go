@@ -3,7 +3,7 @@ package badger
 import (
 	"context"
 	"encoding/binary"
-	"log"
+	"errors"
 
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
@@ -11,15 +11,15 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b BadgerBackend) CountEvents(ctx context.Context, f *filter.T) (int64, error) {
+func (b *BadgerBackend) CountEvents(ctx context.Context, f *filter.T) (int64, error) {
 	var count int64 = 0
 
-	queries, extraFilter, since, err := prepareQueries(f)
-	if err != nil {
-		return 0, err
+	queries, extraFilter, since, e := prepareQueries(f)
+	if e != nil {
+		return 0, e
 	}
 
-	err = b.View(func(txn *badger.Txn) (e error) {
+	e = b.View(func(txn *badger.Txn) (e error) {
 		// iterate only through keys and in reverse order
 		opts := badger.IteratorOptions{
 			Reverse: true,
@@ -52,19 +52,20 @@ func (b BadgerBackend) CountEvents(ctx context.Context, f *filter.T) (int64, err
 					count++
 				} else {
 					// fetch actual event
-					item, err := txn.Get(idx)
-					if err != nil {
-						if err == badger.ErrDiscardedTxn {
-							return err
+					item, e = txn.Get(idx)
+					if e != nil {
+						if errors.Is(e, badger.ErrDiscardedTxn) {
+							return
 						}
-						log.Printf("badger: count (%v) failed to get %d from raw event store: %s\n", q, idx, err)
-						return err
+						log.D.F("badger: count (%v) failed to get %d from raw " +
+							"event store: %s\n", q, idx)
+						return
 					}
 
-					err = item.Value(func(val []byte) (e error) {
+					e = item.Value(func(val []byte) (e error) {
 						evt := &event.T{}
-						if err := nostr_binary.Unmarshal(val, evt); err != nil {
-							return err
+						if e := nostr_binary.Unmarshal(val, evt); e != nil {
+							return e
 						}
 
 						// check if this matches the other filters that were not part of the index
@@ -74,8 +75,8 @@ func (b BadgerBackend) CountEvents(ctx context.Context, f *filter.T) (int64, err
 
 						return nil
 					})
-					if err != nil {
-						log.Printf("badger: count value read error: %s\n", err)
+					if fails(e) {
+						log.D.F("badger: count value read error: %s\n", e)
 					}
 				}
 			}
@@ -84,5 +85,5 @@ func (b BadgerBackend) CountEvents(ctx context.Context, f *filter.T) (int64, err
 		return nil
 	})
 
-	return count, err
+	return count, e
 }
