@@ -39,7 +39,7 @@ func ParseMessage(message []byte) envelopes.Envelope {
 	case bytes.Contains(label, []byte("OK")):
 		v = &OK.OKEnvelope{}
 	case bytes.Contains(label, []byte("AUTH")):
-		v = &auth.AuthEnvelope{}
+		v = &auth.Envelope{}
 	case bytes.Contains(label, []byte("CLOSED")):
 		v = &closed.ClosedEnvelope{}
 	case bytes.Contains(label, []byte("CLOSE")):

@@ -30,7 +30,7 @@ func RequestAuth(ctx Ctx) {
 		ws.Authed = make(chan struct{})
 	}
 	ws.authLock.Unlock()
-	log.E.Chk(ws.WriteJSON(auth.AuthEnvelope{Challenge: &ws.Challenge}))
+	log.E.Chk(ws.WriteJSON(auth.Envelope{Challenge: &ws.Challenge}))
 }
 
 func GetConnection(ctx Ctx) *WebSocket { return ctx.Value(wsKey).(*WebSocket) }

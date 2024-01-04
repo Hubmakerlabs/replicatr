@@ -224,7 +224,7 @@ func (r *Relay) Connect(ctx context.Context) error {
 				} else {
 					log.Printf("NOTICE from %s: '%s'\n", r.URL, string(*env))
 				}
-			case *auth.AuthEnvelope:
+			case *auth.Envelope:
 				if env.Challenge == nil {
 					continue
 				}
@@ -314,7 +314,7 @@ func (r *Relay) Auth(ctx context.Context, sign func(event *event.T) error) error
 		return fmt.Errorf("error signing auth event: %w", err)
 	}
 
-	return r.publish(ctx, authEvent.ID, &auth.AuthEnvelope{Event: authEvent})
+	return r.publish(ctx, authEvent.ID, &auth.Envelope{Event: authEvent})
 }
 
 // publish can be used both for EVENT and for AUTH

@@ -40,7 +40,7 @@ func TestParseMessage(t *testing.T) {
 		{
 			Name:             "AUTH envelope",
 			Message:          []byte(`["AUTH","bisteka"]`),
-			ExpectedEnvelope: &auth.AuthEnvelope{Challenge: ptr.Ptr("bisteka")},
+			ExpectedEnvelope: &auth.Envelope{Challenge: ptr.Ptr("bisteka")},
 		},
 		{
 			Name:             "REQ envelope",
