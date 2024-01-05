@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
@@ -22,9 +23,11 @@ type Envelope struct {
 	filters.T
 }
 
+var _ enveloper.Enveloper = &Envelope{}
+
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *Envelope) Label() (l labels.T) { return labels.LReq }
+func (E *Envelope) Label() (l string) { return labels.REQ }
 
 func (E *Envelope) ToArray() (arr array.T) {
 	arr = array.T{labels.REQ, E.SubscriptionID}
@@ -45,6 +48,11 @@ func (E *Envelope) Bytes() (s []byte) {
 // MarshalJSON returns the JSON encoded form of the envelope.
 func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
 	return E.ToArray().Bytes(), nil
+}
+
+func (E *Envelope) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
 }
 
 // Unmarshal the envelope.

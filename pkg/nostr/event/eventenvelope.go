@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
+
+var _ enveloper.Enveloper = (*Envelope)(nil)
 
 // Envelope is the wrapper expected by a relay around an event.
 type Envelope struct {
@@ -19,6 +22,11 @@ type Envelope struct {
 
 	// The Event is here a pointer because it should not be copied unnecessarily.
 	Event *T
+}
+
+func (env *Envelope) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
 }
 
 // NewEventEnvelope builds an Envelope from a provided T
@@ -38,39 +46,39 @@ func NewEventEnvelope(si string, ev *T) (ee *Envelope, e error) {
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *Envelope) Label() (l labels.T) { return labels.LEvent }
+func (env *Envelope) Label() (l string) { return labels.EVENT }
 
 // ToArray converts an Envelope to a form that has a JSON formatted String
 // and Bytes function (array.T). To get the encoded form, invoke either of these
 // methods on the returned value.
-func (E *Envelope) ToArray() (a array.T) {
+func (env *Envelope) ToArray() (a array.T) {
 
 	// T envelope has max 3 fields
 	a = make(array.T, 0, 3)
 	a = append(a, labels.EVENT)
-	if E.SubscriptionID.IsValid() {
-		a = append(a, E.SubscriptionID)
+	if env.SubscriptionID.IsValid() {
+		a = append(a, env.SubscriptionID)
 	}
-	a = append(a, E.Event.ToObject())
+	a = append(a, env.Event.ToObject())
 	return
 }
 
-func (E *Envelope) String() (s string) {
-	return E.ToArray().String()
+func (env *Envelope) String() (s string) {
+	return env.ToArray().String()
 }
 
-func (E *Envelope) Bytes() (s []byte) {
-	return E.ToArray().Bytes()
+func (env *Envelope) Bytes() (s []byte) {
+	return env.ToArray().Bytes()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
-	return E.ToArray().Bytes(), nil
+func (env *Envelope) MarshalJSON() (bytes []byte, e error) {
+	return env.ToArray().Bytes(), nil
 }
 
 // Unmarshal the envelope.
-func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
-	if E == nil {
+func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+	if env == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label (note we aren't checking that only
@@ -93,7 +101,7 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 		if sid, e = buf.ReadUntil('"'); log.D.Chk(e) {
 			return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 		}
-		E.SubscriptionID = subscriptionid.T(sid[:])
+		env.SubscriptionID = subscriptionid.T(sid[:])
 		// Next, find the comma after the subscription ID (note we aren't checking
 		// that only whitespace intervenes because laziness, usually this is the
 		// very next character).
@@ -114,8 +122,8 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 		return
 	}
 	// allocate an event to unmarshal into
-	E.Event = &T{}
-	if e = json.Unmarshal(eventObj, E.Event); fails(e) {
+	env.Event = &T{}
+	if e = json.Unmarshal(eventObj, env.Event); fails(e) {
 		log.D.S(string(eventObj))
 		return
 	}

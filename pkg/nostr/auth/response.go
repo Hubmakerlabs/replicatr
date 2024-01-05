@@ -4,10 +4,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"net/url"
-	"strings"
-	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
@@ -23,16 +21,18 @@ var (
 	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
-type ResponseEnvelope struct {
+type Response struct {
 	*event.T
 }
 
-// New creates an ResponseEnvelope response from an ChallengeEnvelope.
+var _ enveloper.Enveloper = &Response{}
+
+// New creates an Response response from an Challenge.
 //
 // The caller must sign the embedded event before sending it back to
 // authenticate.
-func New(ac *ChallengeEnvelope, rl string) (ae *ResponseEnvelope) {
-	ae = &ResponseEnvelope{
+func New(ac *Challenge, rl string) (ae *Response) {
+	ae = &Response{
 		&event.T{
 			Kind: kind.ClientAuthentication,
 			Tags: tags.T{
@@ -44,9 +44,20 @@ func New(ac *ChallengeEnvelope, rl string) (ae *ResponseEnvelope) {
 	return
 }
 
-func (a *ResponseEnvelope) Label() labels.T { return labels.LAuth }
+func (a *Response) Label() string { return labels.AUTH }
+func (a *Response) ToArray() array.T {
+	return array.T{labels.AUTH,
+		a.T.ToObject()}
+}
+func (a *Response) String() (s string) { return a.ToArray().String() }
+func (a *Response) Bytes() (s []byte)  { return a.ToArray().Bytes() }
 
-func (a *ResponseEnvelope) Unmarshal(buf *text.Buffer) (e error) {
+func (a *Response) MarshalJSON() (b []byte, e error) {
+	return a.ToArray().Bytes(), nil
+}
+func (a *Response) UnmarshalJSON(b []byte) error { panic("implement me") }
+
+func (a *Response) Unmarshal(buf *text.Buffer) (e error) {
 	if a == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
@@ -81,71 +92,4 @@ func (a *ResponseEnvelope) Unmarshal(buf *text.Buffer) (e error) {
 	}
 	// whatever remains doesn't matter as the envelope has fully unmarshaled.
 	return
-}
-
-func (a *ResponseEnvelope) ToArray() array.T {
-	return array.T{labels.List[labels.LAuth], a.T.ToObject()}
-}
-
-func (a *ResponseEnvelope) String() (s string) {
-	return a.ToArray().String()
-}
-
-func (a *ResponseEnvelope) Bytes() (s []byte) {
-	return a.ToArray().Bytes()
-}
-
-// MarshalJSON returns the JSON encoded form of the envelope.
-func (a *ResponseEnvelope) MarshalJSON() (bytes []byte, e error) {
-	// log.D.F("auth envelope marshal")
-	return a.ToArray().Bytes(), nil
-}
-
-// Validate checks whether event is a valid NIP-42 event for given challenge and relayURL.
-// The result of the validation is encoded in the ok bool.
-func Validate(evt *event.T, challenge string,
-	relayURL string) (pubkey string, ok bool) {
-
-	if evt.Kind != kind.ClientAuthentication {
-		return "", false
-	}
-	if evt.Tags.GetFirst([]string{"challenge", challenge}) == nil {
-		return "", false
-	}
-	var expected, found *url.URL
-	var e error
-	expected, e = parseURL(relayURL)
-	if e != nil {
-		return "", false
-	}
-	found, e = parseURL(evt.Tags.GetFirst([]string{"relay", ""}).Value())
-	if e != nil {
-		return "", false
-	}
-	if expected.Scheme != found.Scheme ||
-		expected.Host != found.Host ||
-		expected.Path != found.Path {
-		return "", false
-	}
-	now := time.Now()
-	if evt.CreatedAt.Time().After(now.Add(10*time.Minute)) ||
-		evt.CreatedAt.Time().Before(now.Add(-10*time.Minute)) {
-
-		return "", false
-	}
-	// save for last, as it is most expensive operation
-	// no need to check returned error, since ok == true implies err == nil.
-	if ok, _ = evt.CheckSignature(); !ok {
-		return "", false
-	}
-	return evt.PubKey, true
-}
-
-// helper function for Validate.
-func parseURL(input string) (*url.URL, error) {
-	return url.Parse(
-		strings.ToLower(
-			strings.TrimSuffix(input, "/"),
-		),
-	)
 }

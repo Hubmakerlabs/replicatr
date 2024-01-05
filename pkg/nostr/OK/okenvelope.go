@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
@@ -26,6 +27,8 @@ const (
 	Error       Reason = "error"
 )
 
+var _ enveloper.Enveloper = (*Envelope)(nil)
+
 // Envelope is a relay message sent in response to an EventEnvelope to
 // indicate acceptance (OK is true), rejection and provide a human readable
 // Reason for clients to display to users, with the first word being a machine
@@ -35,6 +38,11 @@ type Envelope struct {
 	EventID eventid.EventID
 	OK      bool
 	Reason  string
+}
+
+func (env *Envelope) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
 }
 
 func NewOKEnvelope(eventID eventid.EventID, ok bool, reason string) (o *Envelope,
@@ -53,28 +61,28 @@ func NewOKEnvelope(eventID eventid.EventID, ok bool, reason string) (o *Envelope
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *Envelope) Label() (l labels.T) { return labels.LOK }
+func (env *Envelope) Label() (l string) { return labels.OK }
 
 // ToArray converts an Envelope to a form that has a JSON formatted String
 // and Bytes function (array.T). To get the encoded form, invoke either of these
 // methods on the returned value.
-func (E *Envelope) ToArray() (a array.T) {
-	// log.D.F("'%s' %v '%s' ", E.EventID, E.OK, E.Reason)
-	return array.T{labels.OK, E.EventID, E.OK, E.Reason}
+func (env *Envelope) ToArray() (a array.T) {
+	// log.D.F("'%s' %v '%s' ", env.EventID, env.OK, env.Reason)
+	return array.T{labels.OK, env.EventID, env.OK, env.Reason}
 }
 
-func (E *Envelope) String() (s string) {
-	return E.ToArray().String()
+func (env *Envelope) String() (s string) {
+	return env.ToArray().String()
 }
 
-func (E *Envelope) Bytes() (s []byte) {
-	return E.ToArray().Bytes()
+func (env *Envelope) Bytes() (s []byte) {
+	return env.ToArray().Bytes()
 }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
+func (env *Envelope) MarshalJSON() (bytes []byte, e error) {
 	// log.D.F("ok envelope marshal")
-	return E.ToArray().Bytes(), nil
+	return env.ToArray().Bytes(), nil
 }
 
 const (
@@ -85,9 +93,9 @@ const (
 )
 
 // Unmarshal the envelope.
-func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
-	if E == nil {
+	if env == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label
@@ -131,7 +139,7 @@ next:
 				string(eventID))
 		}
 	}
-	E.EventID = eventid.EventID(eventID)
+	env.EventID = eventid.EventID(eventID)
 	// next another comma
 	if e = buf.ScanThrough(','); e != nil {
 		return
@@ -153,7 +161,7 @@ maybeOK:
 				break maybeOK
 			}
 		}
-		E.OK = true
+		env.OK = true
 		isBool = true
 	case l == BfalseLen:
 		for i := range isOK {
@@ -180,7 +188,7 @@ maybeOK:
 	if e = buf.ScanThrough(']'); e != nil {
 		log.D.Ln("envelope unterminated but all fields found")
 	}
-	E.Reason = string(text.UnescapeByteString(reason))
+	env.Reason = string(text.UnescapeByteString(reason))
 	return
 }
 

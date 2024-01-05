@@ -3,34 +3,39 @@ package auth
 import (
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-type ChallengeEnvelope struct {
+type Challenge struct {
 	Challenge string
 }
 
-func NewChallenge(c string) (a *ChallengeEnvelope) {
-	return &ChallengeEnvelope{Challenge: c}
+var _ enveloper.Enveloper = &Challenge{}
+
+func NewChallenge(c string) (a *Challenge) {
+	return &Challenge{Challenge: c}
 }
 
-func (a *ChallengeEnvelope) Label() labels.T    { return labels.LAuth }
-func (a *ChallengeEnvelope) String() (s string) { return a.ToArray().String() }
-func (a *ChallengeEnvelope) Bytes() (s []byte)  { return a.ToArray().Bytes() }
-
-func (a *ChallengeEnvelope) ToArray() array.T {
-	return array.T{labels.List[labels.LAuth], a.Challenge}
+func (a *Challenge) Label() string      { return labels.AUTH }
+func (a *Challenge) String() (s string) { return a.ToArray().String() }
+func (a *Challenge) Bytes() (s []byte)  { return a.ToArray().Bytes() }
+func (a *Challenge) ToArray() array.T {
+	return array.T{labels.AUTH,
+		a.Challenge}
 }
-
-// MarshalJSON returns the JSON encoded form of the envelope.
-func (a *ChallengeEnvelope) MarshalJSON() (bytes []byte, e error) {
-	// log.D.F("auth challenge envelope marshal")
+func (a *Challenge) MarshalJSON() (bytes []byte, e error) {
 	return a.ToArray().Bytes(), nil
 }
 
-func (a *ChallengeEnvelope) Unmarshal(buf *text.Buffer) (e error) {
+func (a *Challenge) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (a *Challenge) Unmarshal(buf *text.Buffer) (e error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
 	if a == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")

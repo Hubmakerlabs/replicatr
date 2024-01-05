@@ -3,6 +3,7 @@ package eose
 import (
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
@@ -20,9 +21,16 @@ type Envelope struct {
 	subscriptionid.T
 }
 
+func (E *Envelope) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+var _ enveloper.Enveloper = (*Envelope)(nil)
+
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *Envelope) Label() (l labels.T) { return labels.LEOSE }
+func (E *Envelope) Label() (l string) { return labels.EOSE }
 
 func (E *Envelope) ToArray() (a array.T) {
 	a = array.T{labels.EOSE, E.T}

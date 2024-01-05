@@ -1,8 +1,9 @@
-package close
+package closer
 
 import (
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
@@ -18,13 +19,13 @@ type Envelope struct {
 	subscriptionid.T
 }
 
+var _ enveloper.Enveloper = &Envelope{}
+
 func NewCloseEnvelope(s subscriptionid.T) (ce *Envelope) {
 	return &Envelope{T: s}
 }
 
-// Label returns the label enum/type of the envelope. The relevant bytes could
-// be retrieved using nip1.List[T]
-func (E *Envelope) Label() (l labels.T) { return labels.LClose }
+func (E *Envelope) Label() (l string) { return labels.CLOSE }
 func (E *Envelope) String() (s string)  { return E.ToArray().String() }
 func (E *Envelope) Bytes() (s []byte)   { return E.ToArray().Bytes() }
 
@@ -35,6 +36,11 @@ func (E *Envelope) ToArray() (a array.T) {
 // MarshalJSON returns the JSON encoded form of the envelope.
 func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
 	return E.ToArray().Bytes(), nil
+}
+
+func (E *Envelope) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
 }
 
 // Unmarshal the envelope.
