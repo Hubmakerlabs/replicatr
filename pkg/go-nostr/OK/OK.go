@@ -9,22 +9,22 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-var _ envelopes.Envelope = (*OKEnvelope)(nil)
+var _ envelopes.Envelope = (*Envelope)(nil)
 
-type OKEnvelope struct {
+type Envelope struct {
 	EventID string
 	OK      bool
 	Reason  string
 }
 
-func (_ OKEnvelope) Label() string { return "OK" }
+func (_ Envelope) Label() string { return "OK" }
 
-func (o OKEnvelope) String() string {
+func (o Envelope) String() string {
 	v, _ := json.Marshal(o)
 	return string(v)
 }
 
-func (v *OKEnvelope) UnmarshalJSON(data []byte) error {
+func (v *Envelope) UnmarshalJSON(data []byte) error {
 	r := gjson.ParseBytes(data)
 	arr := r.Array()
 	if len(arr) < 4 {
@@ -37,7 +37,7 @@ func (v *OKEnvelope) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (v OKEnvelope) MarshalJSON() ([]byte, error) {
+func (v Envelope) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	w.RawString(`["OK",`)
 	w.RawString(`"` + v.EventID + `",`)

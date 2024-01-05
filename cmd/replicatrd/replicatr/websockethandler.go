@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	envelope2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/envelope"
+	envelope "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/envelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip42"
 	"github.com/fasthttp/websocket"
@@ -58,13 +58,13 @@ func (rl *Relay) HandleWebsocket(w ResponseWriter, r *Request) {
 
 func (rl *Relay) websocketProcessMessages(message []byte, ctx Ctx, ws *WebSocket) {
 	var e error
-	envelope := envelope2.ParseMessage(message)
-	if envelope == nil {
+	env := envelope.ParseMessage(message)
+	if env == nil {
 		// stop silently
 		return
 	}
-	switch env := envelope.(type) {
-	case *event.EventEnvelope:
+	switch env := env.(type) {
+	case *event.Envelope:
 		// check id
 		hash := sha256.Sum256(env.T.Serialize())
 		id := hex.EncodeToString(hash[:])

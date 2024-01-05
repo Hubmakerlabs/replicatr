@@ -7,7 +7,7 @@ import (
 
 func TestNoticeEnvelopeEncodingAndDecoding(t *testing.T) {
 	src := `["NOTICE","kjasbdlasvdluiasvd\"kjasbdksab\\d"]`
-	var env NoticeEnvelope
+	var env Envelope
 	json.Unmarshal([]byte(src), &env)
 	if env != "kjasbdlasvdluiasvd\"kjasbdksab\\d" {
 		t.Error("failed to decode NOTICE")

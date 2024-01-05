@@ -46,7 +46,7 @@ func TestParseMessage(t *testing.T) {
 		{
 			Name:             "REQ envelope",
 			Message:          []byte(`["REQ","million", {"kinds": [1]}, {"kinds": [30023 ], "#d": ["buteko",    "batuke"]}]`),
-			ExpectedEnvelope: &req.ReqEnvelope{SubscriptionID: "million", T: filters.T{{Kinds: []int{1}}, {Kinds: []int{30023}, Tags: filter.TagMap{"d": []string{"buteko", "batuke"}}}}},
+			ExpectedEnvelope: &req.Envelope{SubscriptionID: "million", T: filters.T{{Kinds: []int{1}}, {Kinds: []int{30023}, Tags: filter.TagMap{"d": []string{"buteko", "batuke"}}}}},
 		},
 	}
 

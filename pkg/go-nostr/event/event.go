@@ -174,16 +174,16 @@ func (evt *T) Sign(privateKey string, signOpts ...schnorr.SignOption) error {
 	return nil
 }
 
-type EventEnvelope struct {
+type Envelope struct {
 	SubscriptionID *string
 	T
 }
 
-var _ envelopes.Envelope = (*EventEnvelope)(nil)
+var _ envelopes.Envelope = (*Envelope)(nil)
 
-func (_ EventEnvelope) Label() string { return "EVENT" }
+func (_ Envelope) Label() string { return "EVENT" }
 
-func (v *EventEnvelope) UnmarshalJSON(data []byte) error {
+func (v *Envelope) UnmarshalJSON(data []byte) error {
 	r := gjson.ParseBytes(data)
 	arr := r.Array()
 	switch len(arr) {
@@ -197,7 +197,7 @@ func (v *EventEnvelope) UnmarshalJSON(data []byte) error {
 	}
 }
 
-func (v EventEnvelope) MarshalJSON() ([]byte, error) {
+func (v Envelope) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	w.RawString(`["EVENT",`)
 	if v.SubscriptionID != nil {

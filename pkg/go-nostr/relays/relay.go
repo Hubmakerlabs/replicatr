@@ -218,7 +218,7 @@ func (r *Relay) Connect(ctx context.Context) error {
 			}
 
 			switch env := envelope.(type) {
-			case *notice.NoticeEnvelope:
+			case *notice.Envelope:
 				// see WithNoticeHandler
 				if r.notices != nil {
 					r.notices <- string(*env)
@@ -230,7 +230,7 @@ func (r *Relay) Connect(ctx context.Context) error {
 					continue
 				}
 				r.challenge = *env.Challenge
-			case *event.EventEnvelope:
+			case *event.Envelope:
 				if env.SubscriptionID == nil {
 					continue
 				}
@@ -259,7 +259,7 @@ func (r *Relay) Connect(ctx context.Context) error {
 					// dispatch this to the internal .events channel of the subscription
 					subscription.dispatchEvent(&env.T)
 				}
-			case *eose.EOSEEnvelope:
+			case *eose.Envelope:
 				if subscription, ok := r.Subscriptions.Load(string(*env)); ok {
 					subscription.dispatchEose()
 				}
@@ -267,11 +267,11 @@ func (r *Relay) Connect(ctx context.Context) error {
 				if subscription, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok {
 					subscription.dispatchClosed(env.Reason)
 				}
-			case *count.CountEnvelope:
+			case *count.Envelope:
 				if subscription, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok && env.Count != nil && subscription.countResult != nil {
 					subscription.countResult <- *env.Count
 				}
-			case *OK.OKEnvelope:
+			case *OK.Envelope:
 				if okCallback, exist := r.okCallbacks.Load(env.EventID); exist {
 					okCallback(env.OK, env.Reason)
 				} else {
@@ -297,7 +297,7 @@ func (r *Relay) Write(msg []byte) <-chan error {
 
 // Publish sends an "EVENT" command to the relay r as in NIP-01 and waits for an OK response.
 func (r *Relay) Publish(ctx context.Context, evt event.T) error {
-	return r.publish(ctx, evt.ID, &event.EventEnvelope{T: evt})
+	return r.publish(ctx, evt.ID, &event.Envelope{T: evt})
 }
 
 // Auth sends an "AUTH" command client->relay as in NIP-42 and waits for an OK response.

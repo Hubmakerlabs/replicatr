@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,11 +20,15 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/urfave/cli/v2"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/fatih/color"
 )
+
+var log, fails = log2.GetStd()
+var hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 
 const name = "algia"
 

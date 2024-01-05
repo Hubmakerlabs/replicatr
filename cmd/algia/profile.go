@@ -25,7 +25,7 @@ func doProfile(cCtx *cli.Context) (e error) {
 	if rl == nil {
 		return errors.New("cannot connect relays")
 	}
-	defer rl.Close()
+	defer log.E.Chk(rl.Close())
 
 	var pub string
 	if user == "" {
