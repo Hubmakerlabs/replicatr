@@ -72,7 +72,7 @@ func Unmarshal(data string, evt *event.T) (e error) {
 	evt.PubKey = data[PUBKEY_START:PUBKEY_END]
 	evt.Sig = data[SIG_START:SIG_END]
 	ts, _ := strconv.ParseUint(data[CREATED_AT_START:CREATED_AT_END], 10, 64)
-	evt.CreatedAt = timestamp.Timestamp(ts)
+	evt.CreatedAt = timestamp.T(ts)
 
 	// dynamic fields
 	// kind
@@ -214,9 +214,9 @@ func (ne *Event) parseDescriptors() {
 func (ne Event) GetID() string     { return ne.data[ID_START:ID_END] }
 func (ne Event) GetPubkey() string { return ne.data[PUBKEY_START:PUBKEY_END] }
 func (ne Event) GetSig() string    { return ne.data[SIG_START:SIG_END] }
-func (ne Event) GetCreatedAt() timestamp.Timestamp {
+func (ne Event) GetCreatedAt() timestamp.T {
 	ts, _ := strconv.ParseUint(ne.data[CREATED_AT_START:CREATED_AT_END], 10, 64)
-	return timestamp.Timestamp(ts)
+	return timestamp.T(ts)
 }
 
 func (ne *Event) GetKind() int {

@@ -5,8 +5,8 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/auth"
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/close"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/closed"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/closer"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/count"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/eose"

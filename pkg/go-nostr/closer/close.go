@@ -1,4 +1,4 @@
-package close
+package closer
 
 import (
 	"encoding/json"
@@ -13,28 +13,28 @@ var _ envelopes.Envelope = (*Envelope)(nil)
 
 type Envelope string
 
-func (_ Envelope) Label() string { return "CLOSE" }
-func (c Envelope) String() string {
+func (_ *Envelope) Label() string { return "CLOSE" }
+func (c *Envelope) String() string {
 	v, _ := json.Marshal(c)
 	return string(v)
 }
 
-func (v *Envelope) UnmarshalJSON(data []byte) error {
+func (c *Envelope) UnmarshalJSON(data []byte) error {
 	r := gjson.ParseBytes(data)
 	arr := r.Array()
 	switch len(arr) {
 	case 2:
-		*v = Envelope(arr[1].Str)
+		*c = Envelope(arr[1].Str)
 		return nil
 	default:
 		return fmt.Errorf("failed to decode CLOSE envelope")
 	}
 }
 
-func (v Envelope) MarshalJSON() ([]byte, error) {
+func (c *Envelope) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	w.RawString(`["CLOSE",`)
-	w.Raw(json.Marshal(string(v)))
+	w.Raw(json.Marshal(string(*c)))
 	w.RawString(`]`)
 	return w.BuildBytes()
 }

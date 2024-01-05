@@ -12,10 +12,10 @@ type T struct {
 	IDs     []string             `json:"ids,omitempty"`
 	Kinds   []int                `json:"kinds,omitempty"`
 	Authors []string             `json:"authors,omitempty"`
-	Tags    TagMap               `json:"-,omitempty"`
-	Since   *timestamp.Timestamp `json:"since,omitempty"`
-	Until   *timestamp.Timestamp `json:"until,omitempty"`
-	Limit   int                  `json:"limit,omitempty"`
+	Tags    TagMap       `json:"-,omitempty"`
+	Since   *timestamp.T `json:"since,omitempty"`
+	Until   *timestamp.T `json:"until,omitempty"`
+	Limit   int          `json:"limit,omitempty"`
 	Search  string               `json:"search,omitempty"`
 }
 

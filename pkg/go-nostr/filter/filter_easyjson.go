@@ -114,9 +114,9 @@ func easyjson4d398eaaDecodeGithubComNbdWtfGoNostr(in *jlexer.Lexer, out *T) {
 				out.Since = nil
 			} else {
 				if out.Since == nil {
-					out.Since = new(timestamp.Timestamp)
+					out.Since = new(timestamp.T)
 				}
-				*out.Since = timestamp.Timestamp(in.Int64())
+				*out.Since = timestamp.T(in.Int64())
 			}
 		case "until":
 			if in.IsNull() {
@@ -124,9 +124,9 @@ func easyjson4d398eaaDecodeGithubComNbdWtfGoNostr(in *jlexer.Lexer, out *T) {
 				out.Until = nil
 			} else {
 				if out.Until == nil {
-					out.Until = new(timestamp.Timestamp)
+					out.Until = new(timestamp.T)
 				}
-				*out.Until = timestamp.Timestamp(in.Int64())
+				*out.Until = timestamp.T(in.Int64())
 			}
 		case "limit":
 			out.Limit = int(in.Int())

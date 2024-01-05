@@ -106,7 +106,7 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters filt
 	ctx, cancel := context.WithCancel(ctx)
 	_ = cancel // do this so `go vet` will stop complaining
 	events := make(chan IncomingEvent)
-	seenAlready := xsync.NewMapOf[timestamp.Timestamp]()
+	seenAlready := xsync.NewMapOf[timestamp.T]()
 	ticker := time.NewTicker(seenAlreadyDropTick)
 
 	eose := false
@@ -178,8 +178,8 @@ func (pool *SimplePool) subMany(ctx context.Context, urls []string, filters filt
 						}
 					case <-ticker.C:
 						if eose {
-							old := timestamp.Timestamp(time.Now().Add(-seenAlreadyDropTick).Unix())
-							seenAlready.Range(func(id string, value timestamp.Timestamp) bool {
+							old := timestamp.T(time.Now().Add(-seenAlreadyDropTick).Unix())
+							seenAlready.Range(func(id string, value timestamp.T) bool {
 								if value < old {
 									seenAlready.Delete(id)
 								}

@@ -18,9 +18,9 @@ import (
 
 type T struct {
 	ID        string              `json:"id"`
-	PubKey    string              `json:"pubkey"`
-	CreatedAt timestamp.Timestamp `json:"created_at"`
-	Kind      int                 `json:"kind"`
+	PubKey    string      `json:"pubkey"`
+	CreatedAt timestamp.T `json:"created_at"`
+	Kind      int         `json:"kind"`
 	Tags      tags.Tags           `json:"tags"`
 	Content   string              `json:"content"`
 	Sig       string              `json:"sig"`

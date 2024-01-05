@@ -25,7 +25,7 @@ func TestFilterUnmarshal(t *testing.T) {
 }
 
 func TestFilterMarshal(t *testing.T) {
-	until := timestamp.Timestamp(12345678)
+	until := timestamp.T(12345678)
 	filterj, e := json.Marshal(T{
 		Kinds: []int{event.KindTextNote, event.KindRecommendServer, event.KindEncryptedDirectMessage},
 		Tags:  TagMap{"fruit": {"banana", "mango"}},

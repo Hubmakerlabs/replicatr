@@ -17,7 +17,7 @@ type Group struct {
 	Private bool
 	Closed  bool
 
-	LastMetadataUpdate timestamp.Timestamp
+	LastMetadataUpdate timestamp.T
 }
 
 func (group Group) ToMetadataEvent() *event.T {

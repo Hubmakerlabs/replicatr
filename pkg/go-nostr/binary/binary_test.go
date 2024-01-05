@@ -28,7 +28,7 @@ func TestBinaryPartialGet(t *testing.T) {
 		if sig := hex.EncodeToString(bevt[64:128]); sig != evt.Sig {
 			t.Fatalf("partial sig wrong. got %v, expected %v", sig, evt.Sig)
 		}
-		if createdAt := timestamp.Timestamp(binary.BigEndian.Uint32(bevt[128:132])); createdAt != evt.CreatedAt {
+		if createdAt := timestamp.T(binary.BigEndian.Uint32(bevt[128:132])); createdAt != evt.CreatedAt {
 			t.Fatalf("partial created_at wrong. got %v, expected %v", createdAt, evt.CreatedAt)
 		}
 		if kind := int(binary.BigEndian.Uint16(bevt[132:134])); kind != evt.Kind {
