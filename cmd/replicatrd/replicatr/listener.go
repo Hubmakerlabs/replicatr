@@ -1,22 +1,24 @@
 package replicatr
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
 type Listener struct {
-	filters Filters
-	cancel  CancelCauseFunc
+	filters filters.T
+	cancel  context.CancelCauseFunc
 }
 
 var listeners = xsync.NewTypedMapOf[*WebSocket,
 	ListenerMap](pointerHasher[WebSocket])
 
-func GetListeningFilters() (respFilters Filters) {
-	respFilters = make(Filters, 0, listeners.Size()*2)
+func GetListeningFilters() (respFilters filters.T) {
+	respFilters = make(filters.T, 0, listeners.Size()*2)
 	// here we go through all the existing listeners
 	listeners.Range(func(_ *WebSocket, subs ListenerMap) bool {
 		subs.Range(func(_ string, listener *Listener) bool {
@@ -41,16 +43,16 @@ func GetListeningFilters() (respFilters Filters) {
 	return
 }
 
-func setListener(id string, ws *WebSocket, f Filters, c CancelCauseFunc) {
+func SetListener(id string, ws *WebSocket, f filters.T, c context.CancelCauseFunc) {
 	subs, _ := listeners.LoadOrCompute(ws, func() ListenerMap {
 		return xsync.NewMapOf[*Listener]()
 	})
 	subs.Store(id, &Listener{filters: f, cancel: c})
 }
 
-// remove a specific subscription id from listeners for a given ws client and
-// cancel its specific context
-func removeListenerId(ws *WebSocket, id string) {
+// RemoveListenerId removes a specific subscription id from listeners for a
+// given ws client and cancel its specific context
+func RemoveListenerId(ws *WebSocket, id string) {
 	if subs, ok := listeners.Load(ws); ok {
 		if listener, ok := subs.LoadAndDelete(id); ok {
 			listener.cancel(fmt.Errorf("subscription closed by client"))
@@ -61,6 +63,6 @@ func removeListenerId(ws *WebSocket, id string) {
 	}
 }
 
-// remove WebSocket conn from listeners (no need to cancel contexts as they are
-// all inherited from the main connection context)
-func removeListener(ws *WebSocket) { listeners.Delete(ws) }
+// RemoveListener removes WebSocket conn from listeners (no need to cancel
+// contexts as they are all inherited from the main connection context)
+func RemoveListener(ws *WebSocket) { listeners.Delete(ws) }

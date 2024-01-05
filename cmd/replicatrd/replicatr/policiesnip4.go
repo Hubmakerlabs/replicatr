@@ -1,18 +1,21 @@
 package replicatr
 
 import (
+	"context"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"golang.org/x/exp/slices"
 )
 
-// RejectKind4Snoopers prevents reading NIP-04 messages from people not
-// involved in the conversation.
-func RejectKind4Snoopers(ctx Ctx, f *Filter) (bool, string) {
-	// prevent kind-4 events from being returned to unauthed users, only when
-	// authentication is a thing
+// RejectKind4Snoopers prevents reading NIP-04 messages from people not involved
+// in the conversation.
+func RejectKind4Snoopers(c context.Context, f *filter.T) (bool, string) {
+	// prevent kind-4 events from being returned to unauthorized users, only
+	// when authentication is a thing
 	if !slices.Contains(f.Kinds, 4) {
 		return false, ""
 	}
-	ws := GetConnection(ctx)
+	ws := GetConnection(c)
 	s := f.Authors
 	r, _ := f.Tags["p"]
 	switch {

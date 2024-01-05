@@ -6,7 +6,7 @@ import (
 
 // BroadcastEvent emits an event to all listeners whose filters' match, skipping all filters and actions
 // it also doesn't attempt to store the event or trigger any reactions or callbacks
-func (rl *Relay) BroadcastEvent(evt *Event) {
+func (rl *Relay) BroadcastEvent(evt *event.T) {
 	listeners.Range(func(ws *WebSocket, subs ListenerMap) bool {
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {

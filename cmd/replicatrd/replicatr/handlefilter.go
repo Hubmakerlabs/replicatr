@@ -2,19 +2,24 @@ package replicatr
 
 import (
 	"errors"
+	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	event2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/notice"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 )
 
-func (rl *Relay) handleFilter(ctx Ctx, id string,
-	eose *WaitGroup, ws *WebSocket, f *Filter) (e error) {
+func (rl *Relay) handleFilter(c context.T, id string,
+	eose *sync.WaitGroup, ws *WebSocket, f *filter.T) (e error) {
 
 	defer eose.Done()
 	// overwrite the filter (for example, to eliminate some kinds or that we
 	// know we don't support)
 	for _, ovw := range rl.OverwriteFilter {
-		ovw(ctx, f)
+		ovw(c, f)
 	}
 	if f.Limit < 0 {
 		e = errors.New("blocked: filter invalidated")
@@ -26,8 +31,8 @@ func (rl *Relay) handleFilter(ctx Ctx, id string,
 	// that we know we don't support, and then if the end result is an empty
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
-		if rej, msg := reject(ctx, f); rej {
-			rl.E.Chk(ws.WriteJSON(&NoticeEnvelope{Text: msg}))
+		if rej, msg := reject(c, f); rej {
+			rl.E.Chk(ws.WriteJSON(notice.Envelope(msg)))
 			return errors.New(normalize.OKMessage(msg, "blocked"))
 		}
 	}
@@ -35,20 +40,20 @@ func (rl *Relay) handleFilter(ctx Ctx, id string,
 	// but we might be fetching stuff from multiple places)
 	eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
-		var ch chan *Event
-		if ch, e = query(ctx, f); rl.E.Chk(e) {
-			rl.E.Chk(ws.WriteJSON(&NoticeEnvelope{Text: e.Error()}))
+		var ch chan *event.T
+		if ch, e = query(c, f); rl.E.Chk(e) {
+			rl.E.Chk(ws.WriteJSON(notice.Envelope(e.Error())))
 			eose.Done()
 			continue
 		}
-		go func(ch chan *Event) {
-			for event := range ch {
+		go func(ch chan *event.T) {
+			for ev := range ch {
 				for _, ovw := range rl.OverwriteResponseEvent {
-					ovw(ctx, event)
+					ovw(c, ev)
 				}
 				rl.E.Chk(ws.WriteJSON(event2.Envelope{
 					SubscriptionID: &id,
-					T:              *event,
+					T:              *ev,
 				}))
 			}
 			eose.Done()
