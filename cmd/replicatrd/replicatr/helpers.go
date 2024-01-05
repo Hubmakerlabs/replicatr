@@ -3,11 +3,15 @@ package replicatr
 import (
 	"encoding/hex"
 	"hash/maphash"
+	"net/http"
 	"strconv"
 	"strings"
 	"unsafe"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/auth"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/sebest/xff"
 )
@@ -20,8 +24,8 @@ const (
 var log, fails = log2.GetStd()
 var hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 
-func RequestAuth(ctx Ctx) {
-	ws := GetConnection(ctx)
+func RequestAuth(c context.T) {
+	ws := GetConnection(c)
 	ws.authLock.Lock()
 	if ws.Authed == nil {
 		ws.Authed = make(chan struct{})
@@ -30,17 +34,17 @@ func RequestAuth(ctx Ctx) {
 	log.E.Chk(ws.WriteJSON(auth.Envelope{Challenge: &ws.Challenge}))
 }
 
-func GetConnection(ctx Ctx) *WebSocket { return ctx.Value(wsKey).(*WebSocket) }
+func GetConnection(c context.T) *WebSocket { return c.Value(wsKey).(*WebSocket) }
 
-func GetAuthed(ctx Ctx) string { return GetConnection(ctx).AuthedPublicKey }
+func GetAuthed(c context.T) string { return GetConnection(c).AuthedPublicKey }
 
-func GetIP(ctx Ctx) string { return xff.GetRemoteAddr(GetConnection(ctx).Request) }
+func GetIP(c context.T) string { return xff.GetRemoteAddr(GetConnection(c).Request) }
 
-func GetSubscriptionID(ctx Ctx) string { return ctx.Value(subscriptionIdKey).(string) }
+func GetSubscriptionID(c context.T) string { return c.Value(subscriptionIdKey).(string) }
 
-func GetOpenSubscriptions(ctx Ctx) Filters {
-	if subs, ok := listeners.Load(GetConnection(ctx)); ok {
-		res := make(Filters, 0, listeners.Size()*2)
+func GetOpenSubscriptions(c context.T) filters.T {
+	if subs, ok := listeners.Load(GetConnection(c)); ok {
+		res := make(filters.T, 0, listeners.Size()*2)
 		subs.Range(func(_ string, sub *Listener) bool {
 			res = append(res, sub.filters...)
 			return true
@@ -54,12 +58,12 @@ func pointerHasher[V any](_ maphash.Seed, k *V) uint64 {
 	return uint64(uintptr(unsafe.Pointer(k)))
 }
 
-func isOlder(prev, next *Event) bool {
+func isOlder(prev, next *event.T) bool {
 	p, n := prev.CreatedAt, next.CreatedAt
 	return p < n || (p == n && prev.ID > next.ID)
 }
 
-func getServiceBaseURL(r *Request) string {
+func getServiceBaseURL(r *http.Request) string {
 	host := r.Header.Get("X-Forwarded-Host")
 	if host == "" {
 		host = r.Host

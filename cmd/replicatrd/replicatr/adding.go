@@ -4,21 +4,24 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
 
 // AddEvent sends an event through then normal add pipeline, as if it was
 // received from a websocket.
-func (rl *Relay) AddEvent(ctx Ctx, evt *Event) (e error) {
-	if evt == nil {
+func (rl *Relay) AddEvent(c context.T, ev *event.T) (e error) {
+	if ev == nil {
 		e = errors.New("error: event is nil")
 		rl.E.Ln(e)
 		return
 	}
 	for _, rej := range rl.RejectEvent {
-		if reject, msg := rej(ctx, evt); reject {
+		if reject, msg := rej(c, ev); reject {
 			if msg == "" {
 				e = errors.New("blocked: no reason")
 				rl.E.Ln(e)
@@ -30,42 +33,42 @@ func (rl *Relay) AddEvent(ctx Ctx, evt *Event) (e error) {
 			}
 		}
 	}
-	if 20000 <= evt.Kind && evt.Kind < 30000 {
+	if 20000 <= ev.Kind && ev.Kind < 30000 {
 		// do not store ephemeral events
 	} else {
-		if evt.Kind == 0 || evt.Kind == 3 || (10000 <= evt.Kind && evt.Kind < 20000) {
+		if ev.Kind == 0 || ev.Kind == 3 || (10000 <= ev.Kind && ev.Kind < 20000) {
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
-				var ch chan *Event
-				ch, e = query(ctx, &Filter{
-					Authors: tag.T{evt.PubKey},
-					Kinds:   []int{evt.Kind},
+				var ch chan *event.T
+				ch, e = query(c, &filter.T{
+					Authors: tag.T{ev.PubKey},
+					Kinds:   []int{ev.Kind},
 				})
 				if rl.E.Chk(e) {
 					continue
 				}
-				if previous := <-ch; previous != nil && isOlder(previous, evt) {
+				if previous := <-ch; previous != nil && isOlder(previous, ev) {
 					for _, del := range rl.DeleteEvent {
-						rl.D.Chk(del(ctx, previous))
+						rl.D.Chk(del(c, previous))
 					}
 				}
 			}
-		} else if 30000 <= evt.Kind && evt.Kind < 40000 {
+		} else if 30000 <= ev.Kind && ev.Kind < 40000 {
 			// parameterized replaceable event, delete before storing
-			d := evt.Tags.GetFirst([]string{"d", ""})
+			d := ev.Tags.GetFirst([]string{"d", ""})
 			if d != nil {
 				for _, query := range rl.QueryEvents {
-					var ch chan *Event
-					if ch, e = query(ctx, &Filter{
-						Authors: tag.T{evt.PubKey},
-						Kinds:   []int{evt.Kind},
-						Tags:    TagMap{"d": []string{d.Value()}},
+					var ch chan *event.T
+					if ch, e = query(c, &filter.T{
+						Authors: tag.T{ev.PubKey},
+						Kinds:   []int{ev.Kind},
+						Tags:    filter.TagMap{"d": []string{d.Value()}},
 					}); rl.E.Chk(e) {
 						continue
 					}
-					if previous := <-ch; previous != nil && isOlder(previous, evt) {
+					if previous := <-ch; previous != nil && isOlder(previous, ev) {
 						for _, del := range rl.DeleteEvent {
-							rl.E.Chk(del(ctx, previous))
+							rl.E.Chk(del(c, previous))
 						}
 					}
 				}
@@ -73,7 +76,7 @@ func (rl *Relay) AddEvent(ctx Ctx, evt *Event) (e error) {
 		}
 		// store
 		for _, store := range rl.StoreEvent {
-			if saveErr := store(ctx, evt); rl.E.Chk(saveErr) {
+			if saveErr := store(c, ev); rl.E.Chk(saveErr) {
 				switch {
 				case errors.Is(saveErr, eventstore.ErrDupEvent):
 					return nil
@@ -83,12 +86,12 @@ func (rl *Relay) AddEvent(ctx Ctx, evt *Event) (e error) {
 			}
 		}
 		for _, ons := range rl.OnEventSaved {
-			ons(ctx, evt)
+			ons(c, ev)
 		}
 	}
 	for _, ovw := range rl.OverwriteResponseEvent {
-		ovw(ctx, evt)
+		ovw(c, ev)
 	}
-	rl.BroadcastEvent(evt)
+	rl.BroadcastEvent(ev)
 	return nil
 }

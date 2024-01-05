@@ -7,7 +7,7 @@ import (
 )
 
 // ServeHTTP implements http.Handler interface.
-func (rl *Relay) ServeHTTP(w ResponseWriter, r *Request) {
+func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if rl.ServiceURL == "" {
 		rl.ServiceURL = getServiceBaseURL(r)
 	}
