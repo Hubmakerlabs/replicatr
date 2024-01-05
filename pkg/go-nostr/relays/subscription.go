@@ -164,9 +164,9 @@ func (sub *Subscription) Fire() error {
 
 	var reqb []byte
 	if sub.countResult == nil {
-		reqb, _ = req.ReqEnvelope{id, sub.Filters}.MarshalJSON()
+		reqb, _ = req.Envelope{id, sub.Filters}.MarshalJSON()
 	} else {
-		reqb, _ = count.CountEnvelope{id, sub.Filters, nil}.MarshalJSON()
+		reqb, _ = count.Envelope{id, sub.Filters, nil}.MarshalJSON()
 	}
 	fmt.Printf("{%s} sending %v", sub.Relay.URL, string(reqb))
 

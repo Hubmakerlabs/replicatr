@@ -25,19 +25,19 @@ func ParseMessage(message []byte) envelopes.Envelope {
 	var v envelopes.Envelope
 	switch {
 	case bytes.Contains(label, []byte("EVENT")):
-		v = &event.EventEnvelope{}
+		v = &event.Envelope{}
 	case bytes.Contains(label, []byte("REQ")):
-		v = &req.ReqEnvelope{}
+		v = &req.Envelope{}
 	case bytes.Contains(label, []byte("COUNT")):
-		v = &count.CountEnvelope{}
+		v = &count.Envelope{}
 	case bytes.Contains(label, []byte("NOTICE")):
-		x := notice.NoticeEnvelope("")
+		x := notice.Envelope("")
 		v = &x
 	case bytes.Contains(label, []byte("EOSE")):
-		x := eose.EOSEEnvelope("")
+		x := eose.Envelope("")
 		v = &x
 	case bytes.Contains(label, []byte("OK")):
-		v = &OK.OKEnvelope{}
+		v = &OK.Envelope{}
 	case bytes.Contains(label, []byte("AUTH")):
 		v = &auth.Envelope{}
 	case bytes.Contains(label, []byte("CLOSED")):

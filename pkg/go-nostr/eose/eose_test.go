@@ -7,7 +7,7 @@ import (
 
 func TestEoseEnvelopeEncodingAndDecoding(t *testing.T) {
 	src := `["EOSE","kjasbdlasvdluiasvd\"kjasbdksab\\d"]`
-	var env EOSEEnvelope
+	var env Envelope
 	json.Unmarshal([]byte(src), &env)
 	if env != "kjasbdlasvdluiasvd\"kjasbdksab\\d" {
 		t.Error("failed to decode EOSE")

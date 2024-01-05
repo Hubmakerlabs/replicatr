@@ -31,12 +31,12 @@ type (
 	Filter          = filter.T
 	Filters         = filters.T
 	TagMap          = filter.TagMap
-	OKEnvelope      = OK.OKEnvelope
+	OKEnvelope      = OK.Envelope
 	EventID         = eventid.EventID
-	CountEnvelope   = count.CountEnvelope
+	CountEnvelope   = count.Envelope
 	ClosedEnvelope  = closed.Envelope
-	ReqEnvelope     = req.ReqEnvelope
-	EOSEEnvelope    = eose.EOSEEnvelope
+	ReqEnvelope     = req.Envelope
+	EOSEEnvelope    = eose.Envelope
 	CloseEnvelope   = close2.Envelope
 	AuthEnvelope    = auth.Envelope
 	NoticeEnvelope  = notice.Envelope

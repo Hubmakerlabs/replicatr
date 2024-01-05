@@ -12,7 +12,7 @@ func TestOKEnvelopeEncodingAndDecoding(t *testing.T) {
 	}
 
 	for _, raw := range okEnvelopes {
-		var env OKEnvelope
+		var env Envelope
 		if e := json.Unmarshal([]byte(raw), &env); e != nil {
 			t.Errorf("failed to parse ok envelope json: %v", e)
 		}

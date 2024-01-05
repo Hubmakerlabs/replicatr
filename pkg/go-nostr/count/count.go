@@ -11,21 +11,21 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-var _ envelopes.Envelope = (*CountEnvelope)(nil)
+var _ envelopes.Envelope = (*Envelope)(nil)
 
-type CountEnvelope struct {
+type Envelope struct {
 	SubscriptionID string
 	filters.T
 	Count *int64
 }
 
-func (_ CountEnvelope) Label() string { return "COUNT" }
-func (c CountEnvelope) String() string {
+func (_ Envelope) Label() string { return "COUNT" }
+func (c Envelope) String() string {
 	v, _ := json.Marshal(c)
 	return string(v)
 }
 
-func (v *CountEnvelope) UnmarshalJSON(data []byte) error {
+func (v *Envelope) UnmarshalJSON(data []byte) error {
 	r := gjson.ParseBytes(data)
 	arr := r.Array()
 	if len(arr) < 3 {
@@ -60,7 +60,7 @@ func (v *CountEnvelope) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (v CountEnvelope) MarshalJSON() ([]byte, error) {
+func (v Envelope) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	w.RawString(`["COUNT",`)
 	w.RawString(`"` + v.SubscriptionID + `"`)

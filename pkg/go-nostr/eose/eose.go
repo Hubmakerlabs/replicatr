@@ -11,27 +11,27 @@ import (
 
 const RELAY = "wss://nostr.mom"
 
-var _ envelopes.Envelope = (*EOSEEnvelope)(nil)
+var _ envelopes.Envelope = (*Envelope)(nil)
 
-type EOSEEnvelope string
+type Envelope string
 
-func (_ EOSEEnvelope) Label() string { return "EOSE" }
-func (e EOSEEnvelope) String() string {
+func (_ Envelope) Label() string { return "EOSE" }
+func (e Envelope) String() string {
 	v, _ := json.Marshal(e)
 	return string(v)
 }
 
-func (v *EOSEEnvelope) UnmarshalJSON(data []byte) error {
+func (v *Envelope) UnmarshalJSON(data []byte) error {
 	r := gjson.ParseBytes(data)
 	arr := r.Array()
 	if len(arr) < 2 {
 		return fmt.Errorf("failed to decode EOSE envelope")
 	}
-	*v = EOSEEnvelope(arr[1].Str)
+	*v = Envelope(arr[1].Str)
 	return nil
 }
 
-func (v EOSEEnvelope) MarshalJSON() ([]byte, error) {
+func (v Envelope) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	w.RawString(`["EOSE",`)
 	w.Raw(json.Marshal(string(v)))
