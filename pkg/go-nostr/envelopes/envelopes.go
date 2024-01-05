@@ -1,6 +1,6 @@
 package envelopes
 
-type Envelope interface {
+type E interface {
 	Label() string
 	UnmarshalJSON([]byte) error
 	MarshalJSON() ([]byte, error)

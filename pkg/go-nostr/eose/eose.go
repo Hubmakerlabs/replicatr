@@ -11,7 +11,7 @@ import (
 
 const RELAY = "wss://nostr.mom"
 
-var _ envelopes.Envelope = (*Envelope)(nil)
+var _ envelopes.E = (*Envelope)(nil)
 
 type Envelope string
 
