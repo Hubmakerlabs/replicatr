@@ -7,7 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/close"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/closer"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countrequest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"

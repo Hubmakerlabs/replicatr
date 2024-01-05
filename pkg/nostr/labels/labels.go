@@ -57,6 +57,7 @@ var (
 	CLOSE  = string(List[LClose])
 	CLOSED = string(List[LClosed])
 	COUNT  = string(List[LCount])
+	AUTH   = string(List[LAuth])
 )
 
 func GetLabel(s string) (l T) {

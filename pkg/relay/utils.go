@@ -15,7 +15,7 @@ const (
 
 func RequestAuth(ctx context.Context) {
 	ws := GetConnection(ctx)
-	log.D.Chk(ws.WriteJSON(auth.ChallengeEnvelope{Challenge: ws.Challenge}))
+	log.D.Chk(ws.WriteJSON(auth.Challenge{Challenge: ws.Challenge}))
 }
 
 func GetConnection(ctx context.Context) *WebSocket {

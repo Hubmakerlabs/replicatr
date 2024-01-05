@@ -13,11 +13,12 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/close"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/closed"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/closer"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countrequest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countresponse"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
@@ -120,7 +121,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 				var e error
 				var ok bool
 				var envelope enveloper.Enveloper
-				if envelope, _, _, e = enveloper.ProcessEnvelope(message); fails(e) || envelope == nil {
+				if envelope, _, _, e = envelopes.ProcessEnvelope(message); fails(e) || envelope == nil {
 					return
 				}
 				switch env := envelope.(type) {
@@ -231,7 +232,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						cancelReqCtx)
 				case *close2.Envelope:
 					removeListenerId(ws, env.T)
-				case *auth.ResponseEnvelope:
+				case *auth.Response:
 					wsBaseUrl := strings.Replace(rl.ServiceURL, "http",
 						"ws", 1)
 					if pubkey, o := auth.Validate(env.T,

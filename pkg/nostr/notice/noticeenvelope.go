@@ -12,10 +12,19 @@ import (
 var log = log2.GetLogger()
 var fails = log.D.Chk
 
+
 // Envelope is a relay message intended to be shown to users in a nostr
 // client interface.
 type Envelope struct {
 	Text string
+}
+
+
+
+
+func (E *Envelope) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
 }
 
 func NewNoticeEnvelope(text string) (E *Envelope) {
@@ -25,7 +34,7 @@ func NewNoticeEnvelope(text string) (E *Envelope) {
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *Envelope) Label() (l labels.T) { return labels.LNotice }
+func (E *Envelope) Label() (l string) { return labels.NOTICE }
 
 func (E *Envelope) ToArray() (a array.T) {
 	return array.T{labels.NOTICE, E.Text}

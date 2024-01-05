@@ -14,6 +14,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countresponse"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -252,7 +253,7 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 			message := buf.Bytes()
 			log.D.F("{%s} %v", r.URL, string(message))
 			var envelope enveloper.Enveloper
-			envelope, _, _, e = enveloper.ProcessEnvelope(message)
+			envelope, _, _, e = envelopes.ProcessEnvelope(message)
 			if envelope == nil || fails(e) {
 				continue
 			}
@@ -265,7 +266,7 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 				} else {
 					log.D.F("NOTICE from %s: '%s'\n", r.URL, env.Text)
 				}
-			case *auth.ChallengeEnvelope:
+			case *auth.Challenge:
 				if env.Challenge == "" {
 					continue
 				}
@@ -426,7 +427,7 @@ func (r *Relay) Auth(ctx context.Context, event *event.T) (s Status, e error) {
 	r.okCallbacks.Store(string(event.ID), okCallback)
 	defer r.okCallbacks.Delete(string(event.ID))
 	// send AUTH
-	authResponse, _ := (&auth.ResponseEnvelope{T: event}).MarshalJSON()
+	authResponse, _ := (&auth.Response{T: event}).MarshalJSON()
 	log.D.F("{%s} sending %v\n", r.URL, string(authResponse))
 	if e = <-r.Write(authResponse); e != nil {
 		// s will be "failed"

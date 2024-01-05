@@ -26,6 +26,11 @@ type Envelope struct {
 	Approximate    bool
 }
 
+func (env *Envelope) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
+}
+
 var _ enveloper.Enveloper = &Envelope{}
 
 func NewCountResponseEnvelope(sid subscriptionid.T, count int64,
@@ -37,29 +42,29 @@ func NewCountResponseEnvelope(sid subscriptionid.T, count int64,
 	}
 	return
 }
-func (C *Envelope) Label() labels.T    { return labels.LCount }
-func (C *Envelope) String() (s string) { return C.ToArray().String() }
-func (C *Envelope) Bytes() (s []byte)  { return C.ToArray().Bytes() }
+func (env *Envelope) Label() string      { return labels.EVENT }
+func (env *Envelope) String() (s string) { return env.ToArray().String() }
+func (env *Envelope) Bytes() (s []byte)  { return env.ToArray().Bytes() }
 
-func (C *Envelope) ToArray() array.T {
+func (env *Envelope) ToArray() array.T {
 	count := object.T{
-		{Key: "count", Value: C.Count},
+		{Key: "count", Value: env.Count},
 	}
-	if C.Approximate {
+	if env.Approximate {
 		count = append(count,
-			object.KV{Key: "approximate", Value: C.Approximate})
+			object.KV{Key: "approximate", Value: env.Approximate})
 	}
-	return array.T{labels.COUNT, C.SubscriptionID, count}
+	return array.T{labels.COUNT, env.SubscriptionID, count}
 }
 
-func (C *Envelope) MarshalJSON() (bytes []byte, e error) {
+func (env *Envelope) MarshalJSON() (bytes []byte, e error) {
 	// log.D.F("count envelope marshal")
-	return C.ToArray().Bytes(), nil
+	return env.ToArray().Bytes(), nil
 }
 
-func (C *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
-	if C == nil {
+	if env == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label.
@@ -75,7 +80,7 @@ func (C *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	if sid, e = buf.ReadUntil('"'); fails(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
-	C.SubscriptionID = subscriptionid.T(sid)
+	env.SubscriptionID = subscriptionid.T(sid)
 	// Next, find the comma after the subscription ID.
 	if e = buf.ScanThrough(','); e != nil {
 		return
@@ -88,8 +93,8 @@ func (C *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	if e = json.Unmarshal(countObject, &count); fails(e) {
 		return
 	}
-	C.Count = count.Count
-	C.Approximate = count.Approximate
+	env.Count = count.Count
+	env.Approximate = count.Approximate
 	return
 }
 

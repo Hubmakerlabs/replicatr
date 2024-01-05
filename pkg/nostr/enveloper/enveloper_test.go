@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/close"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/closer"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventest"
@@ -43,7 +44,7 @@ func TestEnveloper(t *testing.T) {
 		marshaled := string(b)
 		log.D.Ln("marshaled  ", marshaled)
 		var env enveloper.Enveloper
-		env, _, _, e = enveloper.ProcessEnvelope(b)
+		env, _, _, e = envelopes.ProcessEnvelope(b)
 		if e != nil {
 			t.Fatal(e)
 		}
