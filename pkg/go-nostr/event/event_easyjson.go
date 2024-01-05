@@ -45,7 +45,7 @@ func easyjsonF642ad3eDecodeGithubComNbdWtfGoNostr(in *jlexer.Lexer, out *T) {
 		case "pubkey":
 			out.PubKey = in.String()
 		case "created_at":
-			out.CreatedAt = timestamp.Timestamp(in.Int64())
+			out.CreatedAt = timestamp.T(in.Int64())
 		case "kind":
 			out.Kind = in.Int()
 		case "tags":

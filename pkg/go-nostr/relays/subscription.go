@@ -7,7 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/close"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/closer"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/count"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"

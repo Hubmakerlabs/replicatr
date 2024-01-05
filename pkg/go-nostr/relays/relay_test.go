@@ -27,7 +27,7 @@ func TestPublish(t *testing.T) {
 	textNote := event.T{
 		Kind:      event.KindTextNote,
 		Content:   "hello",
-		CreatedAt: timestamp.Timestamp(1672068534), // random fixed timestamp
+		CreatedAt: timestamp.T(1672068534), // random fixed timestamp
 		Tags:      tags.Tags{[]string{"foo", "bar"}},
 		PubKey:    pub,
 	}

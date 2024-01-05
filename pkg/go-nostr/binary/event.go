@@ -13,7 +13,7 @@ type Event struct {
 	Sig       [64]byte
 	ID        [32]byte
 	Kind      uint16
-	CreatedAt timestamp.Timestamp
+	CreatedAt timestamp.T
 	Content   string
 	Tags      tags.Tags
 }
