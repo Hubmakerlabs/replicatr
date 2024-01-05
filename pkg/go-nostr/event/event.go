@@ -179,7 +179,7 @@ type Envelope struct {
 	T
 }
 
-var _ envelopes.Envelope = (*Envelope)(nil)
+var _ envelopes.E = (*Envelope)(nil)
 
 func (_ Envelope) Label() string { return "EVENT" }
 

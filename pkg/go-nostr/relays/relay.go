@@ -319,7 +319,7 @@ func (r *Relay) Auth(ctx context.Context, sign func(event *event.T) error) error
 }
 
 // publish can be used both for EVENT and for AUTH
-func (r *Relay) publish(ctx context.Context, id string, env envelopes.Envelope) error {
+func (r *Relay) publish(ctx context.Context, id string, env envelopes.E) error {
 	var e error
 	var cancel context.CancelFunc
 

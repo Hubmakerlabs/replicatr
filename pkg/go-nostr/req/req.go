@@ -10,7 +10,7 @@ import (
 	"github.com/tidwall/gjson"
 )
 
-var _ envelopes.Envelope = (*Envelope)(nil)
+var _ envelopes.E = (*Envelope)(nil)
 
 type Envelope struct {
 	SubscriptionID string

@@ -16,7 +16,7 @@ func TestParseMessage(t *testing.T) {
 	testCases := []struct {
 		Name             string
 		Message          []byte
-		ExpectedEnvelope envelopes.Envelope
+		ExpectedEnvelope envelopes.E
 	}{
 		{
 			Name:             "nil",

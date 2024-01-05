@@ -15,14 +15,14 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/req"
 )
 
-func ParseMessage(message []byte) envelopes.Envelope {
+func ParseMessage(message []byte) envelopes.E {
 	firstComma := bytes.Index(message, []byte{','})
 	if firstComma == -1 {
 		return nil
 	}
 	label := message[0:firstComma]
 
-	var v envelopes.Envelope
+	var v envelopes.E
 	switch {
 	case bytes.Contains(label, []byte("EVENT")):
 		v = &event.Envelope{}
