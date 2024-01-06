@@ -10,24 +10,25 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/connect"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countresponse"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eose"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
+	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countresponse"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
+	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/notice"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/puzpuzpuz/xsync/v2"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
-	"github.com/puzpuzpuz/xsync/v2"
 )
 
 // Option is the type of the argument passed for that. Some examples of this are
@@ -266,7 +267,7 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 				} else {
 					log.D.F("NOTICE from %s: '%s'\n", r.URL, env.Text)
 				}
-			case *auth.Challenge:
+			case *auth2.Challenge:
 				if env.Challenge == "" {
 					continue
 				}
@@ -274,7 +275,7 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 				if r.challenges != nil {
 					r.challenges <- env.Challenge
 				}
-			case *event.Envelope:
+			case *event2.Envelope:
 				if env.SubscriptionID == "" {
 					continue
 				}
@@ -368,7 +369,7 @@ func (r *Relay) Publish(ctx context.Context, evt *event.T) (s Status, e error) {
 	r.okCallbacks.Store(string(evt.ID), okCallback)
 	defer r.okCallbacks.Delete(string(evt.ID))
 	// publish event
-	envb, _ := (&event.Envelope{Event: evt}).MarshalJSON()
+	envb, _ := (&event2.Envelope{Event: evt}).MarshalJSON()
 	log.D.F("{%s} sending %v\n", r.URL, string(envb))
 	s = PublishStatusSent
 	if e = <-r.Write(envb); fails(e) {
@@ -427,7 +428,7 @@ func (r *Relay) Auth(ctx context.Context, event *event.T) (s Status, e error) {
 	r.okCallbacks.Store(string(event.ID), okCallback)
 	defer r.okCallbacks.Delete(string(event.ID))
 	// send AUTH
-	authResponse, _ := (&auth.Response{T: event}).MarshalJSON()
+	authResponse, _ := (&auth2.Response{T: event}).MarshalJSON()
 	log.D.F("{%s} sending %v\n", r.URL, string(authResponse))
 	if e = <-r.Write(authResponse); e != nil {
 		// s will be "failed"

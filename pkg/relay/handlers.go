@@ -11,18 +11,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/closed"
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/closer"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countrequest"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countresponse"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eose"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
+	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closed"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countrequest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countresponse"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/req"
 	"github.com/fasthttp/websocket"
 	"github.com/minio/sha256-simd"
 	"github.com/rs/cors"
@@ -232,10 +232,10 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						cancelReqCtx)
 				case *close2.Envelope:
 					removeListenerId(ws, env.T)
-				case *auth.Response:
+				case *auth2.Response:
 					wsBaseUrl := strings.Replace(rl.ServiceURL, "http",
 						"ws", 1)
-					if pubkey, o := auth.Validate(env.T,
+					if pubkey, o := auth2.Validate(env.T,
 						ws.Challenge, wsBaseUrl); o {
 
 						ws.AuthedPublicKey = pubkey

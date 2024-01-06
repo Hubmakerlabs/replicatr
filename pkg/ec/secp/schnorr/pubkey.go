@@ -8,7 +8,7 @@ package schnorr
 import (
 	"fmt"
 
-	"mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // These constants define the lengths of serialized public keys.

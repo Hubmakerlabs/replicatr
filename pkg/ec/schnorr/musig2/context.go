@@ -5,8 +5,8 @@ package musig2
 import (
 	"fmt"
 
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 )
 
 var (
@@ -222,7 +222,7 @@ func NewContext(signingKey *btcec.SecretKey, shouldSort bool,
 	// verification.
 	case opts.keySet != nil:
 		if e := ctx.combineSignerKeys(); e != nil {
-			return nil, err
+			return nil, e
 		}
 
 	// The total signers are known, so we add ourselves, and skip key
@@ -247,7 +247,7 @@ func NewContext(signingKey *btcec.SecretKey, shouldSort bool,
 			WithNonceSecretKeyAux(signingKey),
 		)
 		if e != nil {
-			return nil, err
+			return nil, e
 		}
 	}
 
@@ -297,7 +297,6 @@ func (c *Context) combineSignerKeys() (e error) {
 
 	// Next, we'll use this information to compute the aggregated
 	// public key that'll be used for signing in practice.
-	var e error
 	c.combinedKey, _, _, e = AggregateKeys(
 		c.opts.keySet, c.shouldSort, keyAggOpts...,
 	)
@@ -339,7 +338,7 @@ func (c *Context) RegisterSigner(pub *btcec.PublicKey) (bool, error) {
 	haveAllSigners = len(c.opts.keySet) == c.opts.numSigners
 	if haveAllSigners {
 		if e := c.combineSignerKeys(); e != nil {
-			return false, err
+			return false, e
 		}
 	}
 
@@ -488,7 +487,7 @@ func (c *Context) NewSession(options ...SessionOption) (*Session, error) {
 			WithNonceCombinedKeyAux(c.combinedKey.FinalKey),
 		)
 		if e != nil {
-			return nil, err
+			return nil, e
 		}
 	}
 
@@ -539,7 +538,7 @@ func (s *Session) RegisterPubNonce(nonce [PubNonceSize]byte) (bool, error) {
 	if haveAllNonces {
 		combinedNonce, e := AggregateNonces(s.pubNonces)
 		if e != nil {
-			return false, err
+			return false, e
 		}
 
 		s.combinedNonce = &combinedNonce
@@ -589,7 +588,7 @@ func (s *Session) Sign(msg [32]byte,
 	s.localNonces = nil
 
 	if e != nil {
-		return nil, err
+		return nil, e
 	}
 
 	s.msg = msg

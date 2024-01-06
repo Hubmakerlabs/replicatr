@@ -465,7 +465,7 @@ func TestNAFRandom(t *testing.T) {
 		result := naf(valBytes[:])
 		pos, neg := result.Pos(), result.Neg()
 		if e := checkNAFEncoding(pos, neg, bigIntVal); e != nil {
-			t.Fatalf("encoding err: %v\nin: %x\npos: %x\nneg: %x", err,
+			t.Fatalf("encoding err: %v\nin: %x\npos: %x\nneg: %x", e,
 				bigIntVal, pos, neg)
 		}
 	}
@@ -742,7 +742,7 @@ func TestSplitKRandom(t *testing.T) {
 		origK := randModNScalar(t, rng)
 		k1, k2 := splitK(origK)
 		if e := checkLambdaDecomposition(origK, &k1, &k2); e != nil {
-			t.Fatalf("decomposition err: %v\nin: %v\nk1: %v\nk2: %v", err,
+			t.Fatalf("decomposition err: %v\nin: %v\nk1: %v\nk2: %v", e,
 				origK, k1, k2)
 		}
 	}

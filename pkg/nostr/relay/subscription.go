@@ -7,11 +7,11 @@ import (
 	"sync"
 	"sync/atomic"
 
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/closer"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/countrequest"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countrequest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/req"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 

@@ -4,18 +4,14 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	log2 "mleku.online/git/log"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 	"golang.org/x/exp/slices"
 )
 
-var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log, fails = log2.GetStd()
 
 func getTagIndexPrefix(tagValue string) ([]byte, int) {
 	var k []byte   // the key with full length for created_at and idx at the end, but not filled with these

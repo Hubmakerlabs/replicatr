@@ -10,17 +10,14 @@ import (
 	"net"
 	"net/http"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/gobwas/httphead"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsflate"
 	"github.com/gobwas/ws/wsutil"
-	log2 "mleku.online/git/log"
 )
 
-var (
-	log   = log2.GetLogger()
-	fails = log.D.Chk
-)
+var log, fails = log2.GetStd()
 
 type Connection struct {
 	Conn              net.Conn

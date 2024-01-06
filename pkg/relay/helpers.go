@@ -1,7 +1,6 @@
 package relay
 
 import (
-	"encoding/hex"
 	"hash/maphash"
 	"net/http"
 	"strconv"
@@ -9,13 +8,6 @@ import (
 	"unsafe"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	log2 "mleku.online/git/log"
-)
-
-var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
 func pointerHasher[V any](_ maphash.Seed, k *V) uint64 {

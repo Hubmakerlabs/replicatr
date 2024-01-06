@@ -4,21 +4,20 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/closer"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eose"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filtertest"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/notice"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/req"
-	log2 "mleku.online/git/log"
 )
 
-var log = log2.GetLogger()
-var fails = log.D.Chk
+var log, fails = log2.GetStd()
 
 func TestEnveloper(t *testing.T) {
 	// log2.SetLogLevel(log2.Debug)

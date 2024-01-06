@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"

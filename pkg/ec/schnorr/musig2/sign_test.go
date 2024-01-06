@@ -12,9 +12,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 	"github.com/stretchr/testify/require"
-	"mleku.online/git/ec"
-	secp "mleku.online/git/ec/secp"
 )
 
 const (
@@ -163,7 +163,7 @@ func TestMusig2SignVerify(t *testing.T) {
 				t, testCase.Indices, testCases.PubKeys,
 			)
 			if e != nil {
-				require.ErrorIs(t, err, secp.ErrPubKeyNotOnCurve)
+				require.ErrorIs(t, e, secp.ErrPubKeyNotOnCurve)
 				return
 			}
 
@@ -228,7 +228,7 @@ func TestMusig2SignVerify(t *testing.T) {
 				bytes.NewReader(mustParseHex(testCase.Sig)),
 			)
 			if e != nil && strings.Contains(testCase.Comment, "group size") {
-				require.ErrorIs(t, err, ErrPartialSigInvalid)
+				require.ErrorIs(t, e, ErrPartialSigInvalid)
 			}
 
 			e = verifyPartialSig(
@@ -252,13 +252,13 @@ func TestMusig2SignVerify(t *testing.T) {
 					t, testCase.NonceIndices, testCases.PubNonces,
 				)
 				_, e := AggregateNonces(pubNonces)
-				require.ErrorIs(t, err, secp.ErrPubKeyNotOnCurve)
+				require.ErrorIs(t, e, secp.ErrPubKeyNotOnCurve)
 
 			case "Invalid pubkey":
 				_, e := keysFromIndices(
 					t, testCase.Indices, testCases.PubKeys,
 				)
-				require.ErrorIs(t, err, secp.ErrPubKeyNotOnCurve)
+				require.ErrorIs(t, e, secp.ErrPubKeyNotOnCurve)
 
 			default:
 				t.Fatalf("unhandled case: %v", testCase.Comment)

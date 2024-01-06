@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"testing"
 )
 
@@ -182,8 +183,8 @@ func TestNewHashFromStr(t *testing.T) {
 	t.Logf("Running %d tests", len(tests))
 	for i, test := range tests {
 		result, e := NewHashFromStr(test.in)
-		if e != test.e {
-			t.Errorf(unexpectedErrStr, i, err, test.e)
+		if !errors.Is(e, test.err) {
+			t.Errorf(unexpectedErrStr, i, e, test.err)
 			continue
 		} else if e != nil {
 			// Got expected error. Move on to the next test.
@@ -203,18 +204,18 @@ func TestHashJsonMarshal(t *testing.T) {
 
 	hash, e := NewHashFromStr(hashStr)
 	if e != nil {
-		t.Errorf("NewHashFromStr error:%v, hashStr:%s", err, hashStr)
+		t.Errorf("NewHashFromStr error:%v, hashStr:%s", e, hashStr)
 	}
 
 	hashBytes, e := json.Marshal(hash)
 	if e != nil {
-		t.Errorf("Marshal json error:%v, hash:%v", err, hashBytes)
+		t.Errorf("Marshal json error:%v, hash:%v", e, hashBytes)
 	}
 
 	var newHash Hash
 	e = json.Unmarshal(hashBytes, &newHash)
 	if e != nil {
-		t.Errorf("Unmarshal json error:%v, hash:%v", err, hashBytes)
+		t.Errorf("Unmarshal json error:%v, hash:%v", e, hashBytes)
 	}
 
 	if !hash.IsEqual(&newHash) {
@@ -223,7 +224,7 @@ func TestHashJsonMarshal(t *testing.T) {
 
 	e = newHash.UnmarshalJSON(legacyHashStr)
 	if e != nil {
-		t.Errorf("Unmarshal legacy json error:%v, hash:%v", err, legacyHashStr)
+		t.Errorf("Unmarshal legacy json error:%v, hash:%v", e, legacyHashStr)
 	}
 
 	if !hash.IsEqual(&newHash) {

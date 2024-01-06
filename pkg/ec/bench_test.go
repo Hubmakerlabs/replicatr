@@ -9,7 +9,7 @@ import (
 	"math/big"
 	"testing"
 
-	secp "mleku.online/git/ec/secp"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // setHex decodes the passed big-endian hex string into the internal field value
@@ -190,5 +190,5 @@ func BenchmarkParseCompressedPubKey(b *testing.B) {
 		pk, e = ParsePubKey(rawPk)
 	}
 	_ = pk
-	_ = err
+	_ = e
 }

@@ -127,7 +127,7 @@ func (hash *Hash) UnmarshalJSON(input []byte) (e error) {
 	}
 
 	var sh string
-	e := json.Unmarshal(input, &sh)
+	e = json.Unmarshal(input, &sh)
 	if e != nil {
 		return e
 	}
@@ -145,9 +145,9 @@ func NewHash(newHash []byte) (*Hash, error) {
 	var sh Hash
 	e := sh.SetBytes(newHash)
 	if e != nil {
-		return nil, err
+		return nil, e
 	}
-	return &sh, err
+	return &sh, e
 }
 
 // TaggedHash implements the tagged hash scheme described in BIP-340. We use
@@ -186,7 +186,7 @@ func NewHashFromStr(hash string) (*Hash, error) {
 	ret := new(Hash)
 	e := Decode(ret, hash)
 	if e != nil {
-		return nil, err
+		return nil, e
 	}
 	return ret, nil
 }
@@ -212,7 +212,7 @@ func Decode(dst *Hash, src string) (e error) {
 
 	// Hex decode the source bytes to a temporary destination.
 	var reversedHash Hash
-	_, e := hex.Decode(reversedHash[HashSize-hex.DecodedLen(len(srcBytes)):],
+	_, e = hex.Decode(reversedHash[HashSize-hex.DecodedLen(len(srcBytes)):],
 		srcBytes)
 	if e != nil {
 		return e
@@ -231,7 +231,7 @@ func Decode(dst *Hash, src string) (e error) {
 // (i.e. represented as a bytes array) to a destination.
 func decodeLegacy(dst *Hash, src []byte) (e error) {
 	var hashBytes []byte
-	e := json.Unmarshal(src, &hashBytes)
+	e = json.Unmarshal(src, &hashBytes)
 	if e != nil {
 		return e
 	}

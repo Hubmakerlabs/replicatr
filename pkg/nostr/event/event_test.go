@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"testing"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
@@ -14,15 +15,12 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	secp256k1 "mleku.online/git/ec/secp"
-	log2 "mleku.online/git/log"
+	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
-var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log, fails = log2.GetStd()
+
+var hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 
 const (
 	TestSecBech32 = "nsec1z7tlduw3qkf4fz6kdw3jaq2h02jtexgwkrck244l3p834a930sjsh8t89c"

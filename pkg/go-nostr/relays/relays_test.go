@@ -25,18 +25,18 @@ func TestEOSEMadness(t *testing.T) {
 
 	timeout := time.After(3 * time.Second)
 	n := 0
-	e := 0
+	ee := 0
 
 	for {
 		select {
-		case event := <-sub.Events:
-			if event == nil {
-				t.Fatalf("event is nil: %v", event)
+		case ev := <-sub.Events:
+			if ev == nil {
+				t.Fatalf("event is nil: %v", ev)
 			}
 			n++
 		case <-sub.EndOfStoredEvents:
-			e++
-			if e > 1 {
+			ee++
+			if ee > 1 {
 				t.Fatalf("eose infinite loop")
 			}
 			continue
@@ -48,7 +48,7 @@ func TestEOSEMadness(t *testing.T) {
 	}
 
 end:
-	if e != 1 {
+	if ee != 1 {
 		t.Fatalf("didn't get an eose")
 	}
 	if n < 2 {

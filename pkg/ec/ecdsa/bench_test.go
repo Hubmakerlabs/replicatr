@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // hexToModNScalar converts the passed hex string into a ModNScalar and will

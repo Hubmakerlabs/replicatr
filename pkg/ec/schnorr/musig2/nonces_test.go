@@ -160,7 +160,7 @@ func TestMusig2AggregateNoncesTestVectors(t *testing.T) {
 		t.Run(fmt.Sprintf("invalid_case=%v", i), func(t *testing.T) {
 			_, e := AggregateNonces(testNonces)
 			require.True(t, e != nil)
-			require.Equal(t, testCase.ExpectedErr, err.Error())
+			require.Equal(t, testCase.ExpectedErr, e.Error())
 		})
 	}
 }

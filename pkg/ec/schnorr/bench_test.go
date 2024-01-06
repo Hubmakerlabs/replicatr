@@ -11,8 +11,8 @@ import (
 	"math/big"
 	"testing"
 
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // hexToBytes converts the passed hex string into bytes and will panic if there
@@ -141,7 +141,7 @@ func BenchmarkSign(b *testing.B) {
 	}
 
 	testSig = sig
-	testErr = err
+	testErr = e
 }
 
 // BenchmarkSignRfc6979 benchmarks how long it takes to sign a message.
@@ -165,5 +165,5 @@ func BenchmarkSignRfc6979(b *testing.B) {
 	}
 
 	testSig = sig
-	testErr = err
+	testErr = e
 }

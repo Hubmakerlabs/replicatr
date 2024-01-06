@@ -4,12 +4,16 @@ import (
 	"context"
 	"fmt"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	filters2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/puzpuzpuz/xsync/v2"
 )
+
+var log, fails = log2.GetStd()
 
 type Listener struct {
 	filters filters2.T
@@ -83,7 +87,7 @@ func notifyListeners(evt *event.T) {
 			var sid subscriptionid.T
 			sid, e = subscriptionid.New(id)
 			log.D.Chk(e)
-			log.E.Chk(ws.WriteJSON(&event.Envelope{SubscriptionID: sid, Event: evt}))
+			log.E.Chk(ws.WriteJSON(&event2.Envelope{SubscriptionID: sid, Event: evt}))
 			return true
 		})
 		return true

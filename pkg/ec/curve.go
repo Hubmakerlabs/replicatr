@@ -6,7 +6,7 @@ package btcec
 import (
 	"fmt"
 
-	secp "mleku.online/git/ec/secp"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // JacobianPoint is an element of the group formed by the secp256k1 curve in
@@ -85,7 +85,7 @@ func ParseJacobian(point []byte) (JacobianPoint, error) {
 
 	noncePk, e := secp.ParsePubKey(point)
 	if e != nil {
-		return JacobianPoint{}, err
+		return JacobianPoint{}, e
 	}
 	noncePk.AsJacobian(&result)
 

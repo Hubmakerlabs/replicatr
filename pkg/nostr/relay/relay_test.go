@@ -23,7 +23,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	btcec "mleku.online/git/ec"
+	btcec "github.com/Hubmakerlabs/replicatr/pkg/ec"
 
 	"golang.org/x/net/websocket"
 )
@@ -163,7 +163,7 @@ func TestConnectContextCanceled(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // make ctx expired
 	_, e := RelayConnect(ctx, ws.URL)
-	if !errors.Is(err, context.Canceled) {
+	if !errors.Is(e, context.Canceled) {
 		t.Errorf("RelayConnectContext returned %v error; want context.Canceled", e)
 	}
 }
@@ -216,7 +216,7 @@ func makeKeyPair(t *testing.T) (priv, pub string) {
 func MustRelayConnect(url string) *Relay {
 	rl, e := RelayConnect(context.Background(), url)
 	if e != nil {
-		panic(err.Error())
+		panic(e.Error())
 	}
 	return rl
 }

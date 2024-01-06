@@ -155,7 +155,7 @@ func TestConnectContextCanceled(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // make ctx expired
 	_, e := RelayConnect(ctx, ws.URL)
-	if !errors.Is(err, context.Canceled) {
+	if !errors.Is(e, context.Canceled) {
 		t.Errorf("RelayConnectContext returned %v error; want context.Canceled", e)
 	}
 }

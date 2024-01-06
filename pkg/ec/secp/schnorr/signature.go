@@ -10,7 +10,7 @@ import (
 
 	"github.com/dchest/blake256"
 	"github.com/minio/sha256-simd"
-	"mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 const (

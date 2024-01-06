@@ -10,7 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
-	"mleku.online/git/bech32"
+	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
 )
 
 const (

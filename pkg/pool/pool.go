@@ -6,19 +6,18 @@ import (
 	"sync"
 	"time"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/fiatjaf/generic-ristretto/z"
-	log2 "mleku.online/git/log"
 
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
-var log = log2.GetLogger()
-var fails = log.D.Chk
+var log, fails = log2.GetStd()
 
 const MAX_LOCKS = 50
 

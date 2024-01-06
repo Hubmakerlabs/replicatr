@@ -4,13 +4,10 @@ import (
 	"errors"
 	"testing"
 
-	l "mleku.online/git/log"
+	l "github.com/Hubmakerlabs/replicatr/pkg/log"
 )
 
-var (
-	log   = l.GetLogger()
-	fails = log.E.Chk
-)
+var log, fails = l.GetStd()
 
 func TestGetLogger(t *testing.T) {
 	l.SetLogLevel(l.Trace)

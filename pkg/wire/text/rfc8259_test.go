@@ -5,7 +5,7 @@ import (
 
 	"github.com/minio/sha256-simd"
 	"lukechampine.com/frand"
-	log2 "mleku.online/git/log"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 )
 
 func GenRandString(l int, src *frand.RNG) (str string) {

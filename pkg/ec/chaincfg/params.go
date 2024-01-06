@@ -4,8 +4,8 @@ import (
 	"math/big"
 	"time"
 
-	"mleku.online/git/ec/chainhash"
-	"mleku.online/git/ec/wire"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/chainhash"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/wire"
 )
 
 var (

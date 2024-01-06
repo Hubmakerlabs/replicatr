@@ -5,7 +5,7 @@
 package btcec
 
 import (
-	secp "mleku.online/git/ec/secp"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // SecretKey wraps an ecdsa.SecretKey as a convenience mainly for signing

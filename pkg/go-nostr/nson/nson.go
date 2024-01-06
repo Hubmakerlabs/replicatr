@@ -114,7 +114,7 @@ func Unmarshal(data string, evt *event.T) (e error) {
 
 func MarshalBytes(evt *event.T) ([]byte, error) {
 	v, e := Marshal(evt)
-	return unsafe.Slice(unsafe.StringData(v), len(v)), err
+	return unsafe.Slice(unsafe.StringData(v), len(v)), e
 }
 
 func Marshal(evt *event.T) (string, error) {

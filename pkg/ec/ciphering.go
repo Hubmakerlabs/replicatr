@@ -5,7 +5,7 @@
 package btcec
 
 import (
-	secp "mleku.online/git/ec/secp"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // GenerateSharedSecret generates a shared secret based on a secret key and a

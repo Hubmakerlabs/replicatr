@@ -1,24 +1,20 @@
-package eose
+package notice
 
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
-	log2 "mleku.online/git/log"
 )
 
-var log = log2.GetLogger()
-var fails = log.D.Chk
+var log, fails = log2.GetStd()
 
-// Envelope is a message that indicates that all cached events have been
-// delivered and thereafter events will be new and delivered in pubsub subscribe
-// fashion while the socket remains open.
+// Envelope is a relay message intended to be shown to users in a nostr
+// client interface.
 type Envelope struct {
-	subscriptionid.T
+	Text string
 }
 
 func (E *Envelope) UnmarshalJSON(bytes []byte) error {
@@ -26,15 +22,17 @@ func (E *Envelope) UnmarshalJSON(bytes []byte) error {
 	panic("implement me")
 }
 
-var _ enveloper.Enveloper = (*Envelope)(nil)
+func NewNoticeEnvelope(text string) (E *Envelope) {
+	E = &Envelope{Text: text}
+	return
+}
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *Envelope) Label() (l string) { return labels.EOSE }
+func (E *Envelope) Label() (l string) { return labels.NOTICE }
 
 func (E *Envelope) ToArray() (a array.T) {
-	a = array.T{labels.EOSE, E.T}
-	return
+	return array.T{labels.NOTICE, E.Text}
 }
 
 func (E *Envelope) String() (s string) {
@@ -47,7 +45,8 @@ func (E *Envelope) Bytes() (s []byte) {
 
 // MarshalJSON returns the JSON encoded form of the envelope.
 func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
-	return E.ToArray().Bytes(), nil
+	bytes = E.ToArray().Bytes()
+	return
 }
 
 // Unmarshal the envelope.
@@ -61,15 +60,16 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	if e = buf.ScanUntil(','); e != nil {
 		return
 	}
-	// Next character we find will be open quotes for the subscription ID.
+	// Next character we find will be open quotes for the notice text.
 	if e = buf.ScanThrough('"'); e != nil {
 		return
 	}
-	var sid []byte
+	var noticeText []byte
 	// read the string
-	if sid, e = buf.ReadUntil('"'); fails(e) {
+	if noticeText, e = buf.ReadUntil('"'); fails(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
-	E.T = subscriptionid.T(sid[:])
+	E.Text = string(text.UnescapeByteString(noticeText))
+	// log.D.F("'%s'", E.Text)
 	return
 }

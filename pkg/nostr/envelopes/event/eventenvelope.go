@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
+var log, fails = log2.GetStd()
 
 var _ enveloper.Enveloper = (*Envelope)(nil)
 
@@ -21,7 +24,7 @@ type Envelope struct {
 	SubscriptionID subscriptionid.T
 
 	// The Event is here a pointer because it should not be copied unnecessarily.
-	Event *T
+	Event *event.T
 }
 
 func (env *Envelope) UnmarshalJSON(bytes []byte) error {
@@ -32,7 +35,7 @@ func (env *Envelope) UnmarshalJSON(bytes []byte) error {
 // NewEventEnvelope builds an Envelope from a provided T
 // string and pointer to an T, and returns either the Envelope or an
 // error if the Subscription ID is invalid or the T is nil.
-func NewEventEnvelope(si string, ev *T) (ee *Envelope, e error) {
+func NewEventEnvelope(si string, ev *event.T) (ee *Envelope, e error) {
 	var sid subscriptionid.T
 	if sid, e = subscriptionid.New(si); fails(e) {
 		return
@@ -122,7 +125,7 @@ func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 		return
 	}
 	// allocate an event to unmarshal into
-	env.Event = &T{}
+	env.Event = &event.T{}
 	if e = json.Unmarshal(eventObj, env.Event); fails(e) {
 		log.D.S(string(eventObj))
 		return

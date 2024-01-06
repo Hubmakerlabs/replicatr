@@ -5,10 +5,10 @@ package schnorr
 import (
 	"fmt"
 
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/chainhash"
-	secp "mleku.online/git/ec/secp"
-	ecdsa_schnorr "mleku.online/git/ec/secp/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/chainhash"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	ecdsa_schnorr "github.com/Hubmakerlabs/replicatr/pkg/ec/secp/schnorr"
 )
 
 const (
@@ -332,7 +332,7 @@ func schnorrSign(privKey, nonce *btcec.ModNScalar, pubKey *btcec.PublicKey,
 	// If Verify(bytes(P), m, sig) fails, abort.
 	if !opts.fastSign {
 		if e := schnorrVerify(sig, hash, pBytes); e != nil {
-			return nil, err
+			return nil, e
 		}
 	}
 
@@ -511,7 +511,7 @@ func Sign(privKey *btcec.SecretKey, hash []byte,
 		sig, e := schnorrSign(&privKeyScalar, &kPrime, pub, hash, opts)
 		kPrime.Zero()
 		if e != nil {
-			return nil, err
+			return nil, e
 		}
 
 		return sig, nil

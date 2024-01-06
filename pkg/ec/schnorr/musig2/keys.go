@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"sort"
 
-	secp "mleku.online/git/ec/secp"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/chainhash"
-	"mleku.online/git/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/chainhash"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 )
 
 var (
@@ -440,11 +440,11 @@ func AggregateKeys(keys []*btcec.PublicKey, sort bool,
 	// each one, until we have our final tweaked key, and the related
 	// accumulators.
 	for i := 1; i <= len(opts.tweaks); i++ {
-		finalKeyJ, parityAcc, tweakAcc, e = tweakKey(
+		finalKeyJ, parityAcc, tweakAcc, err = tweakKey(
 			finalKeyJ, parityAcc, opts.tweaks[i-1].Tweak, tweakAcc,
 			opts.tweaks[i-1].IsXOnly,
 		)
-		if e != nil {
+		if err != nil {
 			return nil, nil, nil, err
 		}
 	}

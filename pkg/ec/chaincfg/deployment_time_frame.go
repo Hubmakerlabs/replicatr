@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"mleku.online/git/ec/wire"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/wire"
 )
 
 var (
@@ -91,7 +91,7 @@ func (m *MedianTimeDeploymentStarter) HasStarted(blkHeader *wire.BlockHeader) (b
 
 	medianTime, e := m.blockClock.PastMedianTime(blkHeader)
 	if e != nil {
-		return false, err
+		return false, e
 	}
 
 	// We check both after and equal here as after will fail for equivalent
@@ -134,7 +134,7 @@ func (m *MedianTimeDeploymentEnder) HasEnded(blkHeader *wire.BlockHeader) (bool,
 
 	medianTime, e := m.blockClock.PastMedianTime(blkHeader)
 	if e != nil {
-		return false, err
+		return false, e
 	}
 
 	// We check both after and equal here as after will fail for equivalent

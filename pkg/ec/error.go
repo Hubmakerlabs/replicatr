@@ -4,7 +4,7 @@
 package btcec
 
 import (
-	secp "mleku.online/git/ec/secp"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // Error identifies an error related to public key cryptography using a

@@ -38,7 +38,7 @@ func (s Session) ParseRequest(evt *event.T) (Request, error) {
 	}
 
 	e = json.Unmarshal([]byte(plain), &req)
-	return req, err
+	return req, e
 }
 
 func (s Session) MakeResponse(
@@ -50,7 +50,7 @@ func (s Session) MakeResponse(
 	if e != nil {
 		resp = Response{
 			ID:    id,
-			Error: err.Error(),
+			Error: e.Error(),
 		}
 	} else if result != "" {
 		resp = Response{
@@ -129,7 +129,7 @@ func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventR
 
 	session, e := p.GetSession(evt.PubKey)
 	if e != nil {
-		return req, resp, eventResponse, false, err
+		return req, resp, eventResponse, false, e
 	}
 
 	req, e = session.ParseRequest(evt)
@@ -226,13 +226,13 @@ func (p *Signer) HandleRequest(evt *event.T) (req Request, resp Response, eventR
 
 	resp, eventResponse, e = session.MakeResponse(req.ID, evt.PubKey, result, resultErr)
 	if e != nil {
-		return req, resp, eventResponse, harmless, err
+		return req, resp, eventResponse, harmless, e
 	}
 
 	e = eventResponse.Sign(p.secretKey)
 	if e != nil {
-		return req, resp, eventResponse, harmless, err
+		return req, resp, eventResponse, harmless, e
 	}
 
-	return req, resp, eventResponse, harmless, err
+	return req, resp, eventResponse, harmless, e
 }

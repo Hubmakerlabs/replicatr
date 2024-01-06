@@ -5,10 +5,11 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/OK"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
+	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/notice"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
@@ -49,7 +50,7 @@ func (rl *Relay) handleRequest(ctx context.Context, id subscriptionid.T,
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(ctx, evt)
 				}
-				rl.D.Chk(ws.WriteJSON(event.Envelope{SubscriptionID: id, Event: evt}))
+				rl.D.Chk(ws.WriteJSON(event2.Envelope{SubscriptionID: id, Event: evt}))
 			}
 			eose.Done()
 		}(ch)

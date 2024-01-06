@@ -13,7 +13,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	secp "mleku.online/git/ec/secp"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // This example demonstrates use of GenerateSharedSecret to encrypt a message
@@ -23,7 +23,7 @@ func Example_encryptDecryptMessage() {
 	newAEAD := func(key []byte) (cipher.AEAD, error) {
 		block, e := aes.NewCipher(key)
 		if e != nil {
-			return nil, err
+			return nil, e
 		}
 		return cipher.NewGCM(block)
 	}

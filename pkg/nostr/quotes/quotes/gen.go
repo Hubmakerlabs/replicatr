@@ -35,7 +35,7 @@ var D = []Source{
 func main() {
 	var jsons []string
 	e := filepath.Walk(".",
-		func(path string, info fs.FileInfo, e error) (e error) {
+		func(path string, info fs.FileInfo, er error) (e error) {
 			if strings.HasSuffix(path, "json") {
 				jsons = append(jsons, path)
 			}

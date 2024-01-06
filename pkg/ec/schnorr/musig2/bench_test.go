@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 )
 
 var (
@@ -114,7 +114,7 @@ func BenchmarkPartialSign(b *testing.B) {
 					}
 
 					testSig = sig
-					testErr = err
+					testErr = e
 				})
 			}
 		}

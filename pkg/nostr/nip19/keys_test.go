@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/minio/sha256-simd"
-	"mleku.online/git/ec/schnorr"
-	secp256k1 "mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 func TestConvertBits(t *testing.T) {

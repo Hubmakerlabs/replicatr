@@ -17,7 +17,7 @@ import (
 	"math/big"
 	"os"
 
-	"mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // curveParams houses the secp256k1 curve parameters for convenient access.
