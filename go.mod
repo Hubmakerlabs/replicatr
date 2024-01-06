@@ -20,8 +20,8 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/gjson v1.17.0
 	github.com/urfave/cli/v2 v2.27.1
-	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848
-	golang.org/x/net v0.18.0
+	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
+	golang.org/x/net v0.19.0
 	lukechampine.com/frand v1.4.2
 )
 
@@ -55,8 +55,8 @@ require (
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
-	golang.org/x/term v0.14.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	rsc.io/qr v0.2.0 // indirect
