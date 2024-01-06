@@ -12,15 +12,11 @@ import (
 	"reflect"
 	"time"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
-	log2 "mleku.online/git/log"
 )
-
-var (
-	log   = log2.GetLogger()
-	fails = log.D.Chk
-)
+var log, fails = log2.GetStd()
 
 // Arrayer is an interface for a type that can return an array.T - or in other
 // words []interface{} made into concrete.

@@ -1,46 +1,52 @@
-package closer
+package eose
 
 import (
 	"fmt"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
-	log2 "mleku.online/git/log"
 )
 
-var log = log2.GetLogger()
-var fails = log.D.Chk
+var log, fails = log2.GetStd()
 
-// Envelope is a wrapper for a signal to cancel a subscription.
+// Envelope is a message that indicates that all cached events have been
+// delivered and thereafter events will be new and delivered in pubsub subscribe
+// fashion while the socket remains open.
 type Envelope struct {
 	subscriptionid.T
-}
-
-var _ enveloper.Enveloper = &Envelope{}
-
-func NewCloseEnvelope(s subscriptionid.T) (ce *Envelope) {
-	return &Envelope{T: s}
-}
-
-func (E *Envelope) Label() (l string) { return labels.CLOSE }
-func (E *Envelope) String() (s string)  { return E.ToArray().String() }
-func (E *Envelope) Bytes() (s []byte)   { return E.ToArray().Bytes() }
-
-func (E *Envelope) ToArray() (a array.T) {
-	return array.T{labels.CLOSE, E.T}
-}
-
-// MarshalJSON returns the JSON encoded form of the envelope.
-func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
-	return E.ToArray().Bytes(), nil
 }
 
 func (E *Envelope) UnmarshalJSON(bytes []byte) error {
 	// TODO implement me
 	panic("implement me")
+}
+
+var _ enveloper.Enveloper = (*Envelope)(nil)
+
+// Label returns the label enum/type of the envelope. The relevant bytes could
+// be retrieved using nip1.List[T]
+func (E *Envelope) Label() (l string) { return labels.EOSE }
+
+func (E *Envelope) ToArray() (a array.T) {
+	a = array.T{labels.EOSE, E.T}
+	return
+}
+
+func (E *Envelope) String() (s string) {
+	return E.ToArray().String()
+}
+
+func (E *Envelope) Bytes() (s []byte) {
+	return E.ToArray().Bytes()
+}
+
+// MarshalJSON returns the JSON encoded form of the envelope.
+func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
+	return E.ToArray().Bytes(), nil
 }
 
 // Unmarshal the envelope.

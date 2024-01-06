@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
@@ -11,11 +12,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
-	log2 "mleku.online/git/log"
 )
 
-var log = log2.GetLogger()
-var fails = log.D.Chk
+var log, fails = log2.GetStd()
 
 // Envelope is the wrapper for a query to a relay.
 type Envelope struct {

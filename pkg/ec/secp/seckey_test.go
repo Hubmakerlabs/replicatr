@@ -102,8 +102,8 @@ func TestGenerateSecretKeyError(t *testing.T) {
 	// Generate a secret key using the mock reader and ensure the expected
 	// error is returned.
 	_, e := GenerateSecretKeyFromRand(mockReader)
-	if !errors.Is(err, errDisabled) {
-		t.Fatalf("mismatched err -- got %v, want %v", err, errDisabled)
+	if !errors.Is(e, errDisabled) {
+		t.Fatalf("mismatched err -- got %v, want %v", e, errDisabled)
 		return
 	}
 }

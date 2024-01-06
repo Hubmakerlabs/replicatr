@@ -6,20 +6,14 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
-	secp "mleku.online/git/ec/secp"
-	log2 "mleku.online/git/log"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
-
-var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log, fails = log2.GetStd()
 
 // ComputeSharedSecret computes an Elliptic Curve Diffie Hellman shared secret
 // out of one public key and another secret key.

@@ -18,7 +18,7 @@ import (
 
 	"github.com/dchest/blake256"
 
-	"mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // hexToBytes converts the passed hex string into bytes and will panic if there
@@ -206,9 +206,9 @@ func TestSignatureParsing(t *testing.T) {
 
 	for _, test := range tests {
 		_, e := ParseDERSignature(test.sig)
-		if !errors.Is(err, test.e) {
-			t.Errorf("%s mismatched err -- got %v, want %v", test.name, err,
-				test.e)
+		if !errors.Is(e, test.err) {
+			t.Errorf("%s mismatched err -- got %v, want %v", test.name, e,
+				test.err)
 			continue
 		}
 	}
@@ -979,9 +979,9 @@ func TestRecoverCompactErrors(t *testing.T) {
 
 		// Ensure the expected error is hit.
 		_, _, e := RecoverCompact(sig, hash)
-		if !errors.Is(err, test.e) {
-			t.Errorf("%s: mismatched err -- got %v, want %v", test.name, err,
-				test.e)
+		if !errors.Is(e, test.err) {
+			t.Errorf("%s: mismatched err -- got %v, want %v", test.name, e,
+				test.err)
 			continue
 		}
 	}
@@ -1031,7 +1031,7 @@ func TestSignAndRecoverCompactRandom(t *testing.T) {
 			gotPubKey, gotCompressed, e := RecoverCompact(gotSig, hash[:])
 			if e != nil {
 				t.Fatalf("unexpected err: %v\nsig: %x\nhash: %x\nsecret key: %x",
-					err, gotSig, hash, secKey.Serialize())
+					e, gotSig, hash, secKey.Serialize())
 			}
 			if gotCompressed != compressed {
 				t.Fatalf("unexpected compressed flag: %v\nsig: %x\nhash: %x\n"+

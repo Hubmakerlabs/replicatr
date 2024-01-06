@@ -3,8 +3,8 @@ package chaincfg
 import (
 	"time"
 
-	"mleku.online/git/ec/chainhash"
-	"mleku.online/git/ec/wire"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/chainhash"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/wire"
 )
 
 // genesisCoinbaseTx is the coinbase transaction for the genesis blocks for

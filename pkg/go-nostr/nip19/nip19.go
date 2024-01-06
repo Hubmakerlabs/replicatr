@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
-	"github.com/btcsuite/btcd/btcutil/bech32"
 )
 
 func Decode(bech32string string) (prefix string, value any, e error) {

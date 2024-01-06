@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/btcsuite/btcd/btcec/v2"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 )
 
 // ComputeSharedSecret returns a shared secret key used to encrypt messages.

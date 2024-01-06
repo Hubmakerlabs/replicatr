@@ -12,11 +12,11 @@ import (
 	"testing"
 	"testing/quick"
 
-	"mleku.online/git/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 
 	"github.com/davecgh/go-spew/spew"
-	secp_ecdsa "mleku.online/git/ec/secp"
-	ecdsa_schnorr "mleku.online/git/ec/secp/schnorr"
+	secp_ecdsa "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	ecdsa_schnorr "github.com/Hubmakerlabs/replicatr/pkg/ec/secp/schnorr"
 )
 
 type bip340Test struct {
@@ -193,7 +193,7 @@ var bip340TestVectors = []bip340Test{
 func decodeHex(hexStr string) []byte {
 	b, e := hex.DecodeString(hexStr)
 	if e != nil {
-		panic("invalid hex string in test source: err " + err.Error() +
+		panic("invalid hex string in test source: err " + e.Error() +
 			", hex: " + hexStr)
 	}
 
@@ -256,7 +256,7 @@ func TestSchnorrVerify(t *testing.T) {
 		_, e := ParsePubKey(pubKeyBytes)
 		switch {
 		case !test.validPubKey && e != nil:
-			if !errors.Is(err, test.expectErr) {
+			if !errors.Is(e, test.expectErr) {
 				t.Fatalf("test #%v: pubkey validation should "+
 					"have failed, expected %v, got %v", i,
 					test.expectErr, e)
@@ -288,7 +288,7 @@ func TestSchnorrVerify(t *testing.T) {
 		}
 
 		if !test.verifyResult && test.expectErr != nil {
-			if !errors.Is(err, test.expectErr) {
+			if !errors.Is(e, test.expectErr) {
 				t.Fatalf("test #%v: expect error %v : got %v", i,
 					test.expectErr, e)
 			}

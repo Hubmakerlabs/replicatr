@@ -5,18 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
-	log2 "mleku.online/git/log"
 )
 
+var log, fails = log2.GetStd()
+
 var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
 	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
@@ -25,7 +25,7 @@ type Envelope struct {
 	filters.T
 }
 
-func (C *Envelope) Label() labels.T    { return labels.LCount }
+func (C *Envelope) Label() string      { return labels.COUNT }
 func (C *Envelope) String() (s string) { return C.ToArray().String() }
 func (C *Envelope) Bytes() (s []byte)  { return C.ToArray().Bytes() }
 
@@ -37,6 +37,11 @@ func (C *Envelope) ToArray() array.T {
 func (C *Envelope) MarshalJSON() (bytes []byte, e error) {
 	// log.D.F("count request envelope marshal")
 	return C.ToArray().Bytes(), nil
+}
+
+func (C *Envelope) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
 }
 
 func (C *Envelope) Unmarshal(buf *text.Buffer) (e error) {

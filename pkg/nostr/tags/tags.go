@@ -7,13 +7,12 @@ import (
 	"errors"
 	"fmt"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
-	log2 "mleku.online/git/log"
 )
+var log, fails = log2.GetStd()
 
 var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
 	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 

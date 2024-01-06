@@ -10,7 +10,7 @@ import (
 	"sync"
 	"testing"
 
-	"mleku.online/git/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 )
 
 const (
@@ -20,7 +20,7 @@ const (
 func mustParseHex(str string) []byte {
 	b, e := hex.DecodeString(str)
 	if e != nil {
-		panic(fmt.Errorf("unable to parse hex: %v", err))
+		panic(fmt.Errorf("unable to parse hex: %v", e))
 	}
 
 	return b
@@ -274,7 +274,7 @@ func TestMuSigEarlyNonce(t *testing.T) {
 	// If we try to make a context, with just the secret key and sorting
 	// value, we should get an error.
 	_, e = NewContext(privKey1, true)
-	if !errors.Is(err, ErrSignersNotSpecified) {
+	if !errors.Is(e, ErrSignersNotSpecified) {
 		t.Fatalf("unexpected ctx error: %v", e)
 	}
 
@@ -299,7 +299,7 @@ func TestMuSigEarlyNonce(t *testing.T) {
 
 	// At this point, the combined key shouldn't be available for signer 1,
 	// but should be for signer 2, as they know about all signers.
-	if _, e := ctx1.CombinedKey(); !errors.Is(err, ErrNotEnoughSigners) {
+	if _, e := ctx1.CombinedKey(); !errors.Is(e, ErrNotEnoughSigners) {
 		t.Fatalf("unepxected error: %v", e)
 	}
 	_, e = ctx2.CombinedKey()
@@ -329,12 +329,12 @@ func TestMuSigEarlyNonce(t *testing.T) {
 
 	// If we try to make a session, we should get an error since we dn't
 	// have all the signers yet.
-	if _, e := ctx1.NewSession(); !errors.Is(err, ErrNotEnoughSigners) {
+	if _, e := ctx1.NewSession(); !errors.Is(e, ErrNotEnoughSigners) {
 		t.Fatalf("unexpected session key error: %v", e)
 	}
 
 	// The combined key should also be unavailable as well.
-	if _, e := ctx1.CombinedKey(); !errors.Is(err, ErrNotEnoughSigners) {
+	if _, e := ctx1.CombinedKey(); !errors.Is(e, ErrNotEnoughSigners) {
 		t.Fatalf("unexpected combined key error: %v", e)
 	}
 
@@ -349,7 +349,7 @@ func TestMuSigEarlyNonce(t *testing.T) {
 
 	// If we try to register the signer again, we should get an error.
 	_, e = ctx2.RegisterSigner(&pubKey1)
-	if !errors.Is(err, ErrAlreadyHaveAllSigners) {
+	if !errors.Is(e, ErrAlreadyHaveAllSigners) {
 		t.Fatalf("should not be able to register too many signers")
 	}
 
@@ -368,7 +368,7 @@ func TestMuSigEarlyNonce(t *testing.T) {
 	// If we try to sign before we have the combined nonce, we shoudl get
 	// an error.
 	_, e = session1.Sign(msg)
-	if !errors.Is(err, ErrCombinedNonceUnavailable) {
+	if !errors.Is(e, ErrCombinedNonceUnavailable) {
 		t.Fatalf("unable to gen sig: %v", e)
 	}
 
@@ -391,7 +391,7 @@ func TestMuSigEarlyNonce(t *testing.T) {
 
 	// Registering the nonce again should error out.
 	_, e = session2.RegisterPubNonce(nonce1.PubNonce)
-	if !errors.Is(err, ErrAlredyHaveAllNonces) {
+	if !errors.Is(e, ErrAlredyHaveAllNonces) {
 		t.Fatalf("shouldn't be able to register nonces twice")
 	}
 
@@ -414,7 +414,7 @@ func TestMuSigEarlyNonce(t *testing.T) {
 
 	// If we try to combine another sig, then we should get an error.
 	_, e = session1.CombineSig(sig2)
-	if !errors.Is(err, ErrAlredyHaveAllSigs) {
+	if !errors.Is(e, ErrAlredyHaveAllSigs) {
 		t.Fatalf("shouldn't be able to combine again")
 	}
 

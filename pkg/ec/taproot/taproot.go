@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"mleku.online/git/bech32"
-	"mleku.online/git/ec/chaincfg"
+	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/chaincfg"
 )
 
 // AddressSegWit is the base address type for all SegWit addresses.
@@ -60,7 +60,7 @@ func decodeSegWitAddress(address string) (byte, []byte, error) {
 	// Decode the bech32 encoded address.
 	_, data, bech32version, e := bech32.DecodeGeneric(address)
 	if e != nil {
-		return 0, nil, err
+		return 0, nil, e
 	}
 
 	// The first byte of the decoded address is the witness version, it must
@@ -80,7 +80,7 @@ func decodeSegWitAddress(address string) (byte, []byte, error) {
 	// bytes, we'll need to regroup into 8 bit words.
 	regrouped, e := bech32.ConvertBits(data[1:], 5, 8, false)
 	if e != nil {
-		return 0, nil, err
+		return 0, nil, e
 	}
 
 	// The regrouped data must be between 2 and 40 bytes.
@@ -117,7 +117,7 @@ func encodeSegWitAddress(hrp string, witnessVersion byte,
 	// encode each character in the address string.
 	converted, e := bech32.ConvertBits(witnessProgram, 8, 5, true)
 	if e != nil {
-		return "", err
+		return "", e
 	}
 
 	// Concatenate the witness version and program, and encode the resulting
@@ -139,7 +139,7 @@ func encodeSegWitAddress(hrp string, witnessVersion byte,
 			witnessVersion)
 	}
 	if e != nil {
-		return "", err
+		return "", e
 	}
 
 	// Check validity by decoding the created address.

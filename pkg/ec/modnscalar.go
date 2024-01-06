@@ -4,7 +4,7 @@
 package btcec
 
 import (
-	secp "mleku.online/git/ec/secp"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // ModNScalar implements optimized 256-bit constant-time fixed-precision

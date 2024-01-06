@@ -9,9 +9,9 @@ import (
 	"errors"
 	"io"
 
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/chainhash"
-	"mleku.online/git/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/chainhash"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 )
 
 const (
@@ -266,19 +266,19 @@ func genNonceAuxBytes(rand []byte, pubkey []byte, i int,
 
 	// First, write out the randomness generated in the prior step.
 	if _, e := w.Write(rand); e != nil {
-		return nil, err
+		return nil, e
 	}
 
 	// Next, we'll write out: len(pk) || pk
 	e := writeBytesPrefix(&w, pubkey, uint8Writer)
 	if e != nil {
-		return nil, err
+		return nil, e
 	}
 
 	// Next, we'll write out: len(aggpk) || aggpk.
 	e = writeBytesPrefix(&w, opts.combinedKey, uint8Writer)
 	if e != nil {
-		return nil, err
+		return nil, e
 	}
 
 	switch {
@@ -286,7 +286,7 @@ func genNonceAuxBytes(rand []byte, pubkey []byte, i int,
 	// uint8 of a zero byte: m_prefixed = bytes(1, 0).
 	case opts.msg == nil:
 		if _, e := w.Write([]byte{0x00}); e != nil {
-			return nil, err
+			return nil, e
 		}
 
 	// Otherwise, we'll write a single byte of 0x01 with a 1 byte length
@@ -296,26 +296,26 @@ func genNonceAuxBytes(rand []byte, pubkey []byte, i int,
 		fallthrough
 	default:
 		if _, e := w.Write([]byte{0x01}); e != nil {
-			return nil, err
+			return nil, e
 		}
 
 		e = writeBytesPrefix(&w, opts.msg, uint64Writer)
 		if e != nil {
-			return nil, err
+			return nil, e
 		}
 	}
 
 	// Finally we'll write out the auxiliary input.
 	e = writeBytesPrefix(&w, opts.auxInput, uint32Writer)
 	if e != nil {
-		return nil, err
+		return nil, e
 	}
 
 	// Next we'll write out the interaction/index number which will
 	// uniquely generate two nonces given the rest of the possibly static
 	// parameters.
 	if e := binary.Write(&w, byteOrder, uint8(i)); e != nil {
-		return nil, err
+		return nil, e
 	}
 
 	// With the message buffer complete, we'll now derive the tagged hash
@@ -340,7 +340,7 @@ func GenNonces(options ...NonceGenOption) (*Nonces, error) {
 	// CSPRNG.
 	var randBytes [32]byte
 	if _, e := opts.randReader.Read(randBytes[:]); e != nil {
-		return nil, err
+		return nil, e
 	}
 
 	// If the options contain a secret key, we XOR it with with the tagged
@@ -357,11 +357,11 @@ func GenNonces(options ...NonceGenOption) (*Nonces, error) {
 	// two secret nonces: k1 and k2.
 	k1, e := genNonceAuxBytes(randBytes[:], opts.publicKey, 0, opts)
 	if e != nil {
-		return nil, err
+		return nil, e
 	}
 	k2, e := genNonceAuxBytes(randBytes[:], opts.publicKey, 1, opts)
 	if e != nil {
-		return nil, err
+		return nil, e
 	}
 
 	var k1Mod, k2Mod btcec.ModNScalar
@@ -403,7 +403,7 @@ func AggregateNonces(pubNonces [][PubNonceSize]byte) ([PubNonceSize]byte,
 
 			nonceJ, e := btcec.ParseJacobian(slicer(pubNonceBytes))
 			if e != nil {
-				return btcec.JacobianPoint{}, err
+				return btcec.JacobianPoint{}, e
 			}
 
 			pubNonceJs[i] = &nonceJ
@@ -430,14 +430,14 @@ func AggregateNonces(pubNonces [][PubNonceSize]byte) ([PubNonceSize]byte,
 		return n[:btcec.PubKeyBytesLenCompressed]
 	})
 	if e != nil {
-		return finalNonce, err
+		return finalNonce, e
 	}
 
 	combinedNonce2, e := combineNonces(func(n [PubNonceSize]byte) []byte {
 		return n[btcec.PubKeyBytesLenCompressed:]
 	})
 	if e != nil {
-		return finalNonce, err
+		return finalNonce, e
 	}
 
 	copy(finalNonce[:], btcec.JacobianToByteSlice(combinedNonce1))

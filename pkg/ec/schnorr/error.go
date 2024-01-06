@@ -6,7 +6,7 @@
 package schnorr
 
 import (
-	ecdsa_schnorr "mleku.online/git/ec/secp/schnorr"
+	ecdsa_schnorr "github.com/Hubmakerlabs/replicatr/pkg/ec/secp/schnorr"
 )
 
 // ErrorKind identifies a kind of error.  It has full support for errors.Is

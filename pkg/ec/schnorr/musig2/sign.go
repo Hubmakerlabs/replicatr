@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"io"
 
-	secp "mleku.online/git/ec/secp"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/chainhash"
-	"mleku.online/git/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/chainhash"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 )
 
 var (
@@ -221,13 +221,13 @@ func computeSigningNonce(combinedNonce [PubNonceSize]byte,
 		combinedNonce[:btcec.PubKeyBytesLenCompressed],
 	)
 	if e != nil {
-		return nil, nil, err
+		return nil, nil, e
 	}
 	r2J, e := btcec.ParseJacobian(
 		combinedNonce[btcec.PubKeyBytesLenCompressed:],
 	)
 	if e != nil {
-		return nil, nil, err
+		return nil, nil, e
 	}
 
 	// With our nonce blinding value, we'll now combine both the public
@@ -307,7 +307,7 @@ func Sign(secNonce [SecNonceSize]byte, privKey *btcec.SecretKey,
 		pubKeys, opts.sortKeys, keyAggOpts...,
 	)
 	if e != nil {
-		return nil, err
+		return nil, e
 	}
 
 	// We'll now combine both the public nonces, using the blinding factor
@@ -317,7 +317,7 @@ func Sign(secNonce [SecNonceSize]byte, privKey *btcec.SecretKey,
 		combinedNonce, combinedKey.FinalKey, msg,
 	)
 	if e != nil {
-		return nil, err
+		return nil, e
 	}
 
 	// Next we'll parse out our two secret nonces, which we'll be using in
@@ -374,8 +374,8 @@ func Sign(secNonce [SecNonceSize]byte, privKey *btcec.SecretKey,
 	challengeBytes := chainhash.TaggedHash(
 		ChallengeHashTag, challengeMsg.Bytes(),
 	)
-	var e btcec.ModNScalar
-	e.SetByteSlice(challengeBytes[:])
+	var ee btcec.ModNScalar
+	ee.SetByteSlice(challengeBytes[:])
 
 	// Next, we'll compute a, our aggregation coefficient for the key that
 	// we're signing with.
@@ -384,7 +384,7 @@ func Sign(secNonce [SecNonceSize]byte, privKey *btcec.SecretKey,
 	// With mu constructed, we can finally generate our partial signature
 	// as: s = (k1_1 + b*k_2 + e*a*d) mod n.
 	s := new(btcec.ModNScalar)
-	s.Add(&k1).Add(k2.Mul(nonceBlinder)).Add(e.Mul(a).Mul(&privKeyScalar))
+	s.Add(&k1).Add(k2.Mul(nonceBlinder)).Add(ee.Mul(a).Mul(&privKeyScalar))
 
 	sig := NewPartialSignature(s, nonceKey)
 
@@ -397,7 +397,7 @@ func Sign(secNonce [SecNonceSize]byte, privKey *btcec.SecretKey,
 			signOpts...,
 		)
 		if !sigValid {
-			return nil, fmt.Errorf("sig is invalid!")
+			return nil, fmt.Errorf("sig is invalid")
 		}
 	}
 
@@ -550,8 +550,8 @@ func verifyPartialSig(partialSig *PartialSignature, pubNonce [PubNonceSize]byte,
 	challengeBytes := chainhash.TaggedHash(
 		ChallengeHashTag, challengeMsg.Bytes(),
 	)
-	var e btcec.ModNScalar
-	e.SetByteSlice(challengeBytes[:])
+	var ee btcec.ModNScalar
+	ee.SetByteSlice(challengeBytes[:])
 
 	signingKey, e := btcec.ParsePubKey(pubKey)
 	if e != nil {
@@ -581,7 +581,7 @@ func verifyPartialSig(partialSig *PartialSignature, pubNonce [PubNonceSize]byte,
 	// In the final set, we'll check that: s*G == R' + e*a*g*P.
 	var sG, rP btcec.JacobianPoint
 	btcec.ScalarBaseMultNonConst(s, &sG)
-	btcec.ScalarMultNonConst(e.Mul(a).Mul(finalParityFactor), &signKeyJ, &rP)
+	btcec.ScalarMultNonConst(ee.Mul(a).Mul(finalParityFactor), &signKeyJ, &rP)
 	btcec.AddNonConst(&rP, &pubNonceJ, &rP)
 
 	sG.ToAffine()

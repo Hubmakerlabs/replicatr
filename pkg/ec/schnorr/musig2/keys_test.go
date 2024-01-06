@@ -11,10 +11,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 	"github.com/stretchr/testify/require"
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/schnorr"
-	secp "mleku.online/git/ec/secp"
 )
 
 const (
@@ -109,7 +109,7 @@ func keysFromIndices(t *testing.T, indices []int,
 			mustParseHex(pubKeys[keyIdx]),
 		)
 		if e != nil {
-			return nil, err
+			return nil, e
 		}
 	}
 
@@ -200,18 +200,18 @@ func TestMuSig2KeyAggTestVectors(t *testing.T) {
 				switch testCase.Comment {
 				case "Invalid public key":
 					require.ErrorIs(
-						t, err,
+						t, e,
 						secp.ErrPubKeyNotOnCurve,
 					)
 
 				case "Public key exceeds field size":
 					require.ErrorIs(
-						t, err, secp.ErrPubKeyXTooBig,
+						t, e, secp.ErrPubKeyXTooBig,
 					)
 
 				case "First byte of public key is not 2 or 3":
 					require.ErrorIs(
-						t, err,
+						t, e,
 						secp.ErrPubKeyInvalidFormat,
 					)
 
@@ -246,11 +246,11 @@ func TestMuSig2KeyAggTestVectors(t *testing.T) {
 
 			switch testCase.Comment {
 			case "Tweak is out of range":
-				require.ErrorIs(t, err, ErrTweakedKeyOverflows)
+				require.ErrorIs(t, e, ErrTweakedKeyOverflows)
 
 			case "Intermediate tweaking result is point at infinity":
 
-				require.ErrorIs(t, err, ErrTweakedKeyIsInfinity)
+				require.ErrorIs(t, e, ErrTweakedKeyIsInfinity)
 
 			default:
 				t.Fatalf("uncaught err: %v", e)

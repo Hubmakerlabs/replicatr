@@ -8,11 +8,12 @@ package schnorr
 import (
 	"fmt"
 
-	"mleku.online/git/ec"
-	secp "mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // These constants define the lengths of serialized public keys.
+
 const (
 	PubKeyBytesLen = 32
 )
@@ -20,15 +21,15 @@ const (
 // ParsePubKey parses a public key for a koblitz curve from a bytestring into a
 // btcec.Publickey, verifying that it is valid. It only supports public keys in
 // the BIP-340 32-byte format.
-func ParsePubKey(pubKeyStr []byte) (*btcec.PublicKey, error) {
+func ParsePubKey(pubKeyStr []byte) (p *btcec.PublicKey, e error) {
 	if pubKeyStr == nil {
-		e := fmt.Errorf("nil pubkey byte string")
-		return nil, err
+		e = fmt.Errorf("nil pubkey byte string")
+		return nil, e
 	}
 	if len(pubKeyStr) != PubKeyBytesLen {
-		e := fmt.Errorf("bad pubkey byte string size (want %v, have %v)",
+		e = fmt.Errorf("bad pubkey byte string size (want %v, have %v)",
 			PubKeyBytesLen, len(pubKeyStr))
-		return nil, err
+		return nil, e
 	}
 
 	// We'll manually prepend the compressed byte so we can re-use the

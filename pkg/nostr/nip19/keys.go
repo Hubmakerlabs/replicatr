@@ -4,19 +4,17 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	btcec "mleku.online/git/ec"
-	log2 "mleku.online/git/log"
+	btcec "github.com/Hubmakerlabs/replicatr/pkg/ec"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 
-	"mleku.online/git/bech32"
-	"mleku.online/git/ec/schnorr"
-	secp "mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
-var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log, fails = log2.GetStd()
+
+var hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 
 const (
 	// MinKeyStringLen is 56 because Bech32 needs 52 characters plus 4 for the HRP,
@@ -180,10 +178,11 @@ func DecodeSignature(encoded string) (sig *schnorr.Signature, e error) {
 	return schnorr.ParseSignature(b8[:64])
 }
 
-func GetPublicKey(sk string) (string, error) {
-	b, e := hex.DecodeString(sk)
+func GetPublicKey(sk string) (s string, e error) {
+	var b []byte
+	b, e = hex.DecodeString(sk)
 	if e != nil {
-		return "", err
+		return "", e
 	}
 
 	_, pk := btcec.PrivKeyFromBytes(b)

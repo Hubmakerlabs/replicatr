@@ -3,11 +3,11 @@ package sdk
 import (
 	"encoding/hex"
 
-	log2 "mleku.online/git/log"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 )
 
+var log, fails = log2.GetStd()
+
 var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
 	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )

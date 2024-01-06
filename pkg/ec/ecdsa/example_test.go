@@ -12,8 +12,8 @@ import (
 	"fmt"
 
 	"github.com/dchest/blake256"
-	"mleku.online/git/ec/ecdsa"
-	"mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/ecdsa"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // This example demonstrates signing a message with a secp256k1 secret key that

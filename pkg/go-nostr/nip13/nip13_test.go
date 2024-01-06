@@ -26,7 +26,8 @@ func TestCheck(t *testing.T) {
 	}
 	for i, tc := range tests {
 		if e := Check(eventID, tc.minDifficulty); e != tc.wantErr {
-			t.Errorf("%d: Check(%q, %d) returned %v; want err: %v", i, eventID, tc.minDifficulty, err, tc.wantErr)
+			t.Errorf("%d: Check(%q, %d) returned %v; want err: %v", i, eventID,
+				tc.minDifficulty, e, tc.wantErr)
 		}
 	}
 }
@@ -96,13 +97,13 @@ func TestGenerateTimeout(t *testing.T) {
 	done := make(chan error)
 	go func() {
 		_, e := Generate(event, 256, time.Millisecond)
-		done <- err
+		done <- e
 	}()
 	select {
 	case <-time.After(time.Second):
 		t.Error("Generate took too long to timeout")
 	case e := <-done:
-		if !errors.Is(err, ErrGenerateTimeout) {
+		if !errors.Is(e, ErrGenerateTimeout) {
 			t.Errorf("Generate returned %v; want ErrGenerateTimeout", e)
 		}
 	}

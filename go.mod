@@ -3,8 +3,6 @@ module github.com/Hubmakerlabs/replicatr
 go 1.21.5
 
 require (
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2
-	github.com/btcsuite/btcd/btcutil v1.1.3
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dchest/blake256 v1.1.0
 	github.com/dgraph-io/badger/v4 v4.2.0
@@ -25,19 +23,13 @@ require (
 	golang.org/x/exp v0.0.0-20231219180239-dc181d75b848
 	golang.org/x/net v0.18.0
 	lukechampine.com/frand v1.4.2
-	mleku.online/git/bech32 v1.0.3
-	mleku.online/git/ec v1.0.4
-	mleku.online/git/log v1.0.7
 )
 
 require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect

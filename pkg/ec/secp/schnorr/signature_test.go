@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/minio/sha256-simd"
-	"mleku.online/git/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // TestSignatureParsing ensures that signatures are properly parsed including
@@ -70,9 +70,9 @@ func TestSignatureParsing(t *testing.T) {
 
 	for _, test := range tests {
 		_, e := ParseSignature(hexToBytes(test.sig))
-		if !errors.Is(err, test.e) {
-			t.Errorf("%s mismatched err -- got %v, want %v", test.name, err,
-				test.e)
+		if !errors.Is(e, test.err) {
+			t.Errorf("%s mismatched err -- got %v, want %v", test.name, e,
+				test.err)
 			continue
 		}
 	}
@@ -533,10 +533,9 @@ func TestVerifyErrors(t *testing.T) {
 		// allowed range is caught.
 		sig, e := ParseSignature(hexToBytes(test.sigR + test.sigS))
 		if e != nil {
-			if !errors.Is(err, test.e) {
+			if !errors.Is(e, test.err) {
 				t.Errorf("%s: mismatched err -- got %v, want %v", test.name,
-					err,
-					test.e)
+					e, test.err)
 			}
 
 			continue
@@ -544,9 +543,9 @@ func TestVerifyErrors(t *testing.T) {
 
 		// Ensure the expected error is hit.
 		e = schnorrVerifyBlake256(sig, hash, pubKey)
-		if !errors.Is(err, test.e) {
-			t.Errorf("%s: mismatched err -- got %v, want %v", test.name, err,
-				test.e)
+		if !errors.Is(e, test.err) {
+			t.Errorf("%s: mismatched err -- got %v, want %v", test.name, e,
+				test.err)
 			continue
 		}
 	}

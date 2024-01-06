@@ -3,7 +3,7 @@ package relay
 import (
 	"context"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/sebest/xff"
 )

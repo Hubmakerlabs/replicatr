@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
@@ -11,14 +12,13 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/minio/sha256-simd"
-	"mleku.online/git/ec/schnorr"
-	secp256k1 "mleku.online/git/ec/secp"
-	log2 "mleku.online/git/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
+var log, fails = log2.GetStd()
+
 var (
-	log                    = log2.GetLogger()
-	fails                  = log.D.Chk
 	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
 )
 
