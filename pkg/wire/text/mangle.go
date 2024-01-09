@@ -10,6 +10,10 @@ import (
 	"io"
 )
 
+type Unmarshaler interface {
+	Unmarshal(buf *Buffer) (e error)
+}
+
 type Buffer struct {
 	Pos int
 	Buf []byte

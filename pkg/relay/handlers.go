@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
 	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
@@ -122,7 +122,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 				var e error
 				var ok bool
 				var envelope enveloper.I
-				if envelope, _, _, e = envelopes.ProcessEnvelope(message); log.Fail(e) || envelope == nil {
+				if envelope, _, e = envelopes.ProcessEnvelope(message); log.Fail(e) || envelope == nil {
 					return
 				}
 				switch env := envelope.(type) {

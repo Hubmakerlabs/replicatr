@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
+	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
+
 var log = log2.GetStd()
 
 type Envelope struct {
@@ -20,15 +21,9 @@ type Envelope struct {
 	Approximate    bool
 }
 
-func (env *Envelope) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
-
 var _ enveloper.I = &Envelope{}
 
-func NewCountResponseEnvelope(sid subscriptionid.T, count int64,
-	approx bool) (C *Envelope) {
+func New(sid subscriptionid.T, count int64, approx bool) (C *Envelope) {
 	C = &Envelope{
 		SubscriptionID: sid,
 		Count:          count,
@@ -36,9 +31,7 @@ func NewCountResponseEnvelope(sid subscriptionid.T, count int64,
 	}
 	return
 }
-func (env *Envelope) Label() string      { return labels.EVENT }
-func (env *Envelope) String() (s string) { return env.ToArray().String() }
-func (env *Envelope) Bytes() (s []byte)  { return env.ToArray().Bytes() }
+func (env *Envelope) Label() string { return l.EVENT }
 
 func (env *Envelope) ToArray() array.T {
 	count := object.T{
@@ -48,13 +41,14 @@ func (env *Envelope) ToArray() array.T {
 		count = append(count,
 			object.KV{Key: "approximate", Value: env.Approximate})
 	}
-	return array.T{labels.COUNT, env.SubscriptionID, count}
+	return array.T{l.COUNT, env.SubscriptionID, count}
 }
 
-func (env *Envelope) MarshalJSON() (bytes []byte, e error) {
-	// log.D.F("count envelope marshal")
-	return env.ToArray().Bytes(), nil
-}
+func (env *Envelope) String() (s string) { return env.ToArray().String() }
+
+func (env *Envelope) Bytes() (s []byte) { return env.ToArray().Bytes() }
+
+func (env *Envelope) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
 
 func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))

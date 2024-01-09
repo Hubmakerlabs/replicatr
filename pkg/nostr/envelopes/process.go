@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closed"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
@@ -24,8 +24,7 @@ var log = log2.GetStd()
 // If it fails, it also returns the label bytes found and the buffer, which will
 // have the cursor at the next byte after the quote delimiter of the T, ready
 // for some other envelope outside of nip-01 to decode.
-func ProcessEnvelope(b []byte) (env enveloper.I, label []byte,
-	buf *text.Buffer, e error) {
+func ProcessEnvelope(b []byte) (env enveloper.I, buf *text.Buffer, e error) {
 
 	log.D.F("processing envelope:\n%s", string(b))
 	// The bytes must be valid JSON but we can't assume they are free of
@@ -68,9 +67,6 @@ matched:
 		// no match
 		e = fmt.Errorf("label '%s' not recognised as envelope label",
 			string(candidate))
-		// label is the string that was found in the first element of the JSON
-		// array.
-		label = candidate
 		return
 	}
 	// We know what to expect now, the next thing to do is pass forward to the

@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
+	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
@@ -21,36 +21,19 @@ type Envelope struct {
 
 var _ enveloper.I = &Envelope{}
 
-func NewClosedEnvelope(s subscriptionid.T, reason string) (ce *Envelope) {
-	ce = &Envelope{T: s, Reason: reason}
-	return
+func New(s subscriptionid.T, reason string) *Envelope {
+	return &Envelope{T: s, Reason: reason}
 }
 
-// Label returns the label enum/type of the envelope. The relevant bytes could
-// be retrieved using nip1.Labels[Label]
-func (E *Envelope) Label() (l string) { return labels.CLOSED }
+func (E *Envelope) ToArray() array.T { return array.T{l.CLOSED, E.T, E.Reason} }
 
-func (E *Envelope) ToArray() (a array.T) {
-	return array.T{labels.CLOSED, E.T, E.Reason}
-}
+func (E *Envelope) Label() string { return l.CLOSED }
 
-func (E *Envelope) String() (s string) {
-	return E.ToArray().String()
-}
+func (E *Envelope) String() (s string) { return E.ToArray().String() }
 
-func (E *Envelope) Bytes() (s []byte) {
-	return E.ToArray().Bytes()
-}
+func (E *Envelope) Bytes() (s []byte) { return E.ToArray().Bytes() }
 
-// MarshalJSON returns the JSON encoded form of the envelope.
-func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
-	return E.Bytes(), nil
-}
-
-func (E *Envelope) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
+func (E *Envelope) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
 
 // Unmarshal the envelope.
 func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {

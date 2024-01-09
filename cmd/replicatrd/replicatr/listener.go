@@ -15,6 +15,8 @@ type Listener struct {
 	cancel  context.C
 }
 
+type ListenerMap = *xsync.MapOf[string, *Listener]
+
 var listeners = xsync.NewTypedMapOf[*WebSocket,
 	ListenerMap](pointerHasher[WebSocket])
 

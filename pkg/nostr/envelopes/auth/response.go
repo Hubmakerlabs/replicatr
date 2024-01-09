@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
+	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
@@ -22,57 +22,29 @@ type Response struct {
 
 var _ enveloper.I = &Response{}
 
-// New creates an Response response from an Challenge.
+// NewResponse creates an Response response from an Challenge.
 //
 // The caller must sign the embedded event before sending it back to
 // authenticate.
-func New(ac *Challenge, rl string) (ae *Response) {
+func NewResponse(ac *Challenge, rl string) (ae *Response) {
 	ae = &Response{
 		&event.T{
 			Kind: kind.ClientAuthentication,
-			Tags: tags.T{
-				{"relay", rl},
-				{"challenge", ac.Challenge},
-			},
+			Tags: tags.T{{"relay", rl}, {"challenge", ac.Challenge}},
 		},
 	}
 	return
 }
 
-func (a *Response) Label() string { return labels.AUTH }
-func (a *Response) ToArray() array.T {
-	return array.T{labels.AUTH,
-		a.T.ToObject()}
-}
-func (a *Response) String() (s string) { return a.ToArray().String() }
-func (a *Response) Bytes() (s []byte)  { return a.ToArray().Bytes() }
+func (a *Response) Label() string { return l.AUTH }
 
-func (a *Response) MarshalJSON() (b []byte, e error) {
-	return a.ToArray().Bytes(), nil
-}
+func (a *Response) ToArray() array.T { return array.T{l.AUTH, a.T.ToObject()} }
 
-func (a *Response) UnmarshalJSON(b []byte) (e error) {
-	// if a == nil {
-	// 	return fmt.Errorf("cannot unmarshal to nil pointer")
-	// }
-	// var l labels.T
-	// var buf *text.Buffer
-	// if l, buf, e = sentinel.Identify(b); log.Fail(e) {
-	// 	return
-	// }
-	// if l != labels.LAuth {
-	// 	e = fmt.Errorf("expected '%s' envelope, got '%s'",
-	// 		labels.AUTH, labels.List[l])
-	// 	log.D.Ln(e)
-	// 	return
-	// }
-	// var c enveloper.I
-	// if c, e = sentinel.Read(buf, l); log.Fail(e) {
-	// 	return
-	// }
-	// *a = *c.(*Response)
-	return
-}
+func (a *Response) String() string { return a.ToArray().String() }
+
+func (a *Response) Bytes() []byte { return a.ToArray().Bytes() }
+
+func (a *Response) MarshalJSON() ([]byte, error) { return a.Bytes(), nil }
 
 func (a *Response) Unmarshal(buf *text.Buffer) (e error) {
 	if a == nil {

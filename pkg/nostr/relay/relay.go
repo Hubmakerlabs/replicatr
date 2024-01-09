@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/connect"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
 	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
@@ -255,7 +255,7 @@ func (r *Relay) Connect(c context.T) (e error) {
 			message := buf.Bytes()
 			log.D.F("{%s} %v", r.URL, string(message))
 			var envelope enveloper.I
-			envelope, _, _, e = envelopes.ProcessEnvelope(message)
+			envelope, _, e = envelopes.ProcessEnvelope(message)
 			if envelope == nil || log.Fail(e) {
 				continue
 			}

@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
@@ -20,7 +20,7 @@ import (
 var log = log2.GetStd()
 
 func TestEnveloper(t *testing.T) {
-	// log2.SetLogLevel(log2.Debug)
+	log2.SetLogLevel(log2.Debug)
 	const sub = "subscription000001"
 	envs := []enveloper.I{
 		&event.Envelope{SubscriptionID: sub, Event: eventest.D[0]},
@@ -43,7 +43,7 @@ func TestEnveloper(t *testing.T) {
 		marshaled := string(b)
 		log.D.Ln("marshaled  ", marshaled)
 		var env enveloper.I
-		env, _, _, e = envelopes.ProcessEnvelope(b)
+		env, _, e = envelopes.ProcessEnvelope(b)
 		if e != nil {
 			t.Fatal(e)
 		}

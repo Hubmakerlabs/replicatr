@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
@@ -17,11 +17,6 @@ type Envelope struct {
 	Text string
 }
 
-func (E *Envelope) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
-
 func NewNoticeEnvelope(text string) (E *Envelope) {
 	E = &Envelope{Text: text}
 	return
@@ -29,25 +24,15 @@ func NewNoticeEnvelope(text string) (E *Envelope) {
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *Envelope) Label() (l string) { return labels.NOTICE }
+func (E *Envelope) Label() string { return l.NOTICE }
 
-func (E *Envelope) ToArray() (a array.T) {
-	return array.T{labels.NOTICE, E.Text}
-}
+func (E *Envelope) ToArray() array.T { return array.T{l.NOTICE, E.Text} }
 
-func (E *Envelope) String() (s string) {
-	return E.ToArray().String()
-}
+func (E *Envelope) String() (s string) { return E.ToArray().String() }
 
-func (E *Envelope) Bytes() (s []byte) {
-	return E.ToArray().Bytes()
-}
+func (E *Envelope) Bytes() (s []byte) { return E.ToArray().Bytes() }
 
-// MarshalJSON returns the JSON encoded form of the envelope.
-func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
-	bytes = E.ToArray().Bytes()
-	return
-}
+func (E *Envelope) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
 
 // Unmarshal the envelope.
 func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
