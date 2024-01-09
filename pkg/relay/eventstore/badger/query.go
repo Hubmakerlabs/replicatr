@@ -139,7 +139,7 @@ func (b *Backend) Q(queries []query, since uint32, extraFilter *filter.T, f *fil
 	}
 }
 
-func (b *Backend) QueryEvents(ctx context.T, f *filter.T) (evChan chan *event.T, e error) {
+func (b *Backend) QueryEvents(c context.T, f *filter.T) (evChan chan *event.T, e error) {
 	evChan = make(chan *event.T)
 	var queries []query
 	var extraFilter *filter.T

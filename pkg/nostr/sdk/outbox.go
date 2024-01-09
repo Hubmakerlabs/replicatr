@@ -11,7 +11,7 @@ import (
 )
 
 func (s *System) ExpandQueriesByAuthorAndRelays(
-	ctx context.T,
+	c context.T,
 	f *filter.T,
 ) (filters map[*relay.Relay]*filter.T, e error) {
 
@@ -25,7 +25,7 @@ func (s *System) ExpandQueriesByAuthorAndRelays(
 	for _, pubkey := range f.Authors {
 		go func(pubkey string) {
 			defer wg.Done()
-			relayURLs := s.FetchOutboxRelays(ctx, pubkey)
+			relayURLs := s.FetchOutboxRelays(c, pubkey)
 			c := 0
 			for _, r := range relayURLs {
 				var rl *relay.Relay

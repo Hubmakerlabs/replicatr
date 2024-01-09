@@ -29,14 +29,14 @@ type Connection struct {
 	msgStateW         *wsflate.MessageState
 }
 
-func NewConnection(ctx context.T, url string, requestHeader http.Header) (*Connection, error) {
+func NewConnection(c context.T, url string, requestHeader http.Header) (*Connection, error) {
 	dialer := ws.Dialer{
 		Header: ws.HandshakeHeaderHTTP(requestHeader),
 		Extensions: []httphead.Option{
 			wsflate.DefaultParameters.Option(),
 		},
 	}
-	conn, _, hs, e := dialer.Dial(ctx, url)
+	conn, _, hs, e := dialer.Dial(c, url)
 	if e != nil {
 		return nil, fmt.Errorf("failed to dial: %w", e)
 	}
@@ -127,10 +127,10 @@ func (c *Connection) WriteMessage(data []byte) error {
 	return nil
 }
 
-func (c *Connection) ReadMessage(ctx context.T, buf io.Writer) error {
+func (c *Connection) ReadMessage(cx context.T, buf io.Writer) error {
 	for {
 		select {
-		case <-ctx.Done():
+		case <-cx.Done():
 			return errors.New("context canceled")
 		default:
 		}

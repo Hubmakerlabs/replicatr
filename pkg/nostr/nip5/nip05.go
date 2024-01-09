@@ -25,7 +25,7 @@ type WellKnownResponse struct {
 	Relays key2RelaysMap `json:"relays"` // NIP-35
 }
 
-func QueryIdentifier(ctx context.T, fullname string) (pp *pointers.Profile, e error) {
+func QueryIdentifier(c context.T, fullname string) (pp *pointers.Profile, e error) {
 	spl := strings.Split(fullname, "@")
 	var name, domain string
 	switch len(spl) {
@@ -42,7 +42,7 @@ func QueryIdentifier(ctx context.T, fullname string) (pp *pointers.Profile, e er
 		return nil, fmt.Errorf("hostname doesn't have a dot")
 	}
 	var req *http.Request
-	req, e = http.NewRequestWithContext(ctx, "GET",
+	req, e = http.NewRequestWithContext(c, "GET",
 		fmt.Sprintf("https://%s/.well-known/nostr.json?name=%s", domain, name), nil)
 	if log.E.Chk(e) {
 		return nil, fmt.Errorf("failed to create a request: %w", e)

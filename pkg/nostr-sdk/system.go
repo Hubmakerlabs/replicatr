@@ -31,21 +31,21 @@ func (sys System) StoreRelay() eventstore.RelayInterface {
 	return eventstore.RelayWrapper{Store: sys.Store}
 }
 
-func (sys System) FetchRelays(ctx context.T, pubkey string) []Relay {
+func (sys System) FetchRelays(c context.T, pubkey string) []Relay {
 	if v, ok := sys.RelaysCache.Get(pubkey); ok {
 		return v
 	}
 
-	ctx, cancel := context.Timeout(ctx, time.Second*5)
+	c, cancel := context.Timeout(c, time.Second*5)
 	defer cancel()
 
-	res := FetchRelaysForPubkey(ctx, sys.Pool, pubkey, sys.RelayListRelays...)
+	res := FetchRelaysForPubkey(c, sys.Pool, pubkey, sys.RelayListRelays...)
 	sys.RelaysCache.SetWithTTL(pubkey, res, time.Hour*6)
 	return res
 }
 
-func (sys System) FetchOutboxRelays(ctx context.T, pubkey string) []string {
-	relays := sys.FetchRelays(ctx, pubkey)
+func (sys System) FetchOutboxRelays(c context.T, pubkey string) []string {
+	relays := sys.FetchRelays(c, pubkey)
 	result := make([]string, 0, len(relays))
 	for _, rl := range relays {
 		if rl.Outbox {
@@ -57,27 +57,27 @@ func (sys System) FetchOutboxRelays(ctx context.T, pubkey string) []string {
 
 // FetchProfileMetadata fetches metadata for a given user from the local cache, or from the local store,
 // or, failing these, from the target user's defined outbox relays -- then caches the result.
-func (sys System) FetchProfileMetadata(ctx context.T, pubkey string) ProfileMetadata {
-	pm, _ := sys.fetchProfileMetadata(ctx, pubkey)
+func (sys System) FetchProfileMetadata(c context.T, pubkey string) ProfileMetadata {
+	pm, _ := sys.fetchProfileMetadata(c, pubkey)
 	return pm
 }
 
 // FetchOrStoreProfileMetadata is like FetchProfileMetadata, but also saves the result to the sys.Store
-func (sys System) FetchOrStoreProfileMetadata(ctx context.T, pubkey string) ProfileMetadata {
-	pm, fromInternal := sys.fetchProfileMetadata(ctx, pubkey)
+func (sys System) FetchOrStoreProfileMetadata(c context.T, pubkey string) ProfileMetadata {
+	pm, fromInternal := sys.fetchProfileMetadata(c, pubkey)
 	if !fromInternal {
-		sys.StoreRelay().Publish(ctx, pm.Event)
+		sys.StoreRelay().Publish(c, pm.Event)
 	}
 	return pm
 }
 
-func (sys System) fetchProfileMetadata(ctx context.T, pubkey string) (pm ProfileMetadata, fromInternal bool) {
+func (sys System) fetchProfileMetadata(c context.T, pubkey string) (pm ProfileMetadata, fromInternal bool) {
 	if v, ok := sys.MetadataCache.Get(pubkey); ok {
 		return v, true
 	}
 
 	if sys.Store != nil {
-		res, _ := sys.StoreRelay().QuerySync(ctx, &filter.T{Kinds: []int{0}, Authors: []string{pubkey}})
+		res, _ := sys.StoreRelay().QuerySync(c, &filter.T{Kinds: []int{0}, Authors: []string{pubkey}})
 		if len(res) != 0 {
 			if m, e := ParseMetadata(res[0]); e == nil {
 				m.PubKey = pubkey
@@ -88,12 +88,12 @@ func (sys System) fetchProfileMetadata(ctx context.T, pubkey string) (pm Profile
 		}
 	}
 
-	ctxRelays, cancel := context.Timeout(ctx, time.Second*2)
+	ctxRelays, cancel := context.Timeout(c, time.Second*2)
 	relays := sys.FetchOutboxRelays(ctxRelays, pubkey)
 	cancel()
 
-	ctx, cancel = context.Timeout(ctx, time.Second*3)
-	res := FetchProfileMetadata(ctx, sys.Pool, pubkey, append(relays, sys.MetadataRelays...)...)
+	c, cancel = context.Timeout(c, time.Second*3)
+	res := FetchProfileMetadata(c, sys.Pool, pubkey, append(relays, sys.MetadataRelays...)...)
 	cancel()
 
 	sys.MetadataCache.SetWithTTL(pubkey, res, time.Hour*6)
@@ -101,8 +101,8 @@ func (sys System) fetchProfileMetadata(ctx context.T, pubkey string) (pm Profile
 }
 
 // FetchUserEvents fetches events from each users' outbox relays, grouping queries when possible.
-func (sys System) FetchUserEvents(ctx context.T, filt filter.T) (map[string][]*event.T, error) {
-	filters, e := sys.ExpandQueriesByAuthorAndRelays(ctx, filt)
+func (sys System) FetchUserEvents(c context.T, filt filter.T) (map[string][]*event.T, error) {
+	filters, e := sys.ExpandQueriesByAuthorAndRelays(c, filt)
 	if e != nil {
 		return nil, fmt.Errorf("failed to expand queries: %w", e)
 	}
@@ -114,7 +114,7 @@ func (sys System) FetchUserEvents(ctx context.T, filt filter.T) (map[string][]*e
 		go func(rl *relays.Relay, f filter.T) {
 			defer wg.Done()
 			f.Limit = f.Limit * len(f.Authors) // hack
-			sub, e := rl.Subscribe(ctx, filters2.T{filt})
+			sub, e := rl.Subscribe(c, filters2.T{filt})
 			if e != nil {
 				return
 			}

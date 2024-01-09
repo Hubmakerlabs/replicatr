@@ -12,7 +12,7 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *Backend) CountEvents(ctx context.T, f *filter.T) (c int64, e error) {
+func (b *Backend) CountEvents(c context.T, f *filter.T) (cnt int64, e error) {
 	var queries []query
 	var extraFilter *filter.T
 	var since uint32
@@ -44,7 +44,7 @@ func (b *Backend) CountEvents(ctx context.T, f *filter.T) (c int64, e error) {
 				idx[0] = rawEventStorePrefix
 				copy(idx[1:], key[idxOffset:])
 				if extraFilter == nil {
-					c++
+					cnt++
 				} else {
 					// fetch actual event
 					if item, e = txn.Get(idx); log.E.Chk(e) {
@@ -61,7 +61,7 @@ func (b *Backend) CountEvents(ctx context.T, f *filter.T) (c int64, e error) {
 						}
 						// check if this matches the other filters that were not part of the index
 						if extraFilter == nil || extraFilter.Matches(evt) {
-							c++
+							cnt++
 						}
 						return nil
 					})

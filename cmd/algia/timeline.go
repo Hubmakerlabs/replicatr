@@ -218,8 +218,8 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
-		e := rl.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(c context.T, rl *relays.Relay) bool {
+		e := rl.Publish(c, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
 		} else {
@@ -325,8 +325,8 @@ func doPost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
-		e := rl.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(c context.T, rl *relays.Relay) bool {
+		e := rl.Publish(c, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
 		} else {
@@ -426,7 +426,7 @@ func doReply(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(c context.T, rl *relays.Relay) bool {
 		if !quote {
 			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, rl.URL, "reply"})
 		} else {
@@ -435,7 +435,7 @@ func doReply(cCtx *cli.Context) (e error) {
 		if e := ev.Sign(sk); e != nil {
 			return true
 		}
-		e := rl.Publish(ctx, ev)
+		e := rl.Publish(c, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
 		} else {
@@ -489,9 +489,9 @@ func doRepost(cCtx *cli.Context) (e error) {
 	first.Store(true)
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(c context.T, rl *relays.Relay) bool {
 		if first.Load() {
-			evs, e := rl.QuerySync(ctx, f)
+			evs, e := rl.QuerySync(c, f)
 			if e != nil {
 				return true
 			}
@@ -503,7 +503,7 @@ func doRepost(cCtx *cli.Context) (e error) {
 				return true
 			}
 		}
-		e := rl.Publish(ctx, ev)
+		e := rl.Publish(c, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
 		} else {
@@ -544,8 +544,8 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 	var repostID string
 	var mu sync.Mutex
-	cfg.Do(RelayPerms{Read: true}, func(ctx context.T, rl *relays.Relay) bool {
-		evs, e := rl.QuerySync(ctx, f)
+	cfg.Do(RelayPerms{Read: true}, func(c context.T, rl *relays.Relay) bool {
+		evs, e := rl.QuerySync(c, f)
 		if e != nil {
 			return true
 		}
@@ -566,8 +566,8 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
-		e := rl.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(c context.T, rl *relays.Relay) bool {
+		e := rl.Publish(c, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
 		} else {
@@ -632,9 +632,9 @@ func doLike(cCtx *cli.Context) (e error) {
 	first.Store(true)
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(c context.T, rl *relays.Relay) bool {
 		if first.Load() {
-			evs, e := rl.QuerySync(ctx, f)
+			evs, e := rl.QuerySync(c, f)
 			if e != nil {
 				return true
 			}
@@ -647,7 +647,7 @@ func doLike(cCtx *cli.Context) (e error) {
 			}
 			return true
 		}
-		e := rl.Publish(ctx, ev)
+		e := rl.Publish(c, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
 		} else {
@@ -688,8 +688,8 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 	var likeID string
 	var mu sync.Mutex
-	cfg.Do(RelayPerms{Read: true}, func(ctx context.T, rl *relays.Relay) bool {
-		evs, e := rl.QuerySync(ctx, f)
+	cfg.Do(RelayPerms{Read: true}, func(c context.T, rl *relays.Relay) bool {
+		evs, e := rl.QuerySync(c, f)
 		if e != nil {
 			return true
 		}
@@ -710,8 +710,8 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
-		e := rl.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(c context.T, rl *relays.Relay) bool {
+		e := rl.Publish(c, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
 		} else {
@@ -759,8 +759,8 @@ func doDelete(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
-		e := rl.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(c context.T, rl *relays.Relay) bool {
+		e := rl.Publish(c, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
 		} else {
@@ -880,8 +880,8 @@ func doStream(cCtx *cli.Context) (e error) {
 				if e := evr.Sign(sk); e != nil {
 					return e
 				}
-				cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
-					rl.Publish(ctx, evr)
+				cfg.Do(RelayPerms{Write: true}, func(c context.T, rl *relays.Relay) bool {
+					rl.Publish(c, evr)
 					return true
 				})
 			}
@@ -949,8 +949,8 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
-		e := rl.Publish(ctx, ev)
+	cfg.Do(RelayPerms{Write: true}, func(c context.T, rl *relays.Relay) bool {
+		e := rl.Publish(c, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
 		} else {

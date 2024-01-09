@@ -30,7 +30,7 @@ type (
 	RejectEvent               func(c context.T, event *event.T) (reject bool, msg string)
 	RejectFilter              func(c context.T, f *filter.T) (reject bool, msg string)
 	OverwriteFilter           func(c context.T, f *filter.T)
-	OverwriteDeletionOutcome  func(c context.T, target *event.T, del *event.T) (accept bool, msg string)
+	OverwriteDeletionOutcome  func(c context.T, target, del *event.T) (accept bool, msg string)
 	OverwriteResponseEvent    func(c context.T, ev *event.T)
 	Events                    func(c context.T, ev *event.T) error
 	Hook                      func(c context.T)

@@ -14,13 +14,13 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 )
 
-func (rl *Relay) AddEvent(ctx context.T, evt *event.T) (e error) {
+func (rl *Relay) AddEvent(c context.T, evt *event.T) (e error) {
 	if evt == nil {
 		return errors.New("error: event is nil")
 	}
 
 	for _, reject := range rl.RejectEvent {
-		if reject, msg := reject(ctx, evt); reject {
+		if reject, msg := reject(c, evt); reject {
 			if msg == "" {
 				return errors.New(OK.Message(OK.Blocked, "no reason"))
 			} else {
@@ -35,7 +35,7 @@ func (rl *Relay) AddEvent(ctx context.T, evt *event.T) (e error) {
 		if evt.Kind.IsReplaceable() {
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
-				if ch, e = query(ctx, &filter.T{
+				if ch, e = query(c, &filter.T{
 					Authors: []string{evt.PubKey},
 					Kinds:   kinds.T{evt.Kind},
 				}); rl.E.Chk(e) {
@@ -43,7 +43,7 @@ func (rl *Relay) AddEvent(ctx context.T, evt *event.T) (e error) {
 				}
 				if previous := <-ch; previous != nil && isOlder(previous, evt) {
 					for _, del := range rl.DeleteEvent {
-						rl.E.Chk(del(ctx, previous))
+						rl.E.Chk(del(c, previous))
 					}
 				}
 			}
@@ -52,7 +52,7 @@ func (rl *Relay) AddEvent(ctx context.T, evt *event.T) (e error) {
 			d := evt.Tags.GetFirst([]string{"d", ""})
 			if d != nil {
 				for _, query := range rl.QueryEvents {
-					if ch, e = query(ctx, &filter.T{
+					if ch, e = query(c, &filter.T{
 						Authors: []string{evt.PubKey},
 						Kinds:   kinds.T{evt.Kind},
 						Tags:    filter.TagMap{"d": []string{d.Value()}},
@@ -61,7 +61,7 @@ func (rl *Relay) AddEvent(ctx context.T, evt *event.T) (e error) {
 					}
 					if previous := <-ch; previous != nil && isOlder(previous, evt) {
 						for _, del := range rl.DeleteEvent {
-							del(ctx, previous)
+							del(c, previous)
 						}
 					}
 				}
@@ -70,7 +70,7 @@ func (rl *Relay) AddEvent(ctx context.T, evt *event.T) (e error) {
 
 		// store
 		for _, store := range rl.StoreEvent {
-			if saveErr := store(ctx, evt); saveErr != nil {
+			if saveErr := store(c, evt); saveErr != nil {
 				switch saveErr {
 				case eventstore.ErrDupEvent:
 					return nil
@@ -81,24 +81,24 @@ func (rl *Relay) AddEvent(ctx context.T, evt *event.T) (e error) {
 		}
 
 		for _, ons := range rl.OnEventSaved {
-			ons(ctx, evt)
+			ons(c, evt)
 		}
 	}
 	for _, ovw := range rl.OverwriteResponseEvent {
-		ovw(ctx, evt)
+		ovw(c, evt)
 	}
 	notifyListeners(evt)
 	return nil
 }
 
-func (rl *Relay) handleDeleteRequest(ctx context.T, evt *event.T) (e error) {
+func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (e error) {
 	var ch chan *event.T
 	// event deletion -- nip09
 	for _, tag := range evt.Tags {
 		if len(tag) >= 2 && tag[0] == "e" {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
-				if ch, e = query(ctx, &filter.T{IDs: []string{tag[1]}}); rl.E.Chk(e) {
+				if ch, e = query(c, &filter.T{IDs: []string{tag[1]}}); rl.E.Chk(e) {
 					continue
 				}
 				target := <-ch
@@ -113,12 +113,12 @@ func (rl *Relay) handleDeleteRequest(ctx context.T, evt *event.T) (e error) {
 				}
 				// but if we have a function to overwrite this outcome, use that instead
 				for _, odo := range rl.OverwriteDeletionOutcome {
-					acceptDeletion, msg = odo(ctx, target, evt)
+					acceptDeletion, msg = odo(c, target, evt)
 				}
 				if acceptDeletion {
 					// delete it
 					for _, del := range rl.DeleteEvent {
-						rl.E.Chk(del(ctx, target))
+						rl.E.Chk(del(c, target))
 					}
 				} else {
 					// fail and stop here

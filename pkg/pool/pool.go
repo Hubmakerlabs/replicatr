@@ -42,13 +42,13 @@ type IncomingEvent struct {
 	Relay *relay.Relay
 }
 
-func NewSimplePool(ctx context.T) *SimplePool {
-	ctx, cancel := context.Cancel(ctx)
+func NewSimplePool(c context.T) *SimplePool {
+	c, cancel := context.Cancel(c)
 
 	return &SimplePool{
 		Relays: make(map[string]*relay.Relay),
 
-		Context: ctx,
+		Context: c,
 		cancel:  cancel,
 	}
 }
@@ -65,9 +65,9 @@ func (p *SimplePool) EnsureRelay(url string) (*relay.Relay, error) {
 	} else {
 		var e error
 		// we use this ctx here so when the pool dies everything dies
-		ctx, cancel := context.Timeout(p.Context, time.Second*15)
+		c, cancel := context.Timeout(p.Context, time.Second*15)
 		defer cancel()
-		if rl, e = relay.RelayConnect(ctx, nm); e != nil {
+		if rl, e = relay.RelayConnect(c, nm); e != nil {
 			return nil, fmt.Errorf("failed to connect: %w", e)
 		}
 
@@ -78,16 +78,16 @@ func (p *SimplePool) EnsureRelay(url string) (*relay.Relay, error) {
 
 // SubMany opens a subscription with the given filters to multiple relays
 // the subscriptions only end when the context is canceled
-func (p *SimplePool) SubMany(ctx context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
-	return p.subMany(ctx, urls, filters, true)
+func (p *SimplePool) SubMany(c context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
+	return p.subMany(c, urls, filters, true)
 }
 
 // SubManyNonUnique is like SubMany, but returns duplicate events if they come from different relays
-func (p *SimplePool) SubManyNonUnique(ctx context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
-	return p.subMany(ctx, urls, filters, false)
+func (p *SimplePool) SubManyNonUnique(c context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
+	return p.subMany(c, urls, filters, false)
 }
 
-func (p *SimplePool) subMany(ctx context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
+func (p *SimplePool) subMany(c context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
 	events := make(chan IncomingEvent)
 	seenAlready := xsync.NewMapOf[bool]()
 
@@ -101,7 +101,7 @@ func (p *SimplePool) subMany(ctx context.T, urls []string, filters filters.T, un
 				return
 			}
 
-			sub, _ := rl.Subscribe(ctx, filters)
+			sub, _ := rl.Subscribe(c, filters)
 			if sub == nil {
 				return
 			}
@@ -114,7 +114,7 @@ func (p *SimplePool) subMany(ctx context.T, urls []string, filters filters.T, un
 				if !stop {
 					select {
 					case events <- IncomingEvent{T: evt, Relay: rl}:
-					case <-ctx.Done():
+					case <-c.Done():
 						return
 					}
 				}
@@ -131,17 +131,17 @@ func (p *SimplePool) subMany(ctx context.T, urls []string, filters filters.T, un
 }
 
 // SubManyEose is like SubMany, but it stops subscriptions and closes the channel when gets a EOSE
-func (p *SimplePool) SubManyEose(ctx context.T, urls []string, filters filters.T) chan IncomingEvent {
-	return p.subManyEose(ctx, urls, filters, true)
+func (p *SimplePool) SubManyEose(c context.T, urls []string, filters filters.T) chan IncomingEvent {
+	return p.subManyEose(c, urls, filters, true)
 }
 
 // SubManyEoseNonUnique is like SubManyEose, but returns duplicate events if they come from different relays
-func (p *SimplePool) SubManyEoseNonUnique(ctx context.T, urls []string, filters filters.T) chan IncomingEvent {
-	return p.subManyEose(ctx, urls, filters, false)
+func (p *SimplePool) SubManyEoseNonUnique(c context.T, urls []string, filters filters.T) chan IncomingEvent {
+	return p.subManyEose(c, urls, filters, false)
 }
 
-func (p *SimplePool) subManyEose(ctx context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
-	ctx, cancel := context.Cancel(ctx)
+func (p *SimplePool) subManyEose(c context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
+	c, cancel := context.Cancel(c)
 
 	events := make(chan IncomingEvent)
 	seenAlready := xsync.NewMapOf[bool]()
@@ -164,7 +164,7 @@ func (p *SimplePool) subManyEose(ctx context.T, urls []string, filters filters.T
 				return
 			}
 
-			sub, e := rl.Subscribe(ctx, filters)
+			sub, e := rl.Subscribe(c, filters)
 			if sub == nil {
 				log.E.F("error subscribing to %s with %v: %s", rl, filters, e)
 				return
@@ -172,7 +172,7 @@ func (p *SimplePool) subManyEose(ctx context.T, urls []string, filters filters.T
 
 			for {
 				select {
-				case <-ctx.Done():
+				case <-c.Done():
 					return
 				case <-sub.EndOfStoredEvents:
 					return
@@ -188,7 +188,7 @@ func (p *SimplePool) subManyEose(ctx context.T, urls []string, filters filters.T
 					if !stop {
 						select {
 						case events <- IncomingEvent{T: evt, Relay: rl}:
-						case <-ctx.Done():
+						case <-c.Done():
 							return
 						}
 					}
@@ -201,10 +201,10 @@ func (p *SimplePool) subManyEose(ctx context.T, urls []string, filters filters.T
 }
 
 // QuerySingle returns the first event returned by the first relay, cancels everything else.
-func (p *SimplePool) QuerySingle(ctx context.T, urls []string, f *filter.T) *IncomingEvent {
-	ctx, cancel := context.Cancel(ctx)
+func (p *SimplePool) QuerySingle(c context.T, urls []string, f *filter.T) *IncomingEvent {
+	c, cancel := context.Cancel(c)
 	defer cancel()
-	for ievt := range p.SubManyEose(ctx, urls, filters.T{f}) {
+	for ievt := range p.SubManyEose(c, urls, filters.T{f}) {
 		return &ievt
 	}
 	return nil

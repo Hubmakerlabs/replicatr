@@ -21,10 +21,10 @@ type Relay struct {
 	Outbox bool
 }
 
-func FetchRelaysForPubkey(ctx context.T, pool *pool.SimplePool, pubkey string, relays ...string) (r []Relay) {
-	ctx, cancel := context.Cancel(ctx)
+func FetchRelaysForPubkey(c context.T, pool *pool.SimplePool, pubkey string, relays ...string) (r []Relay) {
+	c, cancel := context.Cancel(c)
 	defer cancel()
-	ch := pool.SubManyEose(ctx, relays, filters.T{
+	ch := pool.SubManyEose(c, relays, filters.T{
 		{
 			Kinds: kinds.T{
 				kind.RelayListMetadata,
