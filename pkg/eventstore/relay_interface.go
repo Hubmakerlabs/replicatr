@@ -1,8 +1,9 @@
 package eventstore
 
 import (
-	"context"
 	"fmt"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -11,8 +12,8 @@ import (
 
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.
 type RelayInterface interface {
-	Publish(ctx context.Context, evt *event.T) error
-	QuerySync(ctx context.Context, f *filter.T, opts ...relay.SubscriptionOption) ([]*event.T, error)
+	Publish(ctx context.T, evt *event.T) error
+	QuerySync(ctx context.T, f *filter.T, opts ...relay.SubscriptionOption) ([]*event.T, error)
 }
 
 type RelayWrapper struct {
@@ -21,7 +22,7 @@ type RelayWrapper struct {
 
 var _ RelayInterface = (*RelayWrapper)(nil)
 
-func (w RelayWrapper) Publish(ctx context.Context, evt *event.T) (e error) {
+func (w RelayWrapper) Publish(ctx context.T, evt *event.T) (e error) {
 	if 20000 <= evt.Kind && evt.Kind < 30000 {
 		// do not store ephemeral events
 		return nil
@@ -59,7 +60,7 @@ func (w RelayWrapper) Publish(ctx context.Context, evt *event.T) (e error) {
 	return nil
 }
 
-func (w RelayWrapper) QuerySync(ctx context.Context, f *filter.T, opts ...relay.SubscriptionOption) ([]*event.T, error) {
+func (w RelayWrapper) QuerySync(ctx context.T, f *filter.T, opts ...relay.SubscriptionOption) ([]*event.T, error) {
 	ch, e := w.Store.QueryEvents(ctx, f)
 	if e != nil {
 		return nil, fmt.Errorf("failed to query: %w", e)

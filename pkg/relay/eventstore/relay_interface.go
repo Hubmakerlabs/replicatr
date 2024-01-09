@@ -1,9 +1,10 @@
 package eventstore
 
 import (
-	"context"
 	"errors"
 	"fmt"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -12,8 +13,8 @@ import (
 
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.
 type RelayInterface interface {
-	Publish(ctx context.Context, event event.T) error
-	QuerySync(ctx context.Context, f *filter.T, opts ...SubscriptionOption) ([]*event.T, error)
+	Publish(ctx context.T, event event.T) error
+	QuerySync(ctx context.T, f *filter.T, opts ...SubscriptionOption) ([]*event.T, error)
 }
 
 // SubscriptionOption is the type of the argument passed for that.
@@ -37,37 +38,37 @@ type RelayWrapper struct {
 // compile time interface check
 var _ RelayInterface = (*RelayWrapper)(nil)
 
-func (w RelayWrapper) Publish(ctx context.Context, evt event.T) (e error) {
-	if evt.Kind.IsEphemeral() {
+func (w RelayWrapper) Publish(ctx context.T, ev event.T) (e error) {
+	if ev.Kind.IsEphemeral() {
 		// do not store ephemeral events
 		return nil
-	} else if evt.Kind.IsReplaceable() {
+	} else if ev.Kind.IsReplaceable() {
 		// replaceable event, delete before storing
 		var ch chan *event.T
-		ch, e = w.Store.QueryEvents(ctx, &filter.T{Authors: []string{evt.PubKey}, Kinds: kinds.T{evt.Kind}})
+		ch, e = w.Store.QueryEvents(ctx, &filter.T{Authors: []string{ev.PubKey}, Kinds: kinds.T{ev.Kind}})
 		if log.Fail(e) {
 			return fmt.Errorf("failed to query before replacing: %w", e)
 		}
-		if previous := <-ch; previous != nil && isOlder(previous, &evt) {
+		if previous := <-ch; previous != nil && isOlder(previous, &ev) {
 			if e = w.Store.DeleteEvent(ctx, previous); log.Fail(e) {
 				return fmt.Errorf("failed to delete event for replacing: %w", e)
 			}
 		}
-	} else if evt.Kind.IsParameterizedReplaceable() {
+	} else if ev.Kind.IsParameterizedReplaceable() {
 		// parameterized replaceable event, delete before storing
-		d := evt.Tags.GetFirst([]string{"d", ""})
+		d := ev.Tags.GetFirst([]string{"d", ""})
 		if d != nil {
 			var ch chan *event.T
 			ch, e = w.Store.QueryEvents(ctx, &filter.T{
-				Authors: []string{evt.PubKey},
-				Kinds:   kinds.T{evt.Kind},
+				Authors: []string{ev.PubKey},
+				Kinds:   kinds.T{ev.Kind},
 				Tags:    filter.TagMap{"d": []string{d.Value()}},
 			})
 			if log.Fail(e) {
 				return fmt.Errorf(
 					"failed to query before parameterized replacing: %w", e)
 			}
-			if previous := <-ch; previous != nil && isOlder(previous, &evt) {
+			if previous := <-ch; previous != nil && isOlder(previous, &ev) {
 				if e = w.Store.DeleteEvent(ctx, previous); log.Fail(e) {
 					return fmt.Errorf(
 						"failed to delete event for parameterized replacing: %w", e)
@@ -75,13 +76,13 @@ func (w RelayWrapper) Publish(ctx context.Context, evt event.T) (e error) {
 			}
 		}
 	}
-	if e = w.SaveEvent(ctx, &evt); log.Fail(e) && !errors.Is(e, ErrDupEvent) {
+	if e = w.SaveEvent(ctx, &ev); log.Fail(e) && !errors.Is(e, ErrDupEvent) {
 		return fmt.Errorf("failed to save: %w", e)
 	}
 	return nil
 }
 
-func (w RelayWrapper) QuerySync(ctx context.Context, f *filter.T,
+func (w RelayWrapper) QuerySync(ctx context.T, f *filter.T,
 	opts ...SubscriptionOption) (evs []*event.T, e error) {
 	var ch chan *event.T
 	if ch, e = w.Store.QueryEvents(ctx, f); log.E.Chk(e) {

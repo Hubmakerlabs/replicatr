@@ -1,11 +1,12 @@
 package relay
 
 import (
-	"context"
 	"fmt"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
@@ -26,7 +27,7 @@ func TestSubscribe(t *testing.T) {
 	rl := MustRelayConnect(RELAY)
 	defer rl.Close()
 
-	sub, e := rl.Subscribe(context.Background(),
+	sub, e := rl.Subscribe(context.Bg(),
 		filters.T{
 			{Kinds: kinds.T{kind.TextNote}, Limit: 2},
 		})
@@ -70,7 +71,7 @@ func TestNestedSubscriptions(t *testing.T) {
 	n := atomic.Uint32{}
 
 	// fetch 2 replies to a note
-	sub, e := rl.Subscribe(context.Background(), filters.T{{
+	sub, e := rl.Subscribe(context.Bg(), filters.T{{
 		Kinds: kinds.T{kind.TextNote},
 		Tags:  filter.TagMap{"e": []string{"0e34a74f8547e3b95d52a2543719b109fd0312aba144e2ef95cba043f42fe8c5"}},
 		Limit: 3,
@@ -84,7 +85,7 @@ func TestNestedSubscriptions(t *testing.T) {
 		select {
 		case event := <-sub.Events:
 			// now fetch author of this
-			sub, e := rl.Subscribe(context.Background(), filters.T{{Kinds: kinds.T{kind.SetMetadata}, Authors: []string{event.PubKey}, Limit: 1}})
+			sub, e := rl.Subscribe(context.Bg(), filters.T{{Kinds: kinds.T{kind.SetMetadata}, Authors: []string{event.PubKey}, Limit: 1}})
 			if e != nil {
 				t.Errorf("subscription 2 failed: %v", e)
 				return
@@ -94,7 +95,7 @@ func TestNestedSubscriptions(t *testing.T) {
 				select {
 				case <-sub.Events:
 					// do another subscription here in "sync" mode, just so we're sure things are not blocking
-					evs, e := rl.QuerySync(context.Background(), &filter.T{Limit: 1})
+					evs, e := rl.QuerySync(context.Bg(), &filter.T{Limit: 1})
 					if log.Fail(e) {
 
 					}

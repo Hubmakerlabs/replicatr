@@ -3,12 +3,13 @@ package connection
 import (
 	"bytes"
 	"compress/flate"
-	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/gobwas/httphead"
 	"github.com/gobwas/ws"
@@ -28,7 +29,7 @@ type Connection struct {
 	msgStateW         *wsflate.MessageState
 }
 
-func NewConnection(ctx context.Context, url string, requestHeader http.Header) (*Connection, error) {
+func NewConnection(ctx context.T, url string, requestHeader http.Header) (*Connection, error) {
 	dialer := ws.Dialer{
 		Header: ws.HandshakeHeaderHTTP(requestHeader),
 		Extensions: []httphead.Option{
@@ -126,7 +127,7 @@ func (c *Connection) WriteMessage(data []byte) error {
 	return nil
 }
 
-func (c *Connection) ReadMessage(ctx context.Context, buf io.Writer) error {
+func (c *Connection) ReadMessage(ctx context.T, buf io.Writer) error {
 	for {
 		select {
 		case <-ctx.Done():

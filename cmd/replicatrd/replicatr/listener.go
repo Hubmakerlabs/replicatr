@@ -1,8 +1,9 @@
 package replicatr
 
 import (
-	"context"
 	"fmt"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
@@ -11,7 +12,7 @@ import (
 
 type Listener struct {
 	filters filters.T
-	cancel  context.CancelCauseFunc
+	cancel  context.C
 }
 
 var listeners = xsync.NewTypedMapOf[*WebSocket,
@@ -43,7 +44,7 @@ func GetListeningFilters() (respFilters filters.T) {
 	return
 }
 
-func SetListener(id string, ws *WebSocket, f filters.T, c context.CancelCauseFunc) {
+func SetListener(id string, ws *WebSocket, f filters.T, c context.C) {
 	subs, _ := listeners.LoadOrCompute(ws, func() ListenerMap {
 		return xsync.NewMapOf[*Listener]()
 	})

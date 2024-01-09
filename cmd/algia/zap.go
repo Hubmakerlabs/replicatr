@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +8,8 @@ import (
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -75,7 +76,7 @@ func pay(cfg *Config, invoice string) (e error) {
 		return e
 	}
 
-	rl, e := relays.RelayConnect(context.Background(), host)
+	rl, e := relays.RelayConnect(context.Bg(), host)
 	if e != nil {
 		return e
 	}
@@ -117,12 +118,12 @@ func pay(cfg *Config, invoice string) (e error) {
 		Kinds: []int{event.KindNWCWalletInfo, event.KindNWCWalletResponse, event.KindNWCWalletRequest},
 		Limit: 1,
 	}}
-	sub, e := rl.Subscribe(context.Background(), filters)
+	sub, e := rl.Subscribe(context.Bg(), filters)
 	if e != nil {
 		return e
 	}
 
-	e = rl.Publish(context.Background(), ev)
+	e = rl.Publish(context.Bg(), ev)
 	if e != nil {
 		return e
 	}
@@ -146,7 +147,7 @@ func pay(cfg *Config, invoice string) (e error) {
 
 // ZapInfo is
 func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
-	rl := cfg.FindRelay(context.Background(), RelayPerms{Read: true})
+	rl := cfg.FindRelay(context.Bg(), RelayPerms{Read: true})
 	if rl == nil {
 		return nil, errors.New("cannot connect relays")
 	}

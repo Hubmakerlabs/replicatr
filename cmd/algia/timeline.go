@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -217,7 +218,7 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
 		e := rl.Publish(ctx, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
@@ -324,7 +325,7 @@ func doPost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
 		e := rl.Publish(ctx, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
@@ -425,7 +426,7 @@ func doReply(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
 		if !quote {
 			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, rl.URL, "reply"})
 		} else {
@@ -488,7 +489,7 @@ func doRepost(cCtx *cli.Context) (e error) {
 	first.Store(true)
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
 		if first.Load() {
 			evs, e := rl.QuerySync(ctx, f)
 			if e != nil {
@@ -543,7 +544,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 	var repostID string
 	var mu sync.Mutex
-	cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Read: true}, func(ctx context.T, rl *relays.Relay) bool {
 		evs, e := rl.QuerySync(ctx, f)
 		if e != nil {
 			return true
@@ -565,7 +566,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
 		e := rl.Publish(ctx, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
@@ -631,7 +632,7 @@ func doLike(cCtx *cli.Context) (e error) {
 	first.Store(true)
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
 		if first.Load() {
 			evs, e := rl.QuerySync(ctx, f)
 			if e != nil {
@@ -687,7 +688,7 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 	var likeID string
 	var mu sync.Mutex
-	cfg.Do(RelayPerms{Read: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Read: true}, func(ctx context.T, rl *relays.Relay) bool {
 		evs, e := rl.QuerySync(ctx, f)
 		if e != nil {
 			return true
@@ -709,7 +710,7 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
 		e := rl.Publish(ctx, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
@@ -758,7 +759,7 @@ func doDelete(cCtx *cli.Context) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
 		e := rl.Publish(ctx, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)
@@ -821,7 +822,7 @@ func doStream(cCtx *cli.Context) (e error) {
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
 
-	rl := cfg.FindRelay(context.Background(), RelayPerms{Read: true})
+	rl := cfg.FindRelay(context.Bg(), RelayPerms{Read: true})
 	if rl == nil {
 		return errors.New("cannot connect relays")
 	}
@@ -859,7 +860,7 @@ func doStream(cCtx *cli.Context) (e error) {
 		Since:   &since,
 	}
 
-	sub, e := rl.Subscribe(context.Background(), filters.T{ff})
+	sub, e := rl.Subscribe(context.Bg(), filters.T{ff})
 	if e != nil {
 		return e
 	}
@@ -879,7 +880,7 @@ func doStream(cCtx *cli.Context) (e error) {
 				if e := evr.Sign(sk); e != nil {
 					return e
 				}
-				cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+				cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
 					rl.Publish(ctx, evr)
 					return true
 				})
@@ -948,7 +949,7 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 	}
 
 	var success atomic.Int64
-	cfg.Do(RelayPerms{Write: true}, func(ctx context.Context, rl *relays.Relay) bool {
+	cfg.Do(RelayPerms{Write: true}, func(ctx context.T, rl *relays.Relay) bool {
 		e := rl.Publish(ctx, ev)
 		if e != nil {
 			fmt.Fprintln(os.Stderr, rl.URL, e)

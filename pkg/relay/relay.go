@@ -1,10 +1,11 @@
 package relay
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -44,22 +45,22 @@ func New() *Relay {
 type Relay struct {
 	ServiceURL string
 
-	RejectEvent               []func(ctx context.Context, ev *event.T) (reject bool, msg string)
-	RejectFilter              []func(ctx context.Context, f *filter.T) (reject bool, msg string)
-	RejectCountFilter         []func(ctx context.Context, f *filter.T) (reject bool, msg string)
-	OverwriteDeletionOutcome  []func(ctx context.Context, target *event.T, deletion *event.T) (acceptDeletion bool, msg string)
-	OverwriteResponseEvent    []func(ctx context.Context, ev *event.T)
-	OverwriteFilter           []func(ctx context.Context, f *filter.T)
-	OverwriteCountFilter      []func(ctx context.Context, f *filter.T)
-	OverwriteRelayInformation []func(ctx context.Context, r *http.Request, info *relayinfo.T) *relayinfo.T
-	StoreEvent                []func(ctx context.Context, ev *event.T) error
-	DeleteEvent               []func(ctx context.Context, ev *event.T) error
-	QueryEvents               []func(ctx context.Context, f *filter.T) (chan *event.T, error)
-	CountEvents               []func(ctx context.Context, f *filter.T) (int64, error)
-	OnAuth                    []func(ctx context.Context, pubkey string)
-	OnConnect                 []func(ctx context.Context)
-	OnDisconnect              []func(ctx context.Context)
-	OnEventSaved              []func(ctx context.Context, ev *event.T)
+	RejectEvent               []func(ctx context.T, ev *event.T) (reject bool, msg string)
+	RejectFilter              []func(ctx context.T, f *filter.T) (reject bool, msg string)
+	RejectCountFilter         []func(ctx context.T, f *filter.T) (reject bool, msg string)
+	OverwriteDeletionOutcome  []func(ctx context.T, target *event.T, deletion *event.T) (acceptDeletion bool, msg string)
+	OverwriteResponseEvent    []func(ctx context.T, ev *event.T)
+	OverwriteFilter           []func(ctx context.T, f *filter.T)
+	OverwriteCountFilter      []func(ctx context.T, f *filter.T)
+	OverwriteRelayInformation []func(ctx context.T, r *http.Request, info *relayinfo.T) *relayinfo.T
+	StoreEvent                []func(ctx context.T, ev *event.T) error
+	DeleteEvent               []func(ctx context.T, ev *event.T) error
+	QueryEvents               []func(ctx context.T, f *filter.T) (chan *event.T, error)
+	CountEvents               []func(ctx context.T, f *filter.T) (int64, error)
+	OnAuth                    []func(ctx context.T, pubkey string)
+	OnConnect                 []func(ctx context.T)
+	OnDisconnect              []func(ctx context.T)
+	OnEventSaved              []func(ctx context.T, ev *event.T)
 
 	// editing info will affect
 	Info *relayinfo.T

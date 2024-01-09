@@ -1,10 +1,11 @@
 package pool
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -31,9 +32,9 @@ func namedLock(name string) (unlock func()) {
 
 type SimplePool struct {
 	Relays  map[string]*relay.Relay
-	Context context.Context
+	Context context.T
 
-	cancel context.CancelFunc
+	cancel context.F
 }
 
 type IncomingEvent struct {
@@ -41,8 +42,8 @@ type IncomingEvent struct {
 	Relay *relay.Relay
 }
 
-func NewSimplePool(ctx context.Context) *SimplePool {
-	ctx, cancel := context.WithCancel(ctx)
+func NewSimplePool(ctx context.T) *SimplePool {
+	ctx, cancel := context.Cancel(ctx)
 
 	return &SimplePool{
 		Relays: make(map[string]*relay.Relay),
@@ -64,7 +65,7 @@ func (p *SimplePool) EnsureRelay(url string) (*relay.Relay, error) {
 	} else {
 		var e error
 		// we use this ctx here so when the pool dies everything dies
-		ctx, cancel := context.WithTimeout(p.Context, time.Second*15)
+		ctx, cancel := context.Timeout(p.Context, time.Second*15)
 		defer cancel()
 		if rl, e = relay.RelayConnect(ctx, nm); e != nil {
 			return nil, fmt.Errorf("failed to connect: %w", e)
@@ -77,16 +78,16 @@ func (p *SimplePool) EnsureRelay(url string) (*relay.Relay, error) {
 
 // SubMany opens a subscription with the given filters to multiple relays
 // the subscriptions only end when the context is canceled
-func (p *SimplePool) SubMany(ctx context.Context, urls []string, filters filters.T, unique bool) chan IncomingEvent {
+func (p *SimplePool) SubMany(ctx context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
 	return p.subMany(ctx, urls, filters, true)
 }
 
 // SubManyNonUnique is like SubMany, but returns duplicate events if they come from different relays
-func (p *SimplePool) SubManyNonUnique(ctx context.Context, urls []string, filters filters.T, unique bool) chan IncomingEvent {
+func (p *SimplePool) SubManyNonUnique(ctx context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
 	return p.subMany(ctx, urls, filters, false)
 }
 
-func (p *SimplePool) subMany(ctx context.Context, urls []string, filters filters.T, unique bool) chan IncomingEvent {
+func (p *SimplePool) subMany(ctx context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
 	events := make(chan IncomingEvent)
 	seenAlready := xsync.NewMapOf[bool]()
 
@@ -130,17 +131,17 @@ func (p *SimplePool) subMany(ctx context.Context, urls []string, filters filters
 }
 
 // SubManyEose is like SubMany, but it stops subscriptions and closes the channel when gets a EOSE
-func (p *SimplePool) SubManyEose(ctx context.Context, urls []string, filters filters.T) chan IncomingEvent {
+func (p *SimplePool) SubManyEose(ctx context.T, urls []string, filters filters.T) chan IncomingEvent {
 	return p.subManyEose(ctx, urls, filters, true)
 }
 
 // SubManyEoseNonUnique is like SubManyEose, but returns duplicate events if they come from different relays
-func (p *SimplePool) SubManyEoseNonUnique(ctx context.Context, urls []string, filters filters.T) chan IncomingEvent {
+func (p *SimplePool) SubManyEoseNonUnique(ctx context.T, urls []string, filters filters.T) chan IncomingEvent {
 	return p.subManyEose(ctx, urls, filters, false)
 }
 
-func (p *SimplePool) subManyEose(ctx context.Context, urls []string, filters filters.T, unique bool) chan IncomingEvent {
-	ctx, cancel := context.WithCancel(ctx)
+func (p *SimplePool) subManyEose(ctx context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
+	ctx, cancel := context.Cancel(ctx)
 
 	events := make(chan IncomingEvent)
 	seenAlready := xsync.NewMapOf[bool]()
@@ -200,8 +201,8 @@ func (p *SimplePool) subManyEose(ctx context.Context, urls []string, filters fil
 }
 
 // QuerySingle returns the first event returned by the first relay, cancels everything else.
-func (p *SimplePool) QuerySingle(ctx context.Context, urls []string, f *filter.T) *IncomingEvent {
-	ctx, cancel := context.WithCancel(ctx)
+func (p *SimplePool) QuerySingle(ctx context.T, urls []string, f *filter.T) *IncomingEvent {
+	ctx, cancel := context.Cancel(ctx)
 	defer cancel()
 	for ievt := range p.SubManyEose(ctx, urls, filters.T{f}) {
 		return &ievt

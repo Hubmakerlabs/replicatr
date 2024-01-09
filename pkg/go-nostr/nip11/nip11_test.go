@@ -3,7 +3,7 @@ package nip11
 import "testing"
 
 func TestAddSupportedNIP(t *testing.T) {
-	info := RelayInformationDocument{}
+	info := Info{}
 	info.AddSupportedNIP(12)
 	info.AddSupportedNIP(12)
 	info.AddSupportedNIP(13)

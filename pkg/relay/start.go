@@ -1,12 +1,13 @@
 package relay
 
 import (
-	"context"
 	"errors"
 	"net"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/fasthttp/websocket"
 	"github.com/rs/cors"
@@ -45,7 +46,7 @@ func (rl *Relay) Start(host string, port int, started ...chan bool) (e error) {
 }
 
 // Shutdown sends a websocket close control message to all connected clients.
-func (rl *Relay) Shutdown(ctx context.Context) {
+func (rl *Relay) Shutdown(ctx context.T) {
 	rl.E.Chk(rl.httpServer.Shutdown(ctx))
 	rl.clients.Range(func(conn *websocket.Conn, _ struct{}) bool {
 		rl.E.Chk(conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second)))

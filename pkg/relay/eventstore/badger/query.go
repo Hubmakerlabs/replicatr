@@ -2,10 +2,11 @@ package badger
 
 import (
 	"container/heap"
-	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
@@ -138,7 +139,7 @@ func (b *Backend) Q(queries []query, since uint32, extraFilter *filter.T, f *fil
 	}
 }
 
-func (b *Backend) QueryEvents(ctx context.Context, f *filter.T) (evChan chan *event.T, e error) {
+func (b *Backend) QueryEvents(ctx context.T, f *filter.T) (evChan chan *event.T, e error) {
 	evChan = make(chan *event.T)
 	var queries []query
 	var extraFilter *filter.T

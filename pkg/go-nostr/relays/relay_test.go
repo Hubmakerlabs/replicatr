@@ -2,7 +2,6 @@ package relays
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -11,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -61,7 +62,7 @@ func TestPublish(t *testing.T) {
 
 	// connect a client and send the text note
 	rl := MustRelayConnect(ws.URL)
-	e := rl.Publish(context.Background(), textNote)
+	e := rl.Publish(context.Bg(), textNote)
 	if e != nil {
 		t.Errorf("publish should have succeeded")
 	}
@@ -90,7 +91,7 @@ func TestPublishBlocked(t *testing.T) {
 
 	// connect a client and send a text note
 	rl := MustRelayConnect(ws.URL)
-	e := rl.Publish(context.Background(), textNote)
+	e := rl.Publish(context.Bg(), textNote)
 	if e == nil {
 		t.Errorf("should have failed to publish")
 	}
@@ -112,7 +113,7 @@ func TestPublishWriteFailed(t *testing.T) {
 	rl := MustRelayConnect(ws.URL)
 	// Force brief period of time so that publish always fails on closed socket.
 	time.Sleep(1 * time.Millisecond)
-	e := rl.Publish(context.Background(), textNote)
+	e := rl.Publish(context.Bg(), textNote)
 	if e == nil {
 		t.Errorf("should have failed to publish")
 	}
@@ -131,7 +132,7 @@ func TestConnectContext(t *testing.T) {
 	defer ws.Close()
 
 	// relay client
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.Timeout(context.Bg(), 3*time.Second)
 	defer cancel()
 	r, e := RelayConnect(ctx, ws.URL)
 	if e != nil {
@@ -152,7 +153,7 @@ func TestConnectContextCanceled(t *testing.T) {
 	defer ws.Close()
 
 	// relay client
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.Cancel(context.Bg())
 	cancel() // make ctx expired
 	_, e := RelayConnect(ctx, ws.URL)
 	if !errors.Is(e, context.Canceled) {
@@ -167,9 +168,9 @@ func TestConnectWithOrigin(t *testing.T) {
 	defer ws.Close()
 
 	// relay client
-	r := NewRelay(context.Background(), normalize.URL(ws.URL))
+	r := NewRelay(context.Bg(), normalize.URL(ws.URL))
 	r.RequestHeader = http.Header{"origin": {"https://example.com"}}
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.Timeout(context.Bg(), 3*time.Second)
 	defer cancel()
 	e := r.Connect(ctx)
 	if e != nil {
@@ -215,11 +216,11 @@ func parseEventMessage(t *testing.T, raw []json.RawMessage) event.T {
 	if typ != "EVENT" {
 		t.Errorf("typ = %q; want EVENT", typ)
 	}
-	var evt event.T
-	if e := json.Unmarshal(raw[1], &evt); e != nil {
+	var ev event.T
+	if e := json.Unmarshal(raw[1], &ev); e != nil {
 		t.Errorf("json.Unmarshal(`%s`): %v", string(raw[1]), e)
 	}
-	return evt
+	return ev
 }
 
 func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string, filters []filter.T) {

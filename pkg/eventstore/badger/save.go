@@ -1,7 +1,7 @@
 package badger
 
 import (
-	"context"
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
@@ -10,7 +10,7 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *BadgerBackend) SaveEvent(ctx context.Context, evt *event.T) (e error) {
+func (b *BadgerBackend) SaveEvent(ctx context.T, evt *event.T) (e error) {
 	return b.Update(func(txn *badger.Txn) (e error) {
 		// query event by id to ensure we don't save duplicates
 		id, _ := hex.Dec(evt.ID)
