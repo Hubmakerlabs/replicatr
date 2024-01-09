@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
@@ -39,11 +39,6 @@ type Envelope struct {
 	Reason  string
 }
 
-func (env *Envelope) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
-
 func NewOKEnvelope(eventID eventid.EventID, ok bool, reason string) (o *Envelope,
 	e error) {
 	var ei eventid.EventID
@@ -58,31 +53,18 @@ func NewOKEnvelope(eventID eventid.EventID, ok bool, reason string) (o *Envelope
 	return
 }
 
-// Label returns the label enum/type of the envelope. The relevant bytes could
-// be retrieved using nip1.List[T]
 func (env *Envelope) Label() (l string) { return labels.OK }
 
-// ToArray converts an Envelope to a form that has a JSON formatted String
-// and Bytes function (array.T). To get the encoded form, invoke either of these
-// methods on the returned value.
 func (env *Envelope) ToArray() (a array.T) {
-	// log.D.F("'%s' %v '%s' ", env.EventID, env.OK, env.Reason)
 	return array.T{labels.OK, env.EventID, env.OK, env.Reason}
 }
 
-func (env *Envelope) String() (s string) {
-	return env.ToArray().String()
-}
+func (env *Envelope) String() (s string) { return env.ToArray().String() }
 
-func (env *Envelope) Bytes() (s []byte) {
-	return env.ToArray().Bytes()
-}
+func (env *Envelope) Bytes() (s []byte) { return env.ToArray().Bytes() }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (env *Envelope) MarshalJSON() (bytes []byte, e error) {
-	// log.D.F("ok envelope marshal")
-	return env.ToArray().Bytes(), nil
-}
+func (env *Envelope) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
 
 const (
 	Btrue     = "true"

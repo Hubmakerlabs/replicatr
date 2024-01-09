@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
@@ -20,24 +20,17 @@ type Envelope struct {
 	filters.T
 }
 
-func (C *Envelope) Label() string      { return labels.COUNT }
-func (C *Envelope) String() (s string) { return C.ToArray().String() }
-func (C *Envelope) Bytes() (s []byte)  { return C.ToArray().Bytes() }
+func (C *Envelope) Label() string { return l.COUNT }
 
 func (C *Envelope) ToArray() array.T {
-	return array.T{labels.COUNT, C.SubscriptionID, C.T}
+	return array.T{l.COUNT, C.SubscriptionID, C.T}
 }
 
-// MarshalJSON returns the JSON encoded form of the envelope.
-func (C *Envelope) MarshalJSON() (bytes []byte, e error) {
-	// log.D.F("count request envelope marshal")
-	return C.ToArray().Bytes(), nil
-}
+func (C *Envelope) String() string { return C.ToArray().String() }
 
-func (C *Envelope) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
+func (C *Envelope) Bytes() []byte { return C.ToArray().Bytes() }
+
+func (C *Envelope) MarshalJSON() ([]byte, error) { return C.Bytes(), nil }
 
 func (C *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))

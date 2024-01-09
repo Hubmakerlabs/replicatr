@@ -1,7 +1,11 @@
 package enveloper
 
 import (
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/envelopes"
+	"encoding/json"
+	"fmt"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/byter"
+	"github.com/Hubmakerlabs/replicatr/pkg/labeler"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
@@ -15,12 +19,10 @@ import (
 // and with omitempty marking the mandatory ones, acting as a "kind" of
 // sentinel.
 type I interface {
-
-	envelopes.E
-
-	// Unmarshal the envelope.
-	Unmarshal(buf *text.Buffer) (e error)
-
-	array.Arrayer
+	labeler.I
+	fmt.Stringer
+	byter.I
+	json.Marshaler
+	text.Unmarshaler
+	array.I
 }
-

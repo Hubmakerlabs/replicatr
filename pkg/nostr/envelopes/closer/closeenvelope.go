@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
+	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
@@ -20,27 +20,17 @@ type Envelope struct {
 
 var _ enveloper.I = &Envelope{}
 
-func NewCloseEnvelope(s subscriptionid.T) (ce *Envelope) {
-	return &Envelope{T: s}
-}
+func New(s subscriptionid.T) (ce *Envelope) { return &Envelope{T: s} }
 
-func (E *Envelope) Label() (l string)  { return labels.CLOSE }
-func (E *Envelope) String() (s string) { return E.ToArray().String() }
-func (E *Envelope) Bytes() (s []byte)  { return E.ToArray().Bytes() }
+func (E *Envelope) Label() string { return l.CLOSE }
 
-func (E *Envelope) ToArray() (a array.T) {
-	return array.T{labels.CLOSE, E.T}
-}
+func (E *Envelope) ToArray() array.T { return array.T{l.CLOSE, E.T} }
 
-// MarshalJSON returns the JSON encoded form of the envelope.
-func (E *Envelope) MarshalJSON() (bytes []byte, e error) {
-	return E.ToArray().Bytes(), nil
-}
+func (E *Envelope) String() string { return E.ToArray().String() }
 
-func (E *Envelope) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
+func (E *Envelope) Bytes() []byte { return E.ToArray().Bytes() }
+
+func (E *Envelope) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
 
 // Unmarshal the envelope.
 func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {

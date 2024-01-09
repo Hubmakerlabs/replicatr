@@ -16,23 +16,20 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
-var log = log2.GetStd()
 
-// Arrayer is an interface for a type that can return an array.T - or in other
-// words []interface{} made into concrete.
-type Arrayer interface {
-	ToArray() T
-}
+var log = log2.GetStd()
 
 type T []interface{}
 
-func (t T) String() string {
-	return t.Buffer().String()
+// I is an interface for a type that can return an array.T - or in other
+// words []interface{} made into concrete.
+type I interface {
+	ToArray() T
 }
 
-func (t T) Bytes() []byte {
-	return t.Buffer().Bytes()
-}
+func (t T) String() string { return t.Buffer().String() }
+
+func (t T) Bytes() []byte { return t.Buffer().Bytes() }
 
 func (t T) Buffer() *bytes.Buffer {
 	buf := new(bytes.Buffer)

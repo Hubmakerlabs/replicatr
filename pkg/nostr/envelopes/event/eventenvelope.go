@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
+	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
+
 var log = log2.GetStd()
 
 var _ enveloper.I = (*Envelope)(nil)
@@ -47,18 +48,11 @@ func NewEventEnvelope(si string, ev *event.T) (ee *Envelope, e error) {
 	return &Envelope{SubscriptionID: sid, Event: ev}, nil
 }
 
-// Label returns the label enum/type of the envelope. The relevant bytes could
-// be retrieved using nip1.List[T]
-func (env *Envelope) Label() (l string) { return labels.EVENT }
+func (env *Envelope) Label() string { return l.EVENT }
 
-// ToArray converts an Envelope to a form that has a JSON formatted String
-// and Bytes function (array.T). To get the encoded form, invoke either of these
-// methods on the returned value.
 func (env *Envelope) ToArray() (a array.T) {
-
-	// T envelope has max 3 fields
 	a = make(array.T, 0, 3)
-	a = append(a, labels.EVENT)
+	a = append(a, l.EVENT)
 	if env.SubscriptionID.IsValid() {
 		a = append(a, env.SubscriptionID)
 	}
@@ -66,18 +60,11 @@ func (env *Envelope) ToArray() (a array.T) {
 	return
 }
 
-func (env *Envelope) String() (s string) {
-	return env.ToArray().String()
-}
+func (env *Envelope) String() (s string) { return env.ToArray().String() }
 
-func (env *Envelope) Bytes() (s []byte) {
-	return env.ToArray().Bytes()
-}
+func (env *Envelope) Bytes() (s []byte) { return env.ToArray().Bytes() }
 
-// MarshalJSON returns the JSON encoded form of the envelope.
-func (env *Envelope) MarshalJSON() (bytes []byte, e error) {
-	return env.ToArray().Bytes(), nil
-}
+func (env *Envelope) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
 
 // Unmarshal the envelope.
 func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
