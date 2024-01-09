@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"net/http"
 	"strings"
@@ -21,6 +20,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip42"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/req"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/fasthttp/websocket"
 )
 
@@ -41,7 +41,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	ws := &WebSocket{
 		conn:      conn,
 		Request:   r,
-		Challenge: encodeToHex(challenge),
+		Challenge: hex.Enc(challenge),
 	}
 	c, cancel := context.WithCancel(
 		context.WithValue(
@@ -76,7 +76,7 @@ func (rl *Relay) websocketProcessMessages(message []byte, c context.Context, ws 
 	case *event.Envelope:
 		// check id
 		hash := sha256.Sum256(env.T.Serialize())
-		id := hex.EncodeToString(hash[:])
+		id := hex.Enc(hash[:])
 		if id != env.T.ID {
 			rl.E.Chk(ws.WriteJSON(OK.Envelope{
 				EventID: env.T.ID,

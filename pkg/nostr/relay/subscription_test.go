@@ -95,7 +95,7 @@ func TestNestedSubscriptions(t *testing.T) {
 				case <-sub.Events:
 					// do another subscription here in "sync" mode, just so we're sure things are not blocking
 					evs, e := rl.QuerySync(context.Background(), &filter.T{Limit: 1})
-					if fails(e) {
+					if log.Fail(e) {
 
 					}
 					log.D.S(evs)

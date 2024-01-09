@@ -46,7 +46,7 @@ func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	var e error
 	var conn *websocket.Conn
-	if conn, e = rl.upgrader.Upgrade(w, r, nil); fails(e) {
+	if conn, e = rl.upgrader.Upgrade(w, r, nil); log.Fail(e) {
 		rl.E.F("failed to upgrade websocket: %v\n", e)
 		return
 	}
@@ -57,7 +57,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	challenge := make([]byte, 8)
 
 	var n int
-	if n, e = rand.Read(challenge); fails(e) {
+	if n, e = rand.Read(challenge); log.Fail(e) {
 		rl.E.F("only read %d bytes from system CSPRNG", n)
 	}
 	ws := &WebSocket{
@@ -100,7 +100,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 			var typ int
 			var message []byte
 			typ, message, e = conn.ReadMessage()
-			if fails(e) {
+			if log.Fail(e) {
 				if websocket.IsUnexpectedCloseError(
 					e,
 					websocket.CloseNormalClosure,    // 1000
@@ -120,8 +120,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 			go func(message []byte) {
 				var e error
 				var ok bool
-				var envelope enveloper.Enveloper
-				if envelope, _, _, e = envelopes.ProcessEnvelope(message); fails(e) || envelope == nil {
+				var envelope enveloper.I
+				if envelope, _, _, e = envelopes.ProcessEnvelope(message); log.Fail(e) || envelope == nil {
 					return
 				}
 				switch env := envelope.(type) {

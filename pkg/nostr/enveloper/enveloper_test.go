@@ -17,12 +17,12 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filtertest"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 func TestEnveloper(t *testing.T) {
 	// log2.SetLogLevel(log2.Debug)
 	const sub = "subscription000001"
-	envs := []enveloper.Enveloper{
+	envs := []enveloper.I{
 		&event.Envelope{SubscriptionID: sub, Event: eventest.D[0]},
 		&event.Envelope{SubscriptionID: sub, Event: eventest.D[1]},
 		&event.Envelope{Event: eventest.D[0]},
@@ -42,7 +42,7 @@ func TestEnveloper(t *testing.T) {
 		}
 		marshaled := string(b)
 		log.D.Ln("marshaled  ", marshaled)
-		var env enveloper.Enveloper
+		var env enveloper.I
 		env, _, _, e = envelopes.ProcessEnvelope(b)
 		if e != nil {
 			t.Fatal(e)

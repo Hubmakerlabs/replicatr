@@ -4,10 +4,10 @@ import (
 	"container/heap"
 	"context"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -143,7 +143,7 @@ func (b *Backend) QueryEvents(ctx context.Context, f *filter.T) (evChan chan *ev
 	var queries []query
 	var extraFilter *filter.T
 	var since uint32
-	if queries, extraFilter, since, e = prepareQueries(f); fails(e) {
+	if queries, extraFilter, since, e = prepareQueries(f); log.Fail(e) {
 		return
 	}
 
@@ -287,7 +287,7 @@ func prepareQueries(f *filter.T) (
 				e = fmt.Errorf("invalid id '%s'", idHex)
 				return
 			}
-			idPrefix8, _ := hex.DecodeString(idHex[0 : 8*2])
+			idPrefix8, _ := hex.Dec(idHex[0 : 8*2])
 			copy(prefix[1:], idPrefix8)
 			qs[i] = query{i: i, prefix: prefix, skipTimestamp: true}
 		}
@@ -300,7 +300,7 @@ func prepareQueries(f *filter.T) (
 					e = fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 					return
 				}
-				pubkeyPrefix8, _ := hex.DecodeString(pubkeyHex[0 : 8*2])
+				pubkeyPrefix8, _ := hex.Dec(pubkeyHex[0 : 8*2])
 				prefix := make([]byte, 1+8)
 				prefix[0] = index
 				copy(prefix[1:], pubkeyPrefix8)
@@ -317,7 +317,7 @@ func prepareQueries(f *filter.T) (
 						return
 					}
 					var pubkeyPrefix8 []byte
-					pubkeyPrefix8, e = hex.DecodeString(pubkeyHex[0 : 8*2])
+					pubkeyPrefix8, e = hex.Dec(pubkeyHex[0 : 8*2])
 					log.D.Chk(e)
 					prefix := make([]byte, 1+8+2)
 					prefix[0] = index

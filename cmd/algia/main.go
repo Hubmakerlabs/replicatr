@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -27,8 +26,7 @@ import (
 	"github.com/fatih/color"
 )
 
-var log, fails = log2.GetStd()
-var hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
+var log = log2.GetStd()
 
 const name = "algia"
 

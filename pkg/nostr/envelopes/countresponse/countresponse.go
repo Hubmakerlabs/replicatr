@@ -1,23 +1,18 @@
 package countresponse
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
-var log, fails = log2.GetStd()
-
-var (
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log = log2.GetStd()
 
 type Envelope struct {
 	SubscriptionID subscriptionid.T
@@ -30,7 +25,7 @@ func (env *Envelope) UnmarshalJSON(bytes []byte) error {
 	panic("implement me")
 }
 
-var _ enveloper.Enveloper = &Envelope{}
+var _ enveloper.I = &Envelope{}
 
 func NewCountResponseEnvelope(sid subscriptionid.T, count int64,
 	approx bool) (C *Envelope) {
@@ -76,8 +71,9 @@ func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	}
 	var sid []byte
 	// read the string
-	if sid, e = buf.ReadUntil('"'); fails(e) {
-		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+	if sid, e = buf.ReadUntil('"'); log.Fail(e) {
+		return fmt.Errorf("unterminated quotes in JSON, " +
+			"probably truncated read")
 	}
 	env.SubscriptionID = subscriptionid.T(sid)
 	// Next, find the comma after the subscription ID.
@@ -85,11 +81,12 @@ func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 		return
 	}
 	var countObject []byte
-	if countObject, e = buf.ReadEnclosed(); fails(e) {
-		return fmt.Errorf("did not find a properly formatted JSON object for the count")
+	if countObject, e = buf.ReadEnclosed(); log.Fail(e) {
+		return fmt.Errorf("did not find a properly formatted JSON " +
+			"object for the count")
 	}
 	var count Count
-	if e = json.Unmarshal(countObject, &count); fails(e) {
+	if e = json.Unmarshal(countObject, &count); log.Fail(e) {
 		return
 	}
 	env.Count = count.Count

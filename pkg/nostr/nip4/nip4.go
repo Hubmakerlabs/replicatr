@@ -13,7 +13,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 // ComputeSharedSecret computes an Elliptic Curve Diffie Hellman shared secret
 // out of one public key and another secret key.
@@ -35,21 +35,21 @@ func ComputeSharedSecret(pub string, sec string) (secret []byte, e error) {
 	var p *secp.PublicKey
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
 	if pub[:nip19.Bech32HRPLen] == nip19.PubHRP {
-		if p, e = nip19.NpubToPublicKey(pub); fails(e) {
+		if p, e = nip19.NpubToPublicKey(pub); log.Fail(e) {
 			return
 		}
 	} else {
-		if p, e = nip19.HexToPublicKey(pub); fails(e) {
+		if p, e = nip19.HexToPublicKey(pub); log.Fail(e) {
 			return
 		}
 	}
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
 	if sec[:nip19.Bech32HRPLen] == nip19.SecHRP {
-		if s, e = nip19.NsecToSecretKey(sec); fails(e) {
+		if s, e = nip19.NsecToSecretKey(sec); log.Fail(e) {
 			return
 		}
 	} else {
-		if s, e = nip19.HexToSecretKey(sec); fails(e) {
+		if s, e = nip19.HexToSecretKey(sec); log.Fail(e) {
 			return
 		}
 	}

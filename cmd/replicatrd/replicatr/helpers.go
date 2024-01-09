@@ -1,7 +1,6 @@
 package replicatr
 
 import (
-	"encoding/hex"
 	"hash/maphash"
 	"net/http"
 	"strconv"
@@ -21,8 +20,7 @@ const (
 	subscriptionIdKey
 )
 
-var log, fails = log2.GetStd()
-var hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
+var log = log2.GetStd()
 
 func RequestAuth(c context.T) {
 	ws := GetConnection(c)

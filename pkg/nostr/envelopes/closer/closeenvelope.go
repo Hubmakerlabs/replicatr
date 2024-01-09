@@ -5,20 +5,20 @@ import (
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 // Envelope is a wrapper for a signal to cancel a subscription.
 type Envelope struct {
 	subscriptionid.T
 }
 
-var _ enveloper.Enveloper = &Envelope{}
+var _ enveloper.I = &Envelope{}
 
 func NewCloseEnvelope(s subscriptionid.T) (ce *Envelope) {
 	return &Envelope{T: s}
@@ -59,7 +59,7 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	}
 	var sid []byte
 	// read the string
-	if sid, e = buf.ReadUntil('"'); fails(e) {
+	if sid, e = buf.ReadUntil('"'); log.Fail(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	E.T = subscriptionid.T(sid[:])

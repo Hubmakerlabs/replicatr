@@ -1,10 +1,10 @@
 package nip19
 
 import (
-	"encoding/hex"
 	"fmt"
 
 	btcec "github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
@@ -12,9 +12,7 @@ import (
 	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
-var log, fails = log2.GetStd()
-
-var hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
+var log = log2.GetStd()
 
 const (
 	// MinKeyStringLen is 56 because Bech32 needs 52 characters plus 4 for the HRP,
@@ -114,10 +112,10 @@ func HexToPublicKey(pk string) (p *btcec.PublicKey, e error) {
 		return
 	}
 	var pb []byte
-	if pb, e = hexDecode(pk); fails(e) {
+	if pb, e = hex.Dec(pk); log.Fail(e) {
 		return
 	}
-	if p, e = schnorr.ParsePubKey(pb); fails(e) {
+	if p, e = schnorr.ParsePubKey(pb); log.Fail(e) {
 		return
 	}
 	return
@@ -132,10 +130,10 @@ func HexToSecretKey(sk string) (s *btcec.SecretKey, e error) {
 		return
 	}
 	var pb []byte
-	if pb, e = hexDecode(sk); fails(e) {
+	if pb, e = hex.Dec(sk); log.Fail(e) {
 		return
 	}
-	if s = secp.SecKeyFromBytes(pb); fails(e) {
+	if s = secp.SecKeyFromBytes(pb); log.Fail(e) {
 		return
 	}
 	return
@@ -180,11 +178,11 @@ func DecodeSignature(encoded string) (sig *schnorr.Signature, e error) {
 
 func GetPublicKey(sk string) (s string, e error) {
 	var b []byte
-	b, e = hex.DecodeString(sk)
+	b, e = hex.Dec(sk)
 	if e != nil {
 		return "", e
 	}
 
 	_, pk := btcec.PrivKeyFromBytes(b)
-	return hex.EncodeToString(schnorr.SerializePubKey(pk)), nil
+	return hex.Enc(schnorr.SerializePubKey(pk)), nil
 }

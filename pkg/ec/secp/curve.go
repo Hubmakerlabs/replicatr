@@ -6,8 +6,9 @@
 package secp256k1
 
 import (
-	"encoding/hex"
 	"math/bits"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 // References:
@@ -31,7 +32,7 @@ import (
 // errors in the source code can be detected. It will only (and must only) be
 // called with hard-coded values.
 func hexToFieldVal(s string) *FieldVal {
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
@@ -55,7 +56,7 @@ func hexToModNScalar(s string) *ModNScalar {
 	if len(s)%2 != 0 {
 		s = "0" + s
 	}
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}

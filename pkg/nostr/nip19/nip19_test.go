@@ -132,7 +132,7 @@ func TestEncodeDecodeNaddr(t *testing.T) {
 	var data any
 	prefix, data, e = Decode(naddr)
 	// log.D.S(prefix, data, e)
-	if fails(e) {
+	if log.Fail(e) {
 		t.Errorf("shouldn't error: %s", e)
 	}
 	if prefix != NentityHRP {

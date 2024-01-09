@@ -111,7 +111,7 @@ func (s *System) FetchUserEvents(ctx context.Context,
 
 	var ff map[*relay.Relay]*filter.T
 	if ff, e = s.ExpandQueriesByAuthorAndRelays(ctx,
-		f); fails(e) {
+		f); log.Fail(e) {
 
 		return nil, fmt.Errorf("failed to expand queries: %w", e)
 	}
@@ -125,7 +125,7 @@ func (s *System) FetchUserEvents(ctx context.Context,
 				len(f.Authors) // hack
 			var sub *relay.Subscription
 			if sub, e = rl.Subscribe(ctx,
-				filters.T{f}); fails(e) {
+				filters.T{f}); log.Fail(e) {
 
 				return
 			}

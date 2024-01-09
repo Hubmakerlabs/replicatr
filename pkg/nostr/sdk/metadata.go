@@ -81,7 +81,7 @@ func ParseMetadata(ev *event.T) (pm *ProfileMetadata, e error) {
 	if ev.Kind != 0 {
 		e = fmt.Errorf("event %s is kind %d, not 0", ev.ID, ev.Kind)
 		return
-	} else if e = json.Unmarshal([]byte(ev.Content), &pm); fails(e) {
+	} else if e = json.Unmarshal([]byte(ev.Content), &pm); log.Fail(e) {
 		cont := ev.Content
 		if len(cont) > 100 {
 			cont = cont[0:99]

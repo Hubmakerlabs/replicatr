@@ -1,9 +1,11 @@
 package event
 
 import (
-	"encoding/hex"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
@@ -12,15 +14,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/minio/sha256-simd"
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
-	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
-var log, fails = log2.GetStd()
-
-var (
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log = log2.GetStd()
 
 func Hash(in []byte) (out []byte) {
 	h := sha256.Sum256(in)
@@ -86,7 +82,7 @@ func (ev *T) ToCanonical() (o array.T) {
 func (ev *T) GetIDBytes() []byte { return Hash(ev.ToCanonical().Bytes()) }
 
 // GetID serializes and returns the event ID as a hexadecimal string.
-func (ev *T) GetID() eventid.EventID { return eventid.EventID(encodeToHex(ev.GetIDBytes())) }
+func (ev *T) GetID() eventid.EventID { return eventid.EventID(hex.Enc(ev.GetIDBytes())) }
 
 // CheckSignature checks if the signature is valid for the id (which is a hash
 // of the serialized event content). returns an error if the signature itself is
@@ -95,28 +91,28 @@ func (ev *T) CheckSignature() (valid bool, e error) {
 
 	// decode pubkey hex to bytes.
 	var pkBytes []byte
-	if pkBytes, e = hexDecode(ev.PubKey); fails(e) {
+	if pkBytes, e = hex.Dec(ev.PubKey); log.Fail(e) {
 		e = fmt.Errorf("event pubkey '%s' is invalid hex: %w", ev.PubKey, e)
 		return
 	}
 
 	// parse pubkey bytes.
 	var pk *secp256k1.PublicKey
-	if pk, e = schnorr.ParsePubKey(pkBytes); fails(e) {
+	if pk, e = schnorr.ParsePubKey(pkBytes); log.Fail(e) {
 		e = fmt.Errorf("event has invalid pubkey '%s': %w", ev.PubKey, e)
 		return
 	}
 
 	// decode signature hex to bytes.
 	var sigBytes []byte
-	if sigBytes, e = hexDecode(ev.Sig); fails(e) {
+	if sigBytes, e = hex.Dec(ev.Sig); log.Fail(e) {
 		e = fmt.Errorf("signature '%s' is invalid hex: %w", ev.Sig, e)
 		return
 	}
 
 	// parse signature bytes.
 	var sig *schnorr.Signature
-	if sig, e = schnorr.ParseSignature(sigBytes); fails(e) {
+	if sig, e = schnorr.ParseSignature(sigBytes); log.Fail(e) {
 		e = fmt.Errorf("failed to parse signature: %w", e)
 		return
 	}
@@ -137,7 +133,7 @@ func (ev *T) Sign(skStr string, so ...schnorr.SignOption) (e error) {
 
 	// decode secret key hex to bytes
 	var skBytes []byte
-	if skBytes, e = hexDecode(skStr); fails(e) {
+	if skBytes, e = hex.Dec(skStr); log.Fail(e) {
 		return fmt.Errorf("sign called with invalid secret key '%s': %w",
 			skStr, e)
 	}
@@ -155,15 +151,15 @@ func (ev *T) SignWithSecKey(sk *secp256k1.SecretKey,
 	// sign the event.
 	var sig *schnorr.Signature
 	id := ev.GetIDBytes()
-	if sig, e = schnorr.Sign(sk, id, so...); fails(e) {
+	if sig, e = schnorr.Sign(sk, id, so...); log.Fail(e) {
 		return e
 	}
 
 	// we know ID is good so just coerce type.
-	ev.ID = eventid.EventID(encodeToHex(id))
+	ev.ID = eventid.EventID(hex.Enc(id))
 
 	// we know secret key is good so we can generate the public key.
-	ev.PubKey = encodeToHex(schnorr.SerializePubKey(sk.PubKey()))
-	ev.Sig = encodeToHex(sig.Serialize())
+	ev.PubKey = hex.Enc(schnorr.SerializePubKey(sk.PubKey()))
+	ev.Sig = hex.Enc(sig.Serialize())
 	return nil
 }

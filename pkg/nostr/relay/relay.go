@@ -137,7 +137,7 @@ func New(ctx context.Context, url string, opts ...Option) (r *Relay) {
 					var e error
 					var status Status
 					if ok := o(r.ctx, authEvent); ok {
-						if status, e = r.Auth(r.ctx, authEvent); fails(e) {
+						if status, e = r.Auth(r.ctx, authEvent); log.Fail(e) {
 						}
 						log.D.Ln(status.String())
 					}
@@ -192,7 +192,7 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 		defer cancel()
 	}
 	var conn *connect.Connection
-	if conn, e = connect.NewConnection(ctx, r.URL, r.RequestHeader); fails(e) {
+	if conn, e = connect.NewConnection(ctx, r.URL, r.RequestHeader); log.Fail(e) {
 		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, e)
 	}
 	r.Connection = conn
@@ -222,15 +222,15 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 		for {
 			select {
 			case <-ticker.C:
-				if e := wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil); fails(e) {
+				if e := wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil); log.Fail(e) {
 					log.E.F("{%s} error writing ping: %v; closing websocket", r.URL, e)
-					if e = r.Close(); fails(e) {
+					if e = r.Close(); log.Fail(e) {
 					} // this should trigger a context cancelation
 					return
 				}
 			case writeReq := <-r.writeQueue:
 				// all write requests will go through this to prevent races
-				if e := r.Connection.WriteMessage(writeReq.Msg); fails(e) {
+				if e := r.Connection.WriteMessage(writeReq.Msg); log.Fail(e) {
 					writeReq.Answer <- e
 				}
 				close(writeReq.Answer)
@@ -246,16 +246,16 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 		buf := new(bytes.Buffer)
 		for {
 			buf.Reset()
-			if e := conn.ReadMessage(r.ctx, buf); fails(e) {
+			if e := conn.ReadMessage(r.ctx, buf); log.Fail(e) {
 				r.Err = e
 				log.E.Chk(r.Close())
 				break
 			}
 			message := buf.Bytes()
 			log.D.F("{%s} %v", r.URL, string(message))
-			var envelope enveloper.Enveloper
+			var envelope enveloper.I
 			envelope, _, _, e = envelopes.ProcessEnvelope(message)
-			if envelope == nil || fails(e) {
+			if envelope == nil || log.Fail(e) {
 				continue
 			}
 
@@ -293,7 +293,7 @@ func (r *Relay) Connect(ctx context.Context) (e error) {
 					if !r.AssumeValid {
 						if ok, e = env.Event.CheckSignature(); !ok {
 							msg := ""
-							if fails(e) {
+							if log.Fail(e) {
 								msg = e.Error()
 							}
 							log.E.F("{%s} bad signature: %s\n", r.URL, msg)
@@ -372,7 +372,7 @@ func (r *Relay) Publish(ctx context.Context, evt *event.T) (s Status, e error) {
 	envb, _ := (&event2.Envelope{Event: evt}).MarshalJSON()
 	log.D.F("{%s} sending %v\n", r.URL, string(envb))
 	s = PublishStatusSent
-	if e = <-r.Write(envb); fails(e) {
+	if e = <-r.Write(envb); log.Fail(e) {
 		s = PublishStatusFailed
 		return
 	}
@@ -458,7 +458,7 @@ func (r *Relay) Subscribe(ctx context.Context, filters filters.T,
 	opts ...SubscriptionOption) (s *Subscription, e error) {
 
 	s = r.PrepareSubscription(ctx, filters, opts...)
-	if e = s.Fire(); fails(e) {
+	if e = s.Fire(); log.Fail(e) {
 		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", filters, r.URL, e)
 	}
 	return
@@ -503,7 +503,7 @@ func (r *Relay) QuerySync(ctx context.Context, f *filter.T,
 	opts ...SubscriptionOption) (evs []*event.T, e error) {
 
 	var sub *Subscription
-	if sub, e = r.Subscribe(ctx, filters.T{f}, opts...); fails(e) {
+	if sub, e = r.Subscribe(ctx, filters.T{f}, opts...); log.Fail(e) {
 		return
 	}
 	defer sub.Unsub()
@@ -534,7 +534,7 @@ func (r *Relay) Count(ctx context.Context, filters filters.T,
 
 	sub := r.PrepareSubscription(ctx, filters, opts...)
 	sub.CountResult = make(chan int64)
-	if e = sub.Fire(); fails(e) {
+	if e = sub.Fire(); log.Fail(e) {
 		return
 	}
 	defer sub.Unsub()

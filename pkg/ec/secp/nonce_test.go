@@ -8,8 +8,9 @@ package secp256k1
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/hex"
 	"testing"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 // hexToBytes converts the passed hex string into bytes and will panic if there
@@ -17,7 +18,7 @@ import (
 // the source code can be detected. It will only (and must only) be called with
 // hard-coded values.
 func hexToBytes(s string) []byte {
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}

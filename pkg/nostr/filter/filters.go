@@ -13,7 +13,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 // T is a query where one or all elements can be filled in.
 //
@@ -104,10 +104,10 @@ func (f *T) UnmarshalJSON(b []byte) (e error) {
 	}
 	log.D.F("unmarshaling filter `%s`", b)
 	var uf UnmarshalingFilter
-	if e = json.Unmarshal(b, &uf); fails(e) {
+	if e = json.Unmarshal(b, &uf); log.Fail(e) {
 		return
 	}
-	if e = CopyUnmarshalFilterToFilter(&uf, f); fails(e) {
+	if e = CopyUnmarshalFilterToFilter(&uf, f); log.Fail(e) {
 		return
 	}
 	return

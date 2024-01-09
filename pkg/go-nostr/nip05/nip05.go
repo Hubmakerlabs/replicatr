@@ -2,13 +2,13 @@ package nip05
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 type (
@@ -68,7 +68,7 @@ func QueryIdentifier(ctx context.Context, fullname string) (*pointers.ProfilePoi
 	}
 
 	if len(pubkey) == 64 {
-		if _, e := hex.DecodeString(pubkey); e != nil {
+		if _, e := hex.Dec(pubkey); e != nil {
 			return &pointers.ProfilePointer{}, nil
 		}
 	}

@@ -2,7 +2,6 @@ package nson
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 /*
@@ -177,9 +177,9 @@ func Marshal(evt *event.T) (string, error) {
 	if nsonSizeBytes > 255 {
 		return "", fmt.Errorf("can't encode to nson, there are too many tags or tag items")
 	}
-	base.WriteString(hex.EncodeToString([]byte{uint8(nsonSizeBytes)})) // nson size (bytes)
+	base.WriteString(hex.Enc([]byte{uint8(nsonSizeBytes)})) // nson size (bytes)
 
-	base.WriteString(hex.EncodeToString(nsonBuf)) // nson descriptors
+	base.WriteString(hex.Enc(nsonBuf)) // nson descriptors
 	base.WriteString(`","kind":` + kind + `,"content":` + content + `,"tags":`)
 	base.WriteString(tagBuilder.String() /* includes the end */)
 
@@ -187,9 +187,9 @@ func Marshal(evt *event.T) (string, error) {
 }
 
 func parseDescriptors(data string) (int, []byte) {
-	nsonSizeBytes, _ := hex.DecodeString(data[NSON_STRING_START:NSON_VALUES_START])
+	nsonSizeBytes, _ := hex.Dec(data[NSON_STRING_START:NSON_VALUES_START])
 	size := int(nsonSizeBytes[0]) * 2 // number of bytes is given, we x2 because the string is in hex
-	values, _ := hex.DecodeString(data[NSON_VALUES_START : NSON_VALUES_START+size])
+	values, _ := hex.Dec(data[NSON_VALUES_START : NSON_VALUES_START+size])
 	return size, values
 }
 

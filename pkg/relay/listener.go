@@ -13,7 +13,7 @@ import (
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 type Listener struct {
 	filters filters2.T

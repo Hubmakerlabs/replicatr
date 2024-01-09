@@ -7,12 +7,12 @@ package schnorr
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"math/big"
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 // hexToBytes converts the passed hex string into bytes and will panic if there
@@ -20,7 +20,7 @@ import (
 // the source code can be detected. It will only (and must only) be called with
 // hard-coded values.
 func hexToBytes(s string) []byte {
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
@@ -32,7 +32,7 @@ func hexToBytes(s string) []byte {
 // constants so errors in the source code can be detected. It will only (and
 // must only) be called with hard-coded values.
 func hexToModNScalar(s string) *btcec.ModNScalar {
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
@@ -48,7 +48,7 @@ func hexToModNScalar(s string) *btcec.ModNScalar {
 // errors in the source code can be detected. It will only (and must only) be
 // called with hard-coded values.
 func hexToFieldVal(s string) *btcec.FieldVal {
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}

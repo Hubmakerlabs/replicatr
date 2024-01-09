@@ -2,9 +2,9 @@ package cache_memory
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	ristretto "github.com/fiatjaf/generic-ristretto"
 )
 
@@ -40,7 +40,7 @@ func shortUint64(idOrPubkey string) uint64 {
 	if length < 8 {
 		return 0
 	}
-	b, e := hex.DecodeString(idOrPubkey[length-8:])
+	b, e := hex.Dec(idOrPubkey[length-8:])
 	if e != nil {
 		return 0
 	}

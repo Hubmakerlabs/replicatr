@@ -3,11 +3,11 @@ package nip19
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 func Decode(bech32string string) (prefix string, value any, e error) {
@@ -27,7 +27,7 @@ func Decode(bech32string string) (prefix string, value any, e error) {
 			return prefix, nil, fmt.Errorf("data is less than 32 bytes (%d)", len(data))
 		}
 
-		return prefix, hex.EncodeToString(data[0:32]), nil
+		return prefix, hex.Enc(data[0:32]), nil
 	case "nprofile":
 		var result pointers.ProfilePointer
 		curr := 0
@@ -47,7 +47,7 @@ func Decode(bech32string string) (prefix string, value any, e error) {
 				if len(v) < 32 {
 					return prefix, nil, fmt.Errorf("pubkey is less than 32 bytes (%d)", len(v))
 				}
-				result.PublicKey = hex.EncodeToString(v)
+				result.PublicKey = hex.Enc(v)
 			case TLVRelay:
 				result.Relays = append(result.Relays, string(v))
 			default:
@@ -75,14 +75,14 @@ func Decode(bech32string string) (prefix string, value any, e error) {
 				if len(v) < 32 {
 					return prefix, nil, fmt.Errorf("id is less than 32 bytes (%d)", len(v))
 				}
-				result.ID = hex.EncodeToString(v)
+				result.ID = hex.Enc(v)
 			case TLVRelay:
 				result.Relays = append(result.Relays, string(v))
 			case TLVAuthor:
 				if len(v) < 32 {
 					return prefix, nil, fmt.Errorf("author is less than 32 bytes (%d)", len(v))
 				}
-				result.Author = hex.EncodeToString(v)
+				result.Author = hex.Enc(v)
 			case TLVKind:
 				result.Kind = int(binary.BigEndian.Uint32(v))
 			default:
@@ -114,7 +114,7 @@ func Decode(bech32string string) (prefix string, value any, e error) {
 				if len(v) < 32 {
 					return prefix, nil, fmt.Errorf("author is less than 32 bytes (%d)", len(v))
 				}
-				result.PublicKey = hex.EncodeToString(v)
+				result.PublicKey = hex.Enc(v)
 			case TLVKind:
 				result.Kind = int(binary.BigEndian.Uint32(v))
 			default:
@@ -129,7 +129,7 @@ func Decode(bech32string string) (prefix string, value any, e error) {
 }
 
 func EncodePrivateKey(privateKeyHex string) (string, error) {
-	b, e := hex.DecodeString(privateKeyHex)
+	b, e := hex.Dec(privateKeyHex)
 	if e != nil {
 		return "", fmt.Errorf("failed to decode private key hex: %w", e)
 	}
@@ -143,7 +143,7 @@ func EncodePrivateKey(privateKeyHex string) (string, error) {
 }
 
 func EncodePublicKey(publicKeyHex string) (string, error) {
-	b, e := hex.DecodeString(publicKeyHex)
+	b, e := hex.Dec(publicKeyHex)
 	if e != nil {
 		return "", fmt.Errorf("failed to decode public key hex: %w", e)
 	}
@@ -157,7 +157,7 @@ func EncodePublicKey(publicKeyHex string) (string, error) {
 }
 
 func EncodeNote(eventIDHex string) (string, error) {
-	b, e := hex.DecodeString(eventIDHex)
+	b, e := hex.Dec(eventIDHex)
 	if e != nil {
 		return "", fmt.Errorf("failed to decode event id hex: %w", e)
 	}
@@ -172,7 +172,7 @@ func EncodeNote(eventIDHex string) (string, error) {
 
 func EncodeProfile(publicKeyHex string, relays []string) (string, error) {
 	buf := &bytes.Buffer{}
-	pubkey, e := hex.DecodeString(publicKeyHex)
+	pubkey, e := hex.Dec(publicKeyHex)
 	if e != nil {
 		return "", fmt.Errorf("invalid pubkey '%s': %w", publicKeyHex, e)
 	}
@@ -192,7 +192,7 @@ func EncodeProfile(publicKeyHex string, relays []string) (string, error) {
 
 func EncodeEvent(eventIDHex string, relays []string, author string) (string, error) {
 	buf := &bytes.Buffer{}
-	id, e := hex.DecodeString(eventIDHex)
+	id, e := hex.Dec(eventIDHex)
 	if e != nil || len(id) != 32 {
 		return "", fmt.Errorf("invalid id '%s': %w", eventIDHex, e)
 	}
@@ -202,7 +202,7 @@ func EncodeEvent(eventIDHex string, relays []string, author string) (string, err
 		writeTLVEntry(buf, TLVRelay, []byte(url))
 	}
 
-	if pubkey, _ := hex.DecodeString(author); len(pubkey) == 32 {
+	if pubkey, _ := hex.Dec(author); len(pubkey) == 32 {
 		writeTLVEntry(buf, TLVAuthor, pubkey)
 	}
 
@@ -223,7 +223,7 @@ func EncodeEntity(publicKey string, kind int, identifier string, relays []string
 		writeTLVEntry(buf, TLVRelay, []byte(url))
 	}
 
-	pubkey, e := hex.DecodeString(publicKey)
+	pubkey, e := hex.Dec(publicKey)
 	if e != nil {
 		return "", fmt.Errorf("invalid pubkey '%s': %w", pubkey, e)
 	}

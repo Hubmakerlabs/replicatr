@@ -10,10 +10,10 @@ import (
 	"crypto/cipher"
 	"crypto/sha256"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 
 	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 // This example demonstrates use of GenerateSharedSecret to encrypt a message
@@ -29,9 +29,9 @@ func Example_encryptDecryptMessage() {
 	}
 
 	// Decode the hex-encoded pubkey of the recipient.
-	pubKeyBytes, e := hex.DecodeString("04115c42e757b2efb7671c578530ec191a1" +
-		"359381e6a71127a9d37c486fd30dae57e76dc58f693bd7e7010358ce6b165e483a29" +
-		"21010db67ac11b1b51b651953d2") // uncompressed pubkey
+	pubKeyBytes, e := hex.Dec(
+		"04115c42e757b2efb7671c578530ec191a1359381e6a71127a9d37c486fd30da" +
+		"e57e76dc58f693bd7e7010358ce6b165e483a2921010db67ac11b1b51b651953d2") // uncompressed pubkey
 	if e != nil {
 		fmt.Println(e)
 		return
@@ -85,8 +85,8 @@ func Example_encryptDecryptMessage() {
 	// ciphertext shared by the sender.
 
 	// Decode the hex-encoded secret key.
-	pkBytes, e := hex.DecodeString("a11b0a4e1a132305652ee7a8eb7848f6ad" +
-		"5ea381e3ce20a2c086a2e388230811")
+	pkBytes, e := hex.Dec(
+		"a11b0a4e1a132305652ee7a8eb7848f6ad5ea381e3ce20a2c086a2e388230811")
 	if e != nil {
 		fmt.Println(e)
 		return

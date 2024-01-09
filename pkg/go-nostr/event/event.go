@@ -2,15 +2,15 @@ package event
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/escape"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
-	"github.com/Hubmakerlabs/replicatr/pkg/ec"
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jwriter"
 	"github.com/tidwall/gjson"
@@ -86,7 +86,7 @@ func (evt T) String() string {
 // GetID serializes and returns the event ID as a string.
 func (evt *T) GetID() string {
 	h := sha256.Sum256(evt.Serialize())
-	return hex.EncodeToString(h[:])
+	return hex.Enc(h[:])
 }
 
 // Serialize outputs a byte array that can be hashed/signed to identify/authenticate.
@@ -122,7 +122,7 @@ func (evt *T) Serialize() []byte {
 // returns an error if the signature itself is invalid.
 func (evt T) CheckSignature() (bool, error) {
 	// read and check pubkey
-	pk, e := hex.DecodeString(evt.PubKey)
+	pk, e := hex.Dec(evt.PubKey)
 	if e != nil {
 		return false, fmt.Errorf("event pubkey '%s' is invalid hex: %w", evt.PubKey, e)
 	}
@@ -133,7 +133,7 @@ func (evt T) CheckSignature() (bool, error) {
 	}
 
 	// read signature
-	s, e := hex.DecodeString(evt.Sig)
+	s, e := hex.Dec(evt.Sig)
 	if e != nil {
 		return false, fmt.Errorf("signature '%s' is invalid hex: %w", evt.Sig, e)
 	}
@@ -149,7 +149,7 @@ func (evt T) CheckSignature() (bool, error) {
 
 // Sign signs an event with a given privateKey.
 func (evt *T) Sign(privateKey string, signOpts ...schnorr.SignOption) error {
-	s, e := hex.DecodeString(privateKey)
+	s, e := hex.Dec(privateKey)
 	if e != nil {
 		return fmt.Errorf("Sign called with invalid private key '%s': %w", privateKey, e)
 	}
@@ -160,7 +160,7 @@ func (evt *T) Sign(privateKey string, signOpts ...schnorr.SignOption) error {
 
 	sk, pk := btcec.PrivKeyFromBytes(s)
 	pkBytes := pk.SerializeCompressed()
-	evt.PubKey = hex.EncodeToString(pkBytes[1:])
+	evt.PubKey = hex.Enc(pkBytes[1:])
 
 	h := sha256.Sum256(evt.Serialize())
 	sig, e := schnorr.Sign(sk, h[:], signOpts...)
@@ -168,8 +168,8 @@ func (evt *T) Sign(privateKey string, signOpts ...schnorr.SignOption) error {
 		return e
 	}
 
-	evt.ID = hex.EncodeToString(h[:])
-	evt.Sig = hex.EncodeToString(sig.Serialize())
+	evt.ID = hex.Enc(h[:])
+	evt.Sig = hex.Enc(sig.Serialize())
 
 	return nil
 }

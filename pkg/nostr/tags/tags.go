@@ -2,7 +2,6 @@ package tags
 
 import (
 	"bytes"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,11 +9,7 @@ import (
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
-var log, fails = log2.GetStd()
-
-var (
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log = log2.GetStd()
 
 // T is a list of T - which are lists of string elements with ordering and no
 // uniqueness constraint (not a set).

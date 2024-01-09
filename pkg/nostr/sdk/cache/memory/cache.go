@@ -2,13 +2,14 @@ package cache_memory
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	ristretto "github.com/fiatjaf/generic-ristretto"
 )
-var log, fails = log2.GetStd()
+
+var log = log2.GetStd()
 
 type RistrettoCache[V any] struct {
 	Cache *ristretto.Cache[string, V]
@@ -44,7 +45,7 @@ func shortUint64(idOrPubkey string) uint64 {
 	}
 	var b []byte
 	var e error
-	if b, e = hex.DecodeString(idOrPubkey[length-8:]); log.E.Chk(e) {
+	if b, e = hex.Dec(idOrPubkey[length-8:]); log.E.Chk(e) {
 		return 0
 	}
 	return uint64(binary.BigEndian.Uint32(b))

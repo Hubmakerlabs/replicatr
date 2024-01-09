@@ -8,13 +8,14 @@ package secp256k1
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 	"math/rand"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 // SetHex decodes the passed big-endian hex string into the internal field value
@@ -28,7 +29,7 @@ func (f *FieldVal) SetHex(hexString string) *FieldVal {
 	if len(hexString)%2 != 0 {
 		hexString = "0" + hexString
 	}
-	bytes, _ := hex.DecodeString(hexString)
+	bytes, _ := hex.Dec(hexString)
 	f.SetByteSlice(bytes)
 	return f
 }

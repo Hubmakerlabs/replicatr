@@ -8,19 +8,19 @@
 package ecdsa_test
 
 import (
-	"encoding/hex"
 	"fmt"
 
-	"github.com/dchest/blake256"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/ecdsa"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	"github.com/dchest/blake256"
 )
 
 // This example demonstrates signing a message with a secp256k1 secret key that
 // is first parsed from raw bytes and serializing the generated signature.
 func ExampleSign() {
 	// Decode a hex-encoded secret key.
-	pkBytes, e := hex.DecodeString("22a47fa09a223f2aa079edf85a7c2d4f87" +
+	pkBytes, e := hex.Dec("22a47fa09a223f2aa079edf85a7c2d4f87" +
 		"20ee63e502ee2869afab7de234b80c")
 	if e != nil {
 		fmt.Println(e)
@@ -51,7 +51,7 @@ func ExampleSign() {
 // raw bytes.
 func ExampleSignature_Verify() {
 	// Decode hex-encoded serialized public key.
-	pubKeyBytes, e := hex.DecodeString("02a673638cb9587cb68ea08dbef685c" +
+	pubKeyBytes, e := hex.Dec("02a673638cb9587cb68ea08dbef685c" +
 		"6f2d2a751a8b3c6f2a7e9a4999e6e4bfaf5")
 	if e != nil {
 		fmt.Println(e)
@@ -64,7 +64,7 @@ func ExampleSignature_Verify() {
 	}
 
 	// Decode hex-encoded serialized signature.
-	sigBytes, e := hex.DecodeString("3045022100fcc0a8768cfbcefcf2cadd7cfb0" +
+	sigBytes, e := hex.Dec("3045022100fcc0a8768cfbcefcf2cadd7cfb0" +
 		"fb18ed08dd2e2ae84bef1a474a3d351b26f0302200fc1a350b45f46fa0010139130" +
 		"2818d748c2b22615511a3ffd5bb638bd777207")
 	if e != nil {

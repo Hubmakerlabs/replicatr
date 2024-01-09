@@ -4,12 +4,12 @@ import (
 	"container/heap"
 	"context"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -209,7 +209,7 @@ func prepareQueries(f *filter.T) (
 			if len(idHex) != 64 {
 				return nil, nil, 0, fmt.Errorf("invalid id '%s'", idHex)
 			}
-			idPrefix8, _ := hex.DecodeString(idHex[0 : 8*2])
+			idPrefix8, _ := hex.Dec(idHex[0 : 8*2])
 			copy(prefix[1:], idPrefix8)
 			queries[i] = query{i: i, prefix: prefix, skipTimestamp: true}
 		}
@@ -221,7 +221,7 @@ func prepareQueries(f *filter.T) (
 				if len(pubkeyHex) != 64 {
 					return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 				}
-				pubkeyPrefix8, _ := hex.DecodeString(pubkeyHex[0 : 8*2])
+				pubkeyPrefix8, _ := hex.Dec(pubkeyHex[0 : 8*2])
 				prefix := make([]byte, 1+8)
 				prefix[0] = index
 				copy(prefix[1:], pubkeyPrefix8)
@@ -236,7 +236,7 @@ func prepareQueries(f *filter.T) (
 					if len(pubkeyHex) != 64 {
 						return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 					}
-					pubkeyPrefix8, _ := hex.DecodeString(pubkeyHex[0 : 8*2])
+					pubkeyPrefix8, _ := hex.Dec(pubkeyHex[0 : 8*2])
 					prefix := make([]byte, 1+8+2)
 					prefix[0] = index
 					copy(prefix[1:], pubkeyPrefix8)
