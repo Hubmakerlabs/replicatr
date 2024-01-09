@@ -6,13 +6,14 @@ package secp256k1
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"math/big"
 	"math/rand"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 // SetHex interprets the provided hex string as a 256-bit big-endian unsigned
@@ -27,7 +28,7 @@ func (s *ModNScalar) SetHex(hexString string) *ModNScalar {
 	if len(hexString)%2 != 0 {
 		hexString = "0" + hexString
 	}
-	bytes, _ := hex.DecodeString(hexString)
+	bytes, _ := hex.Dec(hexString)
 	s.SetByteSlice(bytes)
 	return s
 }

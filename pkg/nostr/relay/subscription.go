@@ -135,7 +135,7 @@ func (sub *Subscription) Close() {
 // The subscription will be closed if the context expires.
 func (sub *Subscription) Sub(_ context.Context, filters filters.T) {
 	sub.Filters = filters
-	if e := sub.Fire(); fails(e) {
+	if e := sub.Fire(); log.Fail(e) {
 	}
 }
 
@@ -147,18 +147,18 @@ func (sub *Subscription) Fire() (e error) {
 		if reqb, e = (&req.Envelope{
 			SubscriptionID: subscriptionid.T(id),
 			T:              sub.Filters,
-		}).MarshalJSON(); fails(e) {
+		}).MarshalJSON(); log.Fail(e) {
 		}
 	} else {
 		if reqb, e = (&countrequest.Envelope{
 			SubscriptionID: subscriptionid.T(id),
 			T:              sub.Filters,
-		}).MarshalJSON(); fails(e) {
+		}).MarshalJSON(); log.Fail(e) {
 		}
 	}
 	log.D.F("{%s} sending %v", sub.Relay.URL, string(reqb))
 	sub.Live.Store(true)
-	if e = <-sub.Relay.Write(reqb); fails(e) {
+	if e = <-sub.Relay.Write(reqb); log.Fail(e) {
 		sub.Cancel()
 		return fmt.Errorf("failed to write: %w", e)
 	}

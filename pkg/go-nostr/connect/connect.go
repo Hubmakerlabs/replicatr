@@ -17,7 +17,7 @@ import (
 	"github.com/gobwas/ws/wsutil"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 type Connection struct {
 	Conn              net.Conn
@@ -38,7 +38,7 @@ func NewConnection(ctx context.Context, url string, requestHeader http.Header) (
 		},
 	}
 	conn, _, hs, e := dialer.Dial(ctx, url)
-	if fails(e) {
+	if log.Fail(e) {
 		return nil, fmt.Errorf("failed to dial: %w", e)
 	}
 
@@ -79,7 +79,7 @@ func NewConnection(ctx context.Context, url string, requestHeader http.Header) (
 	if enableCompression {
 		flateWriter = wsflate.NewWriter(nil, func(w io.Writer) wsflate.Compressor {
 			fw, e := flate.NewWriter(w, 4)
-			if fails(e) {
+			if log.Fail(e) {
 				log.E.F("Failed to create flate writer: %v", e)
 			}
 			return fw
@@ -104,20 +104,20 @@ func NewConnection(ctx context.Context, url string, requestHeader http.Header) (
 func (c *Connection) WriteMessage(data []byte) (e error) {
 	if c.msgState.IsCompressed() && c.enableCompression {
 		c.flateWriter.Reset(c.writer)
-		if _, e := io.Copy(c.flateWriter, bytes.NewReader(data)); fails(e) {
+		if _, e := io.Copy(c.flateWriter, bytes.NewReader(data)); log.Fail(e) {
 			return fmt.Errorf("failed to write message: %w", e)
 		}
 
-		if e := c.flateWriter.Close(); fails(e) {
+		if e := c.flateWriter.Close(); log.Fail(e) {
 			return fmt.Errorf("failed to close flate writer: %w", e)
 		}
 	} else {
-		if _, e := io.Copy(c.writer, bytes.NewReader(data)); fails(e) {
+		if _, e := io.Copy(c.writer, bytes.NewReader(data)); log.Fail(e) {
 			return fmt.Errorf("failed to write message: %w", e)
 		}
 	}
 
-	if e := c.writer.Flush(); fails(e) {
+	if e := c.writer.Flush(); log.Fail(e) {
 		return fmt.Errorf("failed to flush writer: %w", e)
 	}
 
@@ -133,13 +133,13 @@ func (c *Connection) ReadMessage(ctx context.Context, buf io.Writer) (e error) {
 		}
 
 		h, e := c.reader.NextFrame()
-		if fails(e) {
+		if log.Fail(e) {
 			c.Conn.Close()
 			return fmt.Errorf("failed to advance frame: %w", e)
 		}
 
 		if h.OpCode.IsControl() {
-			if e = c.controlHandler(h, c.reader); fails(e) {
+			if e = c.controlHandler(h, c.reader); log.Fail(e) {
 				return fmt.Errorf("failed to handle control frame: %w", e)
 			}
 		} else if h.OpCode == ws.OpBinary ||
@@ -154,7 +154,7 @@ func (c *Connection) ReadMessage(ctx context.Context, buf io.Writer) (e error) {
 
 	if c.msgState.IsCompressed() && c.enableCompression {
 		c.flateReader.Reset(c.reader)
-		if _, e := io.Copy(buf, c.flateReader); fails(e) {
+		if _, e := io.Copy(buf, c.flateReader); log.Fail(e) {
 			return fmt.Errorf("failed to read message: %w", e)
 		}
 	} else {

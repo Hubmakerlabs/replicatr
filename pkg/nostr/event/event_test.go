@@ -1,12 +1,13 @@
 package event_test
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/rand"
 	"testing"
 
+	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventest"
@@ -15,12 +16,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
-var log, fails = log2.GetStd()
-
-var hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
+var log = log2.GetStd()
 
 const (
 	TestSecBech32 = "nsec1z7tlduw3qkf4fz6kdw3jaq2h02jtexgwkrck244l3p834a930sjsh8t89c"
@@ -31,7 +29,7 @@ const (
 
 func GetTestKeyPair() (sec *secp256k1.SecretKey,
 	pub *secp256k1.PublicKey) {
-	b, _ := hexDecode(TestSecHex)
+	b, _ := hex.Dec(TestSecHex)
 	sec = secp256k1.SecKeyFromBytes(b)
 	pub = sec.PubKey()
 	return
@@ -66,7 +64,7 @@ func GenTextNote(sk *secp256k1.SecretKey, replyID,
 		Tags:      t,
 		Content:   quoteText,
 	}
-	if e = ev.SignWithSecKey(sk); fails(e) {
+	if e = ev.SignWithSecKey(sk); log.Fail(e) {
 		return
 	}
 	note = ev.ToObject().String()
@@ -80,7 +78,7 @@ func TestGenerateEvent(t *testing.T) {
 	sec, pub := GetTestKeyPair()
 	_ = pub
 	for i := 0; i < 10; i++ {
-		if note, e = GenTextNote(sec, noteID, relayURL); fails(e) {
+		if note, e = GenTextNote(sec, noteID, relayURL); log.Fail(e) {
 			t.Error(e)
 			t.FailNow()
 		}

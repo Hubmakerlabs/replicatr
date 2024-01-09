@@ -2,8 +2,8 @@ package sdk
 
 import (
 	"context"
-	"encoding/hex"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 
@@ -17,7 +17,7 @@ func InputToProfile(ctx context.Context, input string) (pp *pointers.Profile) {
 	var e error
 	// handle if it is a hex string
 	if len(input) == 64 {
-		if _, e = hex.DecodeString(input); !log.E.Chk(e) {
+		if _, e = hex.Dec(input); !log.E.Chk(e) {
 			return &pointers.Profile{PublicKey: input}
 		}
 	}
@@ -54,7 +54,7 @@ func InputToEventPointer(input string) (ep *pointers.Event) {
 	var e error
 	// handle if it is a hex string
 	if len(input) == 64 {
-		if _, e = hex.DecodeString(input); !log.E.Chk(e) {
+		if _, e = hex.Dec(input); !log.E.Chk(e) {
 			return &pointers.Event{ID: eventid.EventID(input)}
 		}
 	}

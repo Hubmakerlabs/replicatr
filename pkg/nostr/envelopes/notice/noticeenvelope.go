@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 // Envelope is a relay message intended to be shown to users in a nostr
 // client interface.
@@ -66,7 +66,7 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	}
 	var noticeText []byte
 	// read the string
-	if noticeText, e = buf.ReadUntil('"'); fails(e) {
+	if noticeText, e = buf.ReadUntil('"'); log.Fail(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	E.Text = string(text.UnescapeByteString(noticeText))

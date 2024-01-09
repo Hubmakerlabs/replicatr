@@ -2,8 +2,8 @@ package badger
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 
@@ -11,7 +11,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 func getTagIndexPrefix(tagValue string) ([]byte, int) {
 	var k []byte   // the key with full length for created_at and idx at the end, but not filled with these
@@ -25,7 +25,7 @@ func getTagIndexPrefix(tagValue string) ([]byte, int) {
 		copy(k[1+2:], pkb[0:8])
 		copy(k[1+2+8:], d)
 		offset = 1 + 2 + 8 + len(d)
-	} else if vb, _ := hex.DecodeString(tagValue); len(vb) == 32 {
+	} else if vb, _ := hex.Dec(tagValue); len(vb) == 32 {
 		// store value as bytes
 		k = make([]byte, 1+8+4+4)
 		k[0] = indexTag32Prefix
@@ -57,7 +57,7 @@ func getIndexKeysForEvent(evt *event.T, idx []byte) [][]byte {
 
 	{
 		// ~ by pubkey+date
-		pubkeyPrefix8, _ := hex.DecodeString(evt.PubKey[:8*2])
+		pubkeyPrefix8, _ := hex.Dec(evt.PubKey[:8*2])
 		k := make([]byte, 1+8+4+4)
 		k[0] = indexPubkeyPrefix
 		copy(k[1:], pubkeyPrefix8)
@@ -78,7 +78,7 @@ func getIndexKeysForEvent(evt *event.T, idx []byte) [][]byte {
 
 	{
 		// ~ by pubkey+kind+date
-		pubkeyPrefix8, _ := hex.DecodeString(evt.PubKey[:8*2])
+		pubkeyPrefix8, _ := hex.Dec(evt.PubKey[:8*2])
 		k := make([]byte, 1+8+2+4+4)
 		k[0] = indexPubkeyKindPrefix
 		copy(k[1:], pubkeyPrefix8)

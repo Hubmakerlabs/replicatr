@@ -5,11 +5,11 @@
 package btcec
 
 import (
-	"encoding/hex"
 	"math/big"
 	"testing"
 
 	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 // setHex decodes the passed big-endian hex string into the internal field value
@@ -23,7 +23,7 @@ func setHex(hexString string) *FieldVal {
 	if len(hexString)%2 != 0 {
 		hexString = "0" + hexString
 	}
-	bytes, _ := hex.DecodeString(hexString)
+	bytes, _ := hex.Dec(hexString)
 
 	var f FieldVal
 	f.SetByteSlice(bytes)
@@ -36,7 +36,7 @@ func setHex(hexString string) *FieldVal {
 // errors in the source code can be detected. It will only (and must only) be
 // called with hard-coded values.
 func hexToFieldVal(s string) *FieldVal {
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
@@ -153,7 +153,7 @@ func BenchmarkScalarMult(b *testing.B) {
 // constants so errors in the source code can be detected. It will only (and
 // must only) be called with hard-coded values.
 func hexToModNScalar(s string) *ModNScalar {
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
@@ -177,7 +177,7 @@ func BenchmarkFieldNormalize(b *testing.B) {
 // BenchmarkParseCompressedPubKey benchmarks how long it takes to decompress and
 // validate a compressed public key from a byte array.
 func BenchmarkParseCompressedPubKey(b *testing.B) {
-	rawPk, _ := hex.DecodeString("0234f9460f0e4f08393d192b3c5133a6ba099aa0ad9fd54ebccfacdfa239ff49c6")
+	rawPk, _ := hex.Dec("0234f9460f0e4f08393d192b3c5133a6ba099aa0ad9fd54ebccfacdfa239ff49c6")
 
 	var (
 		pk  *PublicKey

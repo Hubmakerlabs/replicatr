@@ -7,13 +7,13 @@ import (
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 type Reason string
 
@@ -26,7 +26,7 @@ const (
 	Error       Reason = "error"
 )
 
-var _ enveloper.Enveloper = (*Envelope)(nil)
+var _ enveloper.I = (*Envelope)(nil)
 
 // Envelope is a relay message sent in response to an EventEnvelope to
 // indicate acceptance (OK is true), rejection and provide a human readable
@@ -47,7 +47,7 @@ func (env *Envelope) UnmarshalJSON(bytes []byte) error {
 func NewOKEnvelope(eventID eventid.EventID, ok bool, reason string) (o *Envelope,
 	e error) {
 	var ei eventid.EventID
-	if ei, e = eventid.NewEventID(string(eventID)); fails(e) {
+	if ei, e = eventid.NewEventID(string(eventID)); log.Fail(e) {
 		return
 	}
 	o = &Envelope{
@@ -106,7 +106,7 @@ func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 		return
 	}
 	var eventID []byte
-	if eventID, e = buf.ReadUntil('"'); fails(e) {
+	if eventID, e = buf.ReadUntil('"'); log.Fail(e) {
 		return fmt.Errorf("did not find event ID value in ok envelope")
 	}
 	// check event is a valid length
@@ -145,7 +145,7 @@ next:
 	}
 	// next comes a boolean value
 	var isOK []byte
-	if isOK, e = buf.ReadUntil(','); fails(e) {
+	if isOK, e = buf.ReadUntil(','); log.Fail(e) {
 		return fmt.Errorf("did not find OK value in ok envelope")
 	}
 	isOK = isOK[:]
@@ -180,7 +180,7 @@ maybeOK:
 		return
 	}
 	var reason []byte
-	if reason, e = buf.ReadUntil('"'); fails(e) {
+	if reason, e = buf.ReadUntil('"'); log.Fail(e) {
 		return fmt.Errorf("did not find reason value in ok envelope")
 	}
 	// Scan for the proper envelope ending.

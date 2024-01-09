@@ -5,13 +5,13 @@ import (
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 // Envelope is a message that indicates that all cached events have been
 // delivered and thereafter events will be new and delivered in pubsub subscribe
@@ -25,7 +25,7 @@ func (E *Envelope) UnmarshalJSON(bytes []byte) error {
 	panic("implement me")
 }
 
-var _ enveloper.Enveloper = (*Envelope)(nil)
+var _ enveloper.I = (*Envelope)(nil)
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
@@ -66,7 +66,7 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	}
 	var sid []byte
 	// read the string
-	if sid, e = buf.ReadUntil('"'); fails(e) {
+	if sid, e = buf.ReadUntil('"'); log.Fail(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	E.T = subscriptionid.T(sid[:])

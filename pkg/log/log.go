@@ -126,6 +126,7 @@ type (
 	// Log is a set of log printers for the various Level items.
 	Log struct {
 		F, E, W, I, D, T LevelPrinter
+		Fail Chk
 	}
 )
 
@@ -141,19 +142,20 @@ func GetLoc(skip int) (output string) {
 // this copies the interface of stdlib log but we don't respect the settings
 // because a logger without timestamps is retarded
 func New(writer io.Writer, appID string, _ int) (l *Log) {
-	return &Log{
-		getOnePrinter(writer, appID, Fatal),
-		getOnePrinter(writer, appID, Error),
-		getOnePrinter(writer, appID, Warn),
-		getOnePrinter(writer, appID, Info),
-		getOnePrinter(writer, appID, Debug),
-		getOnePrinter(writer, appID, Trace),
+	l= &Log{
+		F:getOnePrinter(writer, appID, Fatal),
+		E:getOnePrinter(writer, appID, Error),
+		W:getOnePrinter(writer, appID, Warn),
+		I:getOnePrinter(writer, appID, Info),
+		D:getOnePrinter(writer, appID, Debug),
+		T:getOnePrinter(writer, appID, Trace),
 	}
+	l.Fail = l.D.Chk
+	return
 }
 
-func GetStd() (l *Log, fails Chk) {
+func GetStd() (l *Log) {
 	l = New(os.Stderr, "", 0)
-	fails = l.D.Chk
 	return
 }
 

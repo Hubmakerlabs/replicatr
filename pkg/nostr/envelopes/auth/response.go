@@ -1,31 +1,26 @@
 package auth
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log, fails = log2.GetStd()
-
-var (
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log = log2.GetStd()
 
 type Response struct {
 	*event.T
 }
 
-var _ enveloper.Enveloper = &Response{}
+var _ enveloper.I = &Response{}
 
 // New creates an Response response from an Challenge.
 //
@@ -55,7 +50,29 @@ func (a *Response) Bytes() (s []byte)  { return a.ToArray().Bytes() }
 func (a *Response) MarshalJSON() (b []byte, e error) {
 	return a.ToArray().Bytes(), nil
 }
-func (a *Response) UnmarshalJSON(b []byte) error { panic("implement me") }
+
+func (a *Response) UnmarshalJSON(b []byte) (e error) {
+	// if a == nil {
+	// 	return fmt.Errorf("cannot unmarshal to nil pointer")
+	// }
+	// var l labels.T
+	// var buf *text.Buffer
+	// if l, buf, e = sentinel.Identify(b); log.Fail(e) {
+	// 	return
+	// }
+	// if l != labels.LAuth {
+	// 	e = fmt.Errorf("expected '%s' envelope, got '%s'",
+	// 		labels.AUTH, labels.List[l])
+	// 	log.D.Ln(e)
+	// 	return
+	// }
+	// var c enveloper.I
+	// if c, e = sentinel.Read(buf, l); log.Fail(e) {
+	// 	return
+	// }
+	// *a = *c.(*Response)
+	return
+}
 
 func (a *Response) Unmarshal(buf *text.Buffer) (e error) {
 	if a == nil {
@@ -76,12 +93,12 @@ func (a *Response) Unmarshal(buf *text.Buffer) (e error) {
 	// should end with a close brace. This slice will be wrapped in braces and
 	// contain paired brackets, braces and quotes.
 	var eventObj []byte
-	if eventObj, e = buf.ReadEnclosed(); fails(e) {
+	if eventObj, e = buf.ReadEnclosed(); log.Fail(e) {
 		return fmt.Errorf("event not found in auth envelope")
 	}
 	// allocate an event to unmarshal into
 	a.T = &event.T{}
-	if e = json.Unmarshal(eventObj, a.T); fails(e) {
+	if e = json.Unmarshal(eventObj, a.T); log.Fail(e) {
 		log.D.S(string(eventObj))
 		return
 	}

@@ -8,8 +8,9 @@
 package btcec
 
 import (
-	"encoding/hex"
 	"testing"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 func FuzzParsePubKey(f *testing.F) {
@@ -26,7 +27,7 @@ func FuzzParsePubKey(f *testing.F) {
 		"04A7640409AA2083FDAD38B2D8DE1263B2251799591D840653FB02DBBA503D7745FCB83D80E08A1E02896BE691EA6AFFB8A35939A646F1FC79052A744B1C82EDC3",
 	}
 	for _, pubKey := range recoveryTestPubKeys {
-		seed, e := hex.DecodeString(pubKey)
+		seed, e := hex.Dec(pubKey)
 		if e != nil {
 			f.Fatal(e)
 		}

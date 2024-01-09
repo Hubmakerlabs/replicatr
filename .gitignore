@@ -20,11 +20,15 @@
 # Go workspace file
 go.work
 
-# repeating here so intelliJ users don't get asked pointlessly to include this stuff.
-/.idea/.gitignore
-/.idea/modules.xml
-/.idea/replicatr.iml
-/.idea/vcs.xml
-/.idea/codeStyles/codeStyleConfig.xml
-/.idea/inspectionProfiles/Project_Default.xml
+# repeating here so intelliJ users don't get asked pointlessly to include this
+# stuff.
+**/.idea/**
 /.idea/**
+**/.idea
+
+# and for other IDEs
+/.vscode/
+**/.vscode/
+**/.vscode/**
+
+*.sw*

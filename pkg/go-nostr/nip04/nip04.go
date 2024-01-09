@@ -6,25 +6,25 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 // ComputeSharedSecret returns a shared secret key used to encrypt messages.
 // The private and public keys should be hex encoded.
 // Uses the Diffie-Hellman key exchange (ECDH) (RFC 4753).
 func ComputeSharedSecret(pub string, sk string) (sharedSecret []byte, e error) {
-	privKeyBytes, e := hex.DecodeString(sk)
+	privKeyBytes, e := hex.Dec(sk)
 	if e != nil {
 		return nil, fmt.Errorf("error decoding sender private key: %w", e)
 	}
 	privKey, _ := btcec.PrivKeyFromBytes(privKeyBytes)
 
 	// adding 02 to signal that this is a compressed public key (33 bytes)
-	pubKeyBytes, e := hex.DecodeString("02" + pub)
+	pubKeyBytes, e := hex.Dec("02" + pub)
 	if e != nil {
 		return nil, fmt.Errorf("error decoding hex string of receiver public key '%s': %w", "02"+pub, e)
 	}

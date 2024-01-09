@@ -6,15 +6,15 @@ import (
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
-var _ enveloper.Enveloper = (*Envelope)(nil)
+var _ enveloper.I = (*Envelope)(nil)
 
 // Envelope is the wrapper expected by a relay around an event.
 type Envelope struct {
@@ -37,7 +37,7 @@ func (env *Envelope) UnmarshalJSON(bytes []byte) error {
 // error if the Subscription ID is invalid or the T is nil.
 func NewEventEnvelope(si string, ev *event.T) (ee *Envelope, e error) {
 	var sid subscriptionid.T
-	if sid, e = subscriptionid.New(si); fails(e) {
+	if sid, e = subscriptionid.New(si); log.Fail(e) {
 		return
 	}
 	if ev == nil {
@@ -121,12 +121,12 @@ func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	// should end with a close brace. This slice will be wrapped in braces and
 	// contain paired brackets, braces and quotes.
 	var eventObj []byte
-	if eventObj, e = buf.ReadEnclosed(); fails(e) {
+	if eventObj, e = buf.ReadEnclosed(); log.Fail(e) {
 		return
 	}
 	// allocate an event to unmarshal into
 	env.Event = &event.T{}
-	if e = json.Unmarshal(eventObj, env.Event); fails(e) {
+	if e = json.Unmarshal(eventObj, env.Event); log.Fail(e) {
 		log.D.S(string(eventObj))
 		return
 	}

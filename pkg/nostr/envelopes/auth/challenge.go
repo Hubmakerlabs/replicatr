@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
@@ -13,7 +13,7 @@ type Challenge struct {
 	Challenge string
 }
 
-var _ enveloper.Enveloper = &Challenge{}
+var _ enveloper.I = &Challenge{}
 
 func NewChallenge(c string) (a *Challenge) {
 	return &Challenge{Challenge: c}
@@ -30,9 +30,27 @@ func (a *Challenge) MarshalJSON() (bytes []byte, e error) {
 	return a.ToArray().Bytes(), nil
 }
 
-func (a *Challenge) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
+func (a *Challenge) UnmarshalJSON(b []byte) (e error) {
+	// if a == nil {
+	// 	return fmt.Errorf("cannot unmarshal to nil pointer")
+	// }
+	// var l labels.T
+	// var buf *text.Buffer
+	// if l, buf, e = sentinel.Identify(b); log.Fail(e) {
+	// 	return
+	// }
+	// if l != labels.LAuth {
+	// 	e = fmt.Errorf("expected '%s' envelope, got '%s'",
+	// 		labels.AUTH, labels.List[l])
+	// 	log.D.Ln(e)
+	// 	return
+	// }
+	// var c enveloper.I
+	// if c, e = sentinel.Read(buf, l); log.Fail(e) {
+	// 	return
+	// }
+	// *a = *c.(*Challenge)
+	return
 }
 
 func (a *Challenge) Unmarshal(buf *text.Buffer) (e error) {
@@ -49,7 +67,7 @@ func (a *Challenge) Unmarshal(buf *text.Buffer) (e error) {
 		return
 	}
 	var challengeString []byte
-	if challengeString, e = buf.ReadUntil('"'); fails(e) {
+	if challengeString, e = buf.ReadUntil('"'); log.Fail(e) {
 		return fmt.Errorf("did not find challenge string in auth challenge envelope")
 	}
 	a.Challenge = string(text.UnescapeByteString(challengeString))

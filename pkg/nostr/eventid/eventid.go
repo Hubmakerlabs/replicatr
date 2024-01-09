@@ -1,18 +1,15 @@
 package eventid
 
 import (
-	"encoding/hex"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
-var (
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
 
 // EventID is the SHA256 hash in hexadecimal of the canonical form of an event
 // as produced by the output of T.ToCanonical().Bytes().
@@ -24,7 +21,7 @@ func (ei EventID) String() string {
 
 func (ei EventID) Bytes() (b []byte) {
 	var e error
-	if b, e = hexDecode(string(ei)); log.E.Chk(e) {
+	if b, e = hex.Dec(string(ei)); log.E.Chk(e) {
 		return
 	}
 	return
@@ -38,7 +35,7 @@ func (ei EventID) MarshalJSON() (b []byte, e error) {
 // hexadecimal string, returns the string coerced to the type.
 func NewEventID(s string) (ei EventID, e error) {
 	ei = EventID(s)
-	if e = ei.Validate(); fails(e) {
+	if e = ei.Validate(); log.Fail(e) {
 
 		// clear the result since it failed.
 		ei = ei[:0]
@@ -51,7 +48,7 @@ func NewEventID(s string) (ei EventID, e error) {
 func (ei EventID) Validate() (e error) {
 
 	// Check the string decodes as valid hexadecimal.
-	if _, e = hexDecode(string(ei)); e != nil {
+	if _, e = hex.Dec(string(ei)); e != nil {
 		return
 	}
 

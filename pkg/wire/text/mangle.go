@@ -304,5 +304,6 @@ func (b *Buffer) Copy(length, src, dest int) (e error) {
 	return
 }
 
+// String returns the whole buffer as a string.
 func (b *Buffer) String() (s string) { return string(b.Buf) }
 func (b *Buffer) Bytes() (bb []byte) { return b.Buf }

@@ -2,18 +2,18 @@ package sdk
 
 import (
 	"context"
-	"encoding/hex"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip05"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 // InputToProfile turns any npub/nprofile/hex/nip05 input into a ProfilePointer (or nil).
 func InputToProfile(ctx context.Context, input string) *pointers.ProfilePointer {
 	// handle if it is a hex string
 	if len(input) == 64 {
-		if _, e := hex.DecodeString(input); e == nil {
+		if _, e := hex.Dec(input); e == nil {
 			return &pointers.ProfilePointer{PublicKey: input}
 		}
 	}
@@ -42,7 +42,7 @@ func InputToProfile(ctx context.Context, input string) *pointers.ProfilePointer 
 func InputToEventPointer(input string) *pointers.EventPointer {
 	// handle if it is a hex string
 	if len(input) == 64 {
-		if _, e := hex.DecodeString(input); e == nil {
+		if _, e := hex.Dec(input); e == nil {
 			return &pointers.EventPointer{ID: input}
 		}
 	}

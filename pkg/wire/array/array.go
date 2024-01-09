@@ -16,7 +16,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 // Arrayer is an interface for a type that can return an array.T - or in other
 // words []interface{} made into concrete.

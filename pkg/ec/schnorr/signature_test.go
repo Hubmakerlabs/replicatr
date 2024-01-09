@@ -6,17 +6,17 @@
 package schnorr
 
 import (
-	"encoding/hex"
 	"errors"
 	"strings"
 	"testing"
 	"testing/quick"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 
-	"github.com/davecgh/go-spew/spew"
 	secp_ecdsa "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 	ecdsa_schnorr "github.com/Hubmakerlabs/replicatr/pkg/ec/secp/schnorr"
+	"github.com/davecgh/go-spew/spew"
 )
 
 type bip340Test struct {
@@ -191,7 +191,7 @@ var bip340TestVectors = []bip340Test{
 // panics if an error occurs.  This is only used in the tests as a helper since
 // the only way it can fail is if there is an error in the test source code.
 func decodeHex(hexStr string) []byte {
-	b, e := hex.DecodeString(hexStr)
+	b, e := hex.Dec(hexStr)
 	if e != nil {
 		panic("invalid hex string in test source: err " + e.Error() +
 			", hex: " + hexStr)
@@ -227,7 +227,7 @@ func TestSchnorrSign(t *testing.T) {
 			t.Fatalf("test #%v: sig generation failed: %v", i+1, e)
 		}
 
-		if strings.ToUpper(hex.EncodeToString(sig.Serialize())) != test.signature {
+		if strings.ToUpper(hex.Enc(sig.Serialize())) != test.signature {
 			t.Fatalf("test #%v: got signature %x : "+
 				"want %s", i+1, sig.Serialize(), test.signature)
 		}

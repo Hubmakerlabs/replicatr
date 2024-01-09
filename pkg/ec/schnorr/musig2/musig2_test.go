@@ -4,13 +4,13 @@ package musig2
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 )
 
 func mustParseHex(str string) []byte {
-	b, e := hex.DecodeString(str)
+	b, e := hex.Dec(str)
 	if e != nil {
 		panic(fmt.Errorf("unable to parse hex: %v", e))
 	}

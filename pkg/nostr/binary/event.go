@@ -1,8 +1,7 @@
 package binary
 
 import (
-	"encoding/hex"
-
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
@@ -11,11 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
-var log, fails = log2.GetStd()
-
-var (
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log = log2.GetStd()
 
 type Event struct {
 	PubKey    [32]byte
@@ -36,20 +31,20 @@ func BinaryEvent(evt *event.T) (be *Event) {
 	}
 	var e error
 	var id, pub, sig []byte
-	id, e = hexDecode(string(evt.ID))
+	id, e = hex.Dec(string(evt.ID))
 	log.D.Chk(e)
 	copy(be.ID[:], id)
-	pub, e = hexDecode(evt.PubKey)
+	pub, e = hex.Dec(evt.PubKey)
 	log.D.Chk(e)
 	copy(be.PubKey[:], pub)
-	sig, e = hexDecode(evt.Sig)
+	sig, e = hex.Dec(evt.Sig)
 	copy(be.Sig[:], sig)
 	log.D.Chk(e)
 	return be
 }
 
 func (be *Event) ToNormalEvent() *event.T {
-	id, e := eventid.NewEventID(encodeToHex(be.ID[:]))
+	id, e := eventid.NewEventID(hex.Enc(be.ID[:]))
 	log.D.Chk(e)
 	return &event.T{
 		Tags:      be.Tags,
@@ -57,7 +52,7 @@ func (be *Event) ToNormalEvent() *event.T {
 		Kind:      kind.T(be.Kind),
 		CreatedAt: be.CreatedAt,
 		ID:        id,
-		PubKey:    encodeToHex(be.PubKey[:]),
-		Sig:       encodeToHex(be.Sig[:]),
+		PubKey:    hex.Enc(be.PubKey[:]),
+		Sig:       hex.Enc(be.Sig[:]),
 	}
 }

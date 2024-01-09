@@ -6,15 +6,15 @@ import (
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 // Envelope is the wrapper for a query to a relay.
 type Envelope struct {
@@ -22,7 +22,7 @@ type Envelope struct {
 	filters.T
 }
 
-var _ enveloper.Enveloper = &Envelope{}
+var _ enveloper.I = &Envelope{}
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
@@ -75,7 +75,7 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 		}
 		var sid []byte
 		// read the string
-		if sid, e = buf.ReadUntil('"'); fails(e) {
+		if sid, e = buf.ReadUntil('"'); log.Fail(e) {
 			return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 		}
 		log.D.F("Subscription ID: '%s'", sid)
@@ -97,18 +97,18 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 		// it should end with a close brace. This slice will be wrapped in
 		// braces and contain paired brackets, braces and quotes.
 		var filterArray []byte
-		if filterArray, e = buf.ReadEnclosed(); fails(e) {
+		if filterArray, e = buf.ReadEnclosed(); log.Fail(e) {
 			return
 		}
 		// log.D.F("filter: '%s'", filterArray)
 		f := &filter.T{}
-		if e = json.Unmarshal(filterArray, f); fails(e) {
+		if e = json.Unmarshal(filterArray, f); log.Fail(e) {
 			return
 		}
 		E.T = append(E.T, f)
 		// log.D.F("remaining: '%s'", buf.Buf[buf.Pos:])
 		which = 0
-		if which, e = buf.ScanForOneOf(true, ',', ']'); fails(e) {
+		if which, e = buf.ScanForOneOf(true, ',', ']'); log.Fail(e) {
 			return
 		}
 		// log.D.F("'%s'", string(which))

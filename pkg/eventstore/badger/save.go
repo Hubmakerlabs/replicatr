@@ -2,18 +2,18 @@ package badger
 
 import (
 	"context"
-	"encoding/hex"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/dgraph-io/badger/v4"
 )
 
 func (b *BadgerBackend) SaveEvent(ctx context.Context, evt *event.T) (e error) {
 	return b.Update(func(txn *badger.Txn) (e error) {
 		// query event by id to ensure we don't save duplicates
-		id, _ := hex.DecodeString(evt.ID)
+		id, _ := hex.Dec(evt.ID)
 		prefix := make([]byte, 1+8)
 		prefix[0] = indexIdPrefix
 		copy(prefix[1:], id)

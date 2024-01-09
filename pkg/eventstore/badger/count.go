@@ -75,7 +75,7 @@ func (b *BadgerBackend) CountEvents(ctx context.Context, f *filter.T) (int64, er
 
 						return nil
 					})
-					if fails(e) {
+					if log.Fail(e) {
 						log.D.F("badger: count value read error: %s\n", e)
 					}
 				}

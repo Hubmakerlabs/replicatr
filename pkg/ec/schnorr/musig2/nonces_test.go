@@ -4,13 +4,13 @@ package musig2
 
 import (
 	"bytes"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/stretchr/testify/require"
 )
 
@@ -49,17 +49,17 @@ func TestMusig2NonceGenTestVectors(t *testing.T) {
 	require.NoError(t, json.Unmarshal(testVectorBytes, &testCases))
 
 	for i, testCase := range testCases.TestCases {
-		testCase := testCase
+		c := testCase
 
 		customOpts := nonceGenOpts{
 			randReader:  &memsetRandReader{i: 0},
-			secretKey:   mustParseHex(testCase.Sk),
-			combinedKey: mustParseHex(testCase.AggPk),
-			auxInput:    mustParseHex(testCase.ExtraIn),
-			publicKey:   mustParseHex(testCase.Pk),
+			secretKey:   mustParseHex(c.Sk),
+			combinedKey: mustParseHex(c.AggPk),
+			auxInput:    mustParseHex(c.ExtraIn),
+			publicKey:   mustParseHex(c.Pk),
 		}
-		if testCase.Msg != nil {
-			customOpts.msg = mustParseHex(*testCase.Msg)
+		if c.Msg != nil {
+			customOpts.msg = mustParseHex(*c.Msg)
 		}
 
 		t.Run(fmt.Sprintf("test_case=%v", i), func(t *testing.T) {
@@ -68,7 +68,7 @@ func TestMusig2NonceGenTestVectors(t *testing.T) {
 				t.Fatalf("err gen nonce aux bytes %v", e)
 			}
 
-			expectedBytes, _ := hex.DecodeString(testCase.Expected)
+			expectedBytes, _ := hex.Dec(c.Expected)
 			if !bytes.Equal(nonce.SecNonce[:], expectedBytes) {
 
 				t.Fatalf("nonces don't match: expected %x, got %x",

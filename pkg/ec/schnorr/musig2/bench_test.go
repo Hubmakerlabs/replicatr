@@ -5,12 +5,12 @@
 package musig2
 
 import (
-	"encoding/hex"
 	"fmt"
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 )
 
 func hexToBytes(s string) []byte {
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
@@ -28,7 +28,7 @@ func hexToBytes(s string) []byte {
 }
 
 func hexToModNScalar(s string) *btcec.ModNScalar {
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}

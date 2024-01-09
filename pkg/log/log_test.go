@@ -7,7 +7,7 @@ import (
 	l "github.com/Hubmakerlabs/replicatr/pkg/log"
 )
 
-var log, fails = l.GetStd()
+var log = l.GetStd()
 
 func TestGetLogger(t *testing.T) {
 	l.SetLogLevel(l.Trace)
@@ -17,7 +17,7 @@ func TestGetLogger(t *testing.T) {
 	log.W.Ln("testing log level", l.LvlStr[l.Warn])
 	log.E.Ln("testing log level", l.LvlStr[l.Error])
 	log.F.Ln("testing log level", l.LvlStr[l.Fatal])
-	fails(errors.New("dummy error as error"))
+	log.Fail(errors.New("dummy error as error"))
 	log.I.Chk(errors.New("dummy information check"))
 	log.I.Chk(nil)
 	log.I.S("`backtick wrapped string`", t)

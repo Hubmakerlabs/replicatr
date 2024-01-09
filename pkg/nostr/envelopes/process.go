@@ -10,13 +10,13 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 // ProcessEnvelope scans a message and if it finds a correctly formed Envelope
 // it unmarshals it and returns it.
@@ -24,7 +24,7 @@ var log, fails = log2.GetStd()
 // If it fails, it also returns the label bytes found and the buffer, which will
 // have the cursor at the next byte after the quote delimiter of the T, ready
 // for some other envelope outside of nip-01 to decode.
-func ProcessEnvelope(b []byte) (env enveloper.Enveloper, label []byte,
+func ProcessEnvelope(b []byte) (env enveloper.I, label []byte,
 	buf *text.Buffer, e error) {
 
 	log.D.F("processing envelope:\n%s", string(b))

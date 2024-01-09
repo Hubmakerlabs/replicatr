@@ -2,17 +2,17 @@ package nip5
 
 import (
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 )
 
-var log, fails = log2.GetStd()
+var log = log2.GetStd()
 
 type (
 	name2KeyMap   map[string]string
@@ -65,7 +65,7 @@ func QueryIdentifier(ctx context.Context, fullname string) (pp *pointers.Profile
 		return &pointers.Profile{}, nil
 	}
 	if len(pubkey) == 64 {
-		if _, e := hex.DecodeString(pubkey); e != nil {
+		if _, e := hex.Dec(pubkey); e != nil {
 			return &pointers.Profile{}, nil
 		}
 	}

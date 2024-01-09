@@ -1,24 +1,19 @@
 package countrequest
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log, fails = log2.GetStd()
-
-var (
-	hexDecode, encodeToHex = hex.DecodeString, hex.EncodeToString
-)
+var log = log2.GetStd()
 
 type Envelope struct {
 	SubscriptionID subscriptionid.T
@@ -59,7 +54,7 @@ func (C *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	}
 	var sid []byte
 	// read the string
-	if sid, e = buf.ReadUntil('"'); fails(e) {
+	if sid, e = buf.ReadUntil('"'); log.Fail(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	C.SubscriptionID = subscriptionid.T(sid)
@@ -72,11 +67,11 @@ func (C *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 	// breaking when we don't find a comma after.
 	for {
 		var filterArray []byte
-		if filterArray, e = buf.ReadEnclosed(); fails(e) {
+		if filterArray, e = buf.ReadEnclosed(); log.Fail(e) {
 			return
 		}
 		f := &filter.T{}
-		if e = json.Unmarshal(filterArray, &f); fails(e) {
+		if e = json.Unmarshal(filterArray, &f); log.Fail(e) {
 			return
 		}
 		C.T = append(C.T, f)

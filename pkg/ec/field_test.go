@@ -6,9 +6,10 @@
 package btcec
 
 import (
-	"encoding/hex"
 	"math/rand"
 	"testing"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
 // TestIsZero ensures that checking if a field IsZero works as expected.
@@ -976,7 +977,7 @@ func TestFieldSquareRoot(t *testing.T) {
 // the source code can be detected. It will only (and must only) be called with
 // hard-coded values.
 func hexToBytes(s string) []byte {
-	b, e := hex.DecodeString(s)
+	b, e := hex.Dec(s)
 	if e != nil {
 		panic("invalid hex in source file: " + s)
 	}
