@@ -1,9 +1,10 @@
 package relays
 
 import (
-	"context"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
@@ -15,7 +16,7 @@ func TestEOSEMadness(t *testing.T) {
 	rl := MustRelayConnect(eose.RELAY)
 	defer rl.Close()
 
-	sub, e := rl.Subscribe(context.Background(), filters.T{
+	sub, e := rl.Subscribe(context.Bg(), filters.T{
 		{Kinds: []int{event.KindTextNote}, Limit: 2},
 	})
 	if e != nil {
@@ -62,7 +63,7 @@ func TestCount(t *testing.T) {
 	rl := MustRelayConnect(RELAY)
 	defer rl.Close()
 
-	count, e := rl.Count(context.Background(), filters.T{
+	count, e := rl.Count(context.Bg(), filters.T{
 		{Kinds: []int{event.KindContactList}, Tags: filter.TagMap{"p": []string{"3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d"}}},
 	})
 	if e != nil {

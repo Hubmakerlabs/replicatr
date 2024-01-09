@@ -1,10 +1,11 @@
 package sdk
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -32,18 +33,18 @@ func (s *System) StoreRelay() eventstore.RelayInterface {
 	return eventstore.RelayWrapper{Store: s.Store}
 }
 
-func (s *System) FetchRelays(ctx context.Context, pubkey string) []Relay {
+func (s *System) FetchRelays(ctx context.T, pubkey string) []Relay {
 	if v, ok := s.RelaysCache.Get(pubkey); ok {
 		return v
 	}
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.Timeout(ctx, time.Second*5)
 	defer cancel()
 	res := FetchRelaysForPubkey(ctx, s.Pool, pubkey, s.RelayListRelays...)
 	s.RelaysCache.SetWithTTL(pubkey, res, time.Hour*6)
 	return res
 }
 
-func (s *System) FetchOutboxRelays(ctx context.Context, pubkey string) []string {
+func (s *System) FetchOutboxRelays(ctx context.T, pubkey string) []string {
 	relays := s.FetchRelays(ctx, pubkey)
 	result := make([]string, 0, len(relays))
 	for _, rl := range relays {
@@ -56,7 +57,7 @@ func (s *System) FetchOutboxRelays(ctx context.Context, pubkey string) []string 
 
 // FetchProfileMetadata fetches metadata for a given user from the local cache, or from the local store,
 // or, failing these, from the target user's defined outbox relays -- then caches the result.
-func (s *System) FetchProfileMetadata(ctx context.Context,
+func (s *System) FetchProfileMetadata(ctx context.T,
 	pubkey string) *ProfileMetadata {
 
 	pm, _ := s.fetchProfileMetadata(ctx, pubkey)
@@ -65,7 +66,7 @@ func (s *System) FetchProfileMetadata(ctx context.Context,
 
 // FetchOrStoreProfileMetadata is like FetchProfileMetadata, but also saves the
 // result to the sys.Store
-func (s *System) FetchOrStoreProfileMetadata(ctx context.Context,
+func (s *System) FetchOrStoreProfileMetadata(ctx context.T,
 	pubkey string) *ProfileMetadata {
 
 	pm, fromInternal := s.fetchProfileMetadata(ctx, pubkey)
@@ -75,7 +76,7 @@ func (s *System) FetchOrStoreProfileMetadata(ctx context.Context,
 	return pm
 }
 
-func (s *System) fetchProfileMetadata(ctx context.Context,
+func (s *System) fetchProfileMetadata(ctx context.T,
 	pubkey string) (pm *ProfileMetadata, fromInternal bool) {
 
 	if v, ok := s.MetadataCache.Get(pubkey); ok {
@@ -94,10 +95,10 @@ func (s *System) fetchProfileMetadata(ctx context.Context,
 			}
 		}
 	}
-	ctxRelays, cancel := context.WithTimeout(ctx, time.Second*2)
+	ctxRelays, cancel := context.Timeout(ctx, time.Second*2)
 	relays := s.FetchOutboxRelays(ctxRelays, pubkey)
 	cancel()
-	ctx, cancel = context.WithTimeout(ctx, time.Second*3)
+	ctx, cancel = context.Timeout(ctx, time.Second*3)
 	res := FetchProfileMetadata(ctx, s.Pool, pubkey, append(relays, s.MetadataRelays...)...)
 	cancel()
 	s.MetadataCache.SetWithTTL(pubkey, res, time.Hour*6)
@@ -106,7 +107,7 @@ func (s *System) fetchProfileMetadata(ctx context.Context,
 
 // FetchUserEvents fetches events from each users' outbox relays, grouping
 // queries when possible.
-func (s *System) FetchUserEvents(ctx context.Context,
+func (s *System) FetchUserEvents(ctx context.T,
 	f *filter.T) (r map[string][]*event.T, e error) {
 
 	var ff map[*relay.Relay]*filter.T

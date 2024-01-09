@@ -2,7 +2,6 @@ package relay
 
 import (
 	"bytes"
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -15,6 +14,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
+
+	btcec "github.com/Hubmakerlabs/replicatr/pkg/ec"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
@@ -23,7 +25,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	btcec "github.com/Hubmakerlabs/replicatr/pkg/ec"
 
 	"golang.org/x/net/websocket"
 )
@@ -68,7 +69,7 @@ func TestPublish(t *testing.T) {
 
 	// connect a client and send the text note
 	rl := MustRelayConnect(ws.URL)
-	status, _ := rl.Publish(context.Background(), textNote)
+	status, _ := rl.Publish(context.Bg(), textNote)
 	if status != PublishStatusSucceeded {
 		t.Errorf("published status is %d, not %d", status, PublishStatusSucceeded)
 	}
@@ -98,7 +99,7 @@ func TestPublishBlocked(t *testing.T) {
 
 	// connect a client and send a text note
 	rl := MustRelayConnect(ws.URL)
-	status, _ := rl.Publish(context.Background(), textNote)
+	status, _ := rl.Publish(context.Bg(), textNote)
 	if status != PublishStatusFailed {
 		t.Errorf("published status is %d, not %d", status, PublishStatusFailed)
 	}
@@ -120,7 +121,7 @@ func TestPublishWriteFailed(t *testing.T) {
 	rl := MustRelayConnect(ws.URL)
 	// Force brief period of time so that publish always fails on closed socket.
 	time.Sleep(1 * time.Millisecond)
-	status, e := rl.Publish(context.Background(), textNote)
+	status, e := rl.Publish(context.Bg(), textNote)
 	if status != PublishStatusFailed {
 		t.Errorf("published status is %d, not %d, err: %v", status, PublishStatusFailed, e)
 	}
@@ -139,7 +140,7 @@ func TestConnectContext(t *testing.T) {
 	defer ws.Close()
 
 	// relay client
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.Timeout(context.Bg(), 3*time.Second)
 	defer cancel()
 	r, e := RelayConnect(ctx, ws.URL)
 	if e != nil {
@@ -160,7 +161,7 @@ func TestConnectContextCanceled(t *testing.T) {
 	defer ws.Close()
 
 	// relay client
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.Cancel(context.Bg())
 	cancel() // make ctx expired
 	_, e := RelayConnect(ctx, ws.URL)
 	if !errors.Is(e, context.Canceled) {
@@ -175,9 +176,9 @@ func TestConnectWithOrigin(t *testing.T) {
 	defer ws.Close()
 
 	// relay client
-	r := New(context.Background(), normalize.URL(ws.URL))
+	r := New(context.Bg(), normalize.URL(ws.URL))
 	r.RequestHeader = http.Header{"origin": {"https://example.com"}}
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.Timeout(context.Bg(), 3*time.Second)
 	defer cancel()
 	e := r.Connect(ctx)
 	if e != nil {
@@ -214,7 +215,7 @@ func makeKeyPair(t *testing.T) (priv, pub string) {
 }
 
 func MustRelayConnect(url string) *Relay {
-	rl, e := RelayConnect(context.Background(), url)
+	rl, e := RelayConnect(context.Bg(), url)
 	if e != nil {
 		panic(e.Error())
 	}

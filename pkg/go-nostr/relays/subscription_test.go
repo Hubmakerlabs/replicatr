@@ -1,11 +1,12 @@
 package relays
 
 import (
-	"context"
 	"fmt"
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -19,7 +20,7 @@ func TestSubscribeBasic(t *testing.T) {
 	rl := MustRelayConnect(RELAY)
 	defer rl.Close()
 
-	sub, e := rl.Subscribe(context.Background(), filters.T{{Kinds: []int{event.KindTextNote}, Limit: 2}})
+	sub, e := rl.Subscribe(context.Bg(), filters.T{{Kinds: []int{event.KindTextNote}, Limit: 2}})
 	if e != nil {
 		t.Fatalf("subscription failed: %v", e)
 		return
@@ -60,7 +61,7 @@ func TestNestedSubscriptions(t *testing.T) {
 	n := atomic.Uint32{}
 
 	// fetch 2 replies to a note
-	sub, e := rl.Subscribe(context.Background(), filters.T{{Kinds: []int{event.KindTextNote}, Tags: filter.TagMap{"e": []string{"0e34a74f8547e3b95d52a2543719b109fd0312aba144e2ef95cba043f42fe8c5"}}, Limit: 3}})
+	sub, e := rl.Subscribe(context.Bg(), filters.T{{Kinds: []int{event.KindTextNote}, Tags: filter.TagMap{"e": []string{"0e34a74f8547e3b95d52a2543719b109fd0312aba144e2ef95cba043f42fe8c5"}}, Limit: 3}})
 	if e != nil {
 		t.Fatalf("subscription 1 failed: %v", e)
 		return
@@ -70,7 +71,7 @@ func TestNestedSubscriptions(t *testing.T) {
 		select {
 		case evt := <-sub.Events:
 			// now fetch author of this
-			sub, e := rl.Subscribe(context.Background(), filters.T{{Kinds: []int{event.KindProfileMetadata}, Authors: []string{evt.PubKey}, Limit: 1}})
+			sub, e := rl.Subscribe(context.Bg(), filters.T{{Kinds: []int{event.KindProfileMetadata}, Authors: []string{evt.PubKey}, Limit: 1}})
 			if e != nil {
 				t.Fatalf("subscription 2 failed: %v", e)
 				return
@@ -80,7 +81,7 @@ func TestNestedSubscriptions(t *testing.T) {
 				select {
 				case <-sub.Events:
 					// do another subscription here in "sync" mode, just so we're sure things are not blocking
-					rl.QuerySync(context.Background(), filter.T{Limit: 1})
+					rl.QuerySync(context.Bg(), filter.T{Limit: 1})
 
 					n.Add(1)
 					if n.Load() == 3 {

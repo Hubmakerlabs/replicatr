@@ -1,16 +1,17 @@
 package sdk
 
 import (
-	"context"
 	"fmt"
 	"sync"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 )
 
 func (sys *System) ExpandQueriesByAuthorAndRelays(
-	ctx context.Context,
+	ctx context.T,
 	f filter.T,
 ) (map[*relays.Relay]filter.T, error) {
 	n := len(f.Authors)

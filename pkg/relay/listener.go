@@ -1,8 +1,9 @@
 package relay
 
 import (
-	"context"
 	"fmt"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
@@ -17,7 +18,7 @@ var log = log2.GetStd()
 
 type Listener struct {
 	filters filters2.T
-	cancel  context.CancelCauseFunc
+	cancel  context.C
 }
 
 var listeners = xsync.NewTypedMapOf[*WebSocket, *xsync.MapOf[string, *Listener]](pointerHasher[WebSocket])
@@ -49,7 +50,7 @@ func GetListeningFilters() filters2.T {
 }
 
 func setListener(id subscriptionid.T, ws *WebSocket,
-	filters filters2.T, cancel context.CancelCauseFunc) {
+	filters filters2.T, cancel context.C) {
 
 	subs, _ := listeners.LoadOrCompute(ws,
 		func() *xsync.MapOf[string, *Listener] {

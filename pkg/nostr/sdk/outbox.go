@@ -1,16 +1,17 @@
 package sdk
 
 import (
-	"context"
 	"fmt"
 	"sync"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 )
 
 func (s *System) ExpandQueriesByAuthorAndRelays(
-	ctx context.Context,
+	ctx context.T,
 	f *filter.T,
 ) (filters map[*relay.Relay]*filter.T, e error) {
 

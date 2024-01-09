@@ -1,11 +1,11 @@
 package relays
 
 import (
-	"context"
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 )
 
 func MustRelayConnect(url string) *Relay {
-	rl, e := RelayConnect(context.Background(), url)
+	rl, e := RelayConnect(context.Bg(), url)
 	if e != nil {
 		panic(e.Error())
 	}

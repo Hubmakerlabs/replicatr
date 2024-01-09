@@ -1,9 +1,10 @@
 package badger
 
 import (
-	"context"
 	"encoding/binary"
 	"errors"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -11,7 +12,7 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *Backend) CountEvents(ctx context.Context, f *filter.T) (c int64, e error) {
+func (b *Backend) CountEvents(ctx context.T, f *filter.T) (c int64, e error) {
 	var queries []query
 	var extraFilter *filter.T
 	var since uint32

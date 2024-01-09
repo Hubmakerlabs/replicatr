@@ -1,21 +1,22 @@
 package nip11
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 )
 
-// Fetch fetches the NIP-11 RelayInformationDocument.
-func Fetch(ctx context.Context, u string) (info *RelayInformationDocument, e error) {
+// Fetch fetches the NIP-11 Info.
+func Fetch(ctx context.T, u string) (info *Info, e error) {
 	if _, ok := ctx.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, 7*time.Second)
+		var cancel context.F
+		ctx, cancel = context.Timeout(ctx, 7*time.Second)
 		defer cancel()
 	}
 
@@ -46,7 +47,7 @@ func Fetch(ctx context.Context, u string) (info *RelayInformationDocument, e err
 	}
 	defer resp.Body.Close()
 
-	info = &RelayInformationDocument{}
+	info = &Info{}
 	if e := json.NewDecoder(resp.Body).Decode(info); e != nil {
 		return nil, fmt.Errorf("invalid json: %w", e)
 	}

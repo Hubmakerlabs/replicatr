@@ -1,10 +1,11 @@
 package replicatr
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -26,17 +27,17 @@ const (
 
 // function types used in the relay state
 type (
-	RejectEvent               func(c context.Context, event *event.T) (reject bool, msg string)
-	RejectFilter              func(c context.Context, f *filter.T) (reject bool, msg string)
-	OverwriteFilter           func(c context.Context, f *filter.T)
-	OverwriteDeletionOutcome  func(c context.Context, target *event.T, del *event.T) (accept bool, msg string)
-	OverwriteResponseEvent    func(c context.Context, ev *event.T)
-	Events                    func(c context.Context, ev *event.T) error
-	Hook                      func(c context.Context)
-	OverwriteRelayInformation func(c context.Context, r *http.Request, info *nip11.RelayInformationDocument) *nip11.RelayInformationDocument
-	QueryEvents               func(c context.Context, f *filter.T) (eventC chan *event.T, e error)
-	CountEvents               func(c context.Context, f *filter.T) (cnt int64, e error)
-	OnEventSaved              func(c context.Context, ev *event.T)
+	RejectEvent               func(c context.T, event *event.T) (reject bool, msg string)
+	RejectFilter              func(c context.T, f *filter.T) (reject bool, msg string)
+	OverwriteFilter           func(c context.T, f *filter.T)
+	OverwriteDeletionOutcome  func(c context.T, target *event.T, del *event.T) (accept bool, msg string)
+	OverwriteResponseEvent    func(c context.T, ev *event.T)
+	Events                    func(c context.T, ev *event.T) error
+	Hook                      func(c context.T)
+	OverwriteRelayInformation func(c context.T, r *http.Request, info *nip11.Info) *nip11.Info
+	QueryEvents               func(c context.T, f *filter.T) (eventC chan *event.T, e error)
+	CountEvents               func(c context.T, f *filter.T) (cnt int64, e error)
+	OnEventSaved              func(c context.T, ev *event.T)
 )
 
 type Relay struct {
@@ -57,7 +58,7 @@ type Relay struct {
 	OnDisconnect             []Hook
 	OnEventSaved             []OnEventSaved
 	// editing info will affect
-	Info *nip11.RelayInformationDocument
+	Info *nip11.Info
 	*log2.Log
 	// for establishing websockets
 	upgrader websocket.Upgrader
@@ -77,7 +78,7 @@ type Relay struct {
 func NewRelay(appName string) (r *Relay) {
 	r = &Relay{
 		Log: log2.New(os.Stderr, appName, 0),
-		Info: &nip11.RelayInformationDocument{
+		Info: &nip11.Info{
 			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/replicatrd",
 			Version:       "n/a",
 			SupportedNIPs: make([]int, 0),

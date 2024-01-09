@@ -2,9 +2,10 @@ package badger
 
 import (
 	"container/heap"
-	"context"
 	"encoding/binary"
 	"fmt"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
@@ -26,7 +27,7 @@ type queryEvent struct {
 	query int
 }
 
-func (b BadgerBackend) QueryEvents(ctx context.Context, f *filter.T) (chan *event.T, error) {
+func (b BadgerBackend) QueryEvents(ctx context.T, f *filter.T) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
 	queries, extraFilter, since, e := prepareQueries(f)

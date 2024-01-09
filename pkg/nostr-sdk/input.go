@@ -1,7 +1,7 @@
 package sdk
 
 import (
-	"context"
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip05"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
@@ -10,7 +10,7 @@ import (
 )
 
 // InputToProfile turns any npub/nprofile/hex/nip05 input into a ProfilePointer (or nil).
-func InputToProfile(ctx context.Context, input string) *pointers.ProfilePointer {
+func InputToProfile(ctx context.T, input string) *pointers.ProfilePointer {
 	// handle if it is a hex string
 	if len(input) == 64 {
 		if _, e := hex.Dec(input); e == nil {

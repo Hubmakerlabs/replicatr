@@ -1,7 +1,6 @@
 package replicatr
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"errors"
@@ -9,6 +8,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/auth"
@@ -43,9 +44,9 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		Request:   r,
 		Challenge: hex.Enc(challenge),
 	}
-	c, cancel := context.WithCancel(
-		context.WithValue(
-			context.Background(),
+	c, cancel := context.Cancel(
+		context.Value(
+			context.Bg(),
 			wsKey, ws,
 		),
 	)
@@ -65,7 +66,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	go rl.websocketWatcher(c, kill, ticker, ws)
 }
 
-func (rl *Relay) websocketProcessMessages(message []byte, c context.Context, ws *WebSocket) {
+func (rl *Relay) websocketProcessMessages(message []byte, c context.T, ws *WebSocket) {
 	var e error
 	env := envelope.ParseMessage(message)
 	if env == nil {
@@ -144,9 +145,9 @@ func (rl *Relay) websocketProcessMessages(message []byte, c context.Context, ws 
 		wg := sync.WaitGroup{}
 		wg.Add(len(env.T))
 		// a context just for the "stored events" request handler
-		reqCtx, cancelReqCtx := context.WithCancelCause(c)
+		reqCtx, cancelReqCtx := context.CancelCause(c)
 		// expose subscription id in the context
-		reqCtx = context.WithValue(reqCtx, subscriptionIdKey, env.SubscriptionID)
+		reqCtx = context.Value(reqCtx, subscriptionIdKey, env.SubscriptionID)
 		// handle each filter separately -- dispatching events as they're loaded from databases
 		for _, f := range env.T {
 			e = rl.handleFilter(reqCtx, env.SubscriptionID, &wg, ws, &f)
@@ -198,7 +199,7 @@ func (rl *Relay) websocketProcessMessages(message []byte, c context.Context, ws 
 	}
 }
 
-func (rl *Relay) websocketReadMessages(c context.Context, kill func(),
+func (rl *Relay) websocketReadMessages(c context.T, kill func(),
 	ws *WebSocket, conn *websocket.Conn, r *http.Request) {
 
 	defer kill()
@@ -238,7 +239,7 @@ func (rl *Relay) websocketReadMessages(c context.Context, kill func(),
 	}
 }
 
-func (rl *Relay) websocketWatcher(c context.Context, kill func(), t *time.Ticker, ws *WebSocket) {
+func (rl *Relay) websocketWatcher(c context.T, kill func(), t *time.Ticker, ws *WebSocket) {
 	var e error
 	defer kill()
 	for {

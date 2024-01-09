@@ -1,9 +1,10 @@
 package relay
 
 import (
-	"context"
 	"errors"
 	"fmt"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -13,7 +14,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 )
 
-func (rl *Relay) AddEvent(ctx context.Context, evt *event.T) (e error) {
+func (rl *Relay) AddEvent(ctx context.T, evt *event.T) (e error) {
 	if evt == nil {
 		return errors.New("error: event is nil")
 	}
@@ -90,7 +91,7 @@ func (rl *Relay) AddEvent(ctx context.Context, evt *event.T) (e error) {
 	return nil
 }
 
-func (rl *Relay) handleDeleteRequest(ctx context.Context, evt *event.T) (e error) {
+func (rl *Relay) handleDeleteRequest(ctx context.T, evt *event.T) (e error) {
 	var ch chan *event.T
 	// event deletion -- nip09
 	for _, tag := range evt.Tags {

@@ -1,13 +1,14 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -19,7 +20,7 @@ import (
 )
 
 func main() {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.Timeout(context.Bg(), 3*time.Second)
 
 	// connect to relay
 	url := "wss://nostr.zebedee.cloud"
@@ -122,7 +123,7 @@ func main() {
 	ev.Content = strings.TrimSpace(content)
 	ev.Sign(sk)
 	for _, url := range []string{"wss://nostr.zebedee.cloud"} {
-		ctx := context.WithValue(context.Background(), "url", url)
+		ctx := context.Value(context.Bg(), "url", url)
 		rl, e := relays.RelayConnect(ctx, url)
 		if e != nil {
 			fmt.Println(e)

@@ -2,13 +2,14 @@ package relays
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/auth"
@@ -44,8 +45,8 @@ type Relay struct {
 	Subscriptions *xsync.MapOf[string, *Subscription]
 
 	ConnectionError         error
-	connectionContext       context.Context // will be canceled when the connection closes
-	connectionContextCancel context.CancelFunc
+	connectionContext       context.T // will be canceled when the connection closes
+	connectionContextCancel context.F
 
 	challenge                     string      // NIP-42 challenge, we only keep the last
 	notices                       chan string // NIP-01 NOTICEs
@@ -64,8 +65,8 @@ type writeRequest struct {
 }
 
 // NewRelay returns a new relay. The relay connection will be closed when the context is canceled.
-func NewRelay(ctx context.Context, url string, opts ...RelayOption) *Relay {
-	ctx, cancel := context.WithCancel(ctx)
+func NewRelay(ctx context.T, url string, opts ...RelayOption) *Relay {
+	ctx, cancel := context.Cancel(ctx)
 	r := &Relay{
 		URL:                           normalize.URL(url),
 		connectionContext:             ctx,
@@ -94,13 +95,14 @@ func NewRelay(ctx context.Context, url string, opts ...RelayOption) *Relay {
 // RelayConnect returns a relay object connected to url.
 // Once successfully connected, cancelling ctx has no effect.
 // To close the connection, call r.Close().
-func RelayConnect(ctx context.Context, url string, opts ...RelayOption) (*Relay, error) {
-	r := NewRelay(context.Background(), url, opts...)
+func RelayConnect(ctx context.T, url string, opts ...RelayOption) (*Relay, error) {
+	r := NewRelay(context.Bg(), url, opts...)
 	e := r.Connect(ctx)
 	return r, e
 }
 
 // When instantiating relay connections, some options may be passed.
+
 // RelayOption is the type of the argument passed for that.
 type RelayOption interface {
 	IsRelayOption()
@@ -120,7 +122,7 @@ func (r *Relay) String() string {
 }
 
 // Context retrieves the context that is associated with this relay connection.
-func (r *Relay) Context() context.Context { return r.connectionContext }
+func (r *Relay) Context() context.T { return r.connectionContext }
 
 // IsConnected returns true if the connection to this relay seems to be active.
 func (r *Relay) IsConnected() bool { return r.connectionContext.Err() == nil }
@@ -133,7 +135,7 @@ func (r *Relay) IsConnected() bool { return r.connectionContext.Err() == nil }
 // The underlying relay connection will use a background context. If you want to
 // pass a custom context to the underlying relay connection, use NewRelay() and
 // then Relay.Connect().
-func (r *Relay) Connect(ctx context.Context) error {
+func (r *Relay) Connect(ctx context.T) error {
 	if r.connectionContext == nil || r.Subscriptions == nil {
 		return fmt.Errorf("relay must be initialized with a call to NewRelay()")
 	}
@@ -144,8 +146,8 @@ func (r *Relay) Connect(ctx context.Context) error {
 
 	if _, ok := ctx.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, 7*time.Second)
+		var cancel context.F
+		ctx, cancel = context.Timeout(ctx, 7*time.Second)
 		defer cancel()
 	}
 
@@ -296,12 +298,12 @@ func (r *Relay) Write(msg []byte) <-chan error {
 }
 
 // Publish sends an "EVENT" command to the relay r as in NIP-01 and waits for an OK response.
-func (r *Relay) Publish(ctx context.Context, evt event.T) error {
-	return r.publish(ctx, evt.ID, &event.Envelope{T: evt})
+func (r *Relay) Publish(ctx context.T, ev event.T) error {
+	return r.publish(ctx, ev.ID, &event.Envelope{T: ev})
 }
 
 // Auth sends an "AUTH" command client->relay as in NIP-42 and waits for an OK response.
-func (r *Relay) Auth(ctx context.Context, sign func(event *event.T) error) error {
+func (r *Relay) Auth(ctx context.T, sign func(ev *event.T) error) error {
 	authEvent := event.T{
 		CreatedAt: timestamp.Now(),
 		Kind:      event.KindClientAuthentication,
@@ -319,17 +321,17 @@ func (r *Relay) Auth(ctx context.Context, sign func(event *event.T) error) error
 }
 
 // publish can be used both for EVENT and for AUTH
-func (r *Relay) publish(ctx context.Context, id string, env envelopes.E) error {
+func (r *Relay) publish(ctx context.T, id string, env envelopes.E) error {
 	var e error
-	var cancel context.CancelFunc
+	var cancel context.F
 
 	if _, ok := ctx.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
-		ctx, cancel = context.WithTimeoutCause(ctx, 7*time.Second, fmt.Errorf("given up waiting for an OK"))
+		ctx, cancel = context.TimeoutCause(ctx, 7*time.Second, fmt.Errorf("given up waiting for an OK"))
 		defer cancel()
 	} else {
 		// otherwise make the context cancellable so we can stop everything upon receiving an "OK"
-		ctx, cancel = context.WithCancel(ctx)
+		ctx, cancel = context.Cancel(ctx)
 		defer cancel()
 	}
 
@@ -370,9 +372,9 @@ func (r *Relay) publish(ctx context.Context, id string, env envelopes.E) error {
 // Events are returned through the channel sub.Events.
 // The subscription is closed when context ctx is cancelled ("CLOSE" in NIP-01).
 //
-// Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.Context` will be canceled at some point.
+// Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.T` will be canceled at some point.
 // Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) Subscribe(ctx context.Context, filters filters.T, opts ...SubscriptionOption) (*Subscription, error) {
+func (r *Relay) Subscribe(ctx context.T, filters filters.T, opts ...SubscriptionOption) (*Subscription, error) {
 	sub := r.PrepareSubscription(ctx, filters, opts...)
 
 	if e := sub.Fire(); e != nil {
@@ -384,15 +386,15 @@ func (r *Relay) Subscribe(ctx context.Context, filters filters.T, opts ...Subscr
 
 // PrepareSubscription creates a subscription, but doesn't fire it.
 //
-// Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.Context` will be canceled at some point.
+// Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.T` will be canceled at some point.
 // Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) PrepareSubscription(ctx context.Context, filters filters.T, opts ...SubscriptionOption) *Subscription {
+func (r *Relay) PrepareSubscription(ctx context.T, filters filters.T, opts ...SubscriptionOption) *Subscription {
 	if r.Connection == nil {
 		panic(fmt.Errorf("must call .Connect() first before calling .Subscribe()"))
 	}
 
 	current := subscriptionIDCounter.Add(1)
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.Cancel(ctx)
 
 	sub := &Subscription{
 		Relay:             r,
@@ -421,7 +423,7 @@ func (r *Relay) PrepareSubscription(ctx context.Context, filters filters.T, opts
 	return sub
 }
 
-func (r *Relay) QuerySync(ctx context.Context, f filter.T, opts ...SubscriptionOption) ([]*event.T, error) {
+func (r *Relay) QuerySync(ctx context.T, f filter.T, opts ...SubscriptionOption) ([]*event.T, error) {
 	sub, e := r.Subscribe(ctx, filters.T{f}, opts...)
 	if e != nil {
 		return nil, e
@@ -431,8 +433,8 @@ func (r *Relay) QuerySync(ctx context.Context, f filter.T, opts ...SubscriptionO
 
 	if _, ok := ctx.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, 7*time.Second)
+		var cancel context.F
+		ctx, cancel = context.Timeout(ctx, 7*time.Second)
 		defer cancel()
 	}
 
@@ -453,7 +455,7 @@ func (r *Relay) QuerySync(ctx context.Context, f filter.T, opts ...SubscriptionO
 	}
 }
 
-func (r *Relay) Count(ctx context.Context, filters filters.T, opts ...SubscriptionOption) (int64, error) {
+func (r *Relay) Count(ctx context.T, filters filters.T, opts ...SubscriptionOption) (int64, error) {
 	sub := r.PrepareSubscription(ctx, filters, opts...)
 	sub.countResult = make(chan int64)
 
@@ -465,8 +467,8 @@ func (r *Relay) Count(ctx context.Context, filters filters.T, opts ...Subscripti
 
 	if _, ok := ctx.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, 7*time.Second)
+		var cancel context.F
+		ctx, cancel = context.Timeout(ctx, 7*time.Second)
 		defer cancel()
 	}
 

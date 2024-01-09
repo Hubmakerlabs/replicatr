@@ -1,7 +1,7 @@
 package policies
 
 import (
-	"context"
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay"
@@ -10,7 +10,7 @@ import (
 
 // RejectKind04Snoopers prevents reading NIP-04 messages from people not
 // involved in the conversation.
-func RejectKind04Snoopers(ctx context.Context, f filter.T) (bool, string) {
+func RejectKind04Snoopers(ctx context.T, f filter.T) (bool, string) {
 	// prevent kind-4 events from being returned to unauthed users,
 	//   only when authentication is a thing
 	if !slices.Contains(f.Kinds, 4) {

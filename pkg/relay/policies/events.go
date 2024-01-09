@@ -1,7 +1,7 @@
 package policies
 
 import (
-	"context"
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
@@ -16,7 +16,7 @@ import (
 //
 // If ignoreKinds is given this restriction will not apply to these kinds (useful for allowing a bigger).
 // If onlyKinds is given then all other kinds will be ignored.
-func PreventTooManyIndexableTags(max int, ignoreKinds kinds.T, onlyKinds kinds.T) func(context.Context, *event.T) (bool, string) {
+func PreventTooManyIndexableTags(max int, ignoreKinds kinds.T, onlyKinds kinds.T) func(context.T, *event.T) (bool, string) {
 	ignore := func(kind kind.T) bool { return false }
 	if len(ignoreKinds) > 0 {
 		ignore = func(kind kind.T) bool {
@@ -31,7 +31,7 @@ func PreventTooManyIndexableTags(max int, ignoreKinds kinds.T, onlyKinds kinds.T
 		}
 	}
 
-	return func(ctx context.Context, event *event.T) (reject bool, msg string) {
+	return func(ctx context.T, event *event.T) (reject bool, msg string) {
 		if ignore(event.Kind) {
 			return false, ""
 		}
@@ -50,8 +50,8 @@ func PreventTooManyIndexableTags(max int, ignoreKinds kinds.T, onlyKinds kinds.T
 }
 
 // PreventLargeTags rejects events that have indexable tag values greater than maxTagValueLen.
-func PreventLargeTags(maxTagValueLen int) func(context.Context, *event.T) (bool, string) {
-	return func(ctx context.Context, event *event.T) (reject bool, msg string) {
+func PreventLargeTags(maxTagValueLen int) func(context.T, *event.T) (bool, string) {
+	return func(ctx context.T, event *event.T) (reject bool, msg string) {
 		for _, tag := range event.Tags {
 			if len(tag) > 1 && len(tag[0]) == 1 {
 				if len(tag[1]) > maxTagValueLen {
@@ -67,7 +67,7 @@ func PreventLargeTags(maxTagValueLen int) func(context.Context, *event.T) (bool,
 // any events with kinds different than the specified ones.
 //
 // todo: this range minimum doesn't look like it would ever change from zero
-func RestrictToSpecifiedKinds(kinds ...kind.T) func(context.Context, *event.T) (bool, string) {
+func RestrictToSpecifiedKinds(kinds ...kind.T) func(context.T, *event.T) (bool, string) {
 	var maximum, minimum kind.T
 	for _, kind := range kinds {
 		if kind > maximum {
@@ -79,7 +79,7 @@ func RestrictToSpecifiedKinds(kinds ...kind.T) func(context.Context, *event.T) (
 		}
 	}
 
-	return func(ctx context.Context, event *event.T) (reject bool, msg string) {
+	return func(ctx context.T, event *event.T) (reject bool, msg string) {
 		// these are cheap and very questionable optimizations, but they exist for a reason:
 		// we would have to ensure that the kind number is within the bounds of a uint16 anyway
 		if event.Kind > maximum {
@@ -97,8 +97,8 @@ func RestrictToSpecifiedKinds(kinds ...kind.T) func(context.Context, *event.T) (
 	}
 }
 
-func PreventTimestampsInThePast(thresholdSeconds timestamp.T) func(context.Context, *event.T) (bool, string) {
-	return func(ctx context.Context, event *event.T) (reject bool, msg string) {
+func PreventTimestampsInThePast(thresholdSeconds timestamp.T) func(context.T, *event.T) (bool, string) {
+	return func(ctx context.T, event *event.T) (reject bool, msg string) {
 		if timestamp.Now()-event.CreatedAt > thresholdSeconds {
 			return true, "event too old"
 		}
@@ -106,8 +106,8 @@ func PreventTimestampsInThePast(thresholdSeconds timestamp.T) func(context.Conte
 	}
 }
 
-func PreventTimestampsInTheFuture(thresholdSeconds timestamp.T) func(context.Context, *event.T) (bool, string) {
-	return func(ctx context.Context, event *event.T) (reject bool, msg string) {
+func PreventTimestampsInTheFuture(thresholdSeconds timestamp.T) func(context.T, *event.T) (bool, string) {
+	return func(ctx context.T, event *event.T) (reject bool, msg string) {
 		if event.CreatedAt-timestamp.Now() > thresholdSeconds {
 			return true, "event too much in the future"
 		}

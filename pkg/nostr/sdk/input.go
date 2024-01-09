@@ -1,7 +1,7 @@
 package sdk
 
 import (
-	"context"
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
@@ -13,7 +13,7 @@ import (
 
 // InputToProfile turns any npub/nprofile/hex/nip5 input into a ProfilePointer
 // (or nil).
-func InputToProfile(ctx context.Context, input string) (pp *pointers.Profile) {
+func InputToProfile(ctx context.T, input string) (pp *pointers.Profile) {
 	var e error
 	// handle if it is a hex string
 	if len(input) == 64 {

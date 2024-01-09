@@ -1,11 +1,12 @@
 package nip5
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
@@ -24,7 +25,7 @@ type WellKnownResponse struct {
 	Relays key2RelaysMap `json:"relays"` // NIP-35
 }
 
-func QueryIdentifier(ctx context.Context, fullname string) (pp *pointers.Profile, e error) {
+func QueryIdentifier(ctx context.T, fullname string) (pp *pointers.Profile, e error) {
 	spl := strings.Split(fullname, "@")
 	var name, domain string
 	switch len(spl) {

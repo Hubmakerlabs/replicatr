@@ -1,11 +1,12 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -21,7 +22,7 @@ func doProfile(cCtx *cli.Context) (e error) {
 	j := cCtx.Bool("json")
 
 	cfg := cCtx.App.Metadata["config"].(*Config)
-	rl := cfg.FindRelay(context.Background(), RelayPerms{Read: true})
+	rl := cfg.FindRelay(context.Bg(), RelayPerms{Read: true})
 	if rl == nil {
 		return errors.New("cannot connect relays")
 	}

@@ -2,7 +2,7 @@ package nip11
 
 import "golang.org/x/exp/slices"
 
-type RelayInformationDocument struct {
+type Info struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 	PubKey        string `json:"pubkey"`
@@ -11,17 +11,17 @@ type RelayInformationDocument struct {
 	Software      string `json:"software"`
 	Version       string `json:"version"`
 
-	Limitation     *RelayLimitationDocument `json:"limitation,omitempty"`
-	RelayCountries []string                 `json:"relay_countries,omitempty"`
+	Limitation     *Limits  `json:"limitation,omitempty"`
+	RelayCountries []string `json:"relay_countries,omitempty"`
 	LanguageTags   []string                 `json:"language_tags,omitempty"`
 	Tags           []string                 `json:"tags,omitempty"`
 	PostingPolicy  string                   `json:"posting_policy,omitempty"`
-	PaymentsURL    string                   `json:"payments_url,omitempty"`
-	Fees           *RelayFeesDocument       `json:"fees,omitempty"`
-	Icon           string                   `json:"icon"`
+	PaymentsURL    string `json:"payments_url,omitempty"`
+	Fees           *Fees  `json:"fees,omitempty"`
+	Icon           string `json:"icon"`
 }
 
-func (info *RelayInformationDocument) AddSupportedNIP(number int) {
+func (info *Info) AddSupportedNIP(number int) {
 	idx, exists := slices.BinarySearch(info.SupportedNIPs, number)
 	if exists {
 		return
@@ -32,7 +32,7 @@ func (info *RelayInformationDocument) AddSupportedNIP(number int) {
 	info.SupportedNIPs[idx] = number
 }
 
-type RelayLimitationDocument struct {
+type Limits struct {
 	MaxMessageLength int  `json:"max_message_length,omitempty"`
 	MaxSubscriptions int  `json:"max_subscriptions,omitempty"`
 	MaxFilters       int  `json:"max_filters,omitempty"`
@@ -46,7 +46,7 @@ type RelayLimitationDocument struct {
 	RestrictedWrites bool `json:"restricted_writes"`
 }
 
-type RelayFeesDocument struct {
+type Fees struct {
 	Admission []struct {
 		Amount int    `json:"amount"`
 		Unit   string `json:"unit"`

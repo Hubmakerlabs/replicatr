@@ -1,7 +1,6 @@
 package relay
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -10,6 +9,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
@@ -66,9 +67,9 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		Challenge: hex.EncodeToString(challenge),
 		Authed:    make(chan struct{}),
 	}
-	ctx, cancel := context.WithCancel(
-		context.WithValue(
-			context.Background(),
+	ctx, cancel := context.Cancel(
+		context.Value(
+			context.Bg(),
 			WebsocketContextKey, ws,
 		),
 	)
@@ -195,9 +196,9 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					ee := sync.WaitGroup{}
 					ee.Add(len(env.T))
 					// a context just for the "stored events" request handler
-					reqCtx, cancelReqCtx := context.WithCancelCause(ctx)
+					reqCtx, cancelReqCtx := context.CancelCause(ctx)
 					// expose subscription id in the context
-					reqCtx = context.WithValue(reqCtx, SubscriptionIDContextKey,
+					reqCtx = context.Value(reqCtx, SubscriptionIDContextKey,
 						env.SubscriptionID)
 					// handle each filter separately -- dispatching events as
 					// they're loaded from databases

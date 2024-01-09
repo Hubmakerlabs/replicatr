@@ -1,11 +1,12 @@
 package relay
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"sync"
 	"sync/atomic"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countrequest"
@@ -29,10 +30,10 @@ type Subscription struct {
 	// the EndOfStoredEvents channel gets closed when an EOSE comes for that subscription
 	EndOfStoredEvents chan struct{}
 	// Context will be .Done() when the subscription ends
-	Context context.Context
+	Context context.T
 	Live    atomic.Bool
 	Eosed   atomic.Bool
-	Cancel  context.CancelFunc
+	Cancel  context.F
 	// this keeps track of the events we've received before the EOSE that we
 	// must dispatch before closing the EndOfStoredEvents channel
 	Storedwg sync.WaitGroup
@@ -133,7 +134,7 @@ func (sub *Subscription) Close() {
 
 // Sub sets sub.T and then calls sub.Fire(ctx).
 // The subscription will be closed if the context expires.
-func (sub *Subscription) Sub(_ context.Context, filters filters.T) {
+func (sub *Subscription) Sub(_ context.T, filters filters.T) {
 	sub.Filters = filters
 	if e := sub.Fire(); log.Fail(e) {
 	}

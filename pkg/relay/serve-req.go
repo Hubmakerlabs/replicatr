@@ -1,9 +1,10 @@
 package relay
 
 import (
-	"context"
 	"errors"
 	"sync"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
 	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
@@ -13,7 +14,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
-func (rl *Relay) handleRequest(ctx context.Context, id subscriptionid.T,
+func (rl *Relay) handleRequest(ctx context.T, id subscriptionid.T,
 	eose *sync.WaitGroup, ws *WebSocket, f *filter.T) (e error) {
 
 	defer eose.Done()
@@ -58,7 +59,7 @@ func (rl *Relay) handleRequest(ctx context.Context, id subscriptionid.T,
 	return nil
 }
 
-func (rl *Relay) handleCountRequest(ctx context.Context, ws *WebSocket, f *filter.T) int64 {
+func (rl *Relay) handleCountRequest(ctx context.T, ws *WebSocket, f *filter.T) int64 {
 	// overwrite the filter (for example, to eliminate some kinds or tags that
 	// we know we don't support)
 	for _, ovw := range rl.OverwriteCountFilter {

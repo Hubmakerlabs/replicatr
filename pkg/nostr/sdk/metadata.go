@@ -1,9 +1,10 @@
 package sdk
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
@@ -36,7 +37,7 @@ func (p ProfileMetadata) Npub() string {
 	return v
 }
 
-func (p ProfileMetadata) Nprofile(ctx context.Context, sys *System,
+func (p ProfileMetadata) Nprofile(ctx context.T, sys *System,
 	nrelays int) string {
 
 	v, e := nip19.EncodeProfile(p.PubKey,
@@ -56,10 +57,10 @@ func (p ProfileMetadata) ShortName() string {
 	return npub[0:7] + "…" + npub[58:]
 }
 
-func FetchProfileMetadata(ctx context.Context, pool *pool.SimplePool,
+func FetchProfileMetadata(ctx context.T, pool *pool.SimplePool,
 	pubkey string, relays ...string) (pm *ProfileMetadata) {
 
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.Cancel(ctx)
 	defer cancel()
 	ch := pool.SubManyEose(ctx, relays, filters.T{
 		{

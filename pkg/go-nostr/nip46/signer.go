@@ -46,7 +46,7 @@ func (s Session) MakeResponse(
 	requester string,
 	result string,
 	e error,
-) (resp Response, evt event.T, error error) {
+) (resp Response, ev event.T, err error) {
 	if e != nil {
 		resp = Response{
 			ID:    id,
@@ -60,17 +60,18 @@ func (s Session) MakeResponse(
 	}
 
 	jresp, _ := json.Marshal(resp)
-	ciphertext, e := nip04.Encrypt(string(jresp), s.SharedKey)
+	var ciphertext string
+	ciphertext, e = nip04.Encrypt(string(jresp), s.SharedKey)
 	if e != nil {
-		return resp, evt, fmt.Errorf("failed to encrypt result: %w", e)
+		return resp, ev, fmt.Errorf("failed to encrypt result: %w", e)
 	}
-	evt.Content = ciphertext
+	ev.Content = ciphertext
 
-	evt.CreatedAt = timestamp.Now()
-	evt.Kind = event.KindNostrConnect
-	evt.Tags = tags.Tags{tags.Tag{"p", requester}}
+	ev.CreatedAt = timestamp.Now()
+	ev.Kind = event.KindNostrConnect
+	ev.Tags = tags.Tags{tags.Tag{"p", requester}}
 
-	return resp, evt, nil
+	return resp, ev, nil
 }
 
 type Signer struct {

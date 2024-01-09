@@ -55,12 +55,12 @@ func TestBinaryEncode(t *testing.T) {
 		if e != nil {
 			t.Fatalf("failed to encode binary: %s", e)
 		}
-		var evt event.T
-		if e := Unmarshal(bevt, &evt); e != nil {
+		var ev event.T
+		if e := Unmarshal(bevt, &ev); e != nil {
 			t.Fatalf("error unmarshalling binary: %s", e)
 		}
 		checkParsedCorrectly(t, &pevt, jevt)
-		checkParsedCorrectly(t, &evt, jevt)
+		checkParsedCorrectly(t, &ev, jevt)
 	}
 }
 

@@ -1,8 +1,9 @@
 package sdk
 
 import (
-	"context"
 	"encoding/json"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
@@ -17,8 +18,8 @@ type Relay struct {
 	Outbox bool
 }
 
-func FetchRelaysForPubkey(ctx context.Context, pool *pools.SimplePool, pubkey string, relays ...string) []Relay {
-	ctx, cancel := context.WithCancel(ctx)
+func FetchRelaysForPubkey(ctx context.T, pool *pools.SimplePool, pubkey string, relays ...string) []Relay {
+	ctx, cancel := context.Cancel(ctx)
 	defer cancel()
 
 	ch := pool.SubManyEose(ctx, relays, filters.T{
