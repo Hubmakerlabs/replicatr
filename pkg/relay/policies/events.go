@@ -31,7 +31,7 @@ func PreventTooManyIndexableTags(max int, ignoreKinds kinds.T, onlyKinds kinds.T
 		}
 	}
 
-	return func(ctx context.T, event *event.T) (reject bool, msg string) {
+	return func(c context.T, event *event.T) (reject bool, msg string) {
 		if ignore(event.Kind) {
 			return false, ""
 		}
@@ -51,7 +51,7 @@ func PreventTooManyIndexableTags(max int, ignoreKinds kinds.T, onlyKinds kinds.T
 
 // PreventLargeTags rejects events that have indexable tag values greater than maxTagValueLen.
 func PreventLargeTags(maxTagValueLen int) func(context.T, *event.T) (bool, string) {
-	return func(ctx context.T, event *event.T) (reject bool, msg string) {
+	return func(c context.T, event *event.T) (reject bool, msg string) {
 		for _, tag := range event.Tags {
 			if len(tag) > 1 && len(tag[0]) == 1 {
 				if len(tag[1]) > maxTagValueLen {
@@ -79,7 +79,7 @@ func RestrictToSpecifiedKinds(kinds ...kind.T) func(context.T, *event.T) (bool, 
 		}
 	}
 
-	return func(ctx context.T, event *event.T) (reject bool, msg string) {
+	return func(c context.T, event *event.T) (reject bool, msg string) {
 		// these are cheap and very questionable optimizations, but they exist for a reason:
 		// we would have to ensure that the kind number is within the bounds of a uint16 anyway
 		if event.Kind > maximum {
@@ -98,7 +98,7 @@ func RestrictToSpecifiedKinds(kinds ...kind.T) func(context.T, *event.T) (bool, 
 }
 
 func PreventTimestampsInThePast(thresholdSeconds timestamp.T) func(context.T, *event.T) (bool, string) {
-	return func(ctx context.T, event *event.T) (reject bool, msg string) {
+	return func(c context.T, event *event.T) (reject bool, msg string) {
 		if timestamp.Now()-event.CreatedAt > thresholdSeconds {
 			return true, "event too old"
 		}
@@ -107,7 +107,7 @@ func PreventTimestampsInThePast(thresholdSeconds timestamp.T) func(context.T, *e
 }
 
 func PreventTimestampsInTheFuture(thresholdSeconds timestamp.T) func(context.T, *event.T) (bool, string) {
-	return func(ctx context.T, event *event.T) (reject bool, msg string) {
+	return func(c context.T, event *event.T) (reject bool, msg string) {
 		if event.CreatedAt-timestamp.Now() > thresholdSeconds {
 			return true, "event too much in the future"
 		}

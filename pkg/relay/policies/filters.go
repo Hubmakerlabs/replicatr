@@ -10,7 +10,7 @@ import (
 )
 
 // NoComplexFilters disallows filters with more than 2 tags.
-func NoComplexFilters(ctx context.T, f filter.T) (reject bool, msg string) {
+func NoComplexFilters(c context.T, f filter.T) (reject bool, msg string) {
 	items := len(f.Tags) + len(f.Kinds)
 
 	if items > 4 && len(f.Tags) > 2 {
@@ -21,12 +21,12 @@ func NoComplexFilters(ctx context.T, f filter.T) (reject bool, msg string) {
 }
 
 // NoEmptyFilters disallows filters that don't have at least a tag, a kind, an author or an id.
-func NoEmptyFilters(ctx context.T, f filter.T) (reject bool, msg string) {
-	c := len(f.Kinds) + len(f.IDs) + len(f.Authors)
+func NoEmptyFilters(c context.T, f filter.T) (reject bool, msg string) {
+	cs := len(f.Kinds) + len(f.IDs) + len(f.Authors)
 	for _, tagItems := range f.Tags {
-		c += len(tagItems)
+		cs += len(tagItems)
 	}
-	if c == 0 {
+	if cs == 0 {
 		return true, "can't handle empty filters"
 	}
 	return false, ""
@@ -34,24 +34,24 @@ func NoEmptyFilters(ctx context.T, f filter.T) (reject bool, msg string) {
 
 // AntiSyncBots tries to prevent people from syncing kind:1s from this relay to else by always
 // requiring an author parameter at least.
-func AntiSyncBots(ctx context.T, f filter.T) (reject bool, msg string) {
+func AntiSyncBots(c context.T, f filter.T) (reject bool, msg string) {
 	return (len(f.Kinds) == 0 || slices.Contains(f.Kinds, 1)) &&
 		len(f.Authors) == 0, "an author must be specified to get their kind:1 notes"
 }
 
-func NoSearchQueries(ctx context.T, f filter.T) (reject bool, msg string) {
+func NoSearchQueries(c context.T, f filter.T) (reject bool, msg string) {
 	if f.Search != "" {
 		return true, "search is not supported"
 	}
 	return false, ""
 }
 
-func RemoveSearchQueries(ctx context.T, f *filter.T) {
+func RemoveSearchQueries(c context.T, f *filter.T) {
 	f.Search = ""
 }
 
 func RemoveAllButKinds(kinds ...uint16) func(context.T, *filter.T) {
-	return func(ctx context.T, f *filter.T) {
+	return func(c context.T, f *filter.T) {
 		if n := len(f.Kinds); n > 0 {
 			newKinds := make(kinds2.T, 0, n)
 			for i := 0; i < n; i++ {
@@ -65,7 +65,7 @@ func RemoveAllButKinds(kinds ...uint16) func(context.T, *filter.T) {
 }
 
 func RemoveAllButTags(tagNames ...string) func(context.T, *filter.T) {
-	return func(ctx context.T, f *filter.T) {
+	return func(c context.T, f *filter.T) {
 		for tagName := range f.Tags {
 			if !slices.Contains(tagNames, tagName) {
 				delete(f.Tags, tagName)

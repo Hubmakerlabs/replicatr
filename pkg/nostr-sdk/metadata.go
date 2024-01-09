@@ -32,8 +32,8 @@ func (p ProfileMetadata) Npub() string {
 	return v
 }
 
-func (p ProfileMetadata) Nprofile(ctx context.T, sys *System, nrelays int) string {
-	v, _ := nip19.EncodeProfile(p.PubKey, sys.FetchOutboxRelays(ctx, p.PubKey))
+func (p ProfileMetadata) Nprofile(c context.T, sys *System, nrelays int) string {
+	v, _ := nip19.EncodeProfile(p.PubKey, sys.FetchOutboxRelays(c, p.PubKey))
 	return v
 }
 
@@ -48,11 +48,11 @@ func (p ProfileMetadata) ShortName() string {
 	return npub[0:7] + "…" + npub[58:]
 }
 
-func FetchProfileMetadata(ctx context.T, pool *pools.SimplePool, pubkey string, relays ...string) ProfileMetadata {
-	ctx, cancel := context.Cancel(ctx)
+func FetchProfileMetadata(c context.T, pool *pools.SimplePool, pubkey string, relays ...string) ProfileMetadata {
+	c, cancel := context.Cancel(c)
 	defer cancel()
 
-	ch := pool.SubManyEose(ctx, relays, filters.T{
+	ch := pool.SubManyEose(c, relays, filters.T{
 		{
 			Kinds:   []int{event.KindProfileMetadata},
 			Authors: []string{pubkey},

@@ -27,7 +27,7 @@ type queryEvent struct {
 	query int
 }
 
-func (b BadgerBackend) QueryEvents(ctx context.T, f *filter.T) (chan *event.T, error) {
+func (b BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
 	queries, extraFilter, since, e := prepareQueries(f)

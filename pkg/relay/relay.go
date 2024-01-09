@@ -45,22 +45,22 @@ func New() *Relay {
 type Relay struct {
 	ServiceURL string
 
-	RejectEvent               []func(ctx context.T, ev *event.T) (reject bool, msg string)
-	RejectFilter              []func(ctx context.T, f *filter.T) (reject bool, msg string)
-	RejectCountFilter         []func(ctx context.T, f *filter.T) (reject bool, msg string)
-	OverwriteDeletionOutcome  []func(ctx context.T, target *event.T, deletion *event.T) (acceptDeletion bool, msg string)
-	OverwriteResponseEvent    []func(ctx context.T, ev *event.T)
-	OverwriteFilter           []func(ctx context.T, f *filter.T)
-	OverwriteCountFilter      []func(ctx context.T, f *filter.T)
-	OverwriteRelayInformation []func(ctx context.T, r *http.Request, info *relayinfo.T) *relayinfo.T
-	StoreEvent                []func(ctx context.T, ev *event.T) error
-	DeleteEvent               []func(ctx context.T, ev *event.T) error
-	QueryEvents               []func(ctx context.T, f *filter.T) (chan *event.T, error)
-	CountEvents               []func(ctx context.T, f *filter.T) (int64, error)
-	OnAuth                    []func(ctx context.T, pubkey string)
-	OnConnect                 []func(ctx context.T)
-	OnDisconnect              []func(ctx context.T)
-	OnEventSaved              []func(ctx context.T, ev *event.T)
+	RejectEvent               []func(c context.T, ev *event.T) (reject bool, msg string)
+	RejectFilter              []func(c context.T, f *filter.T) (reject bool, msg string)
+	RejectCountFilter         []func(c context.T, f *filter.T) (reject bool, msg string)
+	OverwriteDeletionOutcome  []func(c context.T, target *event.T, deletion *event.T) (acceptDeletion bool, msg string)
+	OverwriteResponseEvent    []func(c context.T, ev *event.T)
+	OverwriteFilter           []func(c context.T, f *filter.T)
+	OverwriteCountFilter      []func(c context.T, f *filter.T)
+	OverwriteRelayInformation []func(c context.T, r *http.Request, info *relayinfo.T) *relayinfo.T
+	StoreEvent                []func(c context.T, ev *event.T) error
+	DeleteEvent               []func(c context.T, ev *event.T) error
+	QueryEvents               []func(c context.T, f *filter.T) (chan *event.T, error)
+	CountEvents               []func(c context.T, f *filter.T) (int64, error)
+	OnAuth                    []func(c context.T, pubkey string)
+	OnConnect                 []func(c context.T)
+	OnDisconnect              []func(c context.T)
+	OnEventSaved              []func(c context.T, ev *event.T)
 
 	// editing info will affect
 	Info *relayinfo.T

@@ -10,7 +10,7 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *BadgerBackend) SaveEvent(ctx context.T, evt *event.T) (e error) {
+func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (e error) {
 	return b.Update(func(txn *badger.Txn) (e error) {
 		// query event by id to ensure we don't save duplicates
 		id, _ := hex.Dec(evt.ID)

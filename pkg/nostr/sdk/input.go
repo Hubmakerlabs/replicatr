@@ -13,7 +13,7 @@ import (
 
 // InputToProfile turns any npub/nprofile/hex/nip5 input into a ProfilePointer
 // (or nil).
-func InputToProfile(ctx context.T, input string) (pp *pointers.Profile) {
+func InputToProfile(c context.T, input string) (pp *pointers.Profile) {
 	var e error
 	// handle if it is a hex string
 	if len(input) == 64 {
@@ -39,7 +39,7 @@ func InputToProfile(ctx context.T, input string) (pp *pointers.Profile) {
 		return
 	}
 	// handle nip5 ids, if that's the case
-	if pp, e = nip5.QueryIdentifier(ctx, input); log.D.Chk(e) {
+	if pp, e = nip5.QueryIdentifier(c, input); log.D.Chk(e) {
 		return
 	}
 	if pp != nil {

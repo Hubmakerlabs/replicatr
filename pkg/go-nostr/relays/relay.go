@@ -65,8 +65,8 @@ type writeRequest struct {
 }
 
 // NewRelay returns a new relay. The relay connection will be closed when the context is canceled.
-func NewRelay(ctx context.T, url string, opts ...RelayOption) *Relay {
-	ctx, cancel := context.Cancel(ctx)
+func NewRelay(c context.T, url string, opts ...RelayOption) *Relay {
+	ctx, cancel := context.Cancel(c)
 	r := &Relay{
 		URL:                           normalize.URL(url),
 		connectionContext:             ctx,
@@ -82,8 +82,8 @@ func NewRelay(ctx context.T, url string, opts ...RelayOption) *Relay {
 		case WithNoticeHandler:
 			r.notices = make(chan string)
 			go func() {
-				for notice := range r.notices {
-					o(notice)
+				for n := range r.notices {
+					o(n)
 				}
 			}()
 		}
@@ -95,9 +95,9 @@ func NewRelay(ctx context.T, url string, opts ...RelayOption) *Relay {
 // RelayConnect returns a relay object connected to url.
 // Once successfully connected, cancelling ctx has no effect.
 // To close the connection, call r.Close().
-func RelayConnect(ctx context.T, url string, opts ...RelayOption) (*Relay, error) {
+func RelayConnect(c context.T, url string, opts ...RelayOption) (*Relay, error) {
 	r := NewRelay(context.Bg(), url, opts...)
-	e := r.Connect(ctx)
+	e := r.Connect(c)
 	return r, e
 }
 
@@ -135,7 +135,7 @@ func (r *Relay) IsConnected() bool { return r.connectionContext.Err() == nil }
 // The underlying relay connection will use a background context. If you want to
 // pass a custom context to the underlying relay connection, use NewRelay() and
 // then Relay.Connect().
-func (r *Relay) Connect(ctx context.T) error {
+func (r *Relay) Connect(c context.T) error {
 	if r.connectionContext == nil || r.Subscriptions == nil {
 		return fmt.Errorf("relay must be initialized with a call to NewRelay()")
 	}
@@ -144,14 +144,14 @@ func (r *Relay) Connect(ctx context.T) error {
 		return fmt.Errorf("invalid relay URL '%s'", r.URL)
 	}
 
-	if _, ok := ctx.Deadline(); !ok {
+	if _, ok := c.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		var cancel context.F
-		ctx, cancel = context.Timeout(ctx, 7*time.Second)
+		c, cancel = context.Timeout(c, 7*time.Second)
 		defer cancel()
 	}
 
-	conn, e := connection.NewConnection(ctx, r.URL, r.RequestHeader)
+	conn, e := connection.NewConnection(c, r.URL, r.RequestHeader)
 	if e != nil {
 		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, e)
 	}
@@ -298,12 +298,12 @@ func (r *Relay) Write(msg []byte) <-chan error {
 }
 
 // Publish sends an "EVENT" command to the relay r as in NIP-01 and waits for an OK response.
-func (r *Relay) Publish(ctx context.T, ev event.T) error {
-	return r.publish(ctx, ev.ID, &event.Envelope{T: ev})
+func (r *Relay) Publish(c context.T, ev event.T) error {
+	return r.publish(c, ev.ID, &event.Envelope{T: ev})
 }
 
 // Auth sends an "AUTH" command client->relay as in NIP-42 and waits for an OK response.
-func (r *Relay) Auth(ctx context.T, sign func(ev *event.T) error) error {
+func (r *Relay) Auth(c context.T, sign func(ev *event.T) error) error {
 	authEvent := event.T{
 		CreatedAt: timestamp.Now(),
 		Kind:      event.KindClientAuthentication,
@@ -317,21 +317,21 @@ func (r *Relay) Auth(ctx context.T, sign func(ev *event.T) error) error {
 		return fmt.Errorf("error signing auth event: %w", e)
 	}
 
-	return r.publish(ctx, authEvent.ID, &auth.Envelope{Event: authEvent})
+	return r.publish(c, authEvent.ID, &auth.Envelope{Event: authEvent})
 }
 
 // publish can be used both for EVENT and for AUTH
-func (r *Relay) publish(ctx context.T, id string, env envelopes.E) error {
+func (r *Relay) publish(c context.T, id string, env envelopes.E) error {
 	var e error
 	var cancel context.F
 
-	if _, ok := ctx.Deadline(); !ok {
+	if _, ok := c.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
-		ctx, cancel = context.TimeoutCause(ctx, 7*time.Second, fmt.Errorf("given up waiting for an OK"))
+		c, cancel = context.TimeoutCause(c, 7*time.Second, fmt.Errorf("given up waiting for an OK"))
 		defer cancel()
 	} else {
 		// otherwise make the context cancellable so we can stop everything upon receiving an "OK"
-		ctx, cancel = context.Cancel(ctx)
+		c, cancel = context.Cancel(c)
 		defer cancel()
 	}
 
@@ -355,12 +355,12 @@ func (r *Relay) publish(ctx context.T, id string, env envelopes.E) error {
 
 	for {
 		select {
-		case <-ctx.Done():
+		case <-c.Done():
 			// this will be called when we get an OK or when the context has been canceled
 			if gotOk {
 				return e
 			}
-			return ctx.Err()
+			return c.Err()
 		case <-r.connectionContext.Done():
 			// this is caused when we lose connectivity
 			return e
@@ -374,8 +374,8 @@ func (r *Relay) publish(ctx context.T, id string, env envelopes.E) error {
 //
 // Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.T` will be canceled at some point.
 // Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) Subscribe(ctx context.T, filters filters.T, opts ...SubscriptionOption) (*Subscription, error) {
-	sub := r.PrepareSubscription(ctx, filters, opts...)
+func (r *Relay) Subscribe(c context.T, filters filters.T, opts ...SubscriptionOption) (*Subscription, error) {
+	sub := r.PrepareSubscription(c, filters, opts...)
 
 	if e := sub.Fire(); e != nil {
 		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", filters, r.URL, e)
@@ -388,13 +388,13 @@ func (r *Relay) Subscribe(ctx context.T, filters filters.T, opts ...Subscription
 //
 // Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.T` will be canceled at some point.
 // Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) PrepareSubscription(ctx context.T, filters filters.T, opts ...SubscriptionOption) *Subscription {
+func (r *Relay) PrepareSubscription(c context.T, filters filters.T, opts ...SubscriptionOption) *Subscription {
 	if r.Connection == nil {
 		panic(fmt.Errorf("must call .Connect() first before calling .Subscribe()"))
 	}
 
 	current := subscriptionIDCounter.Add(1)
-	ctx, cancel := context.Cancel(ctx)
+	ctx, cancel := context.Cancel(c)
 
 	sub := &Subscription{
 		Relay:             r,
@@ -423,18 +423,18 @@ func (r *Relay) PrepareSubscription(ctx context.T, filters filters.T, opts ...Su
 	return sub
 }
 
-func (r *Relay) QuerySync(ctx context.T, f filter.T, opts ...SubscriptionOption) ([]*event.T, error) {
-	sub, e := r.Subscribe(ctx, filters.T{f}, opts...)
+func (r *Relay) QuerySync(c context.T, f filter.T, opts ...SubscriptionOption) ([]*event.T, error) {
+	sub, e := r.Subscribe(c, filters.T{f}, opts...)
 	if e != nil {
 		return nil, e
 	}
 
 	defer sub.Unsub()
 
-	if _, ok := ctx.Deadline(); !ok {
+	if _, ok := c.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		var cancel context.F
-		ctx, cancel = context.Timeout(ctx, 7*time.Second)
+		c, cancel = context.Timeout(c, 7*time.Second)
 		defer cancel()
 	}
 
@@ -449,14 +449,14 @@ func (r *Relay) QuerySync(ctx context.T, f filter.T, opts ...SubscriptionOption)
 			events = append(events, evt)
 		case <-sub.EndOfStoredEvents:
 			return events, nil
-		case <-ctx.Done():
+		case <-c.Done():
 			return events, nil
 		}
 	}
 }
 
-func (r *Relay) Count(ctx context.T, filters filters.T, opts ...SubscriptionOption) (int64, error) {
-	sub := r.PrepareSubscription(ctx, filters, opts...)
+func (r *Relay) Count(c context.T, filters filters.T, opts ...SubscriptionOption) (int64, error) {
+	sub := r.PrepareSubscription(c, filters, opts...)
 	sub.countResult = make(chan int64)
 
 	if e := sub.Fire(); e != nil {
@@ -465,10 +465,10 @@ func (r *Relay) Count(ctx context.T, filters filters.T, opts ...SubscriptionOpti
 
 	defer sub.Unsub()
 
-	if _, ok := ctx.Deadline(); !ok {
+	if _, ok := c.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		var cancel context.F
-		ctx, cancel = context.Timeout(ctx, 7*time.Second)
+		c, cancel = context.Timeout(c, 7*time.Second)
 		defer cancel()
 	}
 
@@ -476,8 +476,8 @@ func (r *Relay) Count(ctx context.T, filters filters.T, opts ...SubscriptionOpti
 		select {
 		case count := <-sub.countResult:
 			return count, nil
-		case <-ctx.Done():
-			return 0, ctx.Err()
+		case <-c.Done():
+			return 0, c.Err()
 		}
 	}
 }

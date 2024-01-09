@@ -12,11 +12,11 @@ import (
 )
 
 // Fetch fetches the NIP-11 Info.
-func Fetch(ctx context.T, u string) (info *Info, e error) {
-	if _, ok := ctx.Deadline(); !ok {
+func Fetch(c context.T, u string) (info *Info, e error) {
+	if _, ok := c.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		var cancel context.F
-		ctx, cancel = context.Timeout(ctx, 7*time.Second)
+		c, cancel = context.Timeout(c, 7*time.Second)
 		defer cancel()
 	}
 
@@ -35,7 +35,7 @@ func Fetch(ctx context.T, u string) (info *Info, e error) {
 	}
 	p.Path = strings.TrimRight(p.Path, "/")
 
-	req, e := http.NewRequestWithContext(ctx, http.MethodGet, p.String(), nil)
+	req, e := http.NewRequestWithContext(c, http.MethodGet, p.String(), nil)
 
 	// add the NIP-11 header
 	req.Header.Add("Accept", "application/nostr+json")
