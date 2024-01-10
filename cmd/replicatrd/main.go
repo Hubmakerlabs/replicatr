@@ -14,7 +14,7 @@ const appName = "replicatr"
 func main() {
 	log2.SetLogLevel(log2.Trace)
 	rl := replicatr.NewRelay(appName)
-	db := &badger.BadgerBackend{Path: "/tmp/replicatr-badger"}
+	db := &badger.BadgerBackend{Path: "/home/me/.replicatr-badger"}
 	if e := db.Init(); rl.E.Chk(e) {
 		rl.E.F("unable to start database: '%s'", e)
 		os.Exit(1)

@@ -156,12 +156,11 @@ func doZap(cCtx *cli.Context) (e error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 
 	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-		sk = s.(string)
-	} else {
-		return e
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		return
 	}
-
+	sk = s.(string)
 	receipt := ""
 	zr := event.T{}
 	zr.Tags = tags.Tags{}
@@ -183,7 +182,8 @@ func doZap(cCtx *cli.Context) (e error) {
 		}
 	}
 	zr.Tags = zr.Tags.AppendUnique(relays)
-	if prefix, s, e := nip19.Decode(cCtx.Args().First()); e == nil {
+	var prefix string
+	if prefix, s, e = nip19.Decode(cCtx.Args().First()); !log.Fail(e) {
 		switch prefix {
 		case "nevent":
 			receipt = s.(pointers.EventPointer).Author

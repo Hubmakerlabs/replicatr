@@ -299,12 +299,14 @@ func (r *Relay) Write(msg []byte) <-chan error {
 	return ch
 }
 
-// Publish sends an "EVENT" command to the relay r as in NIP-01 and waits for an OK response.
+// Publish sends an "EVENT" command to the relay r as in NIP-01 and waits for an
+// OK response.
 func (r *Relay) Publish(c context.T, ev *event.T) error {
 	return r.publish(c, ev.ID, &event.E{T: *ev})
 }
 
-// Auth sends an "AUTH" command client->relay as in NIP-42 and waits for an OK response.
+// Auth sends an "AUTH" command client->relay as in NIP-42 and waits for an OK
+// response.
 func (r *Relay) Auth(c context.T, sign func(ev *event.T) error) error {
 	authEvent := event.T{
 		CreatedAt: timestamp.Now(),
@@ -329,10 +331,12 @@ func (r *Relay) publish(c context.T, id string, env envelopes.E) error {
 
 	if _, ok := c.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
-		c, cancel = context.TimeoutCause(c, 7*time.Second, fmt.Errorf("given up waiting for an OK"))
+		c, cancel = context.TimeoutCause(c, 7*time.Second,
+			fmt.Errorf("given up waiting for an OK"))
 		defer cancel()
 	} else {
-		// otherwise make the context cancellable so we can stop everything upon receiving an "OK"
+		// otherwise make the context cancellable so we can stop everything upon
+		// receiving an "OK"
 		c, cancel = context.Cancel(c)
 		defer cancel()
 	}
