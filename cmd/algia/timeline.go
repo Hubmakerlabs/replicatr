@@ -40,14 +40,12 @@ func doDMList(cCtx *cli.Context) (e error) {
 		return e
 	}
 
-	var sk string
 	var npub string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-		sk = s.(string)
-	} else {
-		return e
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		return
 	}
-	if npub, e = keys.GetPublicKey(sk); log.Fail(e) {
+	if npub, e = keys.GetPublicKey(s.(string)); log.Fail(e) {
 		return e
 	}
 
@@ -109,14 +107,12 @@ func doDMTimeline(cCtx *cli.Context) (e error) {
 
 	cfg := cCtx.App.Metadata["config"].(*C)
 
-	var sk string
 	var npub string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-		sk = s.(string)
-	} else {
-		return e
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		return
 	}
-	if npub, e = keys.GetPublicKey(sk); log.Fail(e) {
+	if npub, e = keys.GetPublicKey(s.(string)); log.Fail(e) {
 		return e
 	}
 
@@ -157,25 +153,23 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	sensitive := cCtx.String("sensitive")
 
 	cfg := cCtx.App.Metadata["config"].(*C)
-
-	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-		sk = s.(string)
-	} else {
-		return e
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		return
 	}
+	sk := s.(string)
 	ev := &event.T{}
-	if npub, e := keys.GetPublicKey(sk); e == nil {
-		if _, e := nip19.EncodePublicKey(npub); log.Fail(e) {
-			return e
-		}
-		ev.PubKey = npub
-	} else {
+	var npub string
+	if npub, e = keys.GetPublicKey(sk); log.Fail(e) {
+		return
+	}
+	if _, e := nip19.EncodePublicKey(npub); log.Fail(e) {
 		return e
 	}
-
+	ev.PubKey = npub
 	if stdin {
-		b, e := io.ReadAll(os.Stdin)
+		var b []byte
+		b, e = io.ReadAll(os.Stdin)
 		if log.Fail(e) {
 			return e
 		}
@@ -254,25 +248,24 @@ func doPost(cCtx *cli.Context) (e error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 
 	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-		sk = s.(string)
-	} else {
-		return e
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		return
 	}
+	sk = s.(string)
 	ev := &event.T{}
-	if pub, e := keys.GetPublicKey(sk); e == nil {
-		if _, e := nip19.EncodePublicKey(pub); log.Fail(e) {
-			return e
-		}
-		ev.PubKey = pub
-	} else {
+	var pub string
+	if pub, e = keys.GetPublicKey(sk); log.Fail(e) {
+		return
+	}
+	if _, e = nip19.EncodePublicKey(pub); log.Fail(e) {
 		return e
 	}
-
+	ev.PubKey = pub
 	if stdin {
-		b, e := io.ReadAll(os.Stdin)
-		if log.Fail(e) {
-			return e
+		var b []byte
+		if b, e = io.ReadAll(os.Stdin); log.Fail(e) {
+			return
 		}
 		ev.Content = string(b)
 	} else {
@@ -363,21 +356,20 @@ func doReply(cCtx *cli.Context) (e error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 
 	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-		sk = s.(string)
-	} else {
-		return e
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		return
 	}
+	sk = s.(string)
 	ev := &event.T{}
-	if pub, e := keys.GetPublicKey(sk); e == nil {
-		if _, e := nip19.EncodePublicKey(pub); log.Fail(e) {
-			return e
-		}
-		ev.PubKey = pub
-	} else {
-		return e
+	var pub string
+	if pub, e = keys.GetPublicKey(sk); log.Fail(e) {
+		return
 	}
-
+	if _, e = nip19.EncodePublicKey(pub); log.Fail(e) {
+		return
+	}
+	ev.PubKey = pub
 	if evp := sdk.InputToEventPointer(id); evp != nil {
 		id = evp.ID
 	} else {
@@ -466,20 +458,19 @@ func doRepost(cCtx *cli.Context) (e error) {
 
 	ev := &event.T{}
 	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-		sk = s.(string)
-	} else {
-		return e
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		return
 	}
-	if pub, e := keys.GetPublicKey(sk); e == nil {
-		if _, e := nip19.EncodePublicKey(pub); log.Fail(e) {
-			return e
-		}
-		ev.PubKey = pub
-	} else {
-		return e
+	sk = s.(string)
+	var pub string
+	if pub, e = keys.GetPublicKey(sk); log.Fail(e) {
+		return
 	}
-
+	if _, e = nip19.EncodePublicKey(pub); log.Fail(e) {
+		return
+	}
+	ev.PubKey = pub
 	if evp := sdk.InputToEventPointer(id); evp != nil {
 		id = evp.ID
 	} else {
@@ -538,14 +529,14 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 
 	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-		sk = s.(string)
-	} else {
-		return e
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		return
 	}
-	pub, e := keys.GetPublicKey(sk)
-	if log.Fail(e) {
-		return e
+	sk = s.(string)
+	var pub string
+	if pub, e = keys.GetPublicKey(sk); log.Fail(e) {
+		return
 	}
 	f := filter.T{
 		Kinds:   []int{event.KindRepost},
@@ -598,12 +589,13 @@ func doLike(cCtx *cli.Context) (e error) {
 
 	ev := &event.T{}
 	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-		sk = s.(string)
-	} else {
-		return e
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		return
 	}
-	if pub, e := keys.GetPublicKey(sk); e == nil {
+	sk = s.(string)
+	var pub string
+	if pub, e = keys.GetPublicKey(sk); e == nil {
 		if _, e := nip19.EncodePublicKey(pub); log.Fail(e) {
 			return e
 		}
@@ -682,7 +674,8 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 
 	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); !log.Fail(e) {
 		sk = s.(string)
 	} else {
 		return e
@@ -742,7 +735,8 @@ func doDelete(cCtx *cli.Context) (e error) {
 
 	ev := &event.T{}
 	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); !log.Fail(e) {
 		sk = s.(string)
 	} else {
 		return e
@@ -839,7 +833,8 @@ func doStream(cCtx *cli.Context) (e error) {
 	defer rl.Close()
 
 	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); !log.Fail(e) {
 		sk = s.(string)
 	} else {
 		return e
@@ -935,13 +930,15 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 
 	var sk string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); !log.Fail(e) {
 		sk = s.(string)
 	} else {
 		return e
 	}
 	ev := &event.T{}
-	if pub, e := keys.GetPublicKey(sk); e == nil {
+	var pub string
+	if pub, e = keys.GetPublicKey(sk); e == nil {
 		if _, e := nip19.EncodePublicKey(pub); log.Fail(e) {
 			return e
 		}

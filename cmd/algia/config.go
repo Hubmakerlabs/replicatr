@@ -256,12 +256,11 @@ func (cfg *C) save(profile string) (e error) {
 func (cfg *C) Decode(ev *event.T) (e error) {
 	var sk string
 	var pub string
-	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-		sk = s.(string)
-		if pub, e = keys.GetPublicKey(s.(string)); log.Fail(e) {
-			return e
-		}
-	} else {
+	var s any
+	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		return
+	}
+	if pub, e = keys.GetPublicKey(s.(string)); log.Fail(e) {
 		return e
 	}
 	tag := ev.Tags.GetFirst([]string{"p"})

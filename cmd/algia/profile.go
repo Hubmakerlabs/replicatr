@@ -28,11 +28,11 @@ func doProfile(cCtx *cli.Context) (e error) {
 
 	var pub string
 	if user == "" {
-		if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-			if pub, e = keys.GetPublicKey(s.(string)); log.Fail(e) {
-				return e
-			}
-		} else {
+		var s any
+		if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+			return
+		}
+		if pub, e = keys.GetPublicKey(s.(string)); log.Fail(e) {
 			return e
 		}
 	} else {
