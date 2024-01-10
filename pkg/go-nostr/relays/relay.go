@@ -232,17 +232,19 @@ func (r *Relay) Connect(c context.T) error {
 					continue
 				}
 				r.challenge = *env.Challenge
-			case *event.Envelope:
+			case *event.E:
 				if env.SubscriptionID == nil {
 					continue
 				}
 				if subscription, ok := r.Subscriptions.Load(*env.SubscriptionID); !ok {
-					fmt.Printf("{%s} no subscription with id '%s'\n", r.URL, *env.SubscriptionID)
+					fmt.Printf("{%s} no subscription with id '%s'\n",
+						r.URL, *env.SubscriptionID)
 					continue
 				} else {
 					// check if the event matches the desired filter, ignore otherwise
 					if !subscription.Filters.Match(&env.T) {
-						fmt.Printf("{%s} filter does not match: %v ~ %v\n", r.URL, subscription.Filters, env.T)
+						fmt.Printf("{%s} filter does not match: %v ~ %v\n",
+							r.URL, subscription.Filters, env.T)
 						continue
 					}
 
@@ -298,8 +300,8 @@ func (r *Relay) Write(msg []byte) <-chan error {
 }
 
 // Publish sends an "EVENT" command to the relay r as in NIP-01 and waits for an OK response.
-func (r *Relay) Publish(c context.T, ev event.T) error {
-	return r.publish(c, ev.ID, &event.Envelope{T: ev})
+func (r *Relay) Publish(c context.T, ev *event.T) error {
+	return r.publish(c, ev.ID, &event.E{T: *ev})
 }
 
 // Auth sends an "AUTH" command client->relay as in NIP-42 and waits for an OK response.

@@ -25,7 +25,7 @@ func ParseMessage(message []byte) envelopes.E {
 	var v envelopes.E
 	switch {
 	case bytes.Contains(label, []byte("EVENT")):
-		v = &event.Envelope{}
+		v = &event.E{}
 	case bytes.Contains(label, []byte("REQ")):
 		v = &req.Envelope{}
 	case bytes.Contains(label, []byte("COUNT")):

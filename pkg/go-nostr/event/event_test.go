@@ -15,7 +15,7 @@ func TestEventEnvelopeEncodingAndDecoding(t *testing.T) {
 	}
 
 	for _, raw := range eventEnvelopes {
-		var env Envelope
+		var env E
 		if e := json.Unmarshal([]byte(raw), &env); e != nil {
 			t.Errorf("failed to parse event envelope json: %v", e)
 		}

@@ -7,21 +7,19 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
 	"github.com/urfave/cli/v2"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 )
 
 func doProfile(cCtx *cli.Context) (e error) {
 	user := cCtx.String("u")
 	j := cCtx.Bool("json")
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*C)
 	rl := cfg.FindRelay(context.Bg(), RelayPerms{Read: true})
 	if rl == nil {
 		return errors.New("cannot connect relays")
@@ -31,7 +29,7 @@ func doProfile(cCtx *cli.Context) (e error) {
 	var pub string
 	if user == "" {
 		if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
-			if pub, e = keys.GetPublicKey(s.(string)); e != nil {
+			if pub, e = keys.GetPublicKey(s.(string)); log.Fail(e) {
 				return e
 			}
 		} else {
@@ -63,11 +61,11 @@ func doProfile(cCtx *cli.Context) (e error) {
 	}
 	var profile Profile
 	e = json.Unmarshal([]byte(evs[0].Content), &profile)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	npub, e := nip19.EncodePublicKey(pub)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	fmt.Printf("Pubkey: %v\n", npub)

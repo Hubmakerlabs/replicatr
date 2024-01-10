@@ -148,10 +148,11 @@ func (evt T) CheckSignature() (bool, error) {
 }
 
 // Sign signs an event with a given privateKey.
-func (evt *T) Sign(privateKey string, signOpts ...schnorr.SignOption) error {
-	s, e := hex.Dec(privateKey)
+func (evt *T) Sign(sec string, signOpts ...schnorr.SignOption) error {
+	s, e := hex.Dec(sec)
 	if e != nil {
-		return fmt.Errorf("Sign called with invalid private key '%s': %w", privateKey, e)
+		return fmt.Errorf("sign called with invalid private key '%s': %w",
+			sec, e)
 	}
 
 	if evt.Tags == nil {
@@ -174,16 +175,16 @@ func (evt *T) Sign(privateKey string, signOpts ...schnorr.SignOption) error {
 	return nil
 }
 
-type Envelope struct {
+type E struct {
 	SubscriptionID *string
 	T
 }
 
-var _ envelopes.E = (*Envelope)(nil)
+var _ envelopes.E = (*E)(nil)
 
-func (_ Envelope) Label() string { return "EVENT" }
+func (_ E) Label() string { return "EVENT" }
 
-func (v *Envelope) UnmarshalJSON(data []byte) error {
+func (v *E) UnmarshalJSON(data []byte) error {
 	r := gjson.ParseBytes(data)
 	arr := r.Array()
 	switch len(arr) {
@@ -197,7 +198,7 @@ func (v *Envelope) UnmarshalJSON(data []byte) error {
 	}
 }
 
-func (v Envelope) MarshalJSON() ([]byte, error) {
+func (v E) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	w.RawString(`["EVENT",`)
 	if v.SubscriptionID != nil {
