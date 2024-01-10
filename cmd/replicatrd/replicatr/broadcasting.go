@@ -12,7 +12,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 			if !listener.filters.Match(evt) {
 				return true
 			}
-			log.E.Chk(ws.WriteJSON(event.Envelope{
+			log.E.Chk(ws.WriteJSON(event.E{
 				SubscriptionID: &id,
 				T:              *evt},
 			))

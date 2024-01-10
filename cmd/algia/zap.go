@@ -7,22 +7,19 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/urfave/cli/v2"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 )
 
 // Lnurlp is
@@ -63,42 +60,42 @@ type PayResponse struct {
 	} `json:"result"`
 }
 
-func pay(cfg *Config, invoice string) (e error) {
+func pay(cfg *C, invoice string) (e error) {
 	uri, e := url.Parse(cfg.NwcURI)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	wallet := uri.Host
 	host := uri.Query().Get("relay")
 	secret := uri.Query().Get("secret")
 	pub, e := keys.GetPublicKey(secret)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 
 	rl, e := relays.RelayConnect(context.Bg(), host)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	defer rl.Close()
 
 	ss, e := nip04.ComputeSharedSecret(wallet, secret)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	var req PayRequest
 	req.Method = "pay_invoice"
 	req.Params.Invoice = invoice
 	b, e := json.Marshal(req)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	content, e := nip04.Encrypt(string(b), ss)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 
-	ev := event.T{
+	ev := &event.T{
 		PubKey:    pub,
 		CreatedAt: timestamp.Now(),
 		Kind:      event.KindNWCWalletRequest,
@@ -106,7 +103,7 @@ func pay(cfg *Config, invoice string) (e error) {
 		Content:   content,
 	}
 	e = ev.Sign(secret)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 
@@ -119,23 +116,23 @@ func pay(cfg *Config, invoice string) (e error) {
 		Limit: 1,
 	}}
 	sub, e := rl.Subscribe(context.Bg(), filters)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 
 	e = rl.Publish(context.Bg(), ev)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 
 	er := <-sub.Events
 	content, e = nip04.Decrypt(er.Content, ss)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	var resp PayResponse
 	e = json.Unmarshal([]byte(content), &resp)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	if resp.Err != nil {
@@ -143,54 +140,6 @@ func pay(cfg *Config, invoice string) (e error) {
 	}
 	json.NewEncoder(os.Stdout).Encode(resp)
 	return nil
-}
-
-// ZapInfo is
-func (cfg *Config) ZapInfo(pub string) (*Lnurlp, error) {
-	rl := cfg.FindRelay(context.Bg(), RelayPerms{Read: true})
-	if rl == nil {
-		return nil, errors.New("cannot connect relays")
-	}
-	defer rl.Close()
-
-	// get set-metadata
-	f := filter.T{
-		Kinds:   []int{event.KindProfileMetadata},
-		Authors: []string{pub},
-		Limit:   1,
-	}
-
-	evs := cfg.Events(f)
-	if len(evs) == 0 {
-		return nil, errors.New("cannot find user")
-	}
-
-	var profile Profile
-	e := json.Unmarshal([]byte(evs[0].Content), &profile)
-	if e != nil {
-		return nil, e
-	}
-
-	tok := strings.SplitN(profile.Lud16, "@", 2)
-	if e != nil {
-		return nil, e
-	}
-	if len(tok) != 2 {
-		return nil, errors.New("receipt address is not valid")
-	}
-
-	resp, e := http.Get("https://" + tok[1] + "/.well-known/lnurlp/" + tok[0])
-	if e != nil {
-		return nil, e
-	}
-	defer resp.Body.Close()
-
-	var lp Lnurlp
-	e = json.NewDecoder(resp.Body).Decode(&lp)
-	if e != nil {
-		return nil, e
-	}
-	return &lp, nil
 }
 
 func doZap(cCtx *cli.Context) (e error) {
@@ -204,7 +153,7 @@ func doZap(cCtx *cli.Context) (e error) {
 		return cli.ShowSubcommandHelp(cCtx)
 	}
 
-	cfg := cCtx.App.Metadata["config"].(*Config)
+	cfg := cCtx.App.Metadata["config"].(*C)
 
 	var sk string
 	if _, s, e := nip19.Decode(cfg.PrivateKey); e == nil {
@@ -218,7 +167,7 @@ func doZap(cCtx *cli.Context) (e error) {
 	zr.Tags = tags.Tags{}
 
 	if pub, e := keys.GetPublicKey(sk); e == nil {
-		if _, e := nip19.EncodePublicKey(pub); e != nil {
+		if _, e := nip19.EncodePublicKey(pub); log.Fail(e) {
 			return e
 		}
 		zr.PubKey = pub
@@ -258,20 +207,20 @@ func doZap(cCtx *cli.Context) (e error) {
 	zr.Kind = event.KindZapRequest // 9734
 	zr.CreatedAt = timestamp.Now()
 	zr.Content = comment
-	if e := zr.Sign(sk); e != nil {
+	if e := zr.Sign(sk); log.Fail(e) {
 		return e
 	}
 	b, e := zr.MarshalJSON()
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 
 	zi, e := cfg.ZapInfo(receipt)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	u, e := url.Parse(zi.Callback)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	param := url.Values{}
@@ -279,14 +228,14 @@ func doZap(cCtx *cli.Context) (e error) {
 	param.Set("nostr", string(b))
 	u.RawQuery = param.Encode()
 	resp, e := http.Get(u.String())
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 	defer resp.Body.Close()
 
 	var iv Invoice
 	e = json.NewDecoder(resp.Body).Decode(&iv)
-	if e != nil {
+	if log.Fail(e) {
 		return e
 	}
 
@@ -303,7 +252,7 @@ func doZap(cCtx *cli.Context) (e error) {
 		fmt.Println("lightning:" + iv.PR)
 		qrterminal.GenerateWithConfig("lightning:"+iv.PR, config)
 	} else {
-		pay(cCtx.App.Metadata["config"].(*Config), iv.PR)
+		pay(cCtx.App.Metadata["config"].(*C), iv.PR)
 	}
 	return nil
 }

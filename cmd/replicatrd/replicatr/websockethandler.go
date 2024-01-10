@@ -74,7 +74,7 @@ func (rl *Relay) websocketProcessMessages(message []byte, c context.T, ws *WebSo
 		return
 	}
 	switch env := env.(type) {
-	case *event.Envelope:
+	case *event.E:
 		// check id
 		hash := sha256.Sum256(env.T.Serialize())
 		id := hex.Enc(hash[:])

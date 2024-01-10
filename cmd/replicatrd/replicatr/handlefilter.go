@@ -51,7 +51,7 @@ func (rl *Relay) handleFilter(c context.T, id string,
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(c, ev)
 				}
-				rl.E.Chk(ws.WriteJSON(event2.Envelope{
+				rl.E.Chk(ws.WriteJSON(event2.E{
 					SubscriptionID: &id,
 					T:              *ev,
 				}))
