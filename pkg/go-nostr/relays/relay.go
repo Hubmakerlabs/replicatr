@@ -340,8 +340,7 @@ func (r *Relay) publish(c context.T, id string, env envelopes.E) error {
 
 	if _, ok := c.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
-		c, cancel = context.TimeoutCause(c, 7*time.Second,
-			fmt.Errorf("given up waiting for an OK"))
+		c, cancel = context.Timeout(c, 7*time.Second)
 		defer cancel()
 	} else {
 		// otherwise make the context cancellable so we can stop everything upon
