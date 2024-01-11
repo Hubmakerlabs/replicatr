@@ -23,7 +23,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/fatih/color"
 )
 
@@ -303,7 +303,7 @@ func doReply(cCtx *cli.Context) (e error) {
 	ev := &event.T{}
 	ev.PubKey = pub
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID
+		id = string(evp.ID)
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
@@ -384,7 +384,7 @@ func doRepost(cCtx *cli.Context) (e error) {
 	}
 	ev.PubKey = pub
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID
+		id = string(evp.ID)
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
@@ -429,7 +429,7 @@ func doRepost(cCtx *cli.Context) (e error) {
 func doUnrepost(cCtx *cli.Context) (e error) {
 	id := cCtx.String("id")
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID
+		id = string(evp.ID)
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
@@ -490,7 +490,7 @@ func doLike(cCtx *cli.Context) (e error) {
 	}
 	ev.PubKey = pub
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID
+		id = string(evp.ID)
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
@@ -547,7 +547,7 @@ func doLike(cCtx *cli.Context) (e error) {
 func doUnlike(cCtx *cli.Context) (e error) {
 	id := cCtx.String("id")
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID
+		id = string(evp.ID)
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
@@ -606,7 +606,7 @@ func doDelete(cCtx *cli.Context) (e error) {
 	}
 	ev.PubKey = pub
 	if evp := sdk.InputToEventPointer(id); evp != nil {
-		id = evp.ID
+		id = string(evp.ID)
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}

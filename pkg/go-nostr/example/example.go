@@ -15,9 +15,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	filters2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 )
 
 var log = log2.GetStd()

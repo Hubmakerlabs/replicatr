@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 )
 
 func getPubFromSec(sk string) (pubHex string, secHex string, e error) {

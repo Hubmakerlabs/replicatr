@@ -8,9 +8,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/urfave/cli/v2"
 )
 

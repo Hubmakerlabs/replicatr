@@ -6,17 +6,19 @@ import (
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 )
 
 type Reference struct {
 	Text    string
 	Start   int
 	End     int
-	Profile *pointers.ProfilePointer
-	Event   *pointers.EventPointer
-	Entity  *pointers.EntityPointer
+	Profile *pointers.Profile
+	Event   *pointers.Event
+	Entity  *pointers.Entity
 }
 
 var mentionRegex = regexp.MustCompile(`\bnostr:((note|npub|naddr|nevent|nprofile)1\w+)\b|#\[(\d+)\]`)
@@ -40,19 +42,19 @@ func ParseReferences(evt *event.T) []*Reference {
 			if prefix, data, e := nip19.Decode(nip19code); e == nil {
 				switch prefix {
 				case "npub":
-					reference.Profile = &pointers.ProfilePointer{
+					reference.Profile = &pointers.Profile{
 						PublicKey: data.(string), Relays: []string{},
 					}
 				case "nprofile":
-					pp := data.(pointers.ProfilePointer)
+					pp := data.(pointers.Profile)
 					reference.Profile = &pp
 				case "note":
-					reference.Event = &pointers.EventPointer{ID: data.(string), Relays: []string{}}
+					reference.Event = &pointers.Event{ID: eventid.EventID(data.(string)), Relays: []string{}}
 				case "nevent":
-					evp := data.(pointers.EventPointer)
+					evp := data.(pointers.Event)
 					reference.Event = &evp
 				case "naddr":
-					addr := data.(pointers.EntityPointer)
+					addr := data.(pointers.Entity)
 					reference.Entity = &addr
 				}
 			}
@@ -71,7 +73,7 @@ func ParseReferences(evt *event.T) []*Reference {
 					if len(tag) > 2 && tag[2] != "" {
 						relays = append(relays, tag[2])
 					}
-					reference.Profile = &pointers.ProfilePointer{
+					reference.Profile = &pointers.Profile{
 						PublicKey: tag[1],
 						Relays:    relays,
 					}
@@ -80,21 +82,21 @@ func ParseReferences(evt *event.T) []*Reference {
 					if len(tag) > 2 && tag[2] != "" {
 						relays = append(relays, tag[2])
 					}
-					reference.Event = &pointers.EventPointer{
-						ID:     tag[1],
+					reference.Event = &pointers.Event{
+						ID:     eventid.EventID(tag[1]),
 						Relays: relays,
 					}
 				case "a":
 					if parts := strings.Split(tag[1], ":"); len(parts) == 3 {
-						kind, _ := strconv.Atoi(parts[0])
+						k, _ := strconv.Atoi(parts[0])
 						relays := make([]string, 0, 1)
 						if len(tag) > 2 && tag[2] != "" {
 							relays = append(relays, tag[2])
 						}
-						reference.Entity = &pointers.EntityPointer{
+						reference.Entity = &pointers.Entity{
 							Identifier: parts[2],
 							PublicKey:  parts[1],
-							Kind:       kind,
+							Kind:       kind.T(k),
 							Relays:     relays,
 						}
 					}
