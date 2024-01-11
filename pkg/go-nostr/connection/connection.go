@@ -17,7 +17,7 @@ import (
 	"github.com/gobwas/ws/wsutil"
 )
 
-type Connection struct {
+type C struct {
 	Conn              net.Conn
 	enableCompression bool
 	controlHandler    wsutil.FrameHandlerFunc
@@ -29,7 +29,7 @@ type Connection struct {
 	msgStateW         *wsflate.MessageState
 }
 
-func NewConnection(c context.T, url string, requestHeader http.Header) (*Connection, error) {
+func NewConnection(c context.T, url string, requestHeader http.Header) (*C, error) {
 	dialer := ws.Dialer{
 		Header: ws.HandshakeHeaderHTTP(requestHeader),
 		Extensions: []httphead.Option{
@@ -91,7 +91,7 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*Connect
 	writer := wsutil.NewWriter(conn, state, ws.OpText)
 	writer.SetExtensions(&msgStateW)
 
-	return &Connection{
+	return &C{
 		Conn:              conn,
 		enableCompression: enableCompression,
 		controlHandler:    controlHandler,
@@ -104,7 +104,7 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*Connect
 	}, nil
 }
 
-func (c *Connection) WriteMessage(data []byte) error {
+func (c *C) WriteMessage(data []byte) error {
 	if c.msgStateW.IsCompressed() && c.enableCompression {
 		c.flateWriter.Reset(c.writer)
 		if _, e := io.Copy(c.flateWriter, bytes.NewReader(data)); e != nil {
@@ -127,7 +127,7 @@ func (c *Connection) WriteMessage(data []byte) error {
 	return nil
 }
 
-func (c *Connection) ReadMessage(cx context.T, buf io.Writer) error {
+func (c *C) ReadMessage(cx context.T, buf io.Writer) error {
 	for {
 		select {
 		case <-cx.Done():
@@ -169,6 +169,6 @@ func (c *Connection) ReadMessage(cx context.T, buf io.Writer) error {
 	return nil
 }
 
-func (c *Connection) Close() error {
+func (c *C) Close() error {
 	return c.Conn.Close()
 }

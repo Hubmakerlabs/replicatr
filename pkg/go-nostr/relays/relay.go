@@ -43,7 +43,7 @@ type Relay struct {
 	URL           string
 	RequestHeader http.Header // e.g. for origin header
 
-	Connection    *connection.Connection
+	Connection    *connection.C
 	Subscriptions *xsync.MapOf[string, *Subscription]
 
 	ConnectionError         error
@@ -66,7 +66,8 @@ type writeRequest struct {
 	answer chan error
 }
 
-// NewRelay returns a new relay. The relay connection will be closed when the context is canceled.
+// NewRelay returns a new relay. The relay connection will be closed when the
+// context is canceled.
 func NewRelay(c context.T, url string, opts ...RelayOption) *Relay {
 	ctx, cancel := context.Cancel(c)
 	r := &Relay{
@@ -94,9 +95,9 @@ func NewRelay(c context.T, url string, opts ...RelayOption) *Relay {
 	return r
 }
 
-// RelayConnect returns a relay object connected to url.
-// Once successfully connected, cancelling ctx has no effect.
-// To close the connection, call r.Close().
+// RelayConnect returns a relay object connected to url. Once successfully
+// connected, cancelling ctx has no effect. To close the connection, call
+// r.Close().
 func RelayConnect(c context.T, url string, opts ...RelayOption) (*Relay, error) {
 	r := NewRelay(context.Bg(), url, opts...)
 	e := r.Connect(c)
@@ -110,8 +111,8 @@ type RelayOption interface {
 	IsRelayOption()
 }
 
-// WithNoticeHandler just takes notices and is expected to do something with them.
-// when not given, defaults to logging the notices.
+// WithNoticeHandler just takes notices and is expected to do something with
+// them. when not given, defaults to logging the notices.
 type WithNoticeHandler func(notice string)
 
 func (_ WithNoticeHandler) IsRelayOption() {}
@@ -129,10 +130,10 @@ func (r *Relay) Context() context.T { return r.connectionContext }
 // IsConnected returns true if the connection to this relay seems to be active.
 func (r *Relay) IsConnected() bool { return r.connectionContext.Err() == nil }
 
-// Connect tries to establish a websocket connection to r.URL.
-// If the context expires before the connection is complete, an error is returned.
-// Once successfully connected, context expiration has no effect: call r.Close
-// to close the connection.
+// Connect tries to establish a websocket connection to r.URL. If the context
+// expires before the connection is complete, an error is returned. Once
+// successfully connected, context expiration has no effect: call r.Close to
+// close the connection.
 //
 // The underlying relay connection will use a background context. If you want to
 // pass a custom context to the underlying relay connection, use NewRelay() and
@@ -186,8 +187,9 @@ func (r *Relay) Connect(c context.T) error {
 			case <-ticker.C:
 				e = wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil)
 				if e != nil {
-					log.D.F("{%s} error writing ping: %v; closing websocket", r.URL, e)
-					r.Close() // this should trigger a context cancelation
+					log.D.F("{%s} error writing ping: %v; closing websocket",
+						r.URL, e)
+					log.Fail(r.Close()) // this should trigger a context cancelation
 					return
 				}
 			case writeRequest := <-r.writeQueue:
@@ -204,14 +206,18 @@ func (r *Relay) Connect(c context.T) error {
 	}()
 
 	// general message reader loop
-	go func() {
+	go r.MessageReadLoop(conn)
+	return nil
+}
+
+func (r *Relay) MessageReadLoop(conn *connection.C) {
 		buf := new(bytes.Buffer)
 
 		for {
 			buf.Reset()
 			if e := conn.ReadMessage(r.connectionContext, buf); e != nil {
 				r.ConnectionError = e
-				r.Close()
+				log.Fail(r.Close())
 				break
 			}
 
@@ -239,15 +245,15 @@ func (r *Relay) Connect(c context.T) error {
 				if env.SubscriptionID == nil {
 					continue
 				}
-				if subscription, ok := r.Subscriptions.Load(*env.SubscriptionID); !ok {
+				if s, ok := r.Subscriptions.Load(*env.SubscriptionID); !ok {
 					log.D.F("{%s} no subscription with id '%s'",
 						r.URL, *env.SubscriptionID)
 					continue
 				} else {
 					// check if the event matches the desired filter, ignore otherwise
-					if !subscription.Filters.Match(&env.T) {
+					if !s.Filters.Match(&env.T) {
 						log.D.F("{%s} filter does not match: %v ~ %v",
-							r.URL, subscription.Filters, env.T)
+							r.URL, s.Filters, env.T)
 						continue
 					}
 
@@ -258,39 +264,39 @@ func (r *Relay) Connect(c context.T) error {
 							if e != nil {
 								errmsg = e.Error()
 							}
-							log.D.F("{%s} bad signature on %s; %s", r.URL, env.T.ID, errmsg)
+							log.D.F("{%s} bad signature on %s; %s",
+								r.URL, env.T.ID, errmsg)
 							continue
 						}
 					}
 
 					// dispatch this to the internal .events channel of the subscription
-					subscription.dispatchEvent(&env.T)
+					s.dispatchEvent(&env.T)
 				}
 			case *eose.Envelope:
-				if subscription, ok := r.Subscriptions.Load(string(*env)); ok {
-					subscription.dispatchEose()
+				if s, ok := r.Subscriptions.Load(string(*env)); ok {
+					s.dispatchEose()
 				}
 			case *closed.Envelope:
-				if subscription, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok {
-					subscription.dispatchClosed(env.Reason)
+				if s, ok := r.Subscriptions.Load(env.SubscriptionID); ok {
+					s.dispatchClosed(env.Reason)
 				}
 			case *count.Envelope:
-				if subscription, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok && env.Count != nil && subscription.countResult != nil {
-					subscription.countResult <- *env.Count
+				if s, ok := r.Subscriptions.Load(env.SubscriptionID); ok &&
+					env.Count != nil && s.countResult != nil {
+
+					s.countResult <- *env.Count
 				}
 			case *OK.Envelope:
 				if okCallback, exist := r.okCallbacks.Load(env.EventID); exist {
 					okCallback(env.OK, env.Reason)
 				} else {
-					log.D.F("{%s} got an unexpected OK message for event %s", r.URL, env.EventID)
+					log.D.F("{%s} got an unexpected OK message for event %s",
+						r.URL, env.EventID)
 				}
 			}
 		}
-	}()
-
-	return nil
 }
-
 // Write queues a message to be sent to the relay.
 func (r *Relay) Write(msg []byte) <-chan error {
 	ch := make(chan error)
