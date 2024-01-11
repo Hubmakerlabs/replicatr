@@ -8,8 +8,8 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pools"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 )
 
 type ProfileMetadata struct {

@@ -13,11 +13,11 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/urfave/cli/v2"
 )
@@ -176,9 +176,9 @@ func doZap(cCtx *cli.Context) (e error) {
 	if prefix, s, e = nip19.Decode(cCtx.Args().First()); !log.Fail(e) {
 		switch prefix {
 		case "nevent":
-			receipt = s.(pointers.EventPointer).Author
+			receipt = s.(pointers.Event).Author
 			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})
-			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"e", s.(pointers.EventPointer).ID})
+			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"e", string(s.(pointers.Event).ID)})
 		case "note":
 			evs := cfg.Events(filter.T{IDs: []string{s.(string)}})
 			if len(evs) != 0 {

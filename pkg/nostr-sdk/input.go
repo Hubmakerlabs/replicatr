@@ -2,19 +2,20 @@ package sdk
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip05"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pointers"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 )
 
 // InputToProfile turns any npub/nprofile/hex/nip05 input into a ProfilePointer (or nil).
-func InputToProfile(c context.T, input string) *pointers.ProfilePointer {
+func InputToProfile(c context.T, input string) *pointers.Profile {
 	// handle if it is a hex string
 	if len(input) == 64 {
 		if _, e := hex.Dec(input); e == nil {
-			return &pointers.ProfilePointer{PublicKey: input}
+			return &pointers.Profile{PublicKey: input}
 		}
 	}
 
@@ -23,9 +24,9 @@ func InputToProfile(c context.T, input string) *pointers.ProfilePointer {
 	switch prefix {
 	case "npub":
 		input = data.(string)
-		return &pointers.ProfilePointer{PublicKey: input}
+		return &pointers.Profile{PublicKey: input}
 	case "nprofile":
-		pp := data.(pointers.ProfilePointer)
+		pp := data.(pointers.Profile)
 		return &pp
 	}
 
@@ -39,11 +40,11 @@ func InputToProfile(c context.T, input string) *pointers.ProfilePointer {
 }
 
 // InputToEventPointer turns any note/nevent/hex input into a EventPointer (or nil).
-func InputToEventPointer(input string) *pointers.EventPointer {
+func InputToEventPointer(input string) *pointers.Event {
 	// handle if it is a hex string
 	if len(input) == 64 {
 		if _, e := hex.Dec(input); e == nil {
-			return &pointers.EventPointer{ID: input}
+			return &pointers.Event{ID: eventid.EventID(input)}
 		}
 	}
 
@@ -52,9 +53,9 @@ func InputToEventPointer(input string) *pointers.EventPointer {
 	switch prefix {
 	case "note":
 		input = data.(string)
-		return &pointers.EventPointer{ID: input}
+		return &pointers.Event{ID: eventid.EventID(input)}
 	case "nevent":
-		ep := data.(pointers.EventPointer)
+		ep := data.(pointers.Event)
 		return &ep
 	}
 
