@@ -48,7 +48,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	var e error
 	var conn *websocket.Conn
 	if conn, e = rl.upgrader.Upgrade(w, r, nil); log.Fail(e) {
-		rl.E.F("failed to upgrade websocket: %v\n", e)
+		rl.E.F("failed to upgrade websocket: %v", e)
 		return
 	}
 	rl.clients.Store(conn, struct{}{})
@@ -109,7 +109,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					websocket.CloseNoStatusReceived, // 1005
 					websocket.CloseAbnormalClosure,  // 1006
 				) {
-					rl.E.F("unexpected close error from %s: %v\n", r.Header.Get("X-Forwarded-For"), e)
+					rl.E.F("unexpected close error from %s: %v", r.Header.Get("X-Forwarded-For"), e)
 				}
 				return
 			}
@@ -267,7 +267,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						"use of closed network connection",
 					) {
 						rl.E.F("error writing ping: %v; "+
-							"closing websocket\n", e)
+							"closing websocket", e)
 					}
 					return
 				}

@@ -1,12 +1,14 @@
 package normalize
 
 import (
-	"fmt"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
+
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 )
+
+var log = log2.GetStd()
 
 // URL normalizes the URL
 //
@@ -36,8 +38,7 @@ func URL(u string) string {
 			strings.HasPrefix(u, "wss://")) {
 		split := strings.Split(u, ":")
 		if len(split) != 2 {
-			_, _ = fmt.Fprintf(os.Stderr,
-				"Error: more than one ':' in URL: '%s'\n", u)
+			log.D.F("Error: more than one ':' in URL: '%s'", u)
 			// this is a malformed URL if it has more than one ":", return empty
 			// since this function does not return an error explicitly.
 			return ""
@@ -45,14 +46,12 @@ func URL(u string) string {
 
 		port, e := strconv.ParseInt(split[1], 10, 64)
 		if e != nil {
-			_, _ = fmt.Fprintf(os.Stderr,
-				"Error normalizing URL '%s': %s\n", u, e)
+			log.D.F("Error normalizing URL '%s': %s", u, e)
 			// again, without an error we must return nil
 			return ""
 		}
 		if port > 65535 {
-			_, _ = fmt.Fprintf(os.Stderr,
-				"Port on address %d: greater than maximum 65535\n", port)
+			log.D.F("Port on address %d: greater than maximum 65535", port)
 			return ""
 		}
 		// if the port is explicitly set to 443 we assume it is wss:// and drop

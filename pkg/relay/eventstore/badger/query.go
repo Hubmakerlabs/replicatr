@@ -63,14 +63,14 @@ func (b *Backend) Q(queries []query, since uint32, extraFilter *filter.T, f *fil
 						if errors.Is(e, badger.ErrDiscardedTxn) {
 							return
 						}
-						log.E.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s\n",
+						log.E.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
 							idx, q.prefix, key, e)
 						return
 					}
 					log.D.Chk(item.Value(func(val []byte) (e error) {
 						evt := &event.T{}
 						if e = nostr_binary.Unmarshal(val, evt); e != nil {
-							log.E.F("badger: value read error (id %x): %s\n", val[0:32], e)
+							log.E.F("badger: value read error (id %x): %s", val[0:32], e)
 							return e
 						}
 						// check if this matches the other filters that were not part of the index
@@ -135,7 +135,7 @@ func (b *Backend) Q(queries []query, since uint32, extraFilter *filter.T, f *fil
 		return nil
 	})
 	if log.E.Chk(e) {
-		log.E.F("badger: query txn error: %s\n", e)
+		log.E.F("badger: query txn error: %s", e)
 	}
 }
 
@@ -181,14 +181,14 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (evChan chan *event.T, e
 							if errors.Is(e, badger.ErrDiscardedTxn) {
 								return
 							}
-							log.E.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s\n",
+							log.E.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
 								idx, q.prefix, key, e)
 							return
 						}
 						log.D.Chk(item.Value(func(val []byte) (e error) {
 							evt := &event.T{}
 							if e = nostr_binary.Unmarshal(val, evt); e != nil {
-								log.E.F("badger: value read error (id %x): %s\n", val[0:32], e)
+								log.E.F("badger: value read error (id %x): %s", val[0:32], e)
 								return e
 							}
 							// check if this matches the other filters that were not part of the index
@@ -253,7 +253,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (evChan chan *event.T, e
 			return nil
 		})
 		if log.E.Chk(e) {
-			log.E.F("badger: query txn error: %s\n", e)
+			log.E.F("badger: query txn error: %s", e)
 		}
 	}()
 	return

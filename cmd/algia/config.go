@@ -92,7 +92,7 @@ func (cfg *C) GetFollows(profile string) (profiles Follows, e error) {
 		mu.Unlock()
 		m := make(Checklist)
 		cfg.Do(rp, cfg.GetRelaysAndTags(pub, m, &mu))
-		log.D.F("found %d followers\n", len(m))
+		log.D.F("found %d followers", len(m))
 		if len(m) > 0 {
 			var follows []string
 			for k := range m {

@@ -2,12 +2,12 @@ package pools
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -17,6 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/puzpuzpuz/xsync/v2"
 )
+var log = log2.GetStd()
 
 const (
 	seenAlreadyDropTick = time.Minute
@@ -195,7 +196,7 @@ func (pool *SimplePool) subMany(c context.T, urls []string, filters filters.T, u
 								goto subscribe
 							}
 						} else {
-							log.Printf("CLOSED from %s: '%s'\n", nm, reason)
+							log.D.F("CLOSED from %s: '%s'", nm, reason)
 						}
 						return
 					case <-c.Done():
@@ -273,7 +274,7 @@ func (pool *SimplePool) subManyEose(c context.T, urls []string, filters filters.
 							goto subscribe
 						}
 					}
-					log.Printf("CLOSED from %s: '%s'\n", nm, reason)
+					log.D.F("CLOSED from %s: '%s'", nm, reason)
 					return
 				case evt, more := <-sub.Events:
 					if !more {

@@ -17,13 +17,13 @@ import (
 )
 
 type T struct {
-	ID        string              `json:"id"`
+	ID        string      `json:"id"`
 	PubKey    string      `json:"pubkey"`
 	CreatedAt timestamp.T `json:"created_at"`
 	Kind      int         `json:"kind"`
-	Tags      tags.Tags           `json:"tags"`
-	Content   string              `json:"content"`
-	Sig       string              `json:"sig"`
+	Tags      tags.Tags   `json:"tags"`
+	Content   string      `json:"content"`
+	Sig       string      `json:"sig"`
 
 	// anything here will be mashed together with the main event object when serializing
 	extra map[string]any

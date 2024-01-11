@@ -59,7 +59,7 @@ func (b *BadgerBackend) CountEvents(c context.T, f *filter.T) (int64, error) {
 							return
 						}
 						log.D.F("badger: count (%v) failed to get %d from raw " +
-							"event store: %s\n", q, idx)
+							"event store: %s", q, idx)
 						return
 					}
 
@@ -77,7 +77,7 @@ func (b *BadgerBackend) CountEvents(c context.T, f *filter.T) (int64, error) {
 						return nil
 					})
 					if log.Fail(e) {
-						log.D.F("badger: count value read error: %s\n", e)
+						log.D.F("badger: count value read error: %s", e)
 					}
 				}
 			}

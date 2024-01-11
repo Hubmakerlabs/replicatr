@@ -266,7 +266,7 @@ func (r *Relay) Connect(c context.T) (e error) {
 				if r.notices != nil {
 					r.notices <- env.Text
 				} else {
-					log.D.F("NOTICE from %s: '%s'\n", r.URL, env.Text)
+					log.D.F("NOTICE from %s: '%s'", r.URL, env.Text)
 				}
 			case *auth2.Challenge:
 				if env.Challenge == "" {
@@ -297,7 +297,7 @@ func (r *Relay) Connect(c context.T) (e error) {
 							if log.Fail(e) {
 								msg = e.Error()
 							}
-							log.E.F("{%s} bad signature: %s\n", r.URL, msg)
+							log.E.F("{%s} bad signature: %s", r.URL, msg)
 							continue
 						}
 					}
@@ -371,7 +371,7 @@ func (r *Relay) Publish(c context.T, evt *event.T) (s Status, e error) {
 	defer r.okCallbacks.Delete(string(evt.ID))
 	// publish event
 	envb, _ := (&event2.Envelope{Event: evt}).MarshalJSON()
-	log.D.F("{%s} sending %v\n", r.URL, string(envb))
+	log.D.F("{%s} sending %v", r.URL, string(envb))
 	s = PublishStatusSent
 	if e = <-r.Write(envb); log.Fail(e) {
 		s = PublishStatusFailed
@@ -430,7 +430,7 @@ func (r *Relay) Auth(c context.T, event *event.T) (s Status, e error) {
 	defer r.okCallbacks.Delete(string(event.ID))
 	// send AUTH
 	authResponse, _ := (&auth2.Response{T: event}).MarshalJSON()
-	log.D.F("{%s} sending %v\n", r.URL, string(authResponse))
+	log.D.F("{%s} sending %v", r.URL, string(authResponse))
 	if e = <-r.Write(authResponse); e != nil {
 		// s will be "failed"
 		return s, e

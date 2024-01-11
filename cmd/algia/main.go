@@ -265,20 +265,6 @@ func main() {
 				Action:    doProfile,
 			},
 			{
-				Name:      "powa",
-				Usage:     "post ぽわ〜",
-				UsageText: appName + " powa",
-				HelpName:  "powa",
-				Action:    doPowa,
-			},
-			{
-				Name:      "puru",
-				Usage:     "post ぷる",
-				UsageText: appName + " puru",
-				HelpName:  "puru",
-				Action:    doPuru,
-			},
-			{
 				Name: "zap",
 				Flags: []cli.Flag{
 					&cli.Uint64Flag{Name: "amount", Usage: "amount for zap", Value: 1},
