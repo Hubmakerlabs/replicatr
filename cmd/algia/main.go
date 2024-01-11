@@ -15,18 +15,17 @@ import (
 
 var log = log2.GetStd()
 
-const name = "algia"
+const appName = "algia"
 
 const version = "0.0.54"
 
 var revision = "HEAD"
 
-func configDir() (string, error) {
+func configDir() (dir string, e error) {
 	switch runtime.GOOS {
 	case "darwin":
-		dir, e := os.UserHomeDir()
-		if log.Fail(e) {
-			return "", e
+		if dir, e = os.UserHomeDir(); log.Fail(e) {
+			return
 		}
 		return filepath.Join(dir, ".config"), nil
 	default:
@@ -34,53 +33,55 @@ func configDir() (string, error) {
 	}
 }
 
-func loadConfig(profile string) (*C, error) {
-	dir, e := configDir()
-	if log.Fail(e) {
+func loadConfig(profile string) (cfg *C, e error) {
+	var dir string
+	if dir, e = configDir(); log.Fail(e) {
 		return nil, e
 	}
-	dir = filepath.Join(dir, "algia")
-
+	dir = filepath.Join(dir, appName)
 	var fp string
-	if profile == "" {
+	switch profile {
+	case "":
 		fp = filepath.Join(dir, "config.json")
-	} else if profile == "?" {
-		names, e := filepath.Glob(filepath.Join(dir, "config-*.json"))
-		if log.Fail(e) {
-			return nil, e
+	case "?":
+		var nn []string
+		p := filepath.Join(dir, "config-*.json")
+		if nn, e = filepath.Glob(p); log.Fail(e) {
+			return
 		}
-		for _, n := range names {
+		for _, n := range nn {
 			n = filepath.Base(n)
 			n = strings.TrimLeft(n[6:len(n)-5], "-")
 			fmt.Println(n)
 		}
 		os.Exit(0)
-	} else {
+	default:
 		fp = filepath.Join(dir, "config-"+profile+".json")
 	}
-	log.Fail(os.MkdirAll(filepath.Dir(fp), 0700))
-
-	b, e := os.ReadFile(fp)
-	if log.Fail(e) {
-		return nil, e
+	if e = os.MkdirAll(filepath.Dir(fp), 0700); log.Fail(e) {
+		return
 	}
-	var cfg C
-	e = json.Unmarshal(b, &cfg)
-	if log.Fail(e) {
-		return nil, e
+	var b []byte
+	if b, e = os.ReadFile(fp); log.Fail(e) {
+		return
+	}
+	cfg = new(C)
+	if e = json.Unmarshal(b, cfg); log.Fail(e) {
+		return
 	}
 	if len(cfg.Relays) == 0 {
-		cfg.Relays = map[string]*RelayPerms{}
-		cfg.Relays["wss://relay.nostr.band"] = &RelayPerms{
-			Read:   true,
-			Write:  true,
-			Search: true,
+		cfg.Relays = Relays{
+			"wss://relay.nostr.band": {
+				Read:   true,
+				Write:  true,
+				Search: true,
+			},
 		}
 	}
-	return &cfg, nil
+	return
 }
 
-func doVersion(cCtx *cli.Context) (e error) {
+func doVersion(_ *cli.Context) (e error) {
 	fmt.Println(version)
 	return nil
 }
@@ -90,7 +91,7 @@ func main() {
 		Usage:       "A cli application for nostr",
 		Description: "A cli application for nostr",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "a", Usage: "profile name"},
+			&cli.StringFlag{Name: "a", Usage: "profile appName"},
 			&cli.StringFlag{Name: "relays", Usage: "relays"},
 			&cli.BoolFlag{Name: "V", Usage: "verbose"},
 		},
@@ -129,7 +130,7 @@ func main() {
 					&cli.StringFlag{Name: "geohash"},
 				},
 				Usage:     "post new note",
-				UsageText: "algia post [note text]",
+				UsageText: appName + " post [note text]",
 				HelpName:  "post",
 				ArgsUsage: "[note text]",
 				Action:    doPost,
@@ -146,7 +147,7 @@ func main() {
 					&cli.StringFlag{Name: "geohash"},
 				},
 				Usage:     "reply to the note",
-				UsageText: "algia reply --id [id] [note text]",
+				UsageText: appName + " reply --id [id] [note text]",
 				HelpName:  "reply",
 				ArgsUsage: "[note text]",
 				Action:    doReply,
@@ -158,7 +159,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "repost the note",
-				UsageText: "algia repost --id [id]",
+				UsageText: appName + " repost --id [id]",
 				HelpName:  "repost",
 				Action:    doRepost,
 			},
@@ -169,7 +170,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "unrepost the note",
-				UsageText: "algia unrepost --id [id]",
+				UsageText: appName + " unrepost --id [id]",
 				HelpName:  "unrepost",
 				Action:    doUnrepost,
 			},
@@ -182,7 +183,7 @@ func main() {
 					&cli.StringFlag{Name: "emoji"},
 				},
 				Usage:     "like the note",
-				UsageText: "algia like --id [id]",
+				UsageText: appName + " like --id [id]",
 				HelpName:  "like",
 				Action:    doLike,
 			},
@@ -193,7 +194,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "unlike the note",
-				UsageText: "algia unlike --id [id]",
+				UsageText: appName + " unlike --id [id]",
 				HelpName:  "unlike",
 				Action:    doUnlike,
 			},
@@ -204,7 +205,7 @@ func main() {
 					&cli.StringFlag{Name: "id", Required: true},
 				},
 				Usage:     "delete the note",
-				UsageText: "algia delete --id [id]",
+				UsageText: appName + " delete --id [id]",
 				HelpName:  "delete",
 				Action:    doDelete,
 			},
@@ -217,7 +218,7 @@ func main() {
 					&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
 				},
 				Usage:     "search notes",
-				UsageText: "algia search [words]",
+				UsageText: appName + " search [words]",
 				HelpName:  "search",
 				Action:    doSearch,
 			},
@@ -247,7 +248,7 @@ func main() {
 					&cli.StringFlag{Name: "sensitive"},
 				},
 				Usage:     "post new note",
-				UsageText: "algia post [note text]",
+				UsageText: appName + " post [note text]",
 				HelpName:  "post",
 				ArgsUsage: "[note text]",
 				Action:    doDMPost,
@@ -259,21 +260,21 @@ func main() {
 					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
 				},
 				Usage:     "show profile",
-				UsageText: "algia profile",
+				UsageText: appName + " profile",
 				HelpName:  "profile",
 				Action:    doProfile,
 			},
 			{
 				Name:      "powa",
 				Usage:     "post ぽわ〜",
-				UsageText: "algia powa",
+				UsageText: appName + " powa",
 				HelpName:  "powa",
 				Action:    doPowa,
 			},
 			{
 				Name:      "puru",
 				Usage:     "post ぷる",
-				UsageText: "algia puru",
+				UsageText: appName + " puru",
 				HelpName:  "puru",
 				Action:    doPuru,
 			},
@@ -284,14 +285,14 @@ func main() {
 					&cli.StringFlag{Name: "comment", Usage: "comment for zap", Value: ""},
 				},
 				Usage:     "zap [note|npub|nevent]",
-				UsageText: "algia zap [note|npub|nevent]",
+				UsageText: appName + " zap [note|npub|nevent]",
 				HelpName:  "zap",
 				Action:    doZap,
 			},
 			{
 				Name:      "version",
 				Usage:     "show version",
-				UsageText: "algia version",
+				UsageText: appName + " version",
 				HelpName:  "version",
 				Action:    doVersion,
 			},
@@ -301,8 +302,8 @@ func main() {
 				return nil
 			}
 			profile := cCtx.String("a")
-			cfg, e := loadConfig(profile)
-			if log.Fail(e) {
+			var cfg *C
+			if cfg, e = loadConfig(profile); log.Fail(e) {
 				return e
 			}
 			cCtx.App.Metadata = map[string]any{
@@ -314,7 +315,7 @@ func main() {
 			}
 			relays := cCtx.String("relays")
 			if strings.TrimSpace(relays) != "" {
-				cfg.Relays = make(map[string]*RelayPerms)
+				cfg.Relays = make(Relays)
 				for _, rl := range strings.Split(relays, ",") {
 					cfg.Relays[rl] = &RelayPerms{
 						Read:  true,
