@@ -8,14 +8,13 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/urfave/cli/v2"
 )
 
 var log = log2.GetStd()
 
-const appName = "algia"
+const appName = "postr"
 
 const version = "0.0.54"
 
@@ -107,18 +106,18 @@ func main() {
 				},
 				Action: doTimeline,
 			},
-			{
-				Name:  "stream",
-				Usage: "show stream",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "author"},
-					&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(event.KindTextNote)},
-					&cli.BoolFlag{Name: "follow"},
-					&cli.StringFlag{Name: "pattern"},
-					&cli.StringFlag{Name: "reply"},
-				},
-				Action: doStream,
-			},
+			// {
+			// 	Name:  "stream",
+			// 	Usage: "show stream",
+			// 	Flags: []cli.Flag{
+			// 		&cli.StringFlag{Name: "author"},
+			// 		&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(event.KindTextNote)},
+			// 		&cli.BoolFlag{Name: "follow"},
+			// 		&cli.StringFlag{Name: "pattern"},
+			// 		&cli.StringFlag{Name: "reply"},
+			// 	},
+			// 	Action: doStream,
+			// },
 			{
 				Name:    "post",
 				Aliases: []string{"n"},
@@ -163,17 +162,17 @@ func main() {
 				HelpName:  "repost",
 				Action:    doRepost,
 			},
-			{
-				Name:    "unrepost",
-				Aliases: []string{"B"},
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "id", Required: true},
-				},
-				Usage:     "unrepost the note",
-				UsageText: appName + " unrepost --id [id]",
-				HelpName:  "unrepost",
-				Action:    doUnrepost,
-			},
+			// {
+			// 	Name:    "unrepost",
+			// 	Aliases: []string{"B"},
+			// 	Flags: []cli.Flag{
+			// 		&cli.StringFlag{Name: "id", Required: true},
+			// 	},
+			// 	Usage:     "unrepost the note",
+			// 	UsageText: appName + " unrepost --id [id]",
+			// 	HelpName:  "unrepost",
+			// 	Action:    doUnrepost,
+			// },
 			{
 				Name:    "like",
 				Aliases: []string{"l"},
@@ -187,28 +186,28 @@ func main() {
 				HelpName:  "like",
 				Action:    doLike,
 			},
-			{
-				Name:    "unlike",
-				Aliases: []string{"L"},
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "id", Required: true},
-				},
-				Usage:     "unlike the note",
-				UsageText: appName + " unlike --id [id]",
-				HelpName:  "unlike",
-				Action:    doUnlike,
-			},
-			{
-				Name:    "delete",
-				Aliases: []string{"d"},
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "id", Required: true},
-				},
-				Usage:     "delete the note",
-				UsageText: appName + " delete --id [id]",
-				HelpName:  "delete",
-				Action:    doDelete,
-			},
+			// {
+			// 	Name:    "unlike",
+			// 	Aliases: []string{"L"},
+			// 	Flags: []cli.Flag{
+			// 		&cli.StringFlag{Name: "id", Required: true},
+			// 	},
+			// 	Usage:     "unlike the note",
+			// 	UsageText: appName + " unlike --id [id]",
+			// 	HelpName:  "unlike",
+			// 	Action:    doUnlike,
+			// },
+			// {
+			// 	Name:    "delete",
+			// 	Aliases: []string{"d"},
+			// 	Flags: []cli.Flag{
+			// 		&cli.StringFlag{Name: "id", Required: true},
+			// 	},
+			// 	Usage:     "delete the note",
+			// 	UsageText: appName + " delete --id [id]",
+			// 	HelpName:  "delete",
+			// 	Action:    doDelete,
+			// },
 			{
 				Name:    "search",
 				Aliases: []string{"s"},
@@ -222,37 +221,37 @@ func main() {
 				HelpName:  "search",
 				Action:    doSearch,
 			},
-			{
-				Name:  "dm-list",
-				Usage: "show DM list",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
-				},
-				Action: doDMList,
-			},
-			{
-				Name:  "dm-timeline",
-				Usage: "show DM timeline",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "u", Value: "", Usage: "DM user", Required: true},
-					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
-					&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
-				},
-				Action: doDMTimeline,
-			},
-			{
-				Name: "dm-post",
-				Flags: []cli.Flag{
-					&cli.StringFlag{Name: "u", Value: "", Usage: "DM user", Required: true},
-					&cli.BoolFlag{Name: "stdin"},
-					&cli.StringFlag{Name: "sensitive"},
-				},
-				Usage:     "post new note",
-				UsageText: appName + " post [note text]",
-				HelpName:  "post",
-				ArgsUsage: "[note text]",
-				Action:    doDMPost,
-			},
+			// {
+			// 	Name:  "dm-list",
+			// 	Usage: "show DM list",
+			// 	Flags: []cli.Flag{
+			// 		&cli.BoolFlag{Name: "json", Usage: "output JSON"},
+			// 	},
+			// 	Action: doDMList,
+			// },
+			// {
+			// 	Name:  "dm-timeline",
+			// 	Usage: "show DM timeline",
+			// 	Flags: []cli.Flag{
+			// 		&cli.StringFlag{Name: "u", Value: "", Usage: "DM user", Required: true},
+			// 		&cli.BoolFlag{Name: "json", Usage: "output JSON"},
+			// 		&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
+			// 	},
+			// 	Action: doDMTimeline,
+			// },
+			// {
+			// 	Name: "dm-post",
+			// 	Flags: []cli.Flag{
+			// 		&cli.StringFlag{Name: "u", Value: "", Usage: "DM user", Required: true},
+			// 		&cli.BoolFlag{Name: "stdin"},
+			// 		&cli.StringFlag{Name: "sensitive"},
+			// 	},
+			// 	Usage:     "post new note",
+			// 	UsageText: appName + " post [note text]",
+			// 	HelpName:  "post",
+			// 	ArgsUsage: "[note text]",
+			// 	Action:    doDMPost,
+			// },
 			{
 				Name: "profile",
 				Flags: []cli.Flag{
@@ -264,17 +263,17 @@ func main() {
 				HelpName:  "profile",
 				Action:    doProfile,
 			},
-			{
-				Name: "zap",
-				Flags: []cli.Flag{
-					&cli.Uint64Flag{Name: "amount", Usage: "amount for zap", Value: 1},
-					&cli.StringFlag{Name: "comment", Usage: "comment for zap", Value: ""},
-				},
-				Usage:     "zap [note|npub|nevent]",
-				UsageText: appName + " zap [note|npub|nevent]",
-				HelpName:  "zap",
-				Action:    doZap,
-			},
+			// {
+			// 	Name: "zap",
+			// 	Flags: []cli.Flag{
+			// 		&cli.Uint64Flag{Name: "amount", Usage: "amount for zap", Value: 1},
+			// 		&cli.StringFlag{Name: "comment", Usage: "comment for zap", Value: ""},
+			// 	},
+			// 	Usage:     "zap [note|npub|nevent]",
+			// 	UsageText: appName + " zap [note|npub|nevent]",
+			// 	HelpName:  "zap",
+			// 	Action:    doZap,
+			// },
 			{
 				Name:      "version",
 				Usage:     "show version",
@@ -313,8 +312,7 @@ func main() {
 			return nil
 		},
 	}
-
-	if e := app.Run(os.Args); log.Fail(e) {
+	if e := app.Run(os.Args); log.E.Chk(e) {
 		os.Exit(1)
 	}
 }

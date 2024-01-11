@@ -239,7 +239,7 @@ func (cfg *C) save(profile string) (e error) {
 	if log.Fail(e) {
 		return e
 	}
-	dir = filepath.Join(dir, "algia")
+	dir = filepath.Join(dir, appName)
 
 	var fp string
 	if profile == "" {
