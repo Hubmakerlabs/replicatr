@@ -62,7 +62,7 @@ func TestPublish(t *testing.T) {
 
 	// connect a client and send the text note
 	rl := MustRelayConnect(ws.URL)
-	e := rl.Publish(context.Bg(), textNote)
+	e := rl.Publish(context.Bg(), &textNote)
 	if e != nil {
 		t.Errorf("publish should have succeeded")
 	}
@@ -91,7 +91,7 @@ func TestPublishBlocked(t *testing.T) {
 
 	// connect a client and send a text note
 	rl := MustRelayConnect(ws.URL)
-	e := rl.Publish(context.Bg(), textNote)
+	e := rl.Publish(context.Bg(), &textNote)
 	if e == nil {
 		t.Errorf("should have failed to publish")
 	}
@@ -113,7 +113,7 @@ func TestPublishWriteFailed(t *testing.T) {
 	rl := MustRelayConnect(ws.URL)
 	// Force brief period of time so that publish always fails on closed socket.
 	time.Sleep(1 * time.Millisecond)
-	e := rl.Publish(context.Bg(), textNote)
+	e := rl.Publish(context.Bg(), &textNote)
 	if e == nil {
 		t.Errorf("should have failed to publish")
 	}
