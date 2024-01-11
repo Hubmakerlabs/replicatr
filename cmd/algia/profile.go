@@ -9,31 +9,24 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
 	"github.com/urfave/cli/v2"
 )
 
 func doProfile(cCtx *cli.Context) (e error) {
-	user := cCtx.String("u")
-	j := cCtx.Bool("json")
-
+	user, j := cCtx.String("u"), cCtx.Bool("json")
 	cfg := cCtx.App.Metadata["config"].(*C)
-	rl := cfg.FindRelay(context.Bg(), RelayPerms{Read: true})
-	if rl == nil {
+	var rl *relays.Relay
+	if rl = cfg.FindRelay(context.Bg(), rp); rl == nil {
 		return errors.New("cannot connect relays")
 	}
 	defer log.E.Chk(rl.Close())
-
 	var pub string
 	if user == "" {
-		var s any
-		if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+		if pub, _, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
 			return
-		}
-		if pub, e = keys.GetPublicKey(s.(string)); log.Fail(e) {
-			return e
 		}
 	} else {
 		if pp := sdk.InputToProfile(context.TODO(), user); pp != nil {

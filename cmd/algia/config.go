@@ -16,9 +16,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/fatih/color"
 )
@@ -29,6 +27,9 @@ type RelayPerms struct {
 	Write  bool `json:"write"`
 	Search bool `json:"search"`
 }
+
+var rp = &RelayPerms{Read: true}
+var wp = &RelayPerms{Write: true}
 
 // Event is
 type Event struct {
@@ -44,54 +45,53 @@ type Profile struct {
 	Lud16       string `json:"lud16"`
 	DisplayName string `json:"display_name"`
 	About       string `json:"about"`
-	Name        string `json:"name"`
+	Name        string `json:"appName"`
 }
 
-type Follows map[string]*Profile
-type Relays map[string]*RelayPerms
-type Emojis map[string]string
+type (
+	Follows       map[string]*Profile
+	Relays        map[string]*RelayPerms
+	Emojis        map[string]string
+	Checklist     map[string]struct{}
+	RelayIterator func(context.T, *relays.Relay) bool
+)
 
 // C is the configuration for the client
 type C struct {
-	Relays     `json:"relays"`
-	Follows    `json:"follows"`
-	PrivateKey string    `json:"privatekey"`
-	Updated    time.Time `json:"updated"`
-	Emojis     `json:"emojis"`
-	NwcURI     string `json:"nwc-uri"`
-	NwcPub     string `json:"nwc-pub"`
-	verbose    bool
-	tempRelay  bool
-	sk         string
+	Relays    `json:"relays"`
+	Follows   `json:"follows"`
+	SecretKey string    `json:"privatekey"`
+	Updated   time.Time `json:"updated"`
+	Emojis    `json:"emojis"`
+	NwcURI    string `json:"nwc-uri"`
+	NwcPub    string `json:"nwc-pub"`
+	verbose   bool
+	tempRelay bool
+	sk        string
 }
 
-type RelayIterator func(context.T, *relays.Relay) bool
+func (cfg *C) LastUpdated(t time.Duration) bool {
+	return cfg.Updated.Add(t).Before(time.Now())
+}
 
-type Checklist map[string]struct{}
-
-var rp = &RelayPerms{Read: true}
-var wp = &RelayPerms{Write: true}
+func (cfg *C) Touch() { cfg.Updated = time.Now() }
 
 // GetFollows is
-func (cfg *C) GetFollows(profile string) (profiles map[string]*Profile, e error) {
+func (cfg *C) GetFollows(profile string) (profiles Follows, e error) {
 	var mu sync.Mutex
 	var pub string
-	var s any
-	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
-		return nil, e
-	}
-	if pub, e = keys.GetPublicKey(s.(string)); log.Fail(e) {
-		return nil, e
+	if pub, _, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+		return
 	}
 	// get followers
-	if (cfg.Updated.Add(3*time.Hour).Before(time.Now()) && !cfg.tempRelay) ||
+	if (cfg.LastUpdated(3*time.Hour) && !cfg.tempRelay) ||
 		len(cfg.Follows) == 0 {
 
 		mu.Lock()
-		cfg.Follows = Follows{}
+		cfg.Follows = make(Follows)
 		mu.Unlock()
-		m := Checklist{}
-		cfg.Do(rp, cfg.aoeu(pub, m, &mu))
+		m := make(Checklist)
+		cfg.Do(rp, cfg.GetRelaysAndTags(pub, m, &mu))
 		log.D.F("found %d followers\n", len(m))
 		if len(m) > 0 {
 			var follows []string
@@ -109,14 +109,14 @@ func (cfg *C) GetFollows(profile string) (profiles map[string]*Profile, e error)
 				cfg.Do(rp, cfg.PopulateFollows(follows, i, end, &mu))
 			}
 		}
-		cfg.Updated = time.Now()
+		cfg.Touch()
 		if e = cfg.save(profile); log.Fail(e) {
 			return nil, e
 		}
 	}
 	return cfg.Follows, nil
 }
-func (cfg *C) aoeu(pub string, m Checklist, mu *sync.Mutex) RelayIterator {
+func (cfg *C) GetRelaysAndTags(pub string, m Checklist, mu *sync.Mutex) RelayIterator {
 	return func(c context.T, rl *relays.Relay) bool {
 		evs, e := rl.QuerySync(c, filter.T{
 			Kinds:   []int{event.KindContactList},
@@ -175,7 +175,7 @@ func (cfg *C) PopulateFollows(f []string, i, end int, mu *sync.Mutex) RelayItera
 }
 
 // FindRelay is
-func (cfg *C) FindRelay(c context.T, r RelayPerms) *relays.Relay {
+func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relays.Relay {
 	for k, v := range cfg.Relays {
 		if r.Write && !v.Write {
 			continue
@@ -186,9 +186,7 @@ func (cfg *C) FindRelay(c context.T, r RelayPerms) *relays.Relay {
 		if !r.Write && !v.Read {
 			continue
 		}
-		if cfg.verbose {
-			fmt.Printf("trying relay: %s\n", k)
-		}
+		log.D.F("trying relay: %s", k)
 		rl, e := relays.RelayConnect(c, k)
 		if log.Fail(e) {
 			continue
@@ -256,12 +254,8 @@ func (cfg *C) save(profile string) (e error) {
 func (cfg *C) Decode(ev *event.T) (e error) {
 	var sk string
 	var pub string
-	var s any
-	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+	if pub, _, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
 		return
-	}
-	if pub, e = keys.GetPublicKey(s.(string)); log.Fail(e) {
-		return e
 	}
 	tag := ev.Tags.GetFirst([]string{"p"})
 	if tag == nil {
@@ -365,24 +359,24 @@ func (cfg *C) Events(f filter.T) []*event.T {
 		return true
 	})
 
-	keys := []string{}
+	var kk []string
 	m.Range(func(k, v any) bool {
-		keys = append(keys, k.(string))
+		kk = append(kk, k.(string))
 		return true
 	})
-	sort.Slice(keys, func(i, j int) bool {
-		lhs, ok := m.Load(keys[i])
+	sort.Slice(kk, func(i, j int) bool {
+		lhs, ok := m.Load(kk[i])
 		if !ok {
 			return false
 		}
-		rhs, ok := m.Load(keys[j])
+		rhs, ok := m.Load(kk[j])
 		if !ok {
 			return false
 		}
 		return lhs.(*event.T).CreatedAt.Time().Before(rhs.(*event.T).CreatedAt.Time())
 	})
 	var evs []*event.T
-	for _, key := range keys {
+	for _, key := range kk {
 		vv, ok := m.Load(key)
 		if !ok {
 			continue
@@ -394,30 +388,26 @@ func (cfg *C) Events(f filter.T) []*event.T {
 
 // ZapInfo is
 func (cfg *C) ZapInfo(pub string) (*Lnurlp, error) {
-	rl := cfg.FindRelay(context.Bg(), RelayPerms{Read: true})
+	rl := cfg.FindRelay(context.Bg(), rp)
 	if rl == nil {
 		return nil, errors.New("cannot connect relays")
 	}
 	defer rl.Close()
-
 	// get set-metadata
 	f := filter.T{
 		Kinds:   []int{event.KindProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
 	}
-
 	evs := cfg.Events(f)
 	if len(evs) == 0 {
 		return nil, errors.New("cannot find user")
 	}
-
 	var profile Profile
 	e := json.Unmarshal([]byte(evs[0].Content), &profile)
 	if log.Fail(e) {
 		return nil, e
 	}
-
 	tok := strings.SplitN(profile.Lud16, "@", 2)
 	if log.Fail(e) {
 		return nil, e
@@ -425,16 +415,15 @@ func (cfg *C) ZapInfo(pub string) (*Lnurlp, error) {
 	if len(tok) != 2 {
 		return nil, errors.New("receipt address is not valid")
 	}
-
-	resp, e := http.Get("https://" + tok[1] + "/.well-known/lnurlp/" + tok[0])
+	var resp *http.Response
+	resp, e = http.Get("https://" + tok[1] + "/.well-known/lnurlp/" + tok[0])
 	if log.Fail(e) {
 		return nil, e
 	}
-	defer resp.Body.Close()
+	defer log.Fail(resp.Body.Close())
 
 	var lp Lnurlp
-	e = json.NewDecoder(resp.Body).Decode(&lp)
-	if log.Fail(e) {
+	if e = json.NewDecoder(resp.Body).Decode(&lp); log.Fail(e) {
 		return nil, e
 	}
 	return &lp, nil

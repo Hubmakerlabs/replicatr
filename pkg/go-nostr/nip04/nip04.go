@@ -11,29 +11,31 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 )
+
+var log = log2.GetStd()
 
 // ComputeSharedSecret returns a shared secret key used to encrypt messages.
 // The private and public keys should be hex encoded.
 // Uses the Diffie-Hellman key exchange (ECDH) (RFC 4753).
-func ComputeSharedSecret(pub string, sk string) (sharedSecret []byte, e error) {
-	privKeyBytes, e := hex.Dec(sk)
+func ComputeSharedSecret(pub string, sec string) (sharedSecret []byte, e error) {
+	var secBytes []byte
+	secBytes, e = hex.Dec(sec)
 	if e != nil {
 		return nil, fmt.Errorf("error decoding sender private key: %w", e)
 	}
-	privKey, _ := btcec.PrivKeyFromBytes(privKeyBytes)
-
+	secKey, _ := btcec.PrivKeyFromBytes(secBytes)
 	// adding 02 to signal that this is a compressed public key (33 bytes)
-	pubKeyBytes, e := hex.Dec("02" + pub)
-	if e != nil {
+	var pubBytes []byte
+	if pubBytes, e = hex.Dec("02" + pub); log.Fail(e) {
 		return nil, fmt.Errorf("error decoding hex string of receiver public key '%s': %w", "02"+pub, e)
 	}
-	pubKey, e := btcec.ParsePubKey(pubKeyBytes)
-	if e != nil {
+	var pubKey *btcec.PublicKey
+	if pubKey, e = btcec.ParsePubKey(pubBytes); log.Fail(e) {
 		return nil, fmt.Errorf("error parsing receiver public key '%s': %w", "02"+pub, e)
 	}
-
-	return btcec.GenerateSharedSecret(privKey, pubKey), nil
+	return btcec.GenerateSharedSecret(secKey, pubKey), nil
 }
 
 // Encrypt encrypts message with key using aes-256-cbc.

@@ -154,35 +154,25 @@ func doZap(cCtx *cli.Context) (e error) {
 	}
 
 	cfg := cCtx.App.Metadata["config"].(*C)
-
-	var sk string
-	var s any
-	if _, s, e = nip19.Decode(cfg.PrivateKey); log.Fail(e) {
+	var pub, sk string
+	if pub, sk, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
 		return
 	}
-	sk = s.(string)
 	receipt := ""
-	zr := event.T{}
-	zr.Tags = tags.Tags{}
-
-	if pub, e := keys.GetPublicKey(sk); e == nil {
-		if _, e := nip19.EncodePublicKey(pub); log.Fail(e) {
-			return e
-		}
-		zr.PubKey = pub
-	} else {
-		return e
+	zr := event.T{
+		PubKey: pub,
+		Tags:   tags.Tags{},
 	}
-
 	zr.Tags = zr.Tags.AppendUnique(tags.Tag{"amount", fmt.Sprint(amount * 1000)})
-	relays := tags.Tag{"relays"}
+	rls := tags.Tag{"relays"}
 	for k, v := range cfg.Relays {
 		if v.Write {
-			relays = append(relays, k)
+			rls = append(rls, k)
 		}
 	}
-	zr.Tags = zr.Tags.AppendUnique(relays)
+	zr.Tags = zr.Tags.AppendUnique(rls)
 	var prefix string
+	var s any
 	if prefix, s, e = nip19.Decode(cCtx.Args().First()); !log.Fail(e) {
 		switch prefix {
 		case "nevent":
@@ -203,23 +193,22 @@ func doZap(cCtx *cli.Context) (e error) {
 			return errors.New("invalid argument")
 		}
 	}
-
 	zr.Kind = event.KindZapRequest // 9734
 	zr.CreatedAt = timestamp.Now()
 	zr.Content = comment
-	if e := zr.Sign(sk); log.Fail(e) {
+	if e = zr.Sign(sk); log.Fail(e) {
 		return e
 	}
-	b, e := zr.MarshalJSON()
-	if log.Fail(e) {
+	var b []byte
+	if b, e = zr.MarshalJSON(); log.Fail(e) {
 		return e
 	}
-
-	zi, e := cfg.ZapInfo(receipt)
-	if log.Fail(e) {
+	var zi *Lnurlp
+	if zi, e = cfg.ZapInfo(receipt); log.Fail(e) {
 		return e
 	}
-	u, e := url.Parse(zi.Callback)
+	var u *url.URL
+	u, e = url.Parse(zi.Callback)
 	if log.Fail(e) {
 		return e
 	}
@@ -227,18 +216,15 @@ func doZap(cCtx *cli.Context) (e error) {
 	param.Set("amount", fmt.Sprint(amount*1000))
 	param.Set("nostr", string(b))
 	u.RawQuery = param.Encode()
-	resp, e := http.Get(u.String())
-	if log.Fail(e) {
+	var resp *http.Response
+	if resp, e = http.Get(u.String()); log.Fail(e) {
 		return e
 	}
-	defer resp.Body.Close()
-
+	defer log.Fail(resp.Body.Close())
 	var iv Invoice
-	e = json.NewDecoder(resp.Body).Decode(&iv)
-	if log.Fail(e) {
+	if e = json.NewDecoder(resp.Body).Decode(&iv); log.Fail(e) {
 		return e
 	}
-
 	if cfg.NwcURI == "" {
 		config := qrterminal.Config{
 			HalfBlocks: false,
@@ -252,7 +238,7 @@ func doZap(cCtx *cli.Context) (e error) {
 		fmt.Println("lightning:" + iv.PR)
 		qrterminal.GenerateWithConfig("lightning:"+iv.PR, config)
 	} else {
-		pay(cCtx.App.Metadata["config"].(*C), iv.PR)
+		log.Fail(pay(cCtx.App.Metadata["config"].(*C), iv.PR))
 	}
 	return nil
 }
