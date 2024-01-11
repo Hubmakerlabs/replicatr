@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -18,6 +19,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 )
+
+var log = log2.GetStd()
 
 func main() {
 	ctx, cancel := context.Timeout(context.Bg(), 3*time.Second)
@@ -32,7 +35,7 @@ func main() {
 	reader := os.Stdin
 	var npub string
 	var b [64]byte
-	fmt.Fprintf(os.Stderr, "using %s\n----\nexample subscription for three most recent notes mentioning user\npaste npub key: ", url)
+	log.D.F("using %s\n----\nexample subscription for three most recent notes mentioning user\npaste npub key: ", url)
 	if n, e := reader.Read(b[:]); e == nil {
 		npub = strings.TrimSpace(fmt.Sprintf("%s", b[:n]))
 	} else {
@@ -73,7 +76,7 @@ func main() {
 
 	filename := "example_output.json"
 	if f, e := os.Create(filename); e == nil {
-		fmt.Fprintf(os.Stderr, "returned events saved to %s\n", filename)
+		log.D.F("returned events saved to %s\n", filename)
 		// encode the returned events in a file
 		enc := json.NewEncoder(f)
 		enc.SetIndent("", " ")
@@ -83,7 +86,7 @@ func main() {
 		panic(e)
 	}
 
-	fmt.Fprintf(os.Stderr, "----\nexample publication of note.\npaste nsec key (leave empty to autogenerate): ")
+	log.D.F("----\nexample publication of note.\npaste nsec key (leave empty to autogenerate): ")
 	var nsec string
 	if n, e := reader.Read(b[:]); e == nil {
 		nsec = strings.TrimSpace(fmt.Sprintf("%s", b[:n]))
@@ -130,6 +133,6 @@ func main() {
 			continue
 		}
 		fmt.Println("posting to: ", url)
-		rl.Publish(ctx, ev)
+		log.Fail(rl.Publish(ctx, &ev))
 	}
 }

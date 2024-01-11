@@ -3,13 +3,13 @@ package relays
 import (
 	"bytes"
 	"fmt"
-	"log"
 	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/OK"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/auth"
@@ -30,6 +30,8 @@ import (
 	"github.com/gobwas/ws/wsutil"
 	"github.com/puzpuzpuz/xsync/v2"
 )
+
+var log = log2.GetStd()
 
 type Status int
 
@@ -178,18 +180,19 @@ func (r *Relay) Connect(c context.T) error {
 
 	// queue all write operations here so we don't do mutex spaghetti
 	go func() {
+		var e error
 		for {
 			select {
 			case <-ticker.C:
-				e := wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil)
+				e = wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil)
 				if e != nil {
-					fmt.Printf("{%s} error writing ping: %v; closing websocket", r.URL, e)
+					log.D.F("{%s} error writing ping: %v; closing websocket", r.URL, e)
 					r.Close() // this should trigger a context cancelation
 					return
 				}
 			case writeRequest := <-r.writeQueue:
 				// all write requests will go through this to prevent races
-				if e := r.Connection.WriteMessage(writeRequest.msg); e != nil {
+				if e = r.Connection.WriteMessage(writeRequest.msg); e != nil {
 					writeRequest.answer <- e
 				}
 				close(writeRequest.answer)
@@ -213,7 +216,7 @@ func (r *Relay) Connect(c context.T) error {
 			}
 
 			message := buf.Bytes()
-			fmt.Printf("{%s} %v\n", r.URL, string(message))
+			log.D.F("{%s} %v", r.URL, string(message))
 			envelope := envelope2.ParseMessage(message)
 			if envelope == nil {
 				continue
@@ -225,7 +228,7 @@ func (r *Relay) Connect(c context.T) error {
 				if r.notices != nil {
 					r.notices <- string(*env)
 				} else {
-					log.Printf("NOTICE from %s: '%s'\n", r.URL, string(*env))
+					log.D.F("NOTICE from %s: '%s'", r.URL, string(*env))
 				}
 			case *auth.Envelope:
 				if env.Challenge == nil {
@@ -237,13 +240,13 @@ func (r *Relay) Connect(c context.T) error {
 					continue
 				}
 				if subscription, ok := r.Subscriptions.Load(*env.SubscriptionID); !ok {
-					fmt.Printf("{%s} no subscription with id '%s'\n",
+					log.D.F("{%s} no subscription with id '%s'",
 						r.URL, *env.SubscriptionID)
 					continue
 				} else {
 					// check if the event matches the desired filter, ignore otherwise
 					if !subscription.Filters.Match(&env.T) {
-						fmt.Printf("{%s} filter does not match: %v ~ %v\n",
+						log.D.F("{%s} filter does not match: %v ~ %v",
 							r.URL, subscription.Filters, env.T)
 						continue
 					}
@@ -255,7 +258,7 @@ func (r *Relay) Connect(c context.T) error {
 							if e != nil {
 								errmsg = e.Error()
 							}
-							fmt.Printf("{%s} bad signature on %s; %s\n", r.URL, env.T.ID, errmsg)
+							log.D.F("{%s} bad signature on %s; %s", r.URL, env.T.ID, errmsg)
 							continue
 						}
 					}
@@ -279,7 +282,7 @@ func (r *Relay) Connect(c context.T) error {
 				if okCallback, exist := r.okCallbacks.Load(env.EventID); exist {
 					okCallback(env.OK, env.Reason)
 				} else {
-					fmt.Printf("{%s} got an unexpected OK message for event %s", r.URL, env.EventID)
+					log.D.F("{%s} got an unexpected OK message for event %s", r.URL, env.EventID)
 				}
 			}
 		}
@@ -354,7 +357,7 @@ func (r *Relay) publish(c context.T, id string, env envelopes.E) error {
 
 	// publish event
 	envb, _ := env.MarshalJSON()
-	fmt.Printf("{%s} sending %v\n", r.URL, string(envb))
+	log.D.F("{%s} sending %v", r.URL, string(envb))
 	if e := <-r.Write(envb); e != nil {
 		return e
 	}

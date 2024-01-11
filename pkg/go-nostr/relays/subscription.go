@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/closer"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/count"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
@@ -147,7 +146,7 @@ func (sub *Subscription) Close() {
 		id := sub.GetID()
 		closeMsg := close2.Envelope(id)
 		closeb, _ := (&closeMsg).MarshalJSON()
-		fmt.Printf("{%s} sending %v", sub.Relay.URL, string(closeb))
+		log.D.F("{%s} sending %v", sub.Relay.URL, string(closeb))
 		<-sub.Relay.Write(closeb)
 	}
 }
@@ -156,7 +155,7 @@ func (sub *Subscription) Close() {
 // The subscription will be closed if the context expires.
 func (sub *Subscription) Sub(_ context.T, filters filters.T) {
 	sub.Filters = filters
-	sub.Fire()
+	log.Fail(sub.Fire())
 }
 
 // Fire sends the "REQ" command to the relay.
@@ -169,7 +168,7 @@ func (sub *Subscription) Fire() error {
 	} else {
 		reqb, _ = count.Envelope{id, sub.Filters, nil}.MarshalJSON()
 	}
-	fmt.Printf("{%s} sending %v", sub.Relay.URL, string(reqb))
+	log.D.F("{%s} sending %v", sub.Relay.URL, string(reqb))
 
 	sub.live.Store(true)
 	if e := <-sub.Relay.Write(reqb); e != nil {

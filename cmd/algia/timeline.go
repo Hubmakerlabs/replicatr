@@ -738,9 +738,9 @@ func doTimeline(cCtx *cli.Context) (e error) {
 	extra := cCtx.Bool("extra")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	// get followers
-	followsMap, e := cfg.GetFollows(cCtx.String("a"))
-	if log.Fail(e) {
-		return e
+	var followsMap Follows
+	if followsMap, e = cfg.GetFollows(cCtx.String("a")); log.Fail(e) {
+		return
 	}
 	var follows []string
 	for k := range followsMap {
@@ -788,12 +788,4 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 		return errors.New("cannot post")
 	}
 	return
-}
-
-func doPowa(cCtx *cli.Context) (e error) {
-	return postMsg(cCtx, "ぽわ〜")
-}
-
-func doPuru(cCtx *cli.Context) (e error) {
-	return postMsg(cCtx, "(((( ˙꒳​˙  ))))ﾌﾟﾙﾌﾟﾙﾌﾟﾙﾌﾟﾙﾌﾟﾙﾌﾟﾙﾌﾟﾙ")
 }

@@ -57,7 +57,7 @@ func TestParseMessage(t *testing.T) {
 				return
 			}
 			if testCase.ExpectedEnvelope == nil && env != nil {
-				t.Fatalf("expected nil but got %v\n", env)
+				t.Fatalf("expected nil but got %v", env)
 			}
 			if testCase.ExpectedEnvelope.String() != env.String() {
 				t.Fatalf("unexpected output:\n     %s\n  != %s", testCase.ExpectedEnvelope, env)

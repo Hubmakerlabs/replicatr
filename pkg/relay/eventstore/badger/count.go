@@ -51,7 +51,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (cnt int64, e error) {
 						if errors.Is(e, badger.ErrDiscardedTxn) {
 							return
 						}
-						log.E.F("badger: count (%v) failed to get %d from raw event store: %s\n", q, idx, e)
+						log.E.F("badger: count (%v) failed to get %d from raw event store: %s", q, idx, e)
 						return
 					}
 					e = item.Value(func(val []byte) (e error) {
@@ -66,7 +66,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (cnt int64, e error) {
 						return nil
 					})
 					if log.E.Chk(e) {
-						log.E.F("badger: count value read error: %s\n", e)
+						log.E.F("badger: count value read error: %s", e)
 					}
 				}
 			}

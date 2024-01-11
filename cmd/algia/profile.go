@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
@@ -35,25 +34,22 @@ func doProfile(cCtx *cli.Context) (e error) {
 			return fmt.Errorf("failed to parse pubkey from '%s'", user)
 		}
 	}
-
 	// get set-metadata
 	f := filter.T{
 		Kinds:   []int{event.KindProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
 	}
-
 	evs := cfg.Events(f)
 	if len(evs) == 0 {
 		return errors.New("cannot find user")
 	}
-
 	if j {
-		fmt.Fprintln(os.Stdout, evs[0].Content)
+		fmt.Println(evs[0].Content)
 		return nil
 	}
-	var profile Profile
-	e = json.Unmarshal([]byte(evs[0].Content), &profile)
+	var p Profile
+	e = json.Unmarshal([]byte(evs[0].Content), &p)
 	if log.Fail(e) {
 		return e
 	}
@@ -61,13 +57,21 @@ func doProfile(cCtx *cli.Context) (e error) {
 	if log.Fail(e) {
 		return e
 	}
-	fmt.Printf("Pubkey: %v\n", npub)
-	fmt.Printf("Name: %v\n", profile.Name)
-	fmt.Printf("DisplayName: %v\n", profile.DisplayName)
-	fmt.Printf("WebSite: %v\n", profile.Website)
-	fmt.Printf("Picture: %v\n", profile.Picture)
-	fmt.Printf("NIP-05: %v\n", profile.Nip05)
-	fmt.Printf("LUD-16: %v\n", profile.Lud16)
-	fmt.Printf("About: %v\n", profile.About)
+	fmt.Printf("Pubkey: %v\n"+
+		"Name: %v\n"+
+		"DisplayName: %v\n"+
+		"WebSite: %v\n"+
+		"Picture: %v\n"+
+		"NIP-05: %v\n"+
+		"LUD-16: %v\n"+
+		"About:\n%v\n",
+		npub,
+		p.Name,
+		p.DisplayName,
+		p.Website,
+		p.Picture,
+		p.Nip05,
+		p.Lud16,
+		p.About)
 	return nil
 }
