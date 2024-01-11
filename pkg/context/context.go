@@ -14,7 +14,6 @@ var (
 	Bg           = context.Background
 	Cancel       = context.WithCancel
 	Timeout      = context.WithTimeout
-	TimeoutCause = context.WithTimeoutCause
 	TODO         = context.TODO
 	Value        = context.WithValue
 	CancelCause  = context.WithCancelCause
