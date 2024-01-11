@@ -39,13 +39,14 @@ type Event struct {
 
 // Profile is
 type Profile struct {
+	Name        string `json:"name"`
 	Website     string `json:"website"`
 	Nip05       string `json:"nip05"`
 	Picture     string `json:"picture"`
+	Banner      string `json:"banner"`
 	Lud16       string `json:"lud16"`
 	DisplayName string `json:"display_name"`
 	About       string `json:"about"`
-	Name        string `json:"appName"`
 }
 
 type (
@@ -70,10 +71,13 @@ type C struct {
 	sk        string
 }
 
+// LastUpdated returns whether there was an update in the most recent time
+// duration previous to the current time.
 func (cfg *C) LastUpdated(t time.Duration) bool {
 	return cfg.Updated.Add(t).Before(time.Now())
 }
 
+// Touch sets the last updated time of the configuration to the current time.
 func (cfg *C) Touch() { cfg.Updated = time.Now() }
 
 // GetFollows is

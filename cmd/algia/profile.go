@@ -44,6 +44,7 @@ func doProfile(cCtx *cli.Context) (e error) {
 	if len(evs) == 0 {
 		return errors.New("cannot find user")
 	}
+	log.D.S(evs[0].Content)
 	if j {
 		fmt.Println(evs[0].Content)
 		return nil
@@ -53,23 +54,26 @@ func doProfile(cCtx *cli.Context) (e error) {
 	if log.Fail(e) {
 		return e
 	}
-	npub, e := nip19.EncodePublicKey(pub)
-	if log.Fail(e) {
+	var npub string
+	if npub, e = nip19.EncodePublicKey(pub); log.Fail(e) {
 		return e
 	}
-	fmt.Printf("Pubkey: %v\n"+
-		"Name: %v\n"+
-		"DisplayName: %v\n"+
-		"WebSite: %v\n"+
-		"Picture: %v\n"+
-		"NIP-05: %v\n"+
-		"LUD-16: %v\n"+
-		"About:\n%v\n",
-		npub,
+	fmt.Printf(
+		"Name:\n\t%v\n"+
+		"Pubkey:\n\t%v\n"+
+		"DisplayName:\n\t%v\n"+
+		"WebSite:\n\t%v\n"+
+		"Picture:\n\t%v\n"+
+		"Banner:\n\t%v\n"+
+		"NIP-05:\n\t%v\n"+
+		"LUD-16:\n\t%v\n"+
+		"About:\n\t%v\n",
 		p.Name,
+		npub,
 		p.DisplayName,
 		p.Website,
 		p.Picture,
+		p.Banner,
 		p.Nip05,
 		p.Lud16,
 		p.About)
