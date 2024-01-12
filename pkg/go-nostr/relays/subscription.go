@@ -85,23 +85,21 @@ func (sub *Subscription) start() {
 }
 
 func (sub *Subscription) dispatchEvent(evt *event.T) {
+	log.D.Ln("dispatching event to channel")
 	added := false
 	if !sub.eosed.Load() {
 		sub.storedwg.Add(1)
 		added = true
 	}
-
 	go func() {
 		sub.mu.Lock()
 		defer sub.mu.Unlock()
-
 		if sub.live.Load() {
 			select {
 			case sub.Events <- evt:
 			case <-sub.Context.Done():
 			}
 		}
-
 		if added {
 			sub.storedwg.Done()
 		}

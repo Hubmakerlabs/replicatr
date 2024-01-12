@@ -38,6 +38,7 @@ func DecodeToString(bech32String string) (prefix, value string, e error) {
 
 func Decode(bech32string string) (prefix string, value any, e error) {
 	var bits5 []byte
+	log.D.Ln("decoding bech32", bech32string)
 	if prefix, bits5, e = bech32.DecodeNoLimit(bech32string); log.Fail(e) {
 		return
 	}

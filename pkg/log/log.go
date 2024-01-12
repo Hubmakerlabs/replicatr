@@ -13,6 +13,9 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
+var l = GetStd()
+
+// Log Levels: all log commands at or below the log level are executed
 const (
 	Off Level = iota
 	Fatal
@@ -70,9 +73,6 @@ var (
 		Trace: "TRC",
 	}
 
-	// log is your generic Log creation invocation that uses the version data
-	// in version.go that provides the current compilation path prefix for making
-	// relative paths for log printing code locations.
 	lvlStrs = map[string]Level{
 		"off": Off,
 		"ftl": Fatal,
@@ -126,9 +126,36 @@ type (
 	// Log is a set of log printers for the various Level items.
 	Log struct {
 		F, E, W, I, D, T LevelPrinter
-		Fail Chk
+		Fail             Chk
 	}
 )
+
+func init() {
+	switch strings.ToUpper(os.Getenv("GODEBUG")) {
+	case "1", "TRUE", "ON":
+		SetLogLevel(Debug)
+		l.D.Ln("printing logs at this level and lower")
+	case "INFO":
+		SetLogLevel(Info)
+	case "DEBUG":
+		SetLogLevel(Debug)
+		l.D.Ln("printing logs at this level and lower")
+	case "TRACE":
+		SetLogLevel(Trace)
+		l.T.Ln("printing logs at this level and lower")
+	case "WARN":
+		SetLogLevel(Warn)
+	case "ERROR":
+		SetLogLevel(Error)
+	case "FATAL":
+		SetLogLevel(Fatal)
+	case "0", "OFF", "FALSE":
+		SetLogLevel(Off)
+	default:
+		SetLogLevel(Info)
+	}
+
+}
 
 // GetLoc calls runtime.Caller to get the path of the calling source code file.
 func GetLoc(skip int) (output string) {
@@ -142,13 +169,13 @@ func GetLoc(skip int) (output string) {
 // this copies the interface of stdlib log but we don't respect the settings
 // because a logger without timestamps is retarded
 func New(writer io.Writer, appID string, _ int) (l *Log) {
-	l= &Log{
-		F:getOnePrinter(writer, appID, Fatal),
-		E:getOnePrinter(writer, appID, Error),
-		W:getOnePrinter(writer, appID, Warn),
-		I:getOnePrinter(writer, appID, Info),
-		D:getOnePrinter(writer, appID, Debug),
-		T:getOnePrinter(writer, appID, Trace),
+	l = &Log{
+		F: getOnePrinter(writer, appID, Fatal),
+		E: getOnePrinter(writer, appID, Error),
+		W: getOnePrinter(writer, appID, Warn),
+		I: getOnePrinter(writer, appID, Info),
+		D: getOnePrinter(writer, appID, Debug),
+		T: getOnePrinter(writer, appID, Trace),
 	}
 	l.Fail = l.D.Chk
 	return
@@ -159,6 +186,8 @@ func GetStd() (l *Log) {
 	return
 }
 
+// SetLogLevel sets the logging level, all prints at or below the level will be
+// executed and all above will not.
 func SetLogLevel(l Level) {
 	levelMx.Lock()
 	defer levelMx.Unlock()
