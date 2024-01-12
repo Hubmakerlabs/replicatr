@@ -212,7 +212,7 @@ func (r *Relay) Connect(c context.T) error {
 
 func (r *Relay) MessageReadLoop(conn *connection.C) {
 		buf := new(bytes.Buffer)
-
+		var e error
 		for {
 			buf.Reset()
 			if e := conn.ReadMessage(r.connectionContext, buf); e != nil {
@@ -222,7 +222,7 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 			}
 
 			message := buf.Bytes()
-			log.D.F("{%s} %v", r.URL, string(message))
+			log.D.F("{%s} received %v", r.URL, string(message))
 			envelope := envelope2.ParseMessage(message)
 			if envelope == nil {
 				continue
@@ -256,12 +256,11 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 							r.URL, s.Filters, env.T)
 						continue
 					}
-
 					// check signature, ignore invalid, except from trusted (AssumeValid) relays
 					if !r.AssumeValid {
-						if ok, e := env.T.CheckSignature(); !ok {
+						if ok, e = env.T.CheckSignature(); !ok {
 							errmsg := ""
-							if e != nil {
+							if log.Fail(e) {
 								errmsg = e.Error()
 							}
 							log.D.F("{%s} bad signature on %s; %s",
@@ -269,8 +268,8 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 							continue
 						}
 					}
-
-					// dispatch this to the internal .events channel of the subscription
+					// dispatch this to the internal .events channel of the
+					// subscription
 					s.dispatchEvent(&env.T)
 				}
 			case *eose.Envelope:

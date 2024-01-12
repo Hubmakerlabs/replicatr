@@ -104,7 +104,7 @@ func main() {
 					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
 					&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
 				},
-				Action: doTimeline,
+				Action: Timeline,
 			},
 			// {
 			// 	Name:  "stream",
@@ -132,7 +132,7 @@ func main() {
 				UsageText: appName + " post [note text]",
 				HelpName:  "post",
 				ArgsUsage: "[note text]",
-				Action:    doPost,
+				Action:    Post,
 			},
 			{
 				Name:    "reply",
@@ -149,7 +149,7 @@ func main() {
 				UsageText: appName + " reply --id [id] [note text]",
 				HelpName:  "reply",
 				ArgsUsage: "[note text]",
-				Action:    doReply,
+				Action:    Reply,
 			},
 			{
 				Name:    "repost",
@@ -160,7 +160,7 @@ func main() {
 				Usage:     "repost the note",
 				UsageText: appName + " repost --id [id]",
 				HelpName:  "repost",
-				Action:    doRepost,
+				Action:    Repost,
 			},
 			// {
 			// 	Name:    "unrepost",
@@ -184,7 +184,7 @@ func main() {
 				Usage:     "like the note",
 				UsageText: appName + " like --id [id]",
 				HelpName:  "like",
-				Action:    doLike,
+				Action:    Like,
 			},
 			// {
 			// 	Name:    "unlike",
@@ -219,7 +219,7 @@ func main() {
 				Usage:     "search notes",
 				UsageText: appName + " search [words]",
 				HelpName:  "search",
-				Action:    doSearch,
+				Action:    Search,
 			},
 			// {
 			// 	Name:  "dm-list",
@@ -261,7 +261,7 @@ func main() {
 				Usage:     "show profile",
 				UsageText: appName + " profile",
 				HelpName:  "profile",
-				Action:    doProfile,
+				Action:    Profile,
 			},
 			// {
 			// 	Name: "zap",

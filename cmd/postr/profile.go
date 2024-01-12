@@ -14,7 +14,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func doProfile(cCtx *cli.Context) (e error) {
+func Profile(cCtx *cli.Context) (e error) {
 	user, j := cCtx.String("u"), cCtx.Bool("json")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var rl *relays.Relay
@@ -49,7 +49,7 @@ func doProfile(cCtx *cli.Context) (e error) {
 		fmt.Println(evs[0].Content)
 		return nil
 	}
-	var p Profile
+	var p Metadata
 	e = json.Unmarshal([]byte(evs[0].Content), &p)
 	if log.Fail(e) {
 		return e
