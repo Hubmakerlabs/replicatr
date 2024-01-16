@@ -12,15 +12,18 @@ import (
 	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
@@ -34,8 +37,8 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 	ev := &event.T{
 		PubKey:    pub,
 		CreatedAt: timestamp.Now(),
-		Kind:      event.KindTextNote,
-		Tags:      tags.Tags{},
+		Kind:      kind.TextNote,
+		Tags:      tags.T{},
 		Content:   msg,
 		Sig:       "",
 	}
@@ -43,8 +46,8 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
-		e := rl.Publish(c, ev)
+	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+		_, e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL, e)
 		} else {
@@ -73,7 +76,7 @@ func doDMList(cCtx *cli.Context) (e error) {
 	}
 	// get timeline
 	f := filter.T{
-		Kinds:   []int{event.KindEncryptedDirectMessage},
+		Kinds:   kinds.T{kind.EncryptedDirectMessage},
 		Authors: []string{pub},
 	}
 	evs := cfg.Events(f)
@@ -145,7 +148,7 @@ func doDMTimeline(cCtx *cli.Context) (e error) {
 	}
 	// get timeline
 	f := filter.T{
-		Kinds:   []int{event.KindEncryptedDirectMessage},
+		Kinds:   kinds.T{kind.EncryptedDirectMessage},
 		Authors: []string{npub, pub},
 		Tags:    filter.TagMap{"p": []string{npub, pub}},
 		Limit:   9999,
@@ -185,7 +188,7 @@ func doDMPost(cCtx *cli.Context) (e error) {
 		return errors.New("content is empty")
 	}
 	if sensitive != "" {
-		ev.Tags = ev.Tags.AppendUnique(tags.Tag{"content-warning", sensitive})
+		ev.Tags = ev.Tags.AppendUnique(tag.T{"content-warning", sensitive})
 	}
 	if u == "me" {
 		u = ev.PubKey
@@ -196,22 +199,22 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	} else {
 		return fmt.Errorf("failed to parse pubkey from '%s'", u)
 	}
-	ev.Tags = ev.Tags.AppendUnique(tags.Tag{"p", pub})
+	ev.Tags = ev.Tags.AppendUnique(tag.T{"p", pub})
 	ev.CreatedAt = timestamp.Now()
-	ev.Kind = event.KindEncryptedDirectMessage
+	ev.Kind = kind.EncryptedDirectMessage
 	var secret []byte
-	if secret, e = nip04.ComputeSharedSecret(ev.PubKey, secHex); log.Fail(e) {
+	if secret, e = nip4.ComputeSharedSecret(ev.PubKey, secHex); log.Fail(e) {
 		return
 	}
-	if ev.Content, e = nip04.Encrypt(ev.Content, secret); log.Fail(e) {
+	if ev.Content, e = nip4.Encrypt(ev.Content, secret); log.Fail(e) {
 		return
 	}
 	if e = ev.Sign(secHex); log.Fail(e) {
 		return
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
-		if e := rl.Publish(c, ev); !log.Fail(e) {
+	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+		if _, e := rl.Publish(c, ev); !log.Fail(e) {
 			success.Add(1)
 		}
 		return true
@@ -235,34 +238,34 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 		return
 	}
 	f := filter.T{
-		Kinds:   []int{event.KindRepost},
+		Kinds:   kinds.T{kind.Repost},
 		Authors: []string{pub},
 		Tags:    filter.TagMap{"e": []string{id}},
 	}
 	var repostID string
 	var mu sync.Mutex
-	cfg.Do(rp, func(c context.T, rl *relays.Relay) bool {
-		evs, e := rl.QuerySync(c, f)
+	cfg.Do(readPerms, func(c context.T, rl *relay.Relay) bool {
+		evs, e := rl.QuerySync(c, &f)
 		if log.Fail(e) {
 			return true
 		}
 		mu.Lock()
 		if len(evs) > 0 && repostID == "" {
-			repostID = evs[0].ID
+			repostID = evs[0].ID.String()
 		}
 		mu.Unlock()
 		return true
 	})
 	ev := &event.T{}
-	ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", repostID})
+	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", repostID})
 	ev.CreatedAt = timestamp.Now()
-	ev.Kind = event.KindDeletion
+	ev.Kind = kind.Deletion
 	if e = ev.Sign(sk); log.Fail(e) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
-		e := rl.Publish(c, ev)
+	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+		_, e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL, e)
 		} else {
@@ -289,34 +292,34 @@ func doUnlike(cCtx *cli.Context) (e error) {
 		return
 	}
 	f := filter.T{
-		Kinds:   []int{event.KindReaction},
+		Kinds:   kinds.T{kind.Reaction},
 		Authors: []string{pub},
 		Tags:    filter.TagMap{"e": []string{id}},
 	}
 	var likeID string
 	var mu sync.Mutex
-	cfg.Do(rp, func(c context.T, rl *relays.Relay) bool {
-		evs, e := rl.QuerySync(c, f)
+	cfg.Do(readPerms, func(c context.T, rl *relay.Relay) bool {
+		evs, e := rl.QuerySync(c, &f)
 		if log.Fail(e) {
 			return true
 		}
 		mu.Lock()
 		if len(evs) > 0 && likeID == "" {
-			likeID = evs[0].ID
+			likeID = evs[0].ID.String()
 		}
 		mu.Unlock()
 		return true
 	})
 	ev := &event.T{}
-	ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", likeID})
+	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", likeID})
 	ev.CreatedAt = timestamp.Now()
-	ev.Kind = event.KindDeletion
+	ev.Kind = kind.Deletion
 	if e := ev.Sign(sk); log.Fail(e) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
-		e := rl.Publish(c, ev)
+	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+		_, e := rl.Publish(c, ev)
 		if !log.Fail(e) {
 			success.Add(1)
 		}
@@ -342,15 +345,15 @@ func doDelete(cCtx *cli.Context) (e error) {
 	} else {
 		return fmt.Errorf("failed to parse event from '%s'", id)
 	}
-	ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id})
+	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id})
 	ev.CreatedAt = timestamp.Now()
-	ev.Kind = event.KindDeletion
+	ev.Kind = kind.Deletion
 	if e = ev.Sign(sk); log.Fail(e) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
-		e := rl.Publish(c, ev)
+	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+		_, e := rl.Publish(c, ev)
 		if !log.Fail(e) {
 			success.Add(1)
 		}
@@ -363,7 +366,7 @@ func doDelete(cCtx *cli.Context) (e error) {
 }
 
 func doStream(cCtx *cli.Context) (e error) {
-	kinds := cCtx.IntSlice("kind")
+	k := cCtx.IntSlice("kind")
 	authors := cCtx.StringSlice("author")
 	f := cCtx.Bool("follow")
 	pattern := cCtx.String("pattern")
@@ -399,19 +402,19 @@ func doStream(cCtx *cli.Context) (e error) {
 	} else {
 		follows = authors
 	}
-	since := timestamp.Now()
+	since := timestamp.Now().Ptr()
 	ff := filter.T{
-		Kinds:   kinds,
+		Kinds:   kinds.FromIntSlice(k),
 		Authors: follows,
-		Since:   &since,
+		Since:   since,
 	}
-	var sub *relays.Subscription
-	sub, e = rl.Subscribe(context.Bg(), filters.T{ff})
+	var sub *relay.Subscription
+	sub, e = rl.Subscribe(context.Bg(), filters.T{&ff})
 	if log.Fail(e) {
 		return e
 	}
 	for ev := range sub.Events {
-		if ev.Kind == event.KindTextNote {
+		if ev.Kind == kind.TextNote {
 			if re != nil && !re.MatchString(ev.Content) {
 				continue
 			}
@@ -420,14 +423,16 @@ func doStream(cCtx *cli.Context) (e error) {
 				evr := &event.T{}
 				evr.PubKey = pub
 				evr.Content = reply
-				evr.Tags = evr.Tags.AppendUnique(tags.Tag{"e", ev.ID, "", "reply"})
+				evr.Tags = evr.Tags.AppendUnique(tag.T{"e", ev.ID.String(), "",
+					"reply"})
 				evr.CreatedAt = timestamp.Now()
-				evr.Kind = event.KindTextNote
+				evr.Kind = kind.TextNote
 				if e := evr.Sign(sk); log.Fail(e) {
 					return e
 				}
-				cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
-					log.Fail(rl.Publish(c, evr))
+				cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+					if _, e = rl.Publish(c, evr); log.Fail(e) {
+					}
 					return true
 				})
 			}

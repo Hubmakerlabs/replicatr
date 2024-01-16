@@ -100,7 +100,8 @@ func main() {
 				Aliases: []string{"tl"},
 				Usage:   "show timeline",
 				Flags: []cli.Flag{
-					&cli.IntFlag{Name: "n", Value: 30, Usage: "number of items"},
+					&cli.IntFlag{Name: "n", Value: 30,
+						Usage: "number of items"},
 					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
 					&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
 				},
@@ -111,7 +112,7 @@ func main() {
 			// 	Usage: "show stream",
 			// 	Flags: []cli.Flag{
 			// 		&cli.StringFlag{Name: "author"},
-			// 		&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(event.KindTextNote)},
+			// 		&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(kind.TextNote)},
 			// 		&cli.BoolFlag{Name: "follow"},
 			// 		&cli.StringFlag{Name: "pattern"},
 			// 		&cli.StringFlag{Name: "reply"},
@@ -212,7 +213,8 @@ func main() {
 				Name:    "search",
 				Aliases: []string{"s"},
 				Flags: []cli.Flag{
-					&cli.IntFlag{Name: "n", Value: 30, Usage: "number of items"},
+					&cli.IntFlag{Name: "n", Value: 30,
+						Usage: "number of items"},
 					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
 					&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
 				},

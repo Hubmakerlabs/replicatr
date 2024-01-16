@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 )
 
