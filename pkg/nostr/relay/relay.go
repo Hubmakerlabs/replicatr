@@ -223,8 +223,10 @@ func (r *Relay) Connect(c context.T) (e error) {
 		for {
 			select {
 			case <-ticker.C:
-				if e := wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil); log.Fail(e) {
-					log.E.F("{%s} error writing ping: %v; closing websocket", r.URL, e)
+				if e := wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing,
+					nil); log.Fail(e) {
+					log.E.F("{%s} error writing ping: %v; closing websocket",
+						r.URL, e)
 					if e = r.Close(); log.Fail(e) {
 					} // this should trigger a context cancelation
 					return
@@ -281,7 +283,8 @@ func (r *Relay) Connect(c context.T) (e error) {
 					continue
 				}
 				if subscr, ok := r.Subscriptions.Load(string(env.SubscriptionID)); !ok {
-					log.D.F("{%s} no subscr with id '%s'", r.URL, env.SubscriptionID)
+					log.D.F("{%s} no subscr with id '%s'", r.URL,
+						env.SubscriptionID)
 					continue
 				} else {
 					// check if the event matches the desired filter, ignore otherwise
@@ -363,7 +366,7 @@ func (r *Relay) Publish(c context.T, evt *event.T) (s Status, e error) {
 			if msg != nil {
 				reason = *msg
 			}
-			e = fmt.Errorf("Msg: %s", reason)
+			e = fmt.Errorf("publish failed: %s", reason)
 		}
 		cancel()
 	}

@@ -9,15 +9,19 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/urfave/cli/v2"
 )
@@ -73,13 +77,13 @@ func pay(cfg *C, invoice string) (e error) {
 		return e
 	}
 
-	rl, e := relays.RelayConnect(context.Bg(), host)
+	rl, e := relay.RelayConnect(context.Bg(), host)
 	if log.Fail(e) {
 		return e
 	}
-	defer rl.Close()
+	defer log.Fail(rl.Close())
 
-	ss, e := nip04.ComputeSharedSecret(wallet, secret)
+	ss, e := nip4.ComputeSharedSecret(wallet, secret)
 	if log.Fail(e) {
 		return e
 	}
@@ -90,7 +94,7 @@ func pay(cfg *C, invoice string) (e error) {
 	if log.Fail(e) {
 		return e
 	}
-	content, e := nip04.Encrypt(string(b), ss)
+	content, e := nip4.Encrypt(string(b), ss)
 	if log.Fail(e) {
 		return e
 	}
@@ -98,8 +102,8 @@ func pay(cfg *C, invoice string) (e error) {
 	ev := &event.T{
 		PubKey:    pub,
 		CreatedAt: timestamp.Now(),
-		Kind:      event.KindNWCWalletRequest,
-		Tags:      tags.Tags{tags.Tag{"p", wallet}},
+		Kind:      kind.NWCWalletRequest,
+		Tags:      tags.T{{"p", wallet}},
 		Content:   content,
 	}
 	e = ev.Sign(secret)
@@ -107,26 +111,29 @@ func pay(cfg *C, invoice string) (e error) {
 		return e
 	}
 
-	filters := []filter.T{{
+	f := filters.T{{
 		Tags: filter.TagMap{
 			"p": []string{pub},
-			"e": []string{ev.ID},
+			"e": []string{ev.ID.String()},
 		},
-		Kinds: []int{event.KindNWCWalletInfo, event.KindNWCWalletResponse, event.KindNWCWalletRequest},
+		Kinds: kinds.T{kind.NWCWalletInfo, kind.NWCWalletResponse,
+			kind.NWCWalletRequest},
 		Limit: 1,
 	}}
-	sub, e := rl.Subscribe(context.Bg(), filters)
+	sub, e := rl.Subscribe(context.Bg(), f)
 	if log.Fail(e) {
 		return e
 	}
 
-	e = rl.Publish(context.Bg(), ev)
+	_, e = rl.Publish(context.Bg(), ev)
 	if log.Fail(e) {
 		return e
 	}
 
 	er := <-sub.Events
-	content, e = nip04.Decrypt(er.Content, ss)
+	var c []byte
+	c, e = nip4.Decrypt(er.Content, ss)
+	content = string(c)
 	if log.Fail(e) {
 		return e
 	}
@@ -138,7 +145,7 @@ func pay(cfg *C, invoice string) (e error) {
 	if resp.Err != nil {
 		return fmt.Errorf(resp.Err.Message)
 	}
-	json.NewEncoder(os.Stdout).Encode(resp)
+	log.Fail(json.NewEncoder(os.Stdout).Encode(resp))
 	return nil
 }
 
@@ -161,10 +168,10 @@ func doZap(cCtx *cli.Context) (e error) {
 	receipt := ""
 	zr := event.T{
 		PubKey: pub,
-		Tags:   tags.Tags{},
+		Tags:   tags.T{},
 	}
-	zr.Tags = zr.Tags.AppendUnique(tags.Tag{"amount", fmt.Sprint(amount * 1000)})
-	rls := tags.Tag{"relays"}
+	zr.Tags = zr.Tags.AppendUnique(tag.T{"amount", fmt.Sprint(amount * 1000)})
+	rls := tag.T{"relays"}
 	for k, v := range cfg.Relays {
 		if v.Write {
 			rls = append(rls, k)
@@ -177,23 +184,24 @@ func doZap(cCtx *cli.Context) (e error) {
 		switch prefix {
 		case "nevent":
 			receipt = s.(pointers.Event).Author
-			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})
-			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"e", string(s.(pointers.Event).ID)})
+			zr.Tags = zr.Tags.AppendUnique(tag.T{"p", receipt})
+			zr.Tags = zr.Tags.AppendUnique(tag.T{"e",
+				string(s.(pointers.Event).ID)})
 		case "note":
 			evs := cfg.Events(filter.T{IDs: []string{s.(string)}})
 			if len(evs) != 0 {
 				receipt = evs[0].PubKey
-				zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})
+				zr.Tags = zr.Tags.AppendUnique(tag.T{"p", receipt})
 			}
-			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"e", s.(string)})
+			zr.Tags = zr.Tags.AppendUnique(tag.T{"e", s.(string)})
 		case "npub":
 			receipt = s.(string)
-			zr.Tags = zr.Tags.AppendUnique(tags.Tag{"p", receipt})
+			zr.Tags = zr.Tags.AppendUnique(tag.T{"p", receipt})
 		default:
 			return errors.New("invalid argument")
 		}
 	}
-	zr.Kind = event.KindZapRequest // 9734
+	zr.Kind = kind.ZapRequest // 9734
 	zr.CreatedAt = timestamp.Now()
 	zr.Content = comment
 	if e = zr.Sign(sk); log.Fail(e) {

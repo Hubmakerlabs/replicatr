@@ -3,8 +3,9 @@ package main
 import (
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/urfave/cli/v2"
 )
 
@@ -25,7 +26,7 @@ func Search(cCtx *cli.Context) (e error) {
 	}
 	// get timeline
 	f := filter.T{
-		Kinds:  []int{event.KindTextNote},
+		Kinds:  kinds.T{kind.TextNote},
 		Search: strings.Join(cCtx.Args().Slice(), " "),
 		Limit:  n,
 	}

@@ -4,16 +4,17 @@ import (
 	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/urfave/cli/v2"
 )
 
 func (cfg *C) publish(ev *event.T, success *atomic.Int64) RelayIterator {
-	return func(c context.T, rl *relays.Relay) bool {
-		e := rl.Publish(c, ev)
+	return func(c context.T, rl *relay.Relay) bool {
+		_, e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL, e)
 		} else {
@@ -37,10 +38,10 @@ func Timeline(cCtx *cli.Context) (e error) {
 	for k := range followsMap {
 		follows = append(follows, k)
 	}
-	log.D.Ln("follows",follows)
+	log.D.Ln("follows", follows)
 	// get timeline
 	f := filter.T{
-		Kinds:   []int{event.KindTextNote},
+		Kinds:   kinds.T{kind.TextNote},
 		Authors: follows,
 		Limit:   n,
 	}
@@ -48,4 +49,3 @@ func Timeline(cCtx *cli.Context) (e error) {
 	cfg.PrintEvents(evs, followsMap, j, extra)
 	return nil
 }
-

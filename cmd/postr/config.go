@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,10 +14,12 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/fatih/color"
 )
 
@@ -27,8 +30,8 @@ type RelayPerms struct {
 	Search bool `json:"search"`
 }
 
-var rp = &RelayPerms{Read: true}
-var wp = &RelayPerms{Write: true}
+var readPerms = &RelayPerms{Read: true}
+var writePerms = &RelayPerms{Write: true}
 
 // Event is
 type Event struct {
@@ -53,7 +56,7 @@ type (
 	Relays        map[string]*RelayPerms
 	Emojis        map[string]string
 	Checklist     map[string]struct{}
-	RelayIterator func(context.T, *relays.Relay) bool
+	RelayIterator func(context.T, *relay.Relay) bool
 )
 
 // C is the configuration for the client
@@ -95,7 +98,7 @@ func (cfg *C) GetFollows(profile string) (profiles Follows, e error) {
 		cfg.Follows = make(Follows)
 		mu.Unlock()
 		m := make(Checklist)
-		cfg.Do(rp, cfg.GetRelaysAndTags(pub, &m, &mu))
+		cfg.Do(readPerms, cfg.GetRelaysAndTags(pub, &m, &mu))
 		log.D.F("found %d followers", len(m))
 		if len(m) > 0 {
 			var follows []string
@@ -110,7 +113,7 @@ func (cfg *C) GetFollows(profile string) (profiles Follows, e error) {
 					end = len(follows)
 				}
 				// get follower's descriptions
-				cfg.Do(rp, cfg.PopulateFollows(&follows, &i, &end, &mu))
+				cfg.Do(readPerms, cfg.PopulateFollows(&follows, &i, &end, &mu))
 			}
 		}
 		cfg.Touch()
@@ -120,10 +123,11 @@ func (cfg *C) GetFollows(profile string) (profiles Follows, e error) {
 	}
 	return cfg.Follows, nil
 }
-func (cfg *C) GetRelaysAndTags(pub string, m *Checklist, mu *sync.Mutex) RelayIterator {
-	return func(c context.T, rl *relays.Relay) bool {
-		evs, e := rl.QuerySync(c, filter.T{
-			Kinds:   []int{event.KindContactList},
+func (cfg *C) GetRelaysAndTags(pub string, m *Checklist,
+	mu *sync.Mutex) RelayIterator {
+	return func(c context.T, rl *relay.Relay) bool {
+		evs, e := rl.QuerySync(c, &filter.T{
+			Kinds:   kinds.T{kind.ContactList},
 			Authors: []string{pub},
 			Limit:   1,
 		})
@@ -163,10 +167,11 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist, mu *sync.Mutex) RelayIt
 	}
 }
 
-func (cfg *C) PopulateFollows(f *[]string, i, end *int, mu *sync.Mutex) RelayIterator {
-	return func(c context.T, rl *relays.Relay) bool {
-		evs, e := rl.QuerySync(c, filter.T{
-			Kinds:   []int{event.KindProfileMetadata},
+func (cfg *C) PopulateFollows(f *[]string, i, end *int,
+	mu *sync.Mutex) RelayIterator {
+	return func(c context.T, rl *relay.Relay) bool {
+		evs, e := rl.QuerySync(c, &filter.T{
+			Kinds:   kinds.T{kind.ProfileMetadata},
 			Authors: (*f)[*i:*end], // Use the updated end index
 		})
 		if log.Fail(e) {
@@ -186,7 +191,7 @@ func (cfg *C) PopulateFollows(f *[]string, i, end *int, mu *sync.Mutex) RelayIte
 }
 
 // FindRelay is
-func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relays.Relay {
+func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.Relay {
 	for k, v := range cfg.Relays {
 		if r.Write && !v.Write {
 			continue
@@ -198,7 +203,7 @@ func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relays.Relay {
 			continue
 		}
 		log.D.F("trying relay: %s", k)
-		rl, e := relays.RelayConnect(c, k)
+		rl, e := relay.RelayConnect(c, k)
 		if log.Fail(e) {
 			continue
 		}
@@ -224,7 +229,7 @@ func (cfg *C) Do(r *RelayPerms, f RelayIterator) {
 		wg.Add(1)
 		go func(wg *sync.WaitGroup, k string, v *RelayPerms) {
 			defer wg.Done()
-			rl, e := relays.RelayConnect(c, k)
+			rl, e := relay.RelayConnect(c, k)
 			if log.Fail(e) {
 				log.D.Ln(e)
 				return
@@ -280,15 +285,15 @@ func (cfg *C) Decode(ev *event.T) (e error) {
 	} else {
 		sp = ev.PubKey
 	}
-	ss, e := nip04.ComputeSharedSecret(sp, sk)
+	ss, e := nip4.ComputeSharedSecret(sp, sk)
 	if log.Fail(e) {
 		return e
 	}
-	content, e := nip04.Decrypt(ev.Content, ss)
+	content, e := nip4.Decrypt(ev.Content, ss)
 	if log.Fail(e) {
 		return e
 	}
-	ev.Content = content
+	ev.Content = string(content)
 	return nil
 }
 
@@ -338,20 +343,20 @@ func (cfg *C) Events(f filter.T) []*event.T {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
-	cfg.Do(rp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(readPerms, func(c context.T, rl *relay.Relay) bool {
 		mu.Lock()
 		if found {
 			mu.Unlock()
 			return false
 		}
 		mu.Unlock()
-		evs, e := rl.QuerySync(c, f)
+		evs, e := rl.QuerySync(c, &f)
 		if log.Fail(e) {
 			return true
 		}
 		for _, ev := range evs {
 			if _, ok := m.Load(ev.ID); !ok {
-				if ev.Kind == event.KindEncryptedDirectMessage {
+				if ev.Kind == kind.EncryptedDirectMessage {
 					if e := cfg.Decode(ev); log.Fail(e) {
 						continue
 					}
@@ -371,7 +376,7 @@ func (cfg *C) Events(f filter.T) []*event.T {
 
 	var kk []string
 	m.Range(func(k, v any) bool {
-		kk = append(kk, k.(string))
+		kk = append(kk, k.(eventid.EventID).String())
 		return true
 	})
 	sort.Slice(kk, func(i, j int) bool {
@@ -398,14 +403,14 @@ func (cfg *C) Events(f filter.T) []*event.T {
 
 // ZapInfo is
 func (cfg *C) ZapInfo(pub string) (*Lnurlp, error) {
-	rl := cfg.FindRelay(context.Bg(), rp)
+	rl := cfg.FindRelay(context.Bg(), readPerms)
 	if rl == nil {
 		return nil, errors.New("cannot connect relays")
 	}
 	defer rl.Close()
 	// get set-metadata
 	f := filter.T{
-		Kinds:   []int{event.KindProfileMetadata},
+		Kinds:   kinds.T{kind.ProfileMetadata},
 		Authors: []string{pub},
 		Limit:   1,
 	}
