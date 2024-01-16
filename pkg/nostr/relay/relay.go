@@ -11,7 +11,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/connect"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/connect"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
 	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
@@ -171,6 +171,130 @@ func (r *Relay) Context() context.T { return r.ctx }
 // IsConnected returns true if the connection to this relay seems to be active.
 func (r *Relay) IsConnected() bool { return r.ctx.Err() == nil }
 
+func (r *Relay) queued(ticker *time.Ticker) {
+	for {
+		select {
+		case <-ticker.C:
+			if e := wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing,
+				nil); log.Fail(e) {
+				log.E.F("{%s} error writing ping: %v; closing websocket",
+					r.URL, e)
+				if e = r.Close(); log.Fail(e) {
+				} // this should trigger a context cancelation
+				return
+			}
+		case writeReq := <-r.writeQueue:
+			// all write requests will go through this to prevent races
+			if e := r.Connection.WriteMessage(writeReq.Msg); log.Fail(e) {
+				writeReq.Answer <- e
+			}
+			close(writeReq.Answer)
+		case <-r.ctx.Done():
+			// stop here
+			return
+		}
+	}
+}
+
+func (r *Relay) closer(ticker *time.Ticker) {
+	<-r.ctx.Done()
+	// close these things when the connection is closed
+	if r.challenges != nil {
+		close(r.challenges)
+	}
+	if r.notices != nil {
+		close(r.notices)
+	}
+	// stop the ticker
+	ticker.Stop()
+	// close all subscriptions
+	r.Subscriptions.Range(func(_ string, sub *Subscription) bool {
+		go sub.Unsub()
+		return true
+	})
+}
+
+func (r *Relay) reader(conn *connect.Connection) {
+	var e error
+	buf := new(bytes.Buffer)
+	for {
+		buf.Reset()
+		if e := conn.ReadMessage(r.ctx, buf); log.Fail(e) {
+			r.Err = e
+			log.E.Chk(r.Close())
+			break
+		}
+		message := buf.Bytes()
+		log.D.F("{%s} %v", r.URL, string(message))
+		var envelope enveloper.I
+		envelope, _, e = envelopes.ProcessEnvelope(message)
+		if envelope == nil || log.Fail(e) {
+			continue
+		}
+
+		switch env := envelope.(type) {
+		case *notice.Envelope:
+			// see WithNoticeHandler
+			if r.notices != nil {
+				r.notices <- env.Text
+			} else {
+				log.D.F("NOTICE from %s: '%s'", r.URL, env.Text)
+			}
+		case *auth2.Challenge:
+			if env.Challenge == "" {
+				continue
+			}
+			// see WithAuthHandler
+			if r.challenges != nil {
+				r.challenges <- env.Challenge
+			}
+		case *event2.Envelope:
+			if env.SubscriptionID == "" {
+				continue
+			}
+			if subscr, ok := r.Subscriptions.Load(string(env.SubscriptionID)); !ok {
+				log.D.F("{%s} no subscr with id '%s'", r.URL,
+					env.SubscriptionID)
+				continue
+			} else {
+				// check if the event matches the desired filter, ignore otherwise
+				if !subscr.Filters.Match(env.Event) {
+					log.E.F("{%s} filter does not match: %v ~ %v",
+						r.URL, subscr.Filters, env.Event)
+					continue
+				}
+				// check signature, ignore invalid, except from trusted (AssumeValid) relays
+				if !r.AssumeValid {
+					if ok, e = env.Event.CheckSignature(); !ok {
+						msg := ""
+						if log.Fail(e) {
+							msg = e.Error()
+						}
+						log.E.F("{%s} bad signature: %s", r.URL, msg)
+						continue
+					}
+				}
+				// dispatch this to the internal .events channel of the subscr
+				subscr.DispatchEvent(env.Event)
+			}
+		case *eose.Envelope:
+			if sub, ok := r.Subscriptions.Load(string(env.T)); ok {
+				sub.DispatchEose()
+			}
+		case *countresponse.Envelope:
+			if sub, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok &&
+				env.Count != 0 &&
+				sub.CountResult != nil {
+				sub.CountResult <- env.Count
+			}
+		case *OK.Envelope:
+			if okCallback, exist := r.okCallbacks.Load(string(env.EventID)); exist {
+				okCallback(env.OK, &env.Reason)
+			}
+		}
+	}
+}
+
 // Connect tries to establish a websocket connection to r.URL. If the context
 // expires before the connection is complete, an error is returned. Once
 // successfully connected, context expiration has no effect: call r.Close to
@@ -200,130 +324,9 @@ func (r *Relay) Connect(c context.T) (e error) {
 	// ping every 29 seconds
 	ticker := time.NewTicker(29 * time.Second)
 	// to be used when the connection is closed
-	go func() {
-		<-r.ctx.Done()
-		// close these things when the connection is closed
-		if r.challenges != nil {
-			close(r.challenges)
-		}
-		if r.notices != nil {
-			close(r.notices)
-		}
-		// stop the ticker
-		ticker.Stop()
-		// close all subscriptions
-		r.Subscriptions.Range(func(_ string, sub *Subscription) bool {
-			go sub.Unsub()
-			return true
-		})
-	}()
-
-	// queue all write operations here so we don't do mutex spaghetti
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				if e := wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing,
-					nil); log.Fail(e) {
-					log.E.F("{%s} error writing ping: %v; closing websocket",
-						r.URL, e)
-					if e = r.Close(); log.Fail(e) {
-					} // this should trigger a context cancelation
-					return
-				}
-			case writeReq := <-r.writeQueue:
-				// all write requests will go through this to prevent races
-				if e := r.Connection.WriteMessage(writeReq.Msg); log.Fail(e) {
-					writeReq.Answer <- e
-				}
-				close(writeReq.Answer)
-			case <-r.ctx.Done():
-				// stop here
-				return
-			}
-		}
-	}()
-
-	// general message reader loop
-	go func() {
-		buf := new(bytes.Buffer)
-		for {
-			buf.Reset()
-			if e := conn.ReadMessage(r.ctx, buf); log.Fail(e) {
-				r.Err = e
-				log.E.Chk(r.Close())
-				break
-			}
-			message := buf.Bytes()
-			log.D.F("{%s} %v", r.URL, string(message))
-			var envelope enveloper.I
-			envelope, _, e = envelopes.ProcessEnvelope(message)
-			if envelope == nil || log.Fail(e) {
-				continue
-			}
-
-			switch env := envelope.(type) {
-			case *notice.Envelope:
-				// see WithNoticeHandler
-				if r.notices != nil {
-					r.notices <- env.Text
-				} else {
-					log.D.F("NOTICE from %s: '%s'", r.URL, env.Text)
-				}
-			case *auth2.Challenge:
-				if env.Challenge == "" {
-					continue
-				}
-				// see WithAuthHandler
-				if r.challenges != nil {
-					r.challenges <- env.Challenge
-				}
-			case *event2.Envelope:
-				if env.SubscriptionID == "" {
-					continue
-				}
-				if subscr, ok := r.Subscriptions.Load(string(env.SubscriptionID)); !ok {
-					log.D.F("{%s} no subscr with id '%s'", r.URL,
-						env.SubscriptionID)
-					continue
-				} else {
-					// check if the event matches the desired filter, ignore otherwise
-					if !subscr.Filters.Match(env.Event) {
-						log.E.F("{%s} filter does not match: %v ~ %v",
-							r.URL, subscr.Filters, env.Event)
-						continue
-					}
-					// check signature, ignore invalid, except from trusted (AssumeValid) relays
-					if !r.AssumeValid {
-						if ok, e = env.Event.CheckSignature(); !ok {
-							msg := ""
-							if log.Fail(e) {
-								msg = e.Error()
-							}
-							log.E.F("{%s} bad signature: %s", r.URL, msg)
-							continue
-						}
-					}
-					// dispatch this to the internal .events channel of the subscr
-					subscr.DispatchEvent(env.Event)
-				}
-			case *eose.Envelope:
-				if sub, ok := r.Subscriptions.Load(string(env.T)); ok {
-					sub.DispatchEose()
-				}
-			case *countresponse.Envelope:
-				if sub, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok &&
-					env.Count != 0 &&
-					sub.CountResult != nil {
-					sub.CountResult <- env.Count
-				}
-			case *OK.Envelope:
-				if okCallback, exist := r.okCallbacks.Load(string(env.EventID)); exist {
-					okCallback(env.OK, &env.Reason)
-				}
-			}
-		}
-	}()
+	go r.closer(ticker)
+	go r.queued(ticker)
+	go r.reader(conn)
 	return nil
 }
 
