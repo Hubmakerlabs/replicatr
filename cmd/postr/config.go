@@ -212,7 +212,8 @@ func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.Relay {
 	return nil
 }
 
-// Do is
+// Do runs a query on all of the configured relays. Return false in the closure
+// to end the iteration.
 func (cfg *C) Do(r *RelayPerms, f RelayIterator) {
 	var wg sync.WaitGroup
 	c := context.Bg()
@@ -298,8 +299,8 @@ func (cfg *C) Decode(ev *event.T) (e error) {
 }
 
 // PrintEvents is
-func (cfg *C) PrintEvents(evs []*event.T, f Follows, j, extra bool) {
-	if j {
+func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
+	if asJson {
 		// if extra {
 		var events []Event
 		for _, ev := range evs {
@@ -351,7 +352,24 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, j, extra bool) {
 	fmt.Println(buffer.String())
 }
 
-// Events is
+func (cfg *C) GetEvents(ids []string) (evs []*event.T) {
+	cfg.Do(readPerms, func(c context.T, rl *relay.Relay) bool {
+		events, e := rl.QuerySync(c, &filter.T{
+			IDs:   ids,
+			Kinds: kinds.T{kind.TextNote},
+			Limit: len(ids),
+		})
+		if log.Fail(e) {
+			return false
+		}
+		evs = append(evs, events...)
+		return true
+	})
+	return
+}
+
+// Events queries for a set of events based on a filter and returns a slice of
+// events that were returned by the relay.
 func (cfg *C) Events(f filter.T) []*event.T {
 	var mu sync.Mutex
 	found := false
