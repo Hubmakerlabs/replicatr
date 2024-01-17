@@ -12,7 +12,6 @@ import (
 	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
@@ -21,6 +20,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"

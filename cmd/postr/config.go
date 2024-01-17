@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -321,21 +321,34 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, j, extra bool) {
 		return
 	}
 
+	buf := make([]byte, 4096)
+	buffer := bytes.NewBuffer(buf)
+	fgHiRed := color.New(color.FgHiRed)
+	fgRed := color.New(color.FgRed)
+	fgNormal := color.New(color.Reset)
+	fgHiBlue := color.Set(color.FgHiBlue)
 	for _, ev := range evs {
 		profile, ok := f[ev.PubKey]
 		if ok {
 			color.Set(color.FgHiRed)
-			fmt.Print(profile.Name, " ")
+			fgHiRed.Fprint(buffer, profile.Name, " ")
+			fgHiBlue.Fprintln(buffer, ev.CreatedAt.Time())
+			fgRed.Fprint(buffer, "pubkey ")
+			fgRed.Fprint(buffer, ev.PubKey)
+			fgHiBlue.Fprint(buffer, " note ID: ")
+			fgHiBlue.Fprintln(buffer, ev.ID)
+			fgNormal.Fprintln(buffer, ev.Content)
+		} else {
+			fgRed.Fprint(buffer, "pubkey ")
+			fgRed.Fprint(buffer, ev.PubKey)
+			fgHiBlue.Fprint(buffer, " note ID: ")
+			fgHiBlue.Fprintln(buffer, ev.ID)
+			fgHiBlue.Fprintln(buffer, ev.CreatedAt.Time())
+			fgNormal.Fprintln(buffer, ev.Content)
 		}
-		color.Set(color.FgRed)
-		fmt.Print(ev.PubKey)
-		color.Set(color.Reset)
-		fmt.Print(": ")
-		color.Set(color.FgHiBlue)
-		fmt.Println(ev.ID)
-		color.Set(color.Reset)
-		fmt.Println(ev.Content)
+		fgNormal.Fprintln(buffer)
 	}
+	fmt.Println(buffer.String())
 }
 
 // Events is
@@ -354,10 +367,11 @@ func (cfg *C) Events(f filter.T) []*event.T {
 		if log.Fail(e) {
 			return true
 		}
+		log.D.Ln("number of events found", len(evs))
 		for _, ev := range evs {
 			if _, ok := m.Load(ev.ID); !ok {
 				if ev.Kind == kind.EncryptedDirectMessage {
-					if e := cfg.Decode(ev); log.Fail(e) {
+					if e = cfg.Decode(ev); log.Fail(e) {
 						continue
 					}
 				}
@@ -373,31 +387,19 @@ func (cfg *C) Events(f filter.T) []*event.T {
 		}
 		return true
 	})
-
-	var kk []string
+	// m.Range(func(key any, value any) bool {
+	// 	log.D.Ln("event ID", key.(eventid.EventID).String())
+	// 	log.D.Ln(value.(*event.T).ToObject().String())
+	// 	return true
+	// })
+	var evs []*event.T
 	m.Range(func(k, v any) bool {
-		kk = append(kk, k.(eventid.EventID).String())
+		evs = append(evs, v.(*event.T))
 		return true
 	})
-	sort.Slice(kk, func(i, j int) bool {
-		lhs, ok := m.Load(kk[i])
-		if !ok {
-			return false
-		}
-		rhs, ok := m.Load(kk[j])
-		if !ok {
-			return false
-		}
-		return lhs.(*event.T).CreatedAt.Time().Before(rhs.(*event.T).CreatedAt.Time())
+	sort.Slice(evs, func(i, j int) bool {
+		return evs[i].CreatedAt < evs[j].CreatedAt
 	})
-	var evs []*event.T
-	for _, key := range kk {
-		vv, ok := m.Load(key)
-		if !ok {
-			continue
-		}
-		evs = append(evs, vv.(*event.T))
-	}
 	return evs
 }
 

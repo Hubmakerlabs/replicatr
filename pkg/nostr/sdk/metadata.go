@@ -5,14 +5,12 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/pool"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/pool"
 )
 
 type ProfileMetadata struct {
