@@ -103,9 +103,20 @@ func main() {
 					&cli.IntFlag{Name: "n", Value: 30,
 						Usage: "number of items"},
 					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
-					&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
+					// &cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
 				},
 				Action: Timeline,
+			},
+			{
+				Name:  "get",
+				Usage: "retrieves one or more based on a provided event ID hashes, space separated",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
+				},
+				UsageText: appName + " get [note ID]",
+				HelpName:  "post",
+				ArgsUsage: "[note ID]",
+				Action:    Get,
 			},
 			// {
 			// 	Name:  "stream",
