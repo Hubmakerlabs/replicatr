@@ -221,7 +221,7 @@ func (r *Relay) reader(conn *connect.Connection) {
 		buf.Reset()
 		if e := conn.ReadMessage(r.ctx, buf); log.Fail(e) {
 			r.Err = e
-			log.E.Chk(r.Close())
+			log.D.Chk(r.Close())
 			break
 		}
 		message := buf.Bytes()

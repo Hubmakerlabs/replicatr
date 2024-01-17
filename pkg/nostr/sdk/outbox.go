@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 )
