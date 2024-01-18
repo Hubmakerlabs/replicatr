@@ -13,46 +13,87 @@ type T uint16
 // creating a special type for them makes this implicit and enforced by the
 // compiler at compile time.
 const (
-	ProfileMetadata               T = 0
-	SetMetadata                   T = 0
-	TextNote                      T = 1
-	RecommendServer               T = 2
-	ContactList                   T = 3
-	EncryptedDirectMessage        T = 4
-	Deletion                      T = 5
-	Repost                        T = 6
-	Reaction                      T = 7
-	ChannelCreation               T = 40
-	ChannelMetadata               T = 41
-	ChannelMessage                T = 42
-	ChannelHideMessage            T = 43
-	ChannelMuteUser               T = 44
-	FileMetadata                  T = 1063
-	MemoryHole                    T = 1984
-	ZapRequest                    T = 9734
-	Zap                           T = 9735
-	ReplaceableStart              T = 10000
-	MuteList                      T = 10000
-	PinList                       T = 10001
-	RelayListMetadata             T = 10002
-	NWCWalletInfo                 T = 13194
-	ReplaceableEnd                T = 20000
-	EphemeralStart                T = 20000
-	ClientAuthentication          T = 22242
-	NWCWalletRequest              T = 23194
-	NWCWalletResponse             T = 23195
-	NostrConnect                  T = 24133
-	EphemeralEnd                  T = 30000
+	// ProfileMetadata is an event type that stores user profile data, pet
+	// names, bio, lightning address, etc.
+	ProfileMetadata T = 0
+	// SetMetadata is a synonym for ProfileMetadata.
+	SetMetadata T = 0
+	// TextNote is a standard short text note of plain text a la twitter
+	TextNote T = 1
+	// RecommendServer is an event type that...
+	RecommendServer T = 2
+	// ContactList is an event type that...
+	ContactList T = 3
+	// EncryptedDirectMessage is an event type that...
+	EncryptedDirectMessage T = 4
+	// Deletion is an event type that...
+	Deletion T = 5
+	// Repost is an event type that...
+	Repost T = 6
+	// Reaction is an event type that...
+	Reaction T = 7
+	// ChannelCreation is an event type that...
+	ChannelCreation T = 40
+	// ChannelMetadata is an event type that...
+	ChannelMetadata T = 41
+	// ChannelMessage is an event type that...
+	ChannelMessage T = 42
+	// ChannelHideMessage is an event type that...
+	ChannelHideMessage T = 43
+	// ChannelMuteUser is an event type that...
+	ChannelMuteUser T = 44
+	// FileMetadata is an event type that...
+	FileMetadata T = 1063
+	// MemoryHole is an event type that...
+	MemoryHole T = 1984
+	// ZapRequest is an event type that...
+	ZapRequest T = 9734
+	// Zap is an event type that...
+	Zap T = 9735
+	// ReplaceableStart is an event type that...
+	ReplaceableStart T = 10000
+	// MuteList is an event type that...
+	MuteList T = 10000
+	// PinList is an event type that...
+	PinList T = 10001
+	// RelayListMetadata is an event type that...
+	RelayListMetadata T = 10002
+	// NWCWalletInfo is an event type that...
+	NWCWalletInfo T = 13194
+	// ReplaceableEnd is an event type that...
+	ReplaceableEnd T = 20000
+	// EphemeralStart is an event type that...
+	EphemeralStart T = 20000
+	// ClientAuthentication is an event type that...
+	ClientAuthentication T = 22242
+	// NWCWalletRequest is an event type that...
+	NWCWalletRequest T = 23194
+	// NWCWalletResponse is an event type that...
+	NWCWalletResponse T = 23195
+	// NostrConnect is an event type that...
+	NostrConnect T = 24133
+	// EphemeralEnd is an event type that...
+	EphemeralEnd T = 30000
+	// ParameterizedReplaceableStart is an event type that...
 	ParameterizedReplaceableStart T = 30000
-	CategorizedPeopleList         T = 30000
-	CategorizedBookmarksList      T = 30001
-	ProfileBadges                 T = 30008
-	BadgeDefinition               T = 30009
-	StallDefinition               T = 30017
-	ProductDefinition             T = 30018
-	Article                       T = 30023
-	ApplicationSpecificData       T = 30078
-	ParameterizedReplaceableEnd   T = 40000
+	// CategorizedPeopleList is an event type that...
+	CategorizedPeopleList T = 30000
+	// CategorizedBookmarksList is an event type that...
+	CategorizedBookmarksList T = 30001
+	// ProfileBadges is an event type that...
+	ProfileBadges T = 30008
+	// BadgeDefinition is an event type that...
+	BadgeDefinition T = 30009
+	// StallDefinition is an event type that...
+	StallDefinition T = 30017
+	// ProductDefinition is an event type that...
+	ProductDefinition T = 30018
+	// Article is an event type that...
+	Article T = 30023
+	// ApplicationSpecificData is an event type that...
+	ApplicationSpecificData T = 30078
+	// ParameterizedReplaceableEnd is an event type that...
+	ParameterizedReplaceableEnd T = 40000
 )
 
 func (evt T) IsReplaceable() bool {
