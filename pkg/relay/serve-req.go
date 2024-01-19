@@ -6,9 +6,9 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
-	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
+	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
@@ -32,8 +32,8 @@ func (rl *Relay) handleRequest(c context.T, id subscriptionid.T,
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if reject, msg := reject(c, f); reject {
-			rl.D.Chk(ws.WriteJSON(notice.Envelope{Text: msg}))
-			return errors.New(OK.Message(OK.Blocked, msg))
+			rl.D.Chk(ws.WriteJSON(noticeenvelope.T{Text: msg}))
+			return errors.New(okenvelope.Message(okenvelope.Blocked, msg))
 		}
 	}
 	// run the functions to query events (generally just one,
@@ -42,7 +42,7 @@ func (rl *Relay) handleRequest(c context.T, id subscriptionid.T,
 	for _, query := range rl.QueryEvents {
 		var ch chan *event.T
 		if ch, e = query(c, f); rl.E.Chk(e) {
-			rl.D.Chk(ws.WriteJSON(notice.Envelope{Text: e.Error()}))
+			rl.D.Chk(ws.WriteJSON(noticeenvelope.T{Text: e.Error()}))
 			eose.Done()
 			continue
 		}
@@ -51,7 +51,7 @@ func (rl *Relay) handleRequest(c context.T, id subscriptionid.T,
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(c, evt)
 				}
-				rl.D.Chk(ws.WriteJSON(event2.Envelope{SubscriptionID: id, Event: evt}))
+				rl.D.Chk(ws.WriteJSON(event2.T{SubscriptionID: id, Event: evt}))
 			}
 			eose.Done()
 		}(ch)
@@ -68,7 +68,7 @@ func (rl *Relay) handleCountRequest(c context.T, ws *WebSocket, f *filter.T) int
 	// then check if we'll reject this filter
 	for _, reject := range rl.RejectCountFilter {
 		if rejecting, msg := reject(c, f); rejecting {
-			rl.D.Chk(ws.WriteJSON(notice.Envelope{Text: msg}))
+			rl.D.Chk(ws.WriteJSON(noticeenvelope.T{Text: msg}))
 			return 0
 		}
 	}
@@ -78,7 +78,7 @@ func (rl *Relay) handleCountRequest(c context.T, ws *WebSocket, f *filter.T) int
 		var e error
 		var res int64
 		if res, e = count(c, f); rl.E.Chk(e) {
-			rl.D.Chk(ws.WriteJSON(notice.Envelope{Text: e.Error()}))
+			rl.D.Chk(ws.WriteJSON(noticeenvelope.T{Text: e.Error()}))
 		}
 		subtotal += res
 	}

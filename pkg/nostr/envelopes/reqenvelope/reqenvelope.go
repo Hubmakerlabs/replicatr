@@ -1,4 +1,4 @@
-package req
+package reqenvelope
 
 import (
 	"encoding/json"
@@ -16,19 +16,19 @@ import (
 
 var log = log2.GetStd()
 
-// Envelope is the wrapper for a query to a relay.
-type Envelope struct {
+// T is the wrapper for a query to a relay.
+type T struct {
 	SubscriptionID subscriptionid.T
 	filters.T
 }
 
-var _ enveloper.I = &Envelope{}
+var _ enveloper.I = &T{}
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *Envelope) Label() (l string) { return labels.REQ }
+func (E *T) Label() (l string) { return labels.REQ }
 
-func (E *Envelope) ToArray() (arr array.T) {
+func (E *T) ToArray() (arr array.T) {
 	arr = array.T{labels.REQ, E.SubscriptionID}
 	for _, f := range E.T {
 		arr = append(arr, f.ToObject())
@@ -36,14 +36,14 @@ func (E *Envelope) ToArray() (arr array.T) {
 	return
 }
 
-func (E *Envelope) String() (s string) { return E.ToArray().String() }
+func (E *T) String() (s string) { return E.ToArray().String() }
 
-func (E *Envelope) Bytes() (s []byte) { return E.ToArray().Bytes() }
+func (E *T) Bytes() (s []byte) { return E.ToArray().Bytes() }
 
-func (E *Envelope) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
+func (E *T) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
 
 // Unmarshal the envelope.
-func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+func (E *T) Unmarshal(buf *text.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
@@ -53,7 +53,7 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 		return
 	}
 	var which byte
-	// Envelope can have one or no subscription IDs, if it is present we want
+	// T can have one or no subscription IDs, if it is present we want
 	// to collect it before looking for the filters.
 	which, e = buf.ScanForOneOf(false, '{', '"')
 	if which == '"' {

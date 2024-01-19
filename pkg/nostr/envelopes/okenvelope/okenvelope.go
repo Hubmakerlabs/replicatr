@@ -1,4 +1,4 @@
-package OK
+package okenvelope
 
 import (
 	"fmt"
@@ -26,45 +26,41 @@ const (
 	Error       Reason = "error"
 )
 
-var _ enveloper.I = (*Envelope)(nil)
+var _ enveloper.I = (*T)(nil)
 
-// Envelope is a relay message sent in response to an EventEnvelope to
+// T is a relay message sent in response to an EventEnvelope to
 // indicate acceptance (OK is true), rejection and provide a human readable
 // Reason for clients to display to users, with the first word being a machine
 // readable reason type, as listed in the RejectReason* constants above,
 // followed by ": " and a human readable message.
-type Envelope struct {
-	EventID eventid.EventID
+type T struct {
+	EventID eventid.T
 	OK      bool
 	Reason  string
 }
 
-func NewOKEnvelope(eventID eventid.EventID, ok bool, reason string) (o *Envelope,
+func NewOKEnvelope(eventID eventid.T, ok bool, reason string) (o *T,
 	e error) {
-	var ei eventid.EventID
-	if ei, e = eventid.NewEventID(string(eventID)); log.Fail(e) {
-		return
-	}
-	o = &Envelope{
-		EventID: ei,
+	o = &T{
+		EventID: eventID,
 		OK:      ok,
 		Reason:  reason,
 	}
 	return
 }
 
-func (env *Envelope) Label() (l string) { return labels.OK }
+func (env *T) Label() (l string) { return labels.OK }
 
-func (env *Envelope) ToArray() (a array.T) {
+func (env *T) ToArray() (a array.T) {
 	return array.T{labels.OK, env.EventID, env.OK, env.Reason}
 }
 
-func (env *Envelope) String() (s string) { return env.ToArray().String() }
+func (env *T) String() (s string) { return env.ToArray().String() }
 
-func (env *Envelope) Bytes() (s []byte) { return env.ToArray().Bytes() }
+func (env *T) Bytes() (s []byte) { return env.ToArray().Bytes() }
 
 // MarshalJSON returns the JSON encoded form of the envelope.
-func (env *Envelope) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
+func (env *T) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
 
 const (
 	Btrue     = "true"
@@ -74,7 +70,7 @@ const (
 )
 
 // Unmarshal the envelope.
-func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+func (env *T) Unmarshal(buf *text.Buffer) (e error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
 	if env == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
@@ -120,7 +116,7 @@ next:
 				string(eventID))
 		}
 	}
-	env.EventID = eventid.EventID(eventID)
+	env.EventID = eventid.T(eventID)
 	// next another comma
 	if e = buf.ScanThrough(','); e != nil {
 		return

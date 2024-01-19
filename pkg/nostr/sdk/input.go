@@ -53,7 +53,7 @@ func InputToEventPointer(input string) (ep *pointers.Event) {
 	// handle if it is a hex string
 	if len(input) == 64 {
 		if _, e = hex.Dec(input); !log.E.Chk(e) {
-			return &pointers.Event{ID: eventid.EventID(input)}
+			return &pointers.Event{ID: eventid.T(input)}
 		}
 	}
 	// handle nip19 codes, if that's the case
@@ -69,7 +69,7 @@ func InputToEventPointer(input string) (ep *pointers.Event) {
 			log.E.F("note pointer was not expected string")
 			return
 		}
-		return &pointers.Event{ID: eventid.EventID(input)}
+		return &pointers.Event{ID: eventid.T(input)}
 	case "nevent":
 		if ep, ok = data.(*pointers.Event); !ok {
 			log.E.F("note pointer was not event pointer")

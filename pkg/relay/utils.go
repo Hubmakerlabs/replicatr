@@ -3,7 +3,7 @@ package relay
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/sebest/xff"
 )
@@ -15,7 +15,7 @@ const (
 
 func RequestAuth(c context.T) {
 	ws := GetConnection(c)
-	log.D.Chk(ws.WriteJSON(auth.Challenge{Challenge: ws.Challenge}))
+	log.D.Chk(ws.WriteJSON(authenvelope.Challenge{Challenge: ws.Challenge}))
 }
 
 func GetConnection(c context.T) *WebSocket {

@@ -98,7 +98,7 @@ func Decode(bech32string string) (prefix string, value any, e error) {
 					return prefix, nil, fmt.Errorf("id is less than 32 bytes (%d)",
 						len(v))
 				}
-				result.ID = eventid.EventID(hex.Enc(v))
+				result.ID = eventid.T(hex.Enc(v))
 			case TLVRelay:
 				result.Relays = append(result.Relays, string(v))
 			case TLVAuthor:

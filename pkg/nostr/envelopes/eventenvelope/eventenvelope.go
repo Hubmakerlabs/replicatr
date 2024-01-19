@@ -1,4 +1,4 @@
-package event
+package eventenvelope
 
 import (
 	"encoding/json"
@@ -15,10 +15,10 @@ import (
 
 var log = log2.GetStd()
 
-var _ enveloper.I = (*Envelope)(nil)
+var _ enveloper.I = (*T)(nil)
 
-// Envelope is the wrapper expected by a relay around an event.
-type Envelope struct {
+// T is the wrapper expected by a relay around an event.
+type T struct {
 
 	// The SubscriptionID field is optional, and may at most contain 64 characters,
 	// sufficient for encoding a 256 bit hash as hex.
@@ -28,15 +28,15 @@ type Envelope struct {
 	Event *event.T
 }
 
-func (env *Envelope) UnmarshalJSON(bytes []byte) error {
+func (env *T) UnmarshalJSON(bytes []byte) error {
 	// TODO implement me
 	panic("implement me")
 }
 
-// NewEventEnvelope builds an Envelope from a provided T
-// string and pointer to an T, and returns either the Envelope or an
+// NewEventEnvelope builds an T from a provided T
+// string and pointer to an T, and returns either the T or an
 // error if the Subscription ID is invalid or the T is nil.
-func NewEventEnvelope(si string, ev *event.T) (ee *Envelope, e error) {
+func NewEventEnvelope(si string, ev *event.T) (ee *T, e error) {
 	var sid subscriptionid.T
 	if sid, e = subscriptionid.New(si); log.Fail(e) {
 		return
@@ -45,12 +45,12 @@ func NewEventEnvelope(si string, ev *event.T) (ee *Envelope, e error) {
 		e = fmt.Errorf("cannot make event envelope with nil event")
 		return
 	}
-	return &Envelope{SubscriptionID: sid, Event: ev}, nil
+	return &T{SubscriptionID: sid, Event: ev}, nil
 }
 
-func (env *Envelope) Label() string { return l.EVENT }
+func (env *T) Label() string { return l.EVENT }
 
-func (env *Envelope) ToArray() (a array.T) {
+func (env *T) ToArray() (a array.T) {
 	a = make(array.T, 0, 3)
 	a = append(a, l.EVENT)
 	if env.SubscriptionID.IsValid() {
@@ -60,14 +60,14 @@ func (env *Envelope) ToArray() (a array.T) {
 	return
 }
 
-func (env *Envelope) String() (s string) { return env.ToArray().String() }
+func (env *T) String() (s string) { return env.ToArray().String() }
 
-func (env *Envelope) Bytes() (s []byte) { return env.ToArray().Bytes() }
+func (env *T) Bytes() (s []byte) { return env.ToArray().Bytes() }
 
-func (env *Envelope) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
+func (env *T) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
 
 // Unmarshal the envelope.
-func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+func (env *T) Unmarshal(buf *text.Buffer) (e error) {
 	if env == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}

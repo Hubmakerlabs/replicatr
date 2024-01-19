@@ -1,4 +1,4 @@
-package notice
+package noticeenvelope
 
 import (
 	"fmt"
@@ -11,31 +11,31 @@ import (
 
 var log = log2.GetStd()
 
-// Envelope is a relay message intended to be shown to users in a nostr
+// T is a relay message intended to be shown to users in a nostr
 // client interface.
-type Envelope struct {
+type T struct {
 	Text string
 }
 
-func NewNoticeEnvelope(text string) (E *Envelope) {
-	E = &Envelope{Text: text}
+func NewNoticeEnvelope(text string) (E *T) {
+	E = &T{Text: text}
 	return
 }
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *Envelope) Label() string { return l.NOTICE }
+func (E *T) Label() string { return l.NOTICE }
 
-func (E *Envelope) ToArray() array.T { return array.T{l.NOTICE, E.Text} }
+func (E *T) ToArray() array.T { return array.T{l.NOTICE, E.Text} }
 
-func (E *Envelope) String() (s string) { return E.ToArray().String() }
+func (E *T) String() (s string) { return E.ToArray().String() }
 
-func (E *Envelope) Bytes() (s []byte) { return E.ToArray().Bytes() }
+func (E *T) Bytes() (s []byte) { return E.ToArray().Bytes() }
 
-func (E *Envelope) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
+func (E *T) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
 
 // Unmarshal the envelope.
-func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+func (E *T) Unmarshal(buf *text.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}

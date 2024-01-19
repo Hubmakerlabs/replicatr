@@ -6,7 +6,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
+	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	filters2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
@@ -88,7 +88,7 @@ func notifyListeners(evt *event.T) {
 			var sid subscriptionid.T
 			sid, e = subscriptionid.New(id)
 			log.D.Chk(e)
-			log.E.Chk(ws.WriteJSON(&event2.Envelope{SubscriptionID: sid, Event: evt}))
+			log.E.Chk(ws.WriteJSON(&event2.T{SubscriptionID: sid, Event: evt}))
 			return true
 		})
 		return true

@@ -4,6 +4,7 @@ import (
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 )
+
 var log = log2.GetStd()
 
 func isOlder(previous, next *event.T) bool {

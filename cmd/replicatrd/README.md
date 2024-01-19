@@ -77,7 +77,7 @@ func main() {
 		},
 	)
 
-	// you can request auth by rejecting an event or a request with the prefix "auth-required: "
+	// you can request auth by rejecting an eventenvelope or a request with the prefix "auth-required: "
 	relay.RejectFilter = append(relay.RejectFilter,
 		func(ctx context.Context, filter nostr.Filter) (reject bool, msg string) {
 			if pubkey := khatru.GetAuthed(ctx); pubkey != "" {

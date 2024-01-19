@@ -14,11 +14,11 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/connect"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
-	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
-	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
+	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
+	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
@@ -233,7 +233,7 @@ func (r *Relay) reader(conn *connect.Connection) {
 		}
 
 		switch env := envelope.(type) {
-		case *notice.Envelope:
+		case *noticeenvelope.T:
 			// see WithNoticeHandler
 			if r.notices != nil {
 				r.notices <- env.Text
@@ -248,7 +248,7 @@ func (r *Relay) reader(conn *connect.Connection) {
 			if r.challenges != nil {
 				r.challenges <- env.Challenge
 			}
-		case *event2.Envelope:
+		case *event2.T:
 			if env.SubscriptionID == "" {
 				continue
 			}
@@ -277,7 +277,7 @@ func (r *Relay) reader(conn *connect.Connection) {
 				// dispatch this to the internal .events channel of the subscr
 				subscr.DispatchEvent(env.Event)
 			}
-		case *eose.Envelope:
+		case *eoseenvelope.T:
 			if sub, ok := r.Subscriptions.Load(string(env.T)); ok {
 				sub.DispatchEose()
 			}
@@ -287,7 +287,7 @@ func (r *Relay) reader(conn *connect.Connection) {
 				sub.CountResult != nil {
 				sub.CountResult <- env.Count
 			}
-		case *OK.Envelope:
+		case *okenvelope.T:
 			if okCallback, exist := r.okCallbacks.Load(string(env.EventID)); exist {
 				okCallback(env.OK, &env.Reason)
 			}
@@ -376,7 +376,7 @@ func (r *Relay) Publish(c context.T, evt *event.T) (s Status, e error) {
 	r.okCallbacks.Store(string(evt.ID), okCallback)
 	defer r.okCallbacks.Delete(string(evt.ID))
 	// publish event
-	envb, _ := (&event2.Envelope{Event: evt}).MarshalJSON()
+	envb, _ := (&event2.T{Event: evt}).MarshalJSON()
 	log.D.F("{%s} sending %v", r.URL, string(envb))
 	s = PublishStatusSent
 	if e = <-r.Write(envb); log.Fail(e) {

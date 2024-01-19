@@ -262,7 +262,7 @@ These are membership-oriented groups where there are whitelisted members, blackl
 {
   "kind": 1,
   "tags": [
-    ["a", "34550:<community event author pubkey>:<community-d-identifier>", "<optional-relay-url>"],
+    ["a", "34550:<community eventenvelope author pubkey>:<community-d-identifier>", "<optional-relay-url>"],
   ],
   "content": "hello world",
   ...
@@ -273,15 +273,15 @@ These are membership-oriented groups where there are whitelisted members, blackl
 
 ```json
 {
-  "pubkey": "<32-bytes lowercase hex-encoded public key of the event creator>",
+  "pubkey": "<32-bytes lowercase hex-encoded public key of the eventenvelope creator>",
   "kind": 4550,
   "tags": [
-    ["a", "34550:<event-author-pubkey>:<community-d-identifier>", "<optional-relay-url>"],
+    ["a", "34550:<eventenvelope-author-pubkey>:<community-d-identifier>", "<optional-relay-url>"],
     ["e", "<post-id>", "<optional-relay-url>"],
     ["p", "<port-author-pubkey>", "<optional-relay-url>"],
     ["k", "<post-request-kind>"]
   ],
-  "content": "<the full approved event, JSON-encoded>",
+  "content": "<the full approved eventenvelope, JSON-encoded>",
   ...
 }
 ```
@@ -295,7 +295,7 @@ These are membership-oriented groups where there are whitelisted members, blackl
   {
     "authors": ["<owner-pubkey>", "<moderator1-pubkey>", "<moderator2-pubkey>", "<moderator3-pubkey>", ...],
     "kinds": [4550],
-    "#a": ["34550:<Community event author pubkey>:<d-identifier of the community>"],
+    "#a": ["34550:<Community eventenvelope author pubkey>:<d-identifier of the community>"],
   }
 ]
 ```
