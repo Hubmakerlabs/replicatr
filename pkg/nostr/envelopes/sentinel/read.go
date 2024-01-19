@@ -30,25 +30,27 @@ var approximateString = []byte("approximate")
 // This function exists because of the count and auth envelopes that have one
 // label but two distinct structures - they are different by the role of the
 // sender but need extra scanning to distinguish between them.
-func Read(buf *text.Buffer, match labels.T) (env enveloper.I, e error) {
+func Read(buf *text.Buffer, match string) (env enveloper.I, e error) {
+	// save the position before the comma for the Unmarshal processing.
+	pos := buf.Pos
 	// For most labels there is only one expected type, so we just return an
 	// empty, initialized envelope struct.
 	switch match {
-	case labels.LEvent:
+	case labels.EVENT:
 		env = &eventenvelope.T{}
-	case labels.LOK:
+	case labels.OK:
 		env = &okenvelope.T{}
-	case labels.LNotice:
+	case labels.NOTICE:
 		env = &noticeenvelope.T{}
-	case labels.LEOSE:
+	case labels.EOSE:
 		env = &eoseenvelope.T{}
-	case labels.LClose:
+	case labels.CLOSE:
 		env = &closeenvelope.T{}
-	case labels.LClosed:
+	case labels.CLOSED:
 		env = &closedenvelope.T{}
-	case labels.LReq:
+	case labels.REQ:
 		env = &reqenvelope.T{}
-	case labels.LCount:
+	case labels.COUNT:
 		// this has two subtypes, a request and a response, the request is
 		// basically like a req envelope but only wants a count response
 		//
@@ -58,8 +60,6 @@ func Read(buf *text.Buffer, match labels.T) (env enveloper.I, e error) {
 		// ProcessEnvelope, this function is for the UnmarshalJSON and
 		// ParseEnvelope, which are not used there.
 		//
-		// save the position before the comma for the Unmarshal processing.
-		pos := buf.Pos
 		// Next, find the comma after the label.
 		if e = buf.ScanThrough(','); e != nil {
 			return
@@ -107,26 +107,20 @@ func Read(buf *text.Buffer, match labels.T) (env enveloper.I, e error) {
 			env = &countenvelope.Response{
 				SubscriptionID: s,
 			}
-		} else {
-			// we only check if it matches one of the two possible count
-			// response key strings, as this is the smaller operation than
-			// checking if the following object is a filter, thus, it is assumed
-			// here that the object is a filter as it doesn't contain keys from
-			// a count response
-			//
-			// a COUNT envelope could have many filters but it doesn't matter
-			// because we are only concerned with correctly identifying whether
-			// this is a count response or request
-			env = &countenvelope.Request{
-				SubscriptionID: s,
-			}
 		}
-		// restore the position to prior to the first filter or the response
-		// count object
-		buf.Pos = pos
-	case labels.LAuth:
-		// save the position before the comma for the auth.Response Unmarshal
-		pos := buf.Pos
+		// we only check if it matches one of the two possible count
+		// response key strings, as this is the smaller operation than
+		// checking if the following object is a filter, thus, it is assumed
+		// here that the object is a filter as it doesn't contain keys from
+		// a count response
+		//
+		// a COUNT envelope could have many filters but it doesn't matter
+		// because we are only concerned with correctly identifying whether
+		// this is a count response or request
+		env = &countenvelope.Request{
+			SubscriptionID: s,
+		}
+	case labels.AUTH:
 		// this has two subtypes, a request and a response, but backwards, the
 		// challenge is from a relay, and the response is from a client
 		// Next, find the comma after the label
@@ -140,19 +134,19 @@ func Read(buf *text.Buffer, match labels.T) (env enveloper.I, e error) {
 		switch which {
 		case '"':
 			env = &authenvelope.Response{}
-			buf.Pos = pos
 		case '{':
 			env = &authenvelope.Response{}
-			buf.Pos = pos
 		default:
 			e = fmt.Errorf("auth envelope malformed: '%s'", buf.String())
 			log.D.Ln(e)
+			return
 		}
-		return
 	default:
+		// this should not happen so it is an error
+		e = fmt.Errorf("unable to match envelope '%s': '%s'", match, buf)
+		return
 	}
-	// this should not happen so it is an error
-	e = fmt.Errorf("unable to match envelope type number %d '%s': '%s'",
-		match, labels.List[match], buf.String())
+	buf.Pos = pos
+	e = env.Unmarshal(buf)
 	return
 }
