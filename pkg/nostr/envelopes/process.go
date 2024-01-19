@@ -93,6 +93,10 @@ matched:
 	case labels.REQ:
 		env = &req.Envelope{}
 		e = env.Unmarshal(buf)
+	case labels.AUTH:
+		log.D.Ln("todo: distinguishing auth envelopes")
+	case labels.COUNT:
+		log.D.Ln("todo: distinguishing count envelopes")
 	default:
 		// we know it is one of the above but static analysers don't.
 	}

@@ -1,10 +1,9 @@
-package countresponse
+package countenvelope
 
 import (
 	"encoding/json"
 	"fmt"
 
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
@@ -13,27 +12,25 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log = log2.GetStd()
-
-type Envelope struct {
+type Response struct {
 	SubscriptionID subscriptionid.T
 	Count          int64
 	Approximate    bool
 }
 
-var _ enveloper.I = &Envelope{}
+var _ enveloper.I = &Response{}
 
-func New(sid subscriptionid.T, count int64, approx bool) (C *Envelope) {
-	C = &Envelope{
+func New(sid subscriptionid.T, count int64, approx bool) (C *Response) {
+	C = &Response{
 		SubscriptionID: sid,
 		Count:          count,
 		Approximate:    approx,
 	}
 	return
 }
-func (env *Envelope) Label() string { return l.EVENT }
+func (env *Response) Label() string { return l.EVENT }
 
-func (env *Envelope) ToArray() array.T {
+func (env *Response) ToArray() array.T {
 	count := object.T{
 		{Key: "count", Value: env.Count},
 	}
@@ -44,13 +41,13 @@ func (env *Envelope) ToArray() array.T {
 	return array.T{l.COUNT, env.SubscriptionID, count}
 }
 
-func (env *Envelope) String() (s string) { return env.ToArray().String() }
+func (env *Response) String() (s string) { return env.ToArray().String() }
 
-func (env *Envelope) Bytes() (s []byte) { return env.ToArray().Bytes() }
+func (env *Response) Bytes() (s []byte) { return env.ToArray().Bytes() }
 
-func (env *Envelope) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
+func (env *Response) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
 
-func (env *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+func (env *Response) Unmarshal(buf *text.Buffer) (e error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
 	if env == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")

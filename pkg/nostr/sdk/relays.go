@@ -27,7 +27,7 @@ func FetchRelaysForPubkey(c context.T, pool *pool.SimplePool, pubkey string, rel
 		{
 			Kinds: kinds.T{
 				kind.RelayListMetadata,
-				kind.ContactList,
+				kind.FollowList,
 			},
 			Authors: []string{pubkey},
 			Limit:   2,
@@ -39,7 +39,7 @@ func FetchRelaysForPubkey(c context.T, pool *pool.SimplePool, pubkey string, rel
 		switch ie.T.Kind {
 		case kind.RelayListMetadata:
 			r = append(r, ParseRelaysFromKind10002(ie.T)...)
-		case kind.ContactList:
+		case kind.FollowList:
 			r = append(r, ParseRelaysFromKind3(ie.T)...)
 		}
 		i++

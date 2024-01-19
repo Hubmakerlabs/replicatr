@@ -14,7 +14,7 @@ import (
 
 var log = log2.GetStd()
 
-const appName = "postr"
+const appName = "oldstr"
 
 const version = "0.0.54"
 
@@ -68,7 +68,6 @@ func loadConfig(profile string) (cfg *C, e error) {
 	if e = json.Unmarshal(b, cfg); log.Fail(e) {
 		return
 	}
-	log.D.Ln("relays", cfg.Relays)
 	if len(cfg.Relays) == 0 {
 		cfg.Relays = Relays{
 			"wss://relay.nostr.band": {
@@ -101,30 +100,18 @@ func main() {
 				Aliases: []string{"tl"},
 				Usage:   "show timeline",
 				Flags: []cli.Flag{
-					&cli.IntFlag{Name: "n", Value: 30,
-						Usage: "number of items"},
+					&cli.IntFlag{Name: "n", Value: 30, Usage: "number of items"},
 					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
-					// &cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
+					&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
 				},
 				Action: Timeline,
-			},
-			{
-				Name:  "get",
-				Usage: "retrieves one or more based on a provided event ID hashes, space separated",
-				Flags: []cli.Flag{
-					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
-				},
-				UsageText: appName + " get [note ID]",
-				HelpName:  "post",
-				ArgsUsage: "[note ID]",
-				Action:    Get,
 			},
 			// {
 			// 	Name:  "stream",
 			// 	Usage: "show stream",
 			// 	Flags: []cli.Flag{
 			// 		&cli.StringFlag{Name: "author"},
-			// 		&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(kind.TextNote)},
+			// 		&cli.IntSliceFlag{Name: "kind", Value: cli.NewIntSlice(event.KindTextNote)},
 			// 		&cli.BoolFlag{Name: "follow"},
 			// 		&cli.StringFlag{Name: "pattern"},
 			// 		&cli.StringFlag{Name: "reply"},
@@ -225,8 +212,7 @@ func main() {
 				Name:    "search",
 				Aliases: []string{"s"},
 				Flags: []cli.Flag{
-					&cli.IntFlag{Name: "n", Value: 30,
-						Usage: "number of items"},
+					&cli.IntFlag{Name: "n", Value: 30, Usage: "number of items"},
 					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
 					&cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
 				},

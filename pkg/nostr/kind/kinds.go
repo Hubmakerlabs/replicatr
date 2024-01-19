@@ -22,8 +22,9 @@ const (
 	TextNote T = 1
 	// RecommendServer is an event type that...
 	RecommendServer T = 2
-	// ContactList is an event type that...
-	ContactList T = 3
+	// FollowList an event containing a list of pubkeys of users that should be
+	// shown as follows in a timeline.
+	FollowList T = 3
 	// EncryptedDirectMessage is an event type that...
 	EncryptedDirectMessage T = 4
 	// Deletion is an event type that...
@@ -97,7 +98,7 @@ const (
 )
 
 func (evt T) IsReplaceable() bool {
-	return evt == ProfileMetadata || evt == ContactList ||
+	return evt == ProfileMetadata || evt == FollowList ||
 		(evt >= ReplaceableStart && evt < ReplaceableEnd)
 }
 

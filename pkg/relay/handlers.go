@@ -18,8 +18,7 @@ import (
 	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closed"
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countrequest"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countresponse"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
@@ -175,7 +174,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					}
 					rl.D.Chk(ws.WriteJSON(OK.Envelope{
 						EventID: env.Event.ID, OK: ok, Reason: reason}))
-				case *countrequest.Envelope:
+				case *countenvelope.Request:
 					if rl.CountEvents == nil {
 						rl.E.Chk(ws.WriteJSON(closed.Envelope{
 							T: env.SubscriptionID,
@@ -188,7 +187,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					for _, f := range env.T {
 						total += rl.handleCountRequest(ctx, ws, f)
 					}
-					rl.D.Chk(ws.WriteJSON(countresponse.Envelope{
+					rl.D.Chk(ws.WriteJSON(countenvelope.Response{
 						SubscriptionID: env.SubscriptionID,
 						Count:          total,
 					}))

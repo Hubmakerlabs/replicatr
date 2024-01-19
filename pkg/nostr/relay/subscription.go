@@ -9,7 +9,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countrequest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
@@ -151,7 +151,7 @@ func (sub *Subscription) Fire() (e error) {
 		}).MarshalJSON(); log.Fail(e) {
 		}
 	} else {
-		if reqb, e = (&countrequest.Envelope{
+		if reqb, e = (&countenvelope.Request{
 			SubscriptionID: subscriptionid.T(id),
 			T:              sub.Filters,
 		}).MarshalJSON(); log.Fail(e) {

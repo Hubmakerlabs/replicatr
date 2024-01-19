@@ -1,13 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -20,7 +16,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
-	"github.com/fatih/color"
 )
 
 // RelayPerms is
@@ -52,18 +47,18 @@ type Metadata struct {
 }
 
 type (
-	Follows       map[string]*Metadata
-	Relays        map[string]*RelayPerms
-	Emojis        map[string]string
-	Checklist     map[string]struct{}
-	RelayIterator func(context.T, *relay.Relay) bool
+	Follows   map[string]*Metadata
+	Relays    map[string]*RelayPerms
+	Emojis    map[string]string
+	Checklist map[string]struct{}
+	RelayIter func(context.T, *relay.Relay) bool
 )
 
 // C is the configuration for the client
 type C struct {
-	Relays    `json:"relays"`
-	Follows   `json:"follows"`
-	SecretKey string    `json:"privatekey"`
+	Relays    Relays    `json:"relays"`
+	Follows   Follows   `json:"follows"`
+	SecretKey string    `json:"secretkey"`
 	Updated   time.Time `json:"updated"`
 	Emojis    `json:"emojis"`
 	NwcURI    string `json:"nwc-uri"`
@@ -71,6 +66,7 @@ type C struct {
 	verbose   bool
 	tempRelay bool
 	sk        string
+	sync.Mutex
 }
 
 // LastUpdated returns whether there was an update in the most recent time
@@ -81,114 +77,6 @@ func (cfg *C) LastUpdated(t time.Duration) bool {
 
 // Touch sets the last updated time of the configuration to the current time.
 func (cfg *C) Touch() { cfg.Updated = time.Now() }
-
-// GetFollows is
-func (cfg *C) GetFollows(profile string) (profiles Follows, e error) {
-	var mu sync.Mutex
-	var pub string
-	if pub, _, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
-		return
-	}
-	log.D.Ln("pub", pub)
-	// get followers
-	if (cfg.LastUpdated(3*time.Hour) && !cfg.tempRelay) ||
-		len(cfg.Follows) == 0 {
-
-		mu.Lock()
-		cfg.Follows = make(Follows)
-		mu.Unlock()
-		m := make(Checklist)
-		cfg.Do(readPerms, cfg.GetRelaysAndTags(pub, &m, &mu))
-		log.D.F("found %d followers", len(m))
-		if len(m) > 0 {
-			var follows []string
-			for k := range m {
-				follows = append(follows, k)
-			}
-			for i := 0; i < len(follows); i += 500 {
-				// Calculate the end index based on the current index and slice
-				// length
-				end := i + 500
-				if end > len(follows) {
-					end = len(follows)
-				}
-				// get follower's descriptions
-				cfg.Do(readPerms, cfg.PopulateFollows(&follows, &i, &end, &mu))
-			}
-		}
-		cfg.Touch()
-		if e = cfg.save(profile); log.Fail(e) {
-			return nil, e
-		}
-	}
-	return cfg.Follows, nil
-}
-func (cfg *C) GetRelaysAndTags(pub string, m *Checklist,
-	mu *sync.Mutex) RelayIterator {
-	return func(c context.T, rl *relay.Relay) bool {
-		evs, e := rl.QuerySync(c, &filter.T{
-			Kinds:   kinds.T{kind.ContactList},
-			Authors: []string{pub},
-			Limit:   1,
-		})
-		if log.Fail(e) {
-			return true
-		}
-		log.D.Ln("evs", len(evs[0].Tags))
-		for _, ev := range evs {
-			var rm Relays
-			if cfg.tempRelay == false {
-				if e = json.Unmarshal([]byte(ev.Content), &rm); log.Fail(e) {
-					// continue
-				} else {
-					for k, v1 := range cfg.Relays {
-						if v2, ok := rm[k]; ok {
-							v2.Search = v1.Search
-						}
-					}
-					cfg.Relays = rm
-				}
-			}
-			log.D.S(ev.Tags)
-			for _, tag := range ev.Tags {
-				if len(tag) >= 2 && tag[0] == "p" {
-					log.D.Ln("p tag", tag.Relay(), tag.Key(), tag.Value())
-					mu.Lock()
-					(*m)[tag[1]] = struct{}{}
-					mu.Unlock()
-				}
-			}
-			mu.Lock()
-			log.D.S(*m)
-			mu.Unlock()
-
-		}
-		return true
-	}
-}
-
-func (cfg *C) PopulateFollows(f *[]string, i, end *int,
-	mu *sync.Mutex) RelayIterator {
-	return func(c context.T, rl *relay.Relay) bool {
-		evs, e := rl.QuerySync(c, &filter.T{
-			Kinds:   kinds.T{kind.ProfileMetadata},
-			Authors: (*f)[*i:*end], // Use the updated end index
-		})
-		if log.Fail(e) {
-			return true
-		}
-		for _, ev := range evs {
-			p := &Metadata{}
-			e = json.Unmarshal([]byte(ev.Content), p)
-			if e == nil {
-				mu.Lock()
-				cfg.Follows[ev.PubKey] = p
-				mu.Unlock()
-			}
-		}
-		return true
-	}
-}
 
 // FindRelay is
 func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.Relay {
@@ -214,7 +102,7 @@ func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.Relay {
 
 // Do runs a query on all of the configured relays. Return false in the closure
 // to end the iteration.
-func (cfg *C) Do(r *RelayPerms, f RelayIterator) {
+func (cfg *C) Do(r *RelayPerms, f RelayIter) {
 	var wg sync.WaitGroup
 	c := context.Bg()
 	for k, v := range cfg.Relays {
@@ -228,8 +116,10 @@ func (cfg *C) Do(r *RelayPerms, f RelayIterator) {
 			continue
 		}
 		wg.Add(1)
+		log.D.Ln("running iterator on", k, v)
 		go func(wg *sync.WaitGroup, k string, v *RelayPerms) {
 			defer wg.Done()
+			log.D.Ln("connecting to relay", k)
 			rl, e := relay.RelayConnect(c, k)
 			if log.Fail(e) {
 				log.D.Ln(e)
@@ -241,30 +131,8 @@ func (cfg *C) Do(r *RelayPerms, f RelayIterator) {
 			log.Fail(rl.Close())
 		}(&wg, k, v)
 	}
+	log.D.Ln("waiting")
 	wg.Wait()
-}
-
-func (cfg *C) save(profile string) (e error) {
-	if cfg.tempRelay {
-		return nil
-	}
-	dir, e := configDir()
-	if log.Fail(e) {
-		return e
-	}
-	dir = filepath.Join(dir, appName)
-
-	var fp string
-	if profile == "" {
-		fp = filepath.Join(dir, "config.json")
-	} else {
-		fp = filepath.Join(dir, "config-"+profile+".json")
-	}
-	b, e := json.MarshalIndent(&cfg, "", "  ")
-	if log.Fail(e) {
-		return e
-	}
-	return os.WriteFile(fp, b, 0644)
 }
 
 // Decode is
@@ -296,60 +164,6 @@ func (cfg *C) Decode(ev *event.T) (e error) {
 	}
 	ev.Content = string(content)
 	return nil
-}
-
-// PrintEvents is
-func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
-	if asJson {
-		// if extra {
-		var events []Event
-		for _, ev := range evs {
-			if profile, ok := f[ev.PubKey]; ok {
-				events = append(events, Event{
-					Event:   ev,
-					Profile: profile,
-				})
-			}
-		}
-		for _, ev := range events {
-			log.Fail(json.NewEncoder(os.Stdout).Encode(ev))
-		}
-		// } else {
-		// 	for _, ev := range evs {
-		// 		log.Fail(json.NewEncoder(os.Stdout).Encode(ev))
-		// 	}
-		// }
-		return
-	}
-
-	buf := make([]byte, 4096)
-	buffer := bytes.NewBuffer(buf)
-	fgHiRed := color.New(color.FgHiRed)
-	fgRed := color.New(color.FgRed)
-	fgNormal := color.New(color.Reset)
-	fgHiBlue := color.Set(color.FgHiBlue)
-	for _, ev := range evs {
-		profile, ok := f[ev.PubKey]
-		if ok {
-			color.Set(color.FgHiRed)
-			fgHiRed.Fprint(buffer, profile.Name, " ")
-			fgHiBlue.Fprintln(buffer, ev.CreatedAt.Time())
-			fgRed.Fprint(buffer, "pubkey ")
-			fgRed.Fprint(buffer, ev.PubKey)
-			fgHiBlue.Fprint(buffer, " note ID: ")
-			fgHiBlue.Fprintln(buffer, ev.ID)
-			fgNormal.Fprintln(buffer, ev.Content)
-		} else {
-			fgRed.Fprint(buffer, "pubkey ")
-			fgRed.Fprint(buffer, ev.PubKey)
-			fgHiBlue.Fprint(buffer, " note ID: ")
-			fgHiBlue.Fprintln(buffer, ev.ID)
-			fgHiBlue.Fprintln(buffer, ev.CreatedAt.Time())
-			fgNormal.Fprintln(buffer, ev.Content)
-		}
-		fgNormal.Fprintln(buffer)
-	}
-	fmt.Println(buffer.String())
 }
 
 func (cfg *C) GetEvents(ids []string) (evs []*event.T) {

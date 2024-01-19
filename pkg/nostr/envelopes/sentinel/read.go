@@ -9,8 +9,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closed"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countrequest"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countresponse"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
@@ -105,7 +104,7 @@ func Read(buf *text.Buffer, match labels.T) (env enveloper.I, e error) {
 			bytes.Compare(bb, approximateString) == 0 {
 			// we found a valid count response object, probably, the rest of the
 			// object should be a count response.
-			env = &countresponse.Envelope{
+			env = &countenvelope.Response{
 				SubscriptionID: s,
 			}
 		} else {
@@ -118,7 +117,7 @@ func Read(buf *text.Buffer, match labels.T) (env enveloper.I, e error) {
 			// a COUNT envelope could have many filters but it doesn't matter
 			// because we are only concerned with correctly identifying whether
 			// this is a count response or request
-			env = &countrequest.Envelope{
+			env = &countenvelope.Request{
 				SubscriptionID: s,
 			}
 		}
@@ -139,10 +138,10 @@ func Read(buf *text.Buffer, match labels.T) (env enveloper.I, e error) {
 			return
 		}
 		switch which {
-		case '"' :
+		case '"':
 			env = &auth.Response{}
 			buf.Pos = pos
-		case'{' :
+		case '{':
 			env = &auth.Response{}
 			buf.Pos = pos
 		default:
