@@ -13,12 +13,12 @@ type Info struct {
 
 	Limitation     *Limits  `json:"limitation,omitempty"`
 	RelayCountries []string `json:"relay_countries,omitempty"`
-	LanguageTags   []string                 `json:"language_tags,omitempty"`
-	Tags           []string                 `json:"tags,omitempty"`
-	PostingPolicy  string                   `json:"posting_policy,omitempty"`
-	PaymentsURL    string `json:"payments_url,omitempty"`
-	Fees           *Fees  `json:"fees,omitempty"`
-	Icon           string `json:"icon"`
+	LanguageTags   []string `json:"language_tags,omitempty"`
+	Tags           []string `json:"tags,omitempty"`
+	PostingPolicy  string   `json:"posting_policy,omitempty"`
+	PaymentsURL    string   `json:"payments_url,omitempty"`
+	Fees           *Fees    `json:"fees,omitempty"`
+	Icon           string   `json:"icon"`
 }
 
 func (info *Info) AddSupportedNIP(number int) {
