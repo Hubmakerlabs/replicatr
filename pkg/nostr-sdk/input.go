@@ -44,7 +44,7 @@ func InputToEventPointer(input string) *pointers.Event {
 	// handle if it is a hex string
 	if len(input) == 64 {
 		if _, e := hex.Dec(input); e == nil {
-			return &pointers.Event{ID: eventid.EventID(input)}
+			return &pointers.Event{ID: eventid.T(input)}
 		}
 	}
 
@@ -53,7 +53,7 @@ func InputToEventPointer(input string) *pointers.Event {
 	switch prefix {
 	case "note":
 		input = data.(string)
-		return &pointers.Event{ID: eventid.EventID(input)}
+		return &pointers.Event{ID: eventid.T(input)}
 	case "nevent":
 		ep := data.(pointers.Event)
 		return &ep

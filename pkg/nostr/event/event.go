@@ -28,7 +28,7 @@ func Hash(in []byte) (out []byte) {
 type T struct {
 
 	// ID is the SHA256 hash of the canonical encoding of the event
-	ID eventid.EventID `json:"id"`
+	ID eventid.T `json:"id"`
 
 	// PubKey is the public key of the event creator in *hexadecimal* format
 	PubKey string `json:"pubkey"`
@@ -82,7 +82,7 @@ func (ev *T) ToCanonical() (o array.T) {
 func (ev *T) GetIDBytes() []byte { return Hash(ev.ToCanonical().Bytes()) }
 
 // GetID serializes and returns the event ID as a hexadecimal string.
-func (ev *T) GetID() eventid.EventID { return eventid.EventID(hex.Enc(ev.GetIDBytes())) }
+func (ev *T) GetID() eventid.T { return eventid.T(hex.Enc(ev.GetIDBytes())) }
 
 // CheckSignature checks if the signature is valid for the id (which is a hash
 // of the serialized event content). returns an error if the signature itself is
@@ -156,7 +156,7 @@ func (ev *T) SignWithSecKey(sk *secp256k1.SecretKey,
 	}
 
 	// we know ID is good so just coerce type.
-	ev.ID = eventid.EventID(hex.Enc(id))
+	ev.ID = eventid.T(hex.Enc(id))
 
 	// we know secret key is good so we can generate the public key.
 	ev.PubKey = hex.Enc(schnorr.SerializePubKey(sk.PubKey()))

@@ -1,4 +1,4 @@
-package closed
+package eoseenvelope
 
 import (
 	"fmt"
@@ -13,30 +13,27 @@ import (
 
 var log = log2.GetStd()
 
-// Envelope is a wrapper for a signal to cancel a subscription.
-type Envelope struct {
+// T is a message that indicates that all cached events have been
+// delivered and thereafter events will be new and delivered in pubsub subscribe
+// fashion while the socket remains open.
+type T struct {
 	subscriptionid.T
-	Reason string
 }
 
-var _ enveloper.I = &Envelope{}
+var _ enveloper.I = (*T)(nil)
 
-func New(s subscriptionid.T, reason string) *Envelope {
-	return &Envelope{T: s, Reason: reason}
-}
+func (E *T) Label() string { return l.EOSE }
 
-func (E *Envelope) ToArray() array.T { return array.T{l.CLOSED, E.T, E.Reason} }
+func (E *T) ToArray() array.T { return array.T{l.EOSE, E.T} }
 
-func (E *Envelope) Label() string { return l.CLOSED }
+func (E *T) String() (s string) { return E.ToArray().String() }
 
-func (E *Envelope) String() (s string) { return E.ToArray().String() }
+func (E *T) Bytes() (s []byte) { return E.ToArray().Bytes() }
 
-func (E *Envelope) Bytes() (s []byte) { return E.ToArray().Bytes() }
-
-func (E *Envelope) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
+func (E *T) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
 
 // Unmarshal the envelope.
-func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+func (E *T) Unmarshal(buf *text.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
@@ -56,15 +53,5 @@ func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	E.T = subscriptionid.T(sid[:])
-	// Next must be a string, which can be empty, but must be at minimum a pair
-	// of quotes.
-	if e = buf.ScanThrough('"'); e != nil {
-		return
-	}
-	var reason []byte
-	if reason, e = buf.ReadUntil('"'); log.Fail(e) {
-		return fmt.Errorf("did not find reason value in close envelope")
-	}
-	E.Reason = string(text.UnescapeByteString(reason))
 	return
 }

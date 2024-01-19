@@ -21,7 +21,7 @@ func TestBinaryPartialGet(t *testing.T) {
 			t.Fatalf("error marshalling binary: %s", e)
 		}
 
-		if id := eventid.EventID(hex.EncodeToString(bevt[0:32])); id != evt.ID {
+		if id := eventid.T(hex.EncodeToString(bevt[0:32])); id != evt.ID {
 			t.Fatalf("partial id wrong. got %v, expected %v", id, evt.ID)
 		}
 		if pubkey := hex.EncodeToString(bevt[32:64]); pubkey != evt.PubKey {

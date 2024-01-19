@@ -1,4 +1,4 @@
-package closer
+package closeenvelope
 
 import (
 	"fmt"
@@ -13,27 +13,27 @@ import (
 
 var log = log2.GetStd()
 
-// Envelope is a wrapper for a signal to cancel a subscription.
-type Envelope struct {
+// T is a wrapper for a signal to cancel a subscription.
+type T struct {
 	subscriptionid.T
 }
 
-var _ enveloper.I = &Envelope{}
+var _ enveloper.I = &T{}
 
-func New(s subscriptionid.T) (ce *Envelope) { return &Envelope{T: s} }
+func New(s subscriptionid.T) (ce *T) { return &T{T: s} }
 
-func (E *Envelope) Label() string { return l.CLOSE }
+func (E *T) Label() string { return l.CLOSE }
 
-func (E *Envelope) ToArray() array.T { return array.T{l.CLOSE, E.T} }
+func (E *T) ToArray() array.T { return array.T{l.CLOSE, E.T} }
 
-func (E *Envelope) String() string { return E.ToArray().String() }
+func (E *T) String() string { return E.ToArray().String() }
 
-func (E *Envelope) Bytes() []byte { return E.ToArray().Bytes() }
+func (E *T) Bytes() []byte { return E.ToArray().Bytes() }
 
-func (E *Envelope) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
+func (E *T) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
 
 // Unmarshal the envelope.
-func (E *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+func (E *T) Unmarshal(buf *text.Buffer) (e error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}

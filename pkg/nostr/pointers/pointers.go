@@ -11,10 +11,10 @@ type Profile struct {
 }
 
 type Event struct {
-	ID     eventid.EventID `json:"id"`
-	Relays []string        `json:"relays,omitempty"`
-	Author string          `json:"author,omitempty"`
-	Kind   kind.T          `json:"kind,omitempty"`
+	ID     eventid.T `json:"id"`
+	Relays []string  `json:"relays,omitempty"`
+	Author string    `json:"author,omitempty"`
+	Kind   kind.T    `json:"kind,omitempty"`
 }
 
 type Entity struct {

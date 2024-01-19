@@ -4,22 +4,22 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closed"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closedenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 var log = log2.GetStd()
 
-// ProcessEnvelope scans a message and if it finds a correctly formed Envelope
-// it unmarshals it and returns it.
+// ProcessEnvelope scans a message and if it finds a correctly formed
+// enveloper.I it unmarshals it and returns it.
 //
 // If it fails, it also returns the label bytes found and the buffer, which will
 // have the cursor at the next byte after the quote delimiter of the T, ready
@@ -73,25 +73,25 @@ matched:
 	// specific envelope unmarshaler.
 	switch match {
 	case labels.EVENT:
-		env = &event.Envelope{}
+		env = &eventenvelope.T{}
 		e = env.Unmarshal(buf)
 	case labels.OK:
-		env = &OK.Envelope{}
+		env = &okenvelope.T{}
 		e = env.Unmarshal(buf)
 	case labels.NOTICE:
-		env = &notice.Envelope{}
+		env = &noticeenvelope.T{}
 		e = env.Unmarshal(buf)
 	case labels.EOSE:
-		env = &eose.Envelope{}
+		env = &eoseenvelope.T{}
 		e = env.Unmarshal(buf)
 	case labels.CLOSE:
-		env = &closer.Envelope{}
+		env = &closeenvelope.T{}
 		e = env.Unmarshal(buf)
 	case labels.CLOSED:
-		env = &closed.Envelope{}
+		env = &closedenvelope.T{}
 		e = env.Unmarshal(buf)
 	case labels.REQ:
-		env = &req.Envelope{}
+		env = &reqenvelope.T{}
 		e = env.Unmarshal(buf)
 	case labels.AUTH:
 		log.D.Ln("todo: distinguishing auth envelopes")

@@ -5,17 +5,17 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closed"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closedenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
@@ -35,19 +35,19 @@ func Read(buf *text.Buffer, match labels.T) (env enveloper.I, e error) {
 	// empty, initialized envelope struct.
 	switch match {
 	case labels.LEvent:
-		env = &event.Envelope{}
+		env = &eventenvelope.T{}
 	case labels.LOK:
-		env = &OK.Envelope{}
+		env = &okenvelope.T{}
 	case labels.LNotice:
-		env = &notice.Envelope{}
+		env = &noticeenvelope.T{}
 	case labels.LEOSE:
-		env = &eose.Envelope{}
+		env = &eoseenvelope.T{}
 	case labels.LClose:
-		env = &closer.Envelope{}
+		env = &closeenvelope.T{}
 	case labels.LClosed:
-		env = &closed.Envelope{}
+		env = &closedenvelope.T{}
 	case labels.LReq:
-		env = &req.Envelope{}
+		env = &reqenvelope.T{}
 	case labels.LCount:
 		// this has two subtypes, a request and a response, the request is
 		// basically like a req envelope but only wants a count response
@@ -139,10 +139,10 @@ func Read(buf *text.Buffer, match labels.T) (env enveloper.I, e error) {
 		}
 		switch which {
 		case '"':
-			env = &auth.Response{}
+			env = &authenvelope.Response{}
 			buf.Pos = pos
 		case '{':
-			env = &auth.Response{}
+			env = &authenvelope.Response{}
 			buf.Pos = pos
 		default:
 			e = fmt.Errorf("auth envelope malformed: '%s'", buf.String())

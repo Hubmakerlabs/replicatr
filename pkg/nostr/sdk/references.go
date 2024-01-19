@@ -49,7 +49,7 @@ func ParseReferences(evt *event.T) (refs []*Reference) {
 					ref.Profile = &pp
 				case "note":
 					ref.Event = &pointers.Event{
-						ID:     data.(eventid.EventID),
+						ID:     data.(eventid.T),
 						Relays: []string{},
 					}
 				case "nevent":
@@ -85,7 +85,7 @@ func ParseReferences(evt *event.T) (refs []*Reference) {
 						relays = append(relays, tag[2])
 					}
 					ref.Event = &pointers.Event{
-						ID:     eventid.EventID(tag[1]),
+						ID:     eventid.T(tag[1]),
 						Relays: relays,
 					}
 				case "a":

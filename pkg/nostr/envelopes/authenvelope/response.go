@@ -1,4 +1,4 @@
-package auth
+package authenvelope
 
 import (
 	"encoding/json"

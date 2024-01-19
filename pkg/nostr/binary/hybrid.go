@@ -20,7 +20,7 @@ func Unmarshal(data []byte, evt *event.T) (e error) {
 		}
 	}()
 
-	evt.ID = eventid.EventID(hex.EncodeToString(data[0:32]))
+	evt.ID = eventid.T(hex.EncodeToString(data[0:32]))
 	evt.PubKey = hex.EncodeToString(data[32:64])
 	evt.Sig = hex.EncodeToString(data[64:128])
 	evt.CreatedAt = timestamp.T(binary.BigEndian.Uint32(data[128:132]))

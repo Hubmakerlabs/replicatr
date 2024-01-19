@@ -44,7 +44,7 @@ func BinaryEvent(evt *event.T) (be *Event) {
 }
 
 func (be *Event) ToNormalEvent() *event.T {
-	id, e := eventid.NewEventID(hex.Enc(be.ID[:]))
+	id, e := eventid.New(hex.Enc(be.ID[:]))
 	log.D.Chk(e)
 	return &event.T{
 		Tags:      be.Tags,

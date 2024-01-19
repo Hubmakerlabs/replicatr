@@ -8,9 +8,9 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
@@ -124,7 +124,7 @@ func (sub *Subscription) Unsub() {
 func (sub *Subscription) Close() {
 	if sub.Relay.IsConnected() {
 		id := sub.GetID()
-		closeMsg := &close2.Envelope{T: subscriptionid.T(id)}
+		closeMsg := &close2.T{T: subscriptionid.T(id)}
 		closeb, e := closeMsg.MarshalJSON()
 		log.D.Chk(e)
 		log.D.F("{%s} sending %s", sub.Relay.URL, string(closeb))
@@ -145,7 +145,7 @@ func (sub *Subscription) Fire() (e error) {
 	id := sub.GetID()
 	var reqb []byte
 	if sub.CountResult == nil {
-		if reqb, e = (&req.Envelope{
+		if reqb, e = (&reqenvelope.T{
 			SubscriptionID: subscriptionid.T(id),
 			T:              sub.Filters,
 		}).MarshalJSON(); log.Fail(e) {

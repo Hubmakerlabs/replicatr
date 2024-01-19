@@ -14,14 +14,14 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
-	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closed"
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
+	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closedenvelope"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/fasthttp/websocket"
 	"github.com/minio/sha256-simd"
@@ -125,12 +125,12 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				switch env := envelope.(type) {
-				case *event.Envelope:
+				case *eventenvelope.T:
 					// check id
 					hash := sha256.Sum256(env.Event.ToCanonical().Bytes())
 					id := hex.EncodeToString(hash[:])
-					if eventid.EventID(id) != env.Event.ID {
-						rl.E.Chk(ws.WriteJSON(OK.Envelope{
+					if eventid.T(id) != env.Event.ID {
+						rl.E.Chk(ws.WriteJSON(okenvelope.T{
 							EventID: env.Event.ID,
 							OK:      false,
 							Reason:  "invalid: id is computed incorrectly",
@@ -139,14 +139,14 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					}
 					// check signature
 					if ok, e = env.Event.CheckSignature(); rl.E.Chk(e) {
-						rl.E.Chk(ws.WriteJSON(OK.Envelope{
+						rl.E.Chk(ws.WriteJSON(okenvelope.T{
 							EventID: env.Event.ID,
 							OK:      false,
 							Reason:  "error: failed to verify signature",
 						}))
 						return
 					} else if !ok {
-						rl.E.Chk(ws.WriteJSON(OK.Envelope{
+						rl.E.Chk(ws.WriteJSON(okenvelope.T{
 							EventID: env.Event.ID,
 							OK:      false,
 							Reason:  "invalid: signature is invalid",
@@ -172,11 +172,11 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 							RequestAuth(ctx)
 						}
 					}
-					rl.D.Chk(ws.WriteJSON(OK.Envelope{
+					rl.D.Chk(ws.WriteJSON(okenvelope.T{
 						EventID: env.Event.ID, OK: ok, Reason: reason}))
 				case *countenvelope.Request:
 					if rl.CountEvents == nil {
-						rl.E.Chk(ws.WriteJSON(closed.Envelope{
+						rl.E.Chk(ws.WriteJSON(closedenvelope.T{
 							T: env.SubscriptionID,
 							Reason: "unsupported: " +
 								"this relay does not support NIP-45",
@@ -191,7 +191,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						SubscriptionID: env.SubscriptionID,
 						Count:          total,
 					}))
-				case *req.Envelope:
+				case *reqenvelope.T:
 					ee := sync.WaitGroup{}
 					ee.Add(len(env.T))
 					// a context just for the "stored events" request handler
@@ -210,7 +210,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 							if strings.HasPrefix(reason, "auth-required:") {
 								RequestAuth(ctx)
 							}
-							rl.D.Chk(ws.WriteJSON(closed.Envelope{
+							rl.D.Chk(ws.WriteJSON(closedenvelope.T{
 								T:      env.SubscriptionID,
 								Reason: reason,
 							}))
@@ -224,13 +224,13 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						// EOSE message
 						ee.Wait()
 						cancelReqCtx(nil)
-						rl.E.Chk(ws.WriteJSON(eose.Envelope{
+						rl.E.Chk(ws.WriteJSON(eoseenvelope.T{
 							T: env.SubscriptionID}))
 					}()
 
 					setListener(env.SubscriptionID, ws, env.T,
 						cancelReqCtx)
-				case *close2.Envelope:
+				case *close2.T:
 					removeListenerId(ws, env.T)
 				case *auth2.Response:
 					wsBaseUrl := strings.Replace(rl.ServiceURL, "http",
@@ -240,10 +240,10 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 						ws.AuthedPublicKey = pubkey
 						close(ws.Authed)
-						rl.E.Chk(ws.WriteJSON(OK.Envelope{
+						rl.E.Chk(ws.WriteJSON(okenvelope.T{
 							EventID: env.T.ID, OK: true}))
 					} else {
-						rl.E.Chk(ws.WriteJSON(OK.Envelope{
+						rl.E.Chk(ws.WriteJSON(okenvelope.T{
 							EventID: env.T.ID,
 							OK:      false,
 							Reason:  "error: failed to authenticate",

@@ -22,17 +22,17 @@ This is the `Event` type and its associated object generator:
 // Event is the primary datatype of nostr. This is the form of the structure
 // that defines its JSON string based format.
 type Event struct {
-	// ID is the SHA256 hash of the canonical encoding of the event
+	// ID is the SHA256 hash of the canonical encoding of the eventenvelope
 	ID string `json:"id"`
-	// PubKey is the public key of the event creator in *hexadecimal* format
+	// PubKey is the public key of the eventenvelope creator in *hexadecimal* format
 	PubKey string `json:"pubkey"`
-	// CreatedAt is the UNIX timestamp of the event according to the event
+	// CreatedAt is the UNIX timestamp of the eventenvelope according to the eventenvelope
 	// creator (never trust a timestamp!)
 	CreatedAt timestamp.T `json:"created_at"`
-	// Kind is the nostr protocol code for the type of event. See kind.T
+	// Kind is the nostr protocol code for the type of eventenvelope. See kind.T
 	Kind kind.T `json:"kind"`
 	// Tags are a list of tags, which are a list of strings usually structured
-	// as a 3 layer scheme indicating specific features of an event.
+	// as a 3 layer scheme indicating specific features of an eventenvelope.
 	Tags tags.T `json:"tags"`
 	// Content is an arbitrary string that can contain anything, but usually
 	// conforming to a specification relating to the Kind and the Tags.

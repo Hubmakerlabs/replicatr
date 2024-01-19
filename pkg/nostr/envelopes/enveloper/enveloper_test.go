@@ -6,13 +6,13 @@ import (
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closer"
+	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/req"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filtertest"
 )
@@ -23,15 +23,15 @@ func TestEnveloper(t *testing.T) {
 	log2.SetLogLevel(log2.Debug)
 	const sub = "subscription000001"
 	envs := []enveloper.I{
-		&event.Envelope{SubscriptionID: sub, Event: eventest.D[0]},
-		&event.Envelope{SubscriptionID: sub, Event: eventest.D[1]},
-		&event.Envelope{Event: eventest.D[0]},
-		&OK.Envelope{EventID: eventest.D[0].ID, OK: true,
-			Reason: OK.Message(OK.PoW, "25>24 \\ ")},
-		&req.Envelope{SubscriptionID: sub, T: filtertest.D},
-		&notice.Envelope{Text: "this notice has been noticed } \\ \\\" ] "},
-		&eose.Envelope{T: sub},
-		&close2.Envelope{T: sub},
+		&eventenvelope.T{SubscriptionID: sub, Event: eventest.D[0]},
+		&eventenvelope.T{SubscriptionID: sub, Event: eventest.D[1]},
+		&eventenvelope.T{Event: eventest.D[0]},
+		&okenvelope.T{EventID: eventest.D[0].ID, OK: true,
+			Reason: okenvelope.Message(okenvelope.PoW, "25>24 \\ ")},
+		&reqenvelope.T{SubscriptionID: sub, T: filtertest.D},
+		&noticeenvelope.T{Text: "this notice has been noticed } \\ \\\" ] "},
+		&eoseenvelope.T{T: sub},
+		&close2.T{T: sub},
 	}
 	var e error
 	var b []byte
