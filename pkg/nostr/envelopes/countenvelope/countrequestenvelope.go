@@ -1,4 +1,4 @@
-package countrequest
+package countenvelope
 
 import (
 	"encoding/json"
@@ -15,24 +15,24 @@ import (
 
 var log = log2.GetStd()
 
-type Envelope struct {
+type Request struct {
 	SubscriptionID subscriptionid.T
 	filters.T
 }
 
-func (C *Envelope) Label() string { return l.COUNT }
+func (C *Request) Label() string { return l.COUNT }
 
-func (C *Envelope) ToArray() array.T {
+func (C *Request) ToArray() array.T {
 	return array.T{l.COUNT, C.SubscriptionID, C.T}
 }
 
-func (C *Envelope) String() string { return C.ToArray().String() }
+func (C *Request) String() string { return C.ToArray().String() }
 
-func (C *Envelope) Bytes() []byte { return C.ToArray().Bytes() }
+func (C *Request) Bytes() []byte { return C.ToArray().Bytes() }
 
-func (C *Envelope) MarshalJSON() ([]byte, error) { return C.Bytes(), nil }
+func (C *Request) MarshalJSON() ([]byte, error) { return C.Bytes(), nil }
 
-func (C *Envelope) Unmarshal(buf *text.Buffer) (e error) {
+func (C *Request) Unmarshal(buf *text.Buffer) (e error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
 	if C == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")

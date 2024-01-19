@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/connect"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/OK"
 	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/auth"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countresponse"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eose"
 	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/notice"
@@ -225,7 +225,7 @@ func (r *Relay) reader(conn *connect.Connection) {
 			break
 		}
 		message := buf.Bytes()
-		log.D.F("{%s} %v", r.URL, string(message))
+		log.D.F("{%s} received %v", r.URL, string(message))
 		var envelope enveloper.I
 		envelope, _, e = envelopes.ProcessEnvelope(message)
 		if envelope == nil || log.Fail(e) {
@@ -281,7 +281,7 @@ func (r *Relay) reader(conn *connect.Connection) {
 			if sub, ok := r.Subscriptions.Load(string(env.T)); ok {
 				sub.DispatchEose()
 			}
-		case *countresponse.Envelope:
+		case *countenvelope.Response:
 			if sub, ok := r.Subscriptions.Load(string(env.SubscriptionID)); ok &&
 				env.Count != 0 &&
 				sub.CountResult != nil {
