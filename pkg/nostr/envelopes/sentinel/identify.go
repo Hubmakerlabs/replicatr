@@ -13,7 +13,7 @@ var log = log2.GetStd()
 // Identify takes a byte slice and scans it as a nostr Envelope array, and
 // returns the label type and a text.Buffer that is ready for the Read function
 // to generate the appropriate structure.
-func Identify(b []byte) (match labels.T, buf *text.Buffer, e error) {
+func Identify(b []byte) (match string, buf *text.Buffer, e error) {
 	// The bytes must be valid JSON but we can't assume they are free of
 	// whitespace... So we will use some tools.
 	buf = text.NewBuffer(b)
@@ -43,19 +43,18 @@ matched:
 			}
 			if !differs {
 				// there can only be one!
-				match = i
+				match = string(labels.List[i])
 				break matched
 			}
 		}
 	}
-	// If there was no match we still have zero.
-	if match == labels.LNil {
+	// if there was no match we still have zero.
+	if match == "" {
 		// no match
 		e = fmt.Errorf("label '%s' not recognised as envelope label",
 			string(candidate))
-		// label is the string that was found in the first element of the JSON
-		// array.
 		return
 	}
+
 	return
 }

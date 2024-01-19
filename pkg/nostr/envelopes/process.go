@@ -1,8 +1,6 @@
 package envelopes
 
 import (
-	"fmt"
-
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closedenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
@@ -13,6 +11,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/sentinel"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
@@ -27,48 +26,15 @@ var log = log2.GetStd()
 func ProcessEnvelope(b []byte) (env enveloper.I, buf *text.Buffer, e error) {
 
 	log.D.F("processing envelope:\n%s", string(b))
-	// The bytes must be valid JSON but we can't assume they are free of
-	// whitespace... So we will use some tools.
-	buf = text.NewBuffer(b)
-	// First there must be an opening bracket.
-	if e = buf.ScanThrough('['); e != nil {
-		return
-	}
-	// Then a quote.
-	if e = buf.ScanThrough('"'); e != nil {
-		return
-	}
-	var candidate []byte
-	if candidate, e = buf.ReadUntil('"'); e != nil {
-		return
-	}
-	// log.D.F("label: '%s' %v", string(candidate), List)
-	var differs bool
+
 	var match string
-matched:
-	for i := range labels.List {
-		differs = false
-		if len(candidate) == len(labels.List[i]) {
-			for j := range candidate {
-				if candidate[j] != labels.List[i][j] {
-					differs = true
-					break
-				}
-			}
-			if !differs {
-				// there can only be one!
-				match = string(labels.List[i])
-				break matched
-			}
-		}
-	}
-	// if there was no match we still have zero.
-	if match == "" {
-		// no match
-		e = fmt.Errorf("label '%s' not recognised as envelope label",
-			string(candidate))
+	if match, buf, e = sentinel.Identify(b); log.Fail(e) {
 		return
 	}
+	// if env, e = sentinel.Read(buf, typ); log.Fail(e) {
+	// 	return
+	// }
+
 	// We know what to expect now, the next thing to do is pass forward to the
 	// specific envelope unmarshaler.
 	switch match {
