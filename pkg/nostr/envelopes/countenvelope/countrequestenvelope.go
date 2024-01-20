@@ -23,7 +23,7 @@ type Request struct {
 
 var _ enveloper.I = &Request{}
 
-func (E *Request) UnmarshalJSON(bytes []byte) error {
+func (C *Request) UnmarshalJSON(bytes []byte) error {
 	// TODO implement me
 	panic("implement me")
 }
