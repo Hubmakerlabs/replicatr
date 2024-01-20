@@ -20,7 +20,7 @@ type Response struct {
 
 var _ enveloper.I = &Response{}
 
-func (E *Response) UnmarshalJSON(bytes []byte) error {
+func (env *Response) UnmarshalJSON(bytes []byte) error {
 	// TODO implement me
 	panic("implement me")
 }
