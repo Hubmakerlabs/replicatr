@@ -16,7 +16,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/fatih/color"
 )
 
@@ -53,7 +53,7 @@ type (
 	Relays        map[string]*RelayPerms
 	Emojis        map[string]string
 	Checklist     map[string]struct{}
-	RelayIterator func(context.T, *relays.Relay) bool
+	RelayIterator func(context.T, *relay.Relay) bool
 )
 
 // C is the configuration for the client
@@ -121,7 +121,7 @@ func (cfg *C) GetFollows(profile string) (profiles Follows, e error) {
 	return cfg.Follows, nil
 }
 func (cfg *C) GetRelaysAndTags(pub string, m *Checklist, mu *sync.Mutex) RelayIterator {
-	return func(c context.T, rl *relays.Relay) bool {
+	return func(c context.T, rl *relay.Relay) bool {
 		evs, e := rl.QuerySync(c, filter.T{
 			Kinds:   []int{event.KindContactList},
 			Authors: []string{pub},
@@ -164,7 +164,7 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist, mu *sync.Mutex) RelayIt
 }
 
 func (cfg *C) PopulateFollows(f *[]string, i, end *int, mu *sync.Mutex) RelayIterator {
-	return func(c context.T, rl *relays.Relay) bool {
+	return func(c context.T, rl *relay.Relay) bool {
 		evs, e := rl.QuerySync(c, filter.T{
 			Kinds:   []int{event.KindProfileMetadata},
 			Authors: (*f)[*i:*end], // Use the updated end index
@@ -186,7 +186,7 @@ func (cfg *C) PopulateFollows(f *[]string, i, end *int, mu *sync.Mutex) RelayIte
 }
 
 // FindRelay is
-func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relays.Relay {
+func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.Relay {
 	for k, v := range cfg.Relays {
 		if r.Write && !v.Write {
 			continue
@@ -198,7 +198,7 @@ func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relays.Relay {
 			continue
 		}
 		log.D.F("trying relay: %s", k)
-		rl, e := relays.RelayConnect(c, k)
+		rl, e := relay.RelayConnect(c, k)
 		if log.Fail(e) {
 			continue
 		}
@@ -224,7 +224,7 @@ func (cfg *C) Do(r *RelayPerms, f RelayIterator) {
 		wg.Add(1)
 		go func(wg *sync.WaitGroup, k string, v *RelayPerms) {
 			defer wg.Done()
-			rl, e := relays.RelayConnect(c, k)
+			rl, e := relay.RelayConnect(c, k)
 			if log.Fail(e) {
 				log.D.Ln(e)
 				return
@@ -338,7 +338,7 @@ func (cfg *C) Events(f filter.T) []*event.T {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
-	cfg.Do(rp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(rp, func(c context.T, rl *relay.Relay) bool {
 		mu.Lock()
 		if found {
 			mu.Unlock()

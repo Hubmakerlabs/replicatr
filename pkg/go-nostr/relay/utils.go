@@ -1,4 +1,4 @@
-package relays
+package relay
 
 import (
 	"net/url"

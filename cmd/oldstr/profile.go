@@ -8,7 +8,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/urfave/cli/v2"
@@ -17,7 +17,7 @@ import (
 func Profile(cCtx *cli.Context) (e error) {
 	user, j := cCtx.String("u"), cCtx.Bool("json")
 	cfg := cCtx.App.Metadata["config"].(*C)
-	var rl *relays.Relay
+	var rl *relay.Relay
 	if rl = cfg.FindRelay(context.Bg(), rp); rl == nil {
 		return errors.New("cannot connect relays")
 	}
@@ -60,14 +60,14 @@ func Profile(cCtx *cli.Context) (e error) {
 	}
 	fmt.Printf(
 		"Name:\n\t%v\n"+
-		"Pubkey:\n\t%v\n"+
-		"DisplayName:\n\t%v\n"+
-		"WebSite:\n\t%v\n"+
-		"Picture:\n\t%v\n"+
-		"Banner:\n\t%v\n"+
-		"NIP-05:\n\t%v\n"+
-		"LUD-16:\n\t%v\n"+
-		"About:\n\t%v\n",
+			"Pubkey:\n\t%v\n"+
+			"DisplayName:\n\t%v\n"+
+			"WebSite:\n\t%v\n"+
+			"Picture:\n\t%v\n"+
+			"Banner:\n\t%v\n"+
+			"NIP-05:\n\t%v\n"+
+			"LUD-16:\n\t%v\n"+
+			"About:\n\t%v\n",
 		p.Name,
 		npub,
 		p.DisplayName,

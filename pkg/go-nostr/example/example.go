@@ -15,7 +15,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	filters2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 )
@@ -27,7 +27,7 @@ func main() {
 
 	// connect to relay
 	url := "wss://nostr.zebedee.cloud"
-	rl, e := relays.RelayConnect(ctx, url)
+	rl, e := relay.RelayConnect(ctx, url)
 	if e != nil {
 		panic(e)
 	}
@@ -127,7 +127,7 @@ func main() {
 	ev.Sign(sk)
 	for _, url := range []string{"wss://nostr.zebedee.cloud"} {
 		ctx := context.Value(context.Bg(), "url", url)
-		rl, e := relays.RelayConnect(ctx, url)
+		rl, e := relay.RelayConnect(ctx, url)
 		if e != nil {
 			fmt.Println(e)
 			continue

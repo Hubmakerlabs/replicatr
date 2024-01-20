@@ -7,12 +7,12 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/urfave/cli/v2"
 )
 
 func (cfg *C) publish(ev *event.T, success *atomic.Int64) RelayIterator {
-	return func(c context.T, rl *relays.Relay) bool {
+	return func(c context.T, rl *relay.Relay) bool {
 		e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL, e)
@@ -37,7 +37,7 @@ func Timeline(cCtx *cli.Context) (e error) {
 	for k := range followsMap {
 		follows = append(follows, k)
 	}
-	log.D.Ln("follows",follows)
+	log.D.Ln("follows", follows)
 	// get timeline
 	f := filter.T{
 		Kinds:   []int{event.KindTextNote},
@@ -48,4 +48,3 @@ func Timeline(cCtx *cli.Context) (e error) {
 	cfg.PrintEvents(evs, followsMap, j, extra)
 	return nil
 }
-

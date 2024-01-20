@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/byter"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/labeler"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
@@ -19,6 +20,7 @@ import (
 // and with omitempty marking the mandatory ones, acting as a "kind" of
 // sentinel.
 type I interface {
+	envelopes.E // transitional
 	labeler.I
 	fmt.Stringer
 	byter.I

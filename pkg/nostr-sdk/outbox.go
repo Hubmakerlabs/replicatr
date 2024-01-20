@@ -7,19 +7,19 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 )
 
 func (sys *System) ExpandQueriesByAuthorAndRelays(
 	c context.T,
 	f filter.T,
-) (map[*relays.Relay]filter.T, error) {
+) (map[*relay.Relay]filter.T, error) {
 	n := len(f.Authors)
 	if n == 0 {
 		return nil, fmt.Errorf("no authors in f")
 	}
 
-	relaysForPubkey := make(map[string][]*relays.Relay, n)
+	relaysForPubkey := make(map[string][]*relay.Relay, n)
 
 	wg := sync.WaitGroup{}
 	wg.Add(n)
@@ -43,7 +43,7 @@ func (sys *System) ExpandQueriesByAuthorAndRelays(
 	}
 	wg.Wait()
 
-	filterForRelay := make(map[*relays.Relay]filter.T, n) // { [relay]: f }
+	filterForRelay := make(map[*relay.Relay]filter.T, n) // { [relay]: f }
 	for pubkey, relays := range relaysForPubkey {
 		for _, rl := range relays {
 			flt, ok := filterForRelay[rl]

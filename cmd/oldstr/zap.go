@@ -13,7 +13,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
@@ -73,7 +73,7 @@ func pay(cfg *C, invoice string) (e error) {
 		return e
 	}
 
-	rl, e := relays.RelayConnect(context.Bg(), host)
+	rl, e := relay.RelayConnect(context.Bg(), host)
 	if log.Fail(e) {
 		return e
 	}
