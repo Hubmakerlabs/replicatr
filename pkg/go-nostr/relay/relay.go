@@ -1,4 +1,4 @@
-package relays
+package relay
 
 import (
 	"bytes"
@@ -211,91 +211,92 @@ func (r *Relay) Connect(c context.T) error {
 }
 
 func (r *Relay) MessageReadLoop(conn *connection.C) {
-		buf := new(bytes.Buffer)
-		var e error
-		for {
-			buf.Reset()
-			if e := conn.ReadMessage(r.connectionContext, buf); e != nil {
-				r.ConnectionError = e
-				log.Fail(r.Close())
-				break
-			}
+	buf := new(bytes.Buffer)
+	var e error
+	for {
+		buf.Reset()
+		if e := conn.ReadMessage(r.connectionContext, buf); e != nil {
+			r.ConnectionError = e
+			log.Fail(r.Close())
+			break
+		}
 
-			message := buf.Bytes()
-			log.D.F("{%s} received %v", r.URL, string(message))
-			envelope := envelope2.ParseMessage(message)
-			if envelope == nil {
+		message := buf.Bytes()
+		log.D.F("{%s} received %v", r.URL, string(message))
+		envelope := envelope2.ParseMessage(message)
+		if envelope == nil {
+			continue
+		}
+
+		switch env := envelope.(type) {
+		case *notice.Envelope:
+			// see WithNoticeHandler
+			if r.notices != nil {
+				r.notices <- string(*env)
+			} else {
+				log.D.F("NOTICE from %s: '%s'", r.URL, string(*env))
+			}
+		case *auth.Envelope:
+			if env.Challenge == nil {
 				continue
 			}
-
-			switch env := envelope.(type) {
-			case *notice.Envelope:
-				// see WithNoticeHandler
-				if r.notices != nil {
-					r.notices <- string(*env)
-				} else {
-					log.D.F("NOTICE from %s: '%s'", r.URL, string(*env))
-				}
-			case *auth.Envelope:
-				if env.Challenge == nil {
+			r.challenge = *env.Challenge
+		case *event.E:
+			if env.SubscriptionID == nil {
+				continue
+			}
+			if s, ok := r.Subscriptions.Load(*env.SubscriptionID); !ok {
+				log.D.F("{%s} no subscription with id '%s'",
+					r.URL, *env.SubscriptionID)
+				continue
+			} else {
+				// check if the event matches the desired filter, ignore otherwise
+				if !s.Filters.Match(&env.T) {
+					log.D.F("{%s} filter does not match: %v ~ %v",
+						r.URL, s.Filters, env.T)
 					continue
 				}
-				r.challenge = *env.Challenge
-			case *event.E:
-				if env.SubscriptionID == nil {
-					continue
-				}
-				if s, ok := r.Subscriptions.Load(*env.SubscriptionID); !ok {
-					log.D.F("{%s} no subscription with id '%s'",
-						r.URL, *env.SubscriptionID)
-					continue
-				} else {
-					// check if the event matches the desired filter, ignore otherwise
-					if !s.Filters.Match(&env.T) {
-						log.D.F("{%s} filter does not match: %v ~ %v",
-							r.URL, s.Filters, env.T)
+				// check signature, ignore invalid, except from trusted (AssumeValid) relays
+				if !r.AssumeValid {
+					if ok, e = env.T.CheckSignature(); !ok {
+						errmsg := ""
+						if log.Fail(e) {
+							errmsg = e.Error()
+						}
+						log.D.F("{%s} bad signature on %s; %s",
+							r.URL, env.T.ID, errmsg)
 						continue
 					}
-					// check signature, ignore invalid, except from trusted (AssumeValid) relays
-					if !r.AssumeValid {
-						if ok, e = env.T.CheckSignature(); !ok {
-							errmsg := ""
-							if log.Fail(e) {
-								errmsg = e.Error()
-							}
-							log.D.F("{%s} bad signature on %s; %s",
-								r.URL, env.T.ID, errmsg)
-							continue
-						}
-					}
-					// dispatch this to the internal .events channel of the
-					// subscription
-					s.dispatchEvent(&env.T)
 				}
-			case *eose.Envelope:
-				if s, ok := r.Subscriptions.Load(string(*env)); ok {
-					s.dispatchEose()
-				}
-			case *closed.Envelope:
-				if s, ok := r.Subscriptions.Load(env.SubscriptionID); ok {
-					s.dispatchClosed(env.Reason)
-				}
-			case *count.Envelope:
-				if s, ok := r.Subscriptions.Load(env.SubscriptionID); ok &&
-					env.Count != nil && s.countResult != nil {
+				// dispatch this to the internal .events channel of the
+				// subscription
+				s.dispatchEvent(&env.T)
+			}
+		case *eose.Envelope:
+			if s, ok := r.Subscriptions.Load(string(*env)); ok {
+				s.dispatchEose()
+			}
+		case *closed.Envelope:
+			if s, ok := r.Subscriptions.Load(env.SubscriptionID); ok {
+				s.dispatchClosed(env.Reason)
+			}
+		case *count.Envelope:
+			if s, ok := r.Subscriptions.Load(env.SubscriptionID); ok &&
+				env.Count != nil && s.countResult != nil {
 
-					s.countResult <- *env.Count
-				}
-			case *OK.Envelope:
-				if okCallback, exist := r.okCallbacks.Load(env.EventID); exist {
-					okCallback(env.OK, env.Reason)
-				} else {
-					log.D.F("{%s} got an unexpected OK message for event %s",
-						r.URL, env.EventID)
-				}
+				s.countResult <- *env.Count
+			}
+		case *OK.Envelope:
+			if okCallback, exist := r.okCallbacks.Load(env.EventID); exist {
+				okCallback(env.OK, env.Reason)
+			} else {
+				log.D.F("{%s} got an unexpected OK message for event %s",
+					r.URL, env.EventID)
 			}
 		}
+	}
 }
+
 // Write queues a message to be sent to the relay.
 func (r *Relay) Write(msg []byte) <-chan error {
 	ch := make(chan error)

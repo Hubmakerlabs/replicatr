@@ -12,11 +12,12 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/puzpuzpuz/xsync/v2"
 )
+
 var log = log2.GetStd()
 
 const (
@@ -24,7 +25,7 @@ const (
 )
 
 type SimplePool struct {
-	Relays  *xsync.MapOf[string, *relays.Relay]
+	Relays  *xsync.MapOf[string, *relay.Relay]
 	Context context.T
 
 	authHandler func(*event.T) error
@@ -33,7 +34,7 @@ type SimplePool struct {
 
 type IncomingEvent struct {
 	*event.T
-	Relay *relays.Relay
+	Relay *relay.Relay
 }
 
 type PoolOption interface {
@@ -45,7 +46,7 @@ func NewSimplePool(c context.T, opts ...PoolOption) *SimplePool {
 	c, cancel := context.Cancel(c)
 
 	pool := &SimplePool{
-		Relays: xsync.NewMapOf[*relays.Relay](),
+		Relays: xsync.NewMapOf[*relay.Relay](),
 
 		Context: c,
 		cancel:  cancel,
@@ -70,7 +71,7 @@ func (h WithAuthHandler) Apply(pool *SimplePool) {
 
 var _ PoolOption = (WithAuthHandler)(nil)
 
-func (pool *SimplePool) EnsureRelay(url string) (*relays.Relay, error) {
+func (pool *SimplePool) EnsureRelay(url string) (*relay.Relay, error) {
 	nm := normalize.URL(url)
 
 	defer NamedLock(url)()
@@ -84,7 +85,7 @@ func (pool *SimplePool) EnsureRelay(url string) (*relays.Relay, error) {
 		// we use this ctx here so when the pool dies everything dies
 		c, cancel := context.Timeout(pool.Context, time.Second*15)
 		defer cancel()
-		if rl, e = relays.RelayConnect(c, nm); e != nil {
+		if rl, e = relay.RelayConnect(c, nm); e != nil {
 			return nil, fmt.Errorf("failed to connect: %w", e)
 		}
 
@@ -134,7 +135,7 @@ func (pool *SimplePool) subMany(c context.T, urls []string, filters filters.T, u
 				default:
 				}
 
-				var sub *relays.Subscription
+				var sub *relay.Subscription
 
 				rl, e := pool.EnsureRelay(nm)
 				if e != nil {

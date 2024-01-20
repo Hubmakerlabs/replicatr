@@ -28,6 +28,11 @@ const (
 
 var _ enveloper.I = (*T)(nil)
 
+func (env *T) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
+}
+
 // T is a relay message sent in response to an EventEnvelope to
 // indicate acceptance (OK is true), rejection and provide a human readable
 // Reason for clients to display to users, with the first word being a machine

@@ -8,7 +8,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pools"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 )
 
@@ -56,7 +56,7 @@ func ParseRelaysFromKind10002(evt *event.T) []Relay {
 	result := make([]Relay, 0, len(evt.Tags))
 	for _, tag := range evt.Tags {
 		if u := tag.Value(); u != "" && tag[0] == "r" {
-			if !relays.IsValidRelayURL(u) {
+			if !relay.IsValidRelayURL(u) {
 				continue
 			}
 			u := normalize.URL(u)
@@ -93,7 +93,7 @@ func ParseRelaysFromKind3(evt *event.T) []Relay {
 	results := make([]Relay, len(items))
 	i := 0
 	for u, item := range items {
-		if !relays.IsValidRelayURL(u) {
+		if !relay.IsValidRelayURL(u) {
 			continue
 		}
 		u := normalize.URL(u)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
@@ -15,6 +16,13 @@ var log = log2.GetStd()
 // client interface.
 type T struct {
 	Text string
+}
+
+var _ enveloper.I = (*T)(nil)
+
+func (E *T) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
 }
 
 func NewNoticeEnvelope(text string) (E *T) {

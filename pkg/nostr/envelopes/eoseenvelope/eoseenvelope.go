@@ -22,6 +22,11 @@ type T struct {
 
 var _ enveloper.I = (*T)(nil)
 
+func (E *T) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
+}
+
 func (E *T) Label() string { return l.EOSE }
 
 func (E *T) ToArray() array.T { return array.T{l.EOSE, E.T} }

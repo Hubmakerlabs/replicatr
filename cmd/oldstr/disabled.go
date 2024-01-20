@@ -16,7 +16,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
@@ -43,7 +43,7 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(wp, func(c context.T, rl *relay.Relay) bool {
 		e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL, e)
@@ -210,7 +210,7 @@ func doDMPost(cCtx *cli.Context) (e error) {
 		return
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(wp, func(c context.T, rl *relay.Relay) bool {
 		if e := rl.Publish(c, ev); !log.Fail(e) {
 			success.Add(1)
 		}
@@ -241,7 +241,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 	var repostID string
 	var mu sync.Mutex
-	cfg.Do(rp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(rp, func(c context.T, rl *relay.Relay) bool {
 		evs, e := rl.QuerySync(c, f)
 		if log.Fail(e) {
 			return true
@@ -261,7 +261,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(wp, func(c context.T, rl *relay.Relay) bool {
 		e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL, e)
@@ -295,7 +295,7 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 	var likeID string
 	var mu sync.Mutex
-	cfg.Do(rp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(rp, func(c context.T, rl *relay.Relay) bool {
 		evs, e := rl.QuerySync(c, f)
 		if log.Fail(e) {
 			return true
@@ -315,7 +315,7 @@ func doUnlike(cCtx *cli.Context) (e error) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(wp, func(c context.T, rl *relay.Relay) bool {
 		e := rl.Publish(c, ev)
 		if !log.Fail(e) {
 			success.Add(1)
@@ -349,7 +349,7 @@ func doDelete(cCtx *cli.Context) (e error) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(wp, func(c context.T, rl *relay.Relay) bool {
 		e := rl.Publish(c, ev)
 		if !log.Fail(e) {
 			success.Add(1)
@@ -405,7 +405,7 @@ func doStream(cCtx *cli.Context) (e error) {
 		Authors: follows,
 		Since:   &since,
 	}
-	var sub *relays.Subscription
+	var sub *relay.Subscription
 	sub, e = rl.Subscribe(context.Bg(), filters.T{ff})
 	if log.Fail(e) {
 		return e
@@ -426,7 +426,7 @@ func doStream(cCtx *cli.Context) (e error) {
 				if e := evr.Sign(sk); log.Fail(e) {
 					return e
 				}
-				cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
+				cfg.Do(wp, func(c context.T, rl *relay.Relay) bool {
 					log.Fail(rl.Publish(c, evr))
 					return true
 				})

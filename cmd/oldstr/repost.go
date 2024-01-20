@@ -8,7 +8,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
@@ -40,7 +40,7 @@ func Repost(cCtx *cli.Context) (e error) {
 	var first atomic.Bool
 	first.Store(true)
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(wp, func(c context.T, rl *relay.Relay) bool {
 		if first.Load() {
 			evs, e := rl.QuerySync(c, f)
 			if log.Fail(e) {

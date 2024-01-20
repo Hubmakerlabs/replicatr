@@ -15,6 +15,11 @@ type Challenge struct {
 
 var _ enveloper.I = &Challenge{}
 
+func (E *Challenge) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
+}
+
 func NewChallenge(c string) (a *Challenge) {
 	return &Challenge{Challenge: c}
 }

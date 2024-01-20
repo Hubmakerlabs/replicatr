@@ -22,6 +22,11 @@ type Response struct {
 
 var _ enveloper.I = &Response{}
 
+func (E *Response) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
+}
+
 // NewResponse creates an Response response from an Challenge.
 //
 // The caller must sign the embedded event before sending it back to

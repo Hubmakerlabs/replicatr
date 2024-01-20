@@ -11,7 +11,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
@@ -88,7 +88,7 @@ func Post(cCtx *cli.Context) (e error) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(wp, func(c context.T, rl *relay.Relay) bool {
 		e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL, e)

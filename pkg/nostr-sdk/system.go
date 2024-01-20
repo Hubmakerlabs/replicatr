@@ -12,7 +12,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	filters2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/pools"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk/cache"
 )
 
@@ -111,7 +111,7 @@ func (sys System) FetchUserEvents(c context.T, filt filter.T) (map[string][]*eve
 	wg := sync.WaitGroup{}
 	wg.Add(len(filters))
 	for rl, ff := range filters {
-		go func(rl *relays.Relay, f filter.T) {
+		go func(rl *relay.Relay, f filter.T) {
 			defer wg.Done()
 			f.Limit = f.Limit * len(f.Authors) // hack
 			sub, e := rl.Subscribe(c, filters2.T{filt})

@@ -11,7 +11,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relays"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
@@ -82,7 +82,7 @@ func Reply(cCtx *cli.Context) (e error) {
 		ev.Tags = ev.Tags.AppendUnique(hashtag)
 	}
 	var success atomic.Int64
-	cfg.Do(wp, func(c context.T, rl *relays.Relay) bool {
+	cfg.Do(wp, func(c context.T, rl *relay.Relay) bool {
 		if !quote {
 			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, rl.URL, "reply"})
 		} else {

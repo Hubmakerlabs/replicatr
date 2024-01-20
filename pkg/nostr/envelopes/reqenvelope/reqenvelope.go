@@ -24,6 +24,11 @@ type T struct {
 
 var _ enveloper.I = &T{}
 
+func (E *T) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
+}
+
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
 func (E *T) Label() (l string) { return labels.REQ }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
@@ -18,6 +19,13 @@ var log = log2.GetStd()
 type Request struct {
 	SubscriptionID subscriptionid.T
 	filters.T
+}
+
+var _ enveloper.I = &Request{}
+
+func (E *Request) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
 }
 
 func (C *Request) Label() string { return l.COUNT }

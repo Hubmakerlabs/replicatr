@@ -21,6 +21,11 @@ type T struct {
 
 var _ enveloper.I = &T{}
 
+func (E *T) UnmarshalJSON(bytes []byte) error {
+	// TODO implement me
+	panic("implement me")
+}
+
 func New(s subscriptionid.T, reason string) *T {
 	return &T{T: s, Reason: reason}
 }
