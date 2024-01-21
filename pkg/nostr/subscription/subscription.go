@@ -34,10 +34,12 @@ type Subscription struct {
 	Events chan *eventenvelope.T
 	mu     sync.Mutex
 
-	// the EndOfStoredEvents channel gets closed when an EOSE comes for that subscription
+	// the EndOfStoredEvents channel gets closed when an EOSE comes for that
+	// subscription
 	EndOfStoredEvents chan struct{}
 
-	// the ClosedReason channel emits the reason when a CLOSED message is received
+	// the ClosedReason channel emits the reason when a CLOSED message is
+	// received
 	ClosedReason chan string
 
 	// Context will be .Done() when the subscription ends
@@ -48,8 +50,8 @@ type Subscription struct {
 	closed atomic.Bool
 	Cancel context.F
 
-	// this keeps track of the events we've received before the EOSE that we must dispatch before
-	// closing the EndOfStoredEvents channel
+	// this keeps track of the events we've received before the EOSE that we
+	// must dispatch before closing the EndOfStoredEvents channel
 	storedwg sync.WaitGroup
 }
 
@@ -66,7 +68,8 @@ type SubscriptionOption interface {
 	IsSubscriptionOption()
 }
 
-// WithLabel puts a label on the subscription (it is prepended to the automatic id) that is sent to relays.
+// WithLabel puts a label on the subscription (it is prepended to the automatic
+// id) that is sent to relays.
 type WithLabel string
 
 func (_ WithLabel) IsSubscriptionOption() {}
@@ -84,7 +87,8 @@ func (sub *Subscription) Start() {
 	// the subscription ends once the context is canceled (if not already)
 	sub.Unsub() // this will set sub.live to false
 
-	// do this so we don't have the possibility of closing the Events channel and then trying to send to it
+	// do this so we don't have the possibility of closing the Events channel
+	// and then trying to send to it
 	sub.mu.Lock()
 	close(sub.Events)
 	sub.mu.Unlock()
@@ -135,7 +139,8 @@ func (sub *Subscription) Unsub() {
 	// cancel the context (if it's not canceled already)
 	sub.Cancel()
 
-	// mark subscription as closed and send a CLOSE to the relay (naïve sync.Once implementation)
+	// mark subscription as closed and send a CLOSE to the relay (naïve
+	// sync.Once implementation)
 	if sub.live.CompareAndSwap(true, false) {
 		sub.Close()
 	}
