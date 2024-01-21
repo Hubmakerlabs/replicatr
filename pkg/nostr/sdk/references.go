@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 )
 
@@ -37,7 +37,7 @@ func ParseReferences(evt *event.T) (refs []*Reference) {
 		if r[6] == -1 {
 			// didn't find a NIP-10 #[0] reference, so it's a NIP-27 mention
 			nip19code := content[r[2]:r[3]]
-			if prefix, data, e := nip19.Decode(nip19code); !log.D.Chk(e) {
+			if prefix, data, e := bech32encoding.Decode(nip19code); !log.D.Chk(e) {
 				switch prefix {
 				case "npub":
 					ref.Profile = &pointers.Profile{

@@ -9,13 +9,13 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
@@ -180,7 +180,7 @@ func doZap(cCtx *cli.Context) (e error) {
 	zr.Tags = zr.Tags.AppendUnique(rls)
 	var prefix string
 	var s any
-	if prefix, s, e = nip19.Decode(cCtx.Args().First()); !log.Fail(e) {
+	if prefix, s, e = bech32encoding.Decode(cCtx.Args().First()); !log.Fail(e) {
 		switch prefix {
 		case "nevent":
 			receipt = s.(pointers.Event).Author

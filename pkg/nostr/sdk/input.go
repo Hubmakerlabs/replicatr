@@ -3,8 +3,8 @@ package sdk
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip5"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 )
@@ -22,7 +22,7 @@ func InputToProfile(c context.T, input string) (pp *pointers.Profile) {
 	// handle nip19 codes, if that's the case
 	var prefix string
 	var data any
-	if prefix, data, e = nip19.Decode(input); log.D.Chk(e) {
+	if prefix, data, e = bech32encoding.Decode(input); log.D.Chk(e) {
 	}
 	var ok bool
 	switch prefix {
@@ -59,7 +59,7 @@ func InputToEventPointer(input string) (ep *pointers.Event) {
 	// handle nip19 codes, if that's the case
 	var prefix string
 	var data any
-	if prefix, data, e = nip19.Decode(input); log.D.Chk(e) {
+	if prefix, data, e = bech32encoding.Decode(input); log.D.Chk(e) {
 		return
 	}
 	var ok bool

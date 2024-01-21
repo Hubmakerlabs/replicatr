@@ -17,7 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 )
 
 var log = log2.GetStd()
@@ -44,7 +44,7 @@ func main() {
 
 	// create filters
 	var filters filters2.T
-	if _, v, e := nip19.Decode(npub); e == nil {
+	if _, v, e := bech32encoding.Decode(npub); e == nil {
 		t := make(map[string][]string)
 		// making a "p" tag for the above public key.
 		// this filters for messages tagged with the user, mainly replies.
@@ -96,14 +96,14 @@ func main() {
 
 	var sk string
 	ev := event.T{}
-	if _, s, e := nip19.Decode(nsec); e == nil {
+	if _, s, e := bech32encoding.Decode(nsec); e == nil {
 		sk = s.(string)
 	} else {
 		sk = keys.GeneratePrivateKey()
 	}
 	if pub, e := keys.GetPublicKey(sk); e == nil {
 		ev.PubKey = pub
-		if npub, e := nip19.EncodePublicKey(pub); e == nil {
+		if npub, e := bech32encoding.EncodePublicKey(pub); e == nil {
 			fmt.Fprintln(os.Stderr, "using:", npub)
 		}
 	} else {

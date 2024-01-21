@@ -1,13 +1,13 @@
-package nip19
+package bech32encoding
 
 import (
 	"crypto/rand"
 	"encoding/hex"
 	"testing"
 
-	"github.com/minio/sha256-simd"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/minio/sha256-simd"
 )
 
 func TestConvertBits(t *testing.T) {

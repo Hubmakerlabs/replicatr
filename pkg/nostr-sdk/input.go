@@ -6,7 +6,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip05"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 )
 
@@ -20,7 +20,7 @@ func InputToProfile(c context.T, input string) *pointers.Profile {
 	}
 
 	// handle nip19 codes, if that's the case
-	prefix, data, _ := nip19.Decode(input)
+	prefix, data, _ := bech32encoding.Decode(input)
 	switch prefix {
 	case "npub":
 		input = data.(string)
@@ -49,7 +49,7 @@ func InputToEventPointer(input string) *pointers.Event {
 	}
 
 	// handle nip19 codes, if that's the case
-	prefix, data, _ := nip19.Decode(input)
+	prefix, data, _ := bech32encoding.Decode(input)
 	switch prefix {
 	case "note":
 		input = data.(string)

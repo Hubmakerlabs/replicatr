@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/fatih/color"
 )
 
@@ -55,7 +55,7 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 			fgRed.Fprint(buffer, "pubkey ")
 			fgRed.Fprint(buffer, ev.PubKey)
 			// fgHiBlue.Fprint(buffer, " note ID: ")
-			note, e := nip19.EncodeNote(ev.ID.String())
+			note, e := bech32encoding.EncodeNote(ev.ID.String())
 			if e != nil {
 				note = ev.ID.String()
 			}

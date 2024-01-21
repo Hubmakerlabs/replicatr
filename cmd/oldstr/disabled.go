@@ -21,7 +21,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/fatih/color"
 	"github.com/urfave/cli/v2"
 )
@@ -91,7 +91,7 @@ func doDMList(cCtx *cli.Context) (e error) {
 		}
 		if profile, ok := followsMap[p]; ok {
 			m[p] = struct{}{}
-			p, _ = nip19.EncodePublicKey(p)
+			p, _ = bech32encoding.EncodePublicKey(p)
 			users = append(users, entry{
 				name:   profile.DisplayName,
 				pubkey: p,
@@ -168,7 +168,7 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	if pubHex, secHex, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
 		return
 	}
-	if _, e = nip19.EncodePublicKey(pubHex); log.Fail(e) {
+	if _, e = bech32encoding.EncodePublicKey(pubHex); log.Fail(e) {
 		return e
 	}
 	ev := &event.T{PubKey: pubHex}
