@@ -12,7 +12,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/connect"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/connection"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
@@ -79,7 +79,7 @@ func (s Status) String() string {
 type Relay struct {
 	URL                           string
 	RequestHeader                 http.Header // e.g. for origin header
-	Connection                    *connect.Connection
+	Connection                    *connection.C
 	Subscriptions                 *xsync.MapOf[string, *Subscription]
 	Err                           error
 	ctx                           context.T // will be canceled when the connection closes
@@ -214,7 +214,7 @@ func (r *Relay) closer(ticker *time.Ticker) {
 	})
 }
 
-func (r *Relay) reader(conn *connect.Connection) {
+func (r *Relay) reader(conn *connection.C) {
 	var e error
 	buf := new(bytes.Buffer)
 	for {
@@ -316,8 +316,8 @@ func (r *Relay) Connect(c context.T) (e error) {
 		c, cancel = context.Timeout(c, 7*time.Second)
 		defer cancel()
 	}
-	var conn *connect.Connection
-	if conn, e = connect.NewConnection(c, r.URL, r.RequestHeader); log.Fail(e) {
+	var conn *connection.C
+	if conn, e = connection.NewConnection(c, r.URL, r.RequestHeader); log.Fail(e) {
 		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, e)
 	}
 	r.Connection = conn

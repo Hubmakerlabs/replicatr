@@ -1,4 +1,4 @@
-package connect
+package connection
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/gobwas/httphead"
 	"github.com/gobwas/ws"
@@ -20,7 +19,7 @@ import (
 
 var log = log2.GetStd()
 
-type Connection struct {
+type C struct {
 	Conn              net.Conn
 	enableCompression bool
 	controlHandler    wsutil.FrameHandlerFunc
@@ -31,7 +30,7 @@ type Connection struct {
 	msgState          *wsflate.MessageState
 }
 
-func NewConnection(c context.T, url string, requestHeader http.Header) (*Connection, error) {
+func NewConnection(c context.T, url string, requestHeader http.Header) (*C, error) {
 	dialer := ws.Dialer{
 		Header: ws.HandshakeHeaderHTTP(requestHeader),
 		Extensions: []httphead.Option{
@@ -90,7 +89,7 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*Connect
 	writer := wsutil.NewWriter(conn, state, ws.OpText)
 	writer.SetExtensions(&msgState)
 
-	return &Connection{
+	return &C{
 		Conn:              conn,
 		enableCompression: enableCompression,
 		controlHandler:    controlHandler,
@@ -102,7 +101,7 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*Connect
 	}, nil
 }
 
-func (c *Connection) WriteMessage(data []byte) (e error) {
+func (c *C) WriteMessage(data []byte) (e error) {
 	if c.msgState.IsCompressed() && c.enableCompression {
 		c.flateWriter.Reset(c.writer)
 		if _, e := io.Copy(c.flateWriter, bytes.NewReader(data)); log.Fail(e) {
@@ -125,7 +124,7 @@ func (c *Connection) WriteMessage(data []byte) (e error) {
 	return nil
 }
 
-func (c *Connection) ReadMessage(cx context.T, buf io.Writer) (e error) {
+func (c *C) ReadMessage(cx context.T, buf io.Writer) (e error) {
 	for {
 		select {
 		case <-cx.Done():
@@ -167,6 +166,6 @@ func (c *Connection) ReadMessage(cx context.T, buf io.Writer) (e error) {
 	return nil
 }
 
-func (c *Connection) Close() (e error) {
+func (c *C) Close() (e error) {
 	return c.Conn.Close()
 }
