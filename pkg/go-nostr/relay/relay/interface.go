@@ -1,6 +1,6 @@
-package types
+package relay
 
-type Relay interface {
+type I interface {
 	IsConnected() bool
 	Write(msg []byte) <-chan error
 	Delete(key string)
