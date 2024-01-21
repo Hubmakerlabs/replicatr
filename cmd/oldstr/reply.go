@@ -84,9 +84,9 @@ func Reply(cCtx *cli.Context) (e error) {
 	var success atomic.Int64
 	cfg.Do(wp, func(c context.T, rl *relay.Relay) bool {
 		if !quote {
-			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, rl.URL, "reply"})
+			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, rl.URL(), "reply"})
 		} else {
-			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, rl.URL, "mention"})
+			ev.Tags = ev.Tags.AppendUnique(tags.Tag{"e", id, rl.URL(), "mention"})
 		}
 		if e := ev.Sign(sk); log.Fail(e) {
 			return true

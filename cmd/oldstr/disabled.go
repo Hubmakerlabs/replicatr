@@ -17,6 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip04"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/subscription"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
@@ -405,7 +406,7 @@ func doStream(cCtx *cli.Context) (e error) {
 		Authors: follows,
 		Since:   &since,
 	}
-	var sub *relay.Subscription
+	var sub *subscription.Subscription
 	sub, e = rl.Subscribe(context.Bg(), filters.T{ff})
 	if log.Fail(e) {
 		return e

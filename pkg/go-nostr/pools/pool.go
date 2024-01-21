@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/subscription"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
@@ -85,7 +86,7 @@ func (pool *SimplePool) EnsureRelay(url string) (*relay.Relay, error) {
 		// we use this ctx here so when the pool dies everything dies
 		c, cancel := context.Timeout(pool.Context, time.Second*15)
 		defer cancel()
-		if rl, e = relay.RelayConnect(c, nm); e != nil {
+		if rl, e = relay.Connect(c, nm); e != nil {
 			return nil, fmt.Errorf("failed to connect: %w", e)
 		}
 
@@ -135,7 +136,7 @@ func (pool *SimplePool) subMany(c context.T, urls []string, filters filters.T, u
 				default:
 				}
 
-				var sub *relay.Subscription
+				var sub *subscription.Subscription
 
 				rl, e := pool.EnsureRelay(nm)
 				if e != nil {

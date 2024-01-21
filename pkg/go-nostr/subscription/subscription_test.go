@@ -1,4 +1,4 @@
-package relay
+package subscription
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
@@ -17,7 +18,7 @@ const RELAY = "wss://nos.lol"
 
 // test if we can fetch a couple of random events
 func TestSubscribeBasic(t *testing.T) {
-	rl := MustRelayConnect(RELAY)
+	rl := relay.MustConnect(RELAY)
 	defer rl.Close()
 
 	sub, e := rl.Subscribe(context.Bg(), filters.T{{Kinds: []int{event.KindTextNote}, Limit: 2}})
@@ -55,7 +56,7 @@ end:
 
 // test if we can do multiple nested subscriptions
 func TestNestedSubscriptions(t *testing.T) {
-	rl := MustRelayConnect(RELAY)
+	rl := relay.MustConnect(RELAY)
 	defer rl.Close()
 
 	n := atomic.Uint32{}

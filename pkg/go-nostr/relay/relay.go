@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/subscription"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/OK"
@@ -40,11 +41,11 @@ var subscriptionIDCounter atomic.Int32
 type Relay struct {
 	closeMutex sync.Mutex
 
-	URL           string
+	url           string
 	RequestHeader http.Header // e.g. for origin header
 
 	Connection    *connection.C
-	Subscriptions *xsync.MapOf[string, *Subscription]
+	Subscriptions *xsync.MapOf[string, *subscription.Subscription]
 
 	ConnectionError         error
 	connectionContext       context.T // will be canceled when the connection closes
@@ -54,12 +55,16 @@ type Relay struct {
 	notices                       chan string // NIP-01 NOTICEs
 	okCallbacks                   *xsync.MapOf[string, func(bool, string)]
 	writeQueue                    chan writeRequest
-	subscriptionChannelCloseQueue chan *Subscription
+	subscriptionChannelCloseQueue chan *subscription.Subscription
 
 	// custom things that aren't often used
 	//
 	AssumeValid bool // this will skip verifying signatures for events received from this relay
 }
+
+func (r *Relay) URL() string { return r.url }
+
+func (r *Relay) Delete(key string) { r.Subscriptions.Delete(key) }
 
 type writeRequest struct {
 	msg    []byte
@@ -71,13 +76,13 @@ type writeRequest struct {
 func NewRelay(c context.T, url string, opts ...RelayOption) *Relay {
 	ctx, cancel := context.Cancel(c)
 	r := &Relay{
-		URL:                           normalize.URL(url),
+		url:                           normalize.URL(url),
 		connectionContext:             ctx,
 		connectionContextCancel:       cancel,
-		Subscriptions:                 xsync.NewMapOf[*Subscription](),
+		Subscriptions:                 xsync.NewMapOf[*subscription.Subscription](),
 		okCallbacks:                   xsync.NewMapOf[func(bool, string)](),
 		writeQueue:                    make(chan writeRequest),
-		subscriptionChannelCloseQueue: make(chan *Subscription),
+		subscriptionChannelCloseQueue: make(chan *subscription.Subscription),
 	}
 
 	for _, opt := range opts {
@@ -95,10 +100,10 @@ func NewRelay(c context.T, url string, opts ...RelayOption) *Relay {
 	return r
 }
 
-// RelayConnect returns a relay object connected to url. Once successfully
+// Connect returns a relay object connected to url. Once successfully
 // connected, cancelling ctx has no effect. To close the connection, call
 // r.Close().
-func RelayConnect(c context.T, url string, opts ...RelayOption) (*Relay, error) {
+func Connect(c context.T, url string, opts ...RelayOption) (*Relay, error) {
 	r := NewRelay(context.Bg(), url, opts...)
 	e := r.Connect(c)
 	return r, e
@@ -121,7 +126,7 @@ var _ RelayOption = (WithNoticeHandler)(nil)
 
 // String just returns the relay URL.
 func (r *Relay) String() string {
-	return r.URL
+	return r.url
 }
 
 // Context retrieves the context that is associated with this relay connection.
@@ -143,7 +148,7 @@ func (r *Relay) Connect(c context.T) error {
 		return fmt.Errorf("relay must be initialized with a call to NewRelay()")
 	}
 
-	if r.URL == "" {
+	if r.url == "" {
 		return fmt.Errorf("invalid relay URL '%s'", r.URL)
 	}
 
@@ -154,7 +159,7 @@ func (r *Relay) Connect(c context.T) error {
 		defer cancel()
 	}
 
-	conn, e := connection.NewConnection(c, r.URL, r.RequestHeader)
+	conn, e := connection.NewConnection(c, r.url, r.RequestHeader)
 	if e != nil {
 		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, e)
 	}
@@ -173,7 +178,7 @@ func (r *Relay) Connect(c context.T) error {
 		// stop the ticker
 		ticker.Stop()
 		// close all subscriptions
-		r.Subscriptions.Range(func(_ string, sub *Subscription) bool {
+		r.Subscriptions.Range(func(_ string, sub *subscription.Subscription) bool {
 			go sub.Unsub()
 			return true
 		})
@@ -270,21 +275,21 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 				}
 				// dispatch this to the internal .events channel of the
 				// subscription
-				s.dispatchEvent(&env.T)
+				s.DispatchEvent(&env.T)
 			}
 		case *eose.Envelope:
 			if s, ok := r.Subscriptions.Load(string(*env)); ok {
-				s.dispatchEose()
+				s.DispatchEose()
 			}
 		case *closed.Envelope:
 			if s, ok := r.Subscriptions.Load(env.SubscriptionID); ok {
-				s.dispatchClosed(env.Reason)
+				s.DispatchClosed(env.Reason)
 			}
 		case *count.Envelope:
 			if s, ok := r.Subscriptions.Load(env.SubscriptionID); ok &&
-				env.Count != nil && s.countResult != nil {
+				env.Count != nil && s.CountResult != nil {
 
-				s.countResult <- *env.Count
+				s.CountResult <- *env.Count
 			}
 		case *OK.Envelope:
 			if okCallback, exist := r.okCallbacks.Load(env.EventID); exist {
@@ -321,7 +326,7 @@ func (r *Relay) Auth(c context.T, sign func(ev *event.T) error) error {
 		CreatedAt: timestamp.Now(),
 		Kind:      event.KindClientAuthentication,
 		Tags: tags.Tags{
-			tags.Tag{"relay", r.URL},
+			tags.Tag{"relay", r.URL()},
 			tags.Tag{"challenge", r.challenge},
 		},
 		Content: "",
@@ -388,7 +393,7 @@ func (r *Relay) publish(c context.T, id string, env envelopes.E) error {
 //
 // Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.T` will be canceled at some point.
 // Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) Subscribe(c context.T, filters filters.T, opts ...SubscriptionOption) (*Subscription, error) {
+func (r *Relay) Subscribe(c context.T, filters filters.T, opts ...subscription.SubscriptionOption) (*subscription.Subscription, error) {
 	sub := r.PrepareSubscription(c, filters, opts...)
 
 	if e := sub.Fire(); e != nil {
@@ -402,7 +407,7 @@ func (r *Relay) Subscribe(c context.T, filters filters.T, opts ...SubscriptionOp
 //
 // Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.T` will be canceled at some point.
 // Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) PrepareSubscription(c context.T, filters filters.T, opts ...SubscriptionOption) *Subscription {
+func (r *Relay) PrepareSubscription(c context.T, filters filters.T, opts ...subscription.SubscriptionOption) *subscription.Subscription {
 	if r.Connection == nil {
 		panic(fmt.Errorf("must call .Connect() first before calling .Subscribe()"))
 	}
@@ -410,11 +415,11 @@ func (r *Relay) PrepareSubscription(c context.T, filters filters.T, opts ...Subs
 	current := subscriptionIDCounter.Add(1)
 	ctx, cancel := context.Cancel(c)
 
-	sub := &Subscription{
+	sub := &subscription.Subscription{
 		Relay:             r,
 		Context:           ctx,
-		cancel:            cancel,
-		counter:           int(current),
+		Cancel:            cancel,
+		Counter:           int(current),
 		Events:            make(chan *event.T),
 		EndOfStoredEvents: make(chan struct{}),
 		ClosedReason:      make(chan string, 1),
@@ -423,8 +428,8 @@ func (r *Relay) PrepareSubscription(c context.T, filters filters.T, opts ...Subs
 
 	for _, opt := range opts {
 		switch o := opt.(type) {
-		case WithLabel:
-			sub.label = string(o)
+		case subscription.WithLabel:
+			sub.Label = string(o)
 		}
 	}
 
@@ -432,12 +437,12 @@ func (r *Relay) PrepareSubscription(c context.T, filters filters.T, opts ...Subs
 	r.Subscriptions.Store(id, sub)
 
 	// start handling events, eose, unsub etc:
-	go sub.start()
+	go sub.Start()
 
 	return sub
 }
 
-func (r *Relay) QuerySync(c context.T, f filter.T, opts ...SubscriptionOption) ([]*event.T, error) {
+func (r *Relay) QuerySync(c context.T, f filter.T, opts ...subscription.SubscriptionOption) ([]*event.T, error) {
 	sub, e := r.Subscribe(c, filters.T{f}, opts...)
 	if e != nil {
 		return nil, e
@@ -469,9 +474,9 @@ func (r *Relay) QuerySync(c context.T, f filter.T, opts ...SubscriptionOption) (
 	}
 }
 
-func (r *Relay) Count(c context.T, filters filters.T, opts ...SubscriptionOption) (int64, error) {
+func (r *Relay) Count(c context.T, filters filters.T, opts ...subscription.SubscriptionOption) (int64, error) {
 	sub := r.PrepareSubscription(c, filters, opts...)
-	sub.countResult = make(chan int64)
+	sub.CountResult = make(chan int64)
 
 	if e := sub.Fire(); e != nil {
 		return 0, e
@@ -488,7 +493,7 @@ func (r *Relay) Count(c context.T, filters filters.T, opts ...SubscriptionOption
 
 	for {
 		select {
-		case count := <-sub.countResult:
+		case count := <-sub.CountResult:
 			return count, nil
 		case <-c.Done():
 			return 0, c.Err()

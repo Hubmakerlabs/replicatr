@@ -1,4 +1,4 @@
-package relay
+package subscription
 
 import (
 	"fmt"
@@ -11,18 +11,23 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/count"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay/types"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/req"
+
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 )
 
-type Subscription struct {
-	label   string
-	counter int
+var log = log2.GetStd()
 
-	Relay   *Relay
+type Subscription struct {
+	Label   string
+	Counter int
+
+	types.Relay
 	Filters filters.T
 
 	// for this to be treated as a COUNT and not a REQ this must be set
-	countResult chan int64
+	CountResult chan int64
 
 	// the Events channel emits all EVENTs that come in a Subscription
 	// will be closed when the subscription ends
@@ -41,7 +46,7 @@ type Subscription struct {
 	live   atomic.Bool
 	eosed  atomic.Bool
 	closed atomic.Bool
-	cancel context.F
+	Cancel context.F
 
 	// this keeps track of the events we've received before the EOSE that we must dispatch before
 	// closing the EndOfStoredEvents channel
@@ -54,6 +59,7 @@ type EventMessage struct {
 }
 
 // When instantiating relay connections, some options may be passed.
+
 // SubscriptionOption is the type of the argument passed for that.
 // Some examples are WithLabel.
 type SubscriptionOption interface {
@@ -70,10 +76,10 @@ var _ SubscriptionOption = (WithLabel)("")
 // GetID return the Nostr subscription ID as given to the Relay
 // it is a concatenation of the label and a serial number.
 func (sub *Subscription) GetID() string {
-	return sub.label + ":" + strconv.Itoa(sub.counter)
+	return sub.Label + ":" + strconv.Itoa(sub.Counter)
 }
 
-func (sub *Subscription) start() {
+func (sub *Subscription) Start() {
 	<-sub.Context.Done()
 	// the subscription ends once the context is canceled (if not already)
 	sub.Unsub() // this will set sub.live to false
@@ -84,7 +90,7 @@ func (sub *Subscription) start() {
 	sub.mu.Unlock()
 }
 
-func (sub *Subscription) dispatchEvent(evt *event.T) {
+func (sub *Subscription) DispatchEvent(evt *event.T) {
 	log.D.Ln("dispatching event to channel")
 	added := false
 	if !sub.eosed.Load() {
@@ -106,7 +112,7 @@ func (sub *Subscription) dispatchEvent(evt *event.T) {
 	}()
 }
 
-func (sub *Subscription) dispatchEose() {
+func (sub *Subscription) DispatchEose() {
 	if sub.eosed.CompareAndSwap(false, true) {
 		go func() {
 			sub.storedwg.Wait()
@@ -115,7 +121,7 @@ func (sub *Subscription) dispatchEose() {
 	}
 }
 
-func (sub *Subscription) dispatchClosed(reason string) {
+func (sub *Subscription) DispatchClosed(reason string) {
 	if sub.closed.CompareAndSwap(false, true) {
 		go func() {
 			sub.ClosedReason <- reason
@@ -127,7 +133,7 @@ func (sub *Subscription) dispatchClosed(reason string) {
 // Unsub() also closes the channel sub.Events and makes a new one.
 func (sub *Subscription) Unsub() {
 	// cancel the context (if it's not canceled already)
-	sub.cancel()
+	sub.Cancel()
 
 	// mark subscription as closed and send a CLOSE to the relay (naïve sync.Once implementation)
 	if sub.live.CompareAndSwap(true, false) {
@@ -135,7 +141,7 @@ func (sub *Subscription) Unsub() {
 	}
 
 	// remove subscription from our map
-	sub.Relay.Subscriptions.Delete(sub.GetID())
+	sub.Relay.Delete(sub.GetID())
 }
 
 // Close just sends a CLOSE message. You probably want Unsub() instead.
@@ -161,16 +167,16 @@ func (sub *Subscription) Fire() error {
 	id := sub.GetID()
 
 	var reqb []byte
-	if sub.countResult == nil {
+	if sub.CountResult == nil {
 		reqb, _ = req.Envelope{id, sub.Filters}.MarshalJSON()
 	} else {
 		reqb, _ = count.Envelope{id, sub.Filters, nil}.MarshalJSON()
 	}
-	log.D.F("{%s} sending %v", sub.Relay.URL, string(reqb))
+	log.D.F("{%s} sending %v", sub.Relay.URL(), string(reqb))
 
 	sub.live.Store(true)
 	if e := <-sub.Relay.Write(reqb); e != nil {
-		sub.cancel()
+		sub.Cancel()
 		return fmt.Errorf("failed to write: %w", e)
 	}
 
