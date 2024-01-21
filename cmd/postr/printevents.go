@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/fatih/color"
 )
 
@@ -53,9 +54,14 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 		} else {
 			fgRed.Fprint(buffer, "pubkey ")
 			fgRed.Fprint(buffer, ev.PubKey)
-			fgHiBlue.Fprint(buffer, " note ID: ")
-			fgHiBlue.Fprintln(buffer, ev.ID)
-			fgHiBlue.Fprintln(buffer, ev.CreatedAt.Time())
+			// fgHiBlue.Fprint(buffer, " note ID: ")
+			note, e := nip19.EncodeNote(ev.ID.String())
+			if e != nil {
+				note = ev.ID.String()
+			}
+			fgHiBlue.Fprint(buffer, " ", note)
+			fgHiBlue.Fprint(buffer, " ", ev.CreatedAt.Time())
+			fgHiBlue.Fprintln(buffer)
 			fgNormal.Fprintln(buffer, ev.Content)
 		}
 		fgNormal.Fprintln(buffer)
