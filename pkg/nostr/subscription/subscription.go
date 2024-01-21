@@ -7,14 +7,14 @@ import (
 	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/closer"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/count"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay/relay"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/req"
-
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay/relay"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
 var log = log2.GetStd()
@@ -31,7 +31,7 @@ type Subscription struct {
 
 	// the Events channel emits all EVENTs that come in a Subscription
 	// will be closed when the subscription ends
-	Events chan *event.T
+	Events chan *eventenvelope.T
 	mu     sync.Mutex
 
 	// the EndOfStoredEvents channel gets closed when an EOSE comes for that subscription
@@ -54,7 +54,7 @@ type Subscription struct {
 }
 
 type EventMessage struct {
-	Event event.T
+	Event eventenvelope.T
 	Relay string
 }
 
@@ -66,16 +66,15 @@ type SubscriptionOption interface {
 	IsSubscriptionOption()
 }
 
-// WithLabel puts a label on the subscription (it is prepended to the automatic
-// id) that is sent to relays.
+// WithLabel puts a label on the subscription (it is prepended to the automatic id) that is sent to relays.
 type WithLabel string
 
 func (_ WithLabel) IsSubscriptionOption() {}
 
 var _ SubscriptionOption = (WithLabel)("")
 
-// GetID return the Nostr subscription ID as given to the Relay it is a
-// concatenation of the label and a serial number.
+// GetID return the Nostr subscription ID as given to the I
+// it is a concatenation of the label and a serial number.
 func (sub *Subscription) GetID() string {
 	return sub.Label + ":" + strconv.Itoa(sub.Counter)
 }
@@ -85,14 +84,13 @@ func (sub *Subscription) Start() {
 	// the subscription ends once the context is canceled (if not already)
 	sub.Unsub() // this will set sub.live to false
 
-	// do this so we don't have the possibility of closing the Events channel
-	// and then trying to send to it
+	// do this so we don't have the possibility of closing the Events channel and then trying to send to it
 	sub.mu.Lock()
 	close(sub.Events)
 	sub.mu.Unlock()
 }
 
-func (sub *Subscription) DispatchEvent(evt *event.T) {
+func (sub *Subscription) DispatchEvent(evt *eventenvelope.T) {
 	log.D.Ln("dispatching event to channel")
 	added := false
 	if !sub.eosed.Load() {
@@ -150,8 +148,8 @@ func (sub *Subscription) Unsub() {
 func (sub *Subscription) Close() {
 	if sub.Relay.IsConnected() {
 		id := sub.GetID()
-		closeMsg := close2.Envelope(id)
-		closeb, _ := (&closeMsg).MarshalJSON()
+		closeMsg := closeenvelope.New(subscriptionid.T(id))
+		closeb, _ := closeMsg.MarshalJSON()
 		log.D.F("{%s} sending %v", sub.Relay.URL, string(closeb))
 		<-sub.Relay.Write(closeb)
 	}
@@ -170,9 +168,15 @@ func (sub *Subscription) Fire() error {
 
 	var reqb []byte
 	if sub.CountResult == nil {
-		reqb, _ = req.Envelope{id, sub.Filters}.MarshalJSON()
+		reqb, _ = (&reqenvelope.T{
+			SubscriptionID: subscriptionid.T(id),
+			T:              sub.Filters,
+		}).MarshalJSON()
 	} else {
-		reqb, _ = count.Envelope{id, sub.Filters, nil}.MarshalJSON()
+		reqb, _ = (&countenvelope.Request{
+			SubscriptionID: subscriptionid.T(id),
+			T:              sub.Filters,
+		}).MarshalJSON()
 	}
 	log.D.F("{%s} sending %v", sub.Relay.URL(), string(reqb))
 
