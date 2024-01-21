@@ -73,7 +73,7 @@ func pay(cfg *C, invoice string) (e error) {
 		return e
 	}
 
-	rl, e := relay.RelayConnect(context.Bg(), host)
+	rl, e := relay.Connect(context.Bg(), host)
 	if log.Fail(e) {
 		return e
 	}

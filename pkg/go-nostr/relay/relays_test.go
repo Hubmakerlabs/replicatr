@@ -13,7 +13,7 @@ import (
 )
 
 func TestEOSEMadness(t *testing.T) {
-	rl := MustRelayConnect(eose.RELAY)
+	rl := MustConnect(eose.RELAY)
 	defer rl.Close()
 
 	sub, e := rl.Subscribe(context.Bg(), filters.T{
@@ -60,7 +60,7 @@ end:
 func TestCount(t *testing.T) {
 	const RELAY = "wss://relay.nostr.band"
 
-	rl := MustRelayConnect(RELAY)
+	rl := MustConnect(RELAY)
 	defer rl.Close()
 
 	count, e := rl.Count(context.Bg(), filters.T{

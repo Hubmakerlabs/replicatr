@@ -61,7 +61,7 @@ func TestPublish(t *testing.T) {
 	defer ws.Close()
 
 	// connect a client and send the text note
-	rl := MustRelayConnect(ws.URL)
+	rl := MustConnect(ws.URL)
 	e := rl.Publish(context.Bg(), &textNote)
 	if e != nil {
 		t.Errorf("publish should have succeeded")
@@ -90,7 +90,7 @@ func TestPublishBlocked(t *testing.T) {
 	defer ws.Close()
 
 	// connect a client and send a text note
-	rl := MustRelayConnect(ws.URL)
+	rl := MustConnect(ws.URL)
 	e := rl.Publish(context.Bg(), &textNote)
 	if e == nil {
 		t.Errorf("should have failed to publish")
@@ -110,7 +110,7 @@ func TestPublishWriteFailed(t *testing.T) {
 	defer ws.Close()
 
 	// connect a client and send a text note
-	rl := MustRelayConnect(ws.URL)
+	rl := MustConnect(ws.URL)
 	// Force brief period of time so that publish always fails on closed socket.
 	time.Sleep(1 * time.Millisecond)
 	e := rl.Publish(context.Bg(), &textNote)
@@ -134,7 +134,7 @@ func TestConnectContext(t *testing.T) {
 	// relay client
 	ctx, cancel := context.Timeout(context.Bg(), 3*time.Second)
 	defer cancel()
-	r, e := RelayConnect(ctx, ws.URL)
+	r, e := Connect(ctx, ws.URL)
 	if e != nil {
 		t.Fatalf("RelayConnectContext: %v", e)
 	}
@@ -155,7 +155,7 @@ func TestConnectContextCanceled(t *testing.T) {
 	// relay client
 	ctx, cancel := context.Cancel(context.Bg())
 	cancel() // make ctx expired
-	_, e := RelayConnect(ctx, ws.URL)
+	_, e := Connect(ctx, ws.URL)
 	if !errors.Is(e, context.Canceled) {
 		t.Errorf("RelayConnectContext returned %v error; want context.Canceled", e)
 	}

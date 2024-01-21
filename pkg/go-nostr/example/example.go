@@ -27,7 +27,7 @@ func main() {
 
 	// connect to relay
 	url := "wss://nostr.zebedee.cloud"
-	rl, e := relay.RelayConnect(ctx, url)
+	rl, e := relay.Connect(ctx, url)
 	if e != nil {
 		panic(e)
 	}
@@ -127,7 +127,7 @@ func main() {
 	ev.Sign(sk)
 	for _, url := range []string{"wss://nostr.zebedee.cloud"} {
 		ctx := context.Value(context.Bg(), "url", url)
-		rl, e := relay.RelayConnect(ctx, url)
+		rl, e := relay.Connect(ctx, url)
 		if e != nil {
 			fmt.Println(e)
 			continue
