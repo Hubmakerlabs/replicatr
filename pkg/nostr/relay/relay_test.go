@@ -17,11 +17,11 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	btcec "github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
@@ -207,7 +207,7 @@ var anyOriginHandshake = func(conf *websocket.Config, r *http.Request) (e error)
 func makeKeyPair(t *testing.T) (priv, pub string) {
 	t.Helper()
 	privkey := GeneratePrivateKey()
-	pubkey, e := nip19.GetPublicKey(privkey)
+	pubkey, e := bech32encoding.GetPublicKey(privkey)
 	if e != nil {
 		t.Fatalf("GetPublicKey(%q): %v", privkey, e)
 	}

@@ -12,12 +12,12 @@ import (
 	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
@@ -93,7 +93,7 @@ func doDMList(cCtx *cli.Context) (e error) {
 		}
 		if profile, ok := followsMap[p]; ok {
 			m[p] = struct{}{}
-			p, _ = nip19.EncodePublicKey(p)
+			p, _ = bech32encoding.EncodePublicKey(p)
 			users = append(users, entry{
 				name:   profile.DisplayName,
 				pubkey: p,
@@ -170,7 +170,7 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	if pubHex, secHex, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
 		return
 	}
-	if _, e = nip19.EncodePublicKey(pubHex); log.Fail(e) {
+	if _, e = bech32encoding.EncodePublicKey(pubHex); log.Fail(e) {
 		return e
 	}
 	ev := &event.T{PubKey: pubHex}

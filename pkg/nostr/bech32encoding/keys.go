@@ -1,4 +1,4 @@
-package nip19
+package bech32encoding
 
 import (
 	"fmt"
@@ -22,7 +22,6 @@ const (
 	Bech32HRPLen    = 4
 	SecHRP          = "nsec"
 	PubHRP          = "npub"
-	SigHRP          = "nsig"
 )
 
 // ConvertForBech32 performs the bit expansion required for encoding into
@@ -137,43 +136,6 @@ func HexToSecretKey(sk string) (s *btcec.SecretKey, e error) {
 		return
 	}
 	return
-}
-
-// EncodeSignature encodes a schnorr signature as Bech32 with the HRP "nsig" to
-// be consistent with the key encodings 4 characters starting with 'n'.
-func EncodeSignature(sig *schnorr.Signature) (str string, e error) {
-
-	var b5 []byte
-	b5, e = ConvertForBech32(sig.Serialize())
-	if e != nil {
-		e = fmt.Errorf("ERROR: '%s'", e)
-		return
-	}
-	str, e = bech32.Encode(SigHRP, b5)
-	return
-}
-
-// DecodeSignature decodes a Bech32 encoded nsig nostr (schnorr) signature into
-// its runtime binary form.
-func DecodeSignature(encoded string) (sig *schnorr.Signature, e error) {
-
-	var b5, b8 []byte
-	var hrp string
-	hrp, b5, e = bech32.DecodeNoLimit(encoded)
-	if e != nil {
-		e = fmt.Errorf("ERROR: '%s'", e)
-		return
-	}
-	if hrp != SigHRP {
-		e = fmt.Errorf("wrong human readable part, got '%s' want '%s'",
-			hrp, SigHRP)
-		return
-	}
-	b8, e = ConvertFromBech32(b5)
-	if e != nil {
-		return
-	}
-	return schnorr.ParseSignature(b8[:64])
 }
 
 func GetPublicKey(sk string) (s string, e error) {

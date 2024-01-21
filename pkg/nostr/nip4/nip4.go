@@ -9,10 +9,11 @@ import (
 	"fmt"
 	"strings"
 
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 )
+
 var log = log2.GetStd()
 
 // ComputeSharedSecret computes an Elliptic Curve Diffie Hellman shared secret
@@ -21,35 +22,35 @@ var log = log2.GetStd()
 // The public key and secret key for this can be either hex or bech32 formatted,
 // since this is easily determined by reading the first 4 bytes of the string
 func ComputeSharedSecret(pub string, sec string) (secret []byte, e error) {
-	if len(pub) < nip19.MinKeyStringLen {
+	if len(pub) < bech32encoding.MinKeyStringLen {
 		e = fmt.Errorf("public key is too short, must be at least %d, "+
-			"'%s' is only %d chars", nip19.MinKeyStringLen, pub, len(pub))
+			"'%s' is only %d chars", bech32encoding.MinKeyStringLen, pub, len(pub))
 		return
 	}
-	if len(sec) < nip19.MinKeyStringLen {
+	if len(sec) < bech32encoding.MinKeyStringLen {
 		e = fmt.Errorf("public key is too short, must be at least %d, "+
-			"'%s' is only %d chars", nip19.MinKeyStringLen, pub, len(pub))
+			"'%s' is only %d chars", bech32encoding.MinKeyStringLen, pub, len(pub))
 		return
 	}
 	var s *secp.SecretKey
 	var p *secp.PublicKey
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
-	if pub[:nip19.Bech32HRPLen] == nip19.PubHRP {
-		if p, e = nip19.NpubToPublicKey(pub); log.Fail(e) {
+	if pub[:bech32encoding.Bech32HRPLen] == bech32encoding.PubHRP {
+		if p, e = bech32encoding.NpubToPublicKey(pub); log.Fail(e) {
 			return
 		}
 	} else {
-		if p, e = nip19.HexToPublicKey(pub); log.Fail(e) {
+		if p, e = bech32encoding.HexToPublicKey(pub); log.Fail(e) {
 			return
 		}
 	}
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
-	if sec[:nip19.Bech32HRPLen] == nip19.SecHRP {
-		if s, e = nip19.NsecToSecretKey(sec); log.Fail(e) {
+	if sec[:bech32encoding.Bech32HRPLen] == bech32encoding.SecHRP {
+		if s, e = bech32encoding.NsecToSecretKey(sec); log.Fail(e) {
 			return
 		}
 	} else {
-		if s, e = nip19.HexToSecretKey(sec); log.Fail(e) {
+		if s, e = bech32encoding.HexToSecretKey(sec); log.Fail(e) {
 			return
 		}
 	}

@@ -1,4 +1,4 @@
-package nip19
+package bech32encoding
 
 import (
 	"reflect"

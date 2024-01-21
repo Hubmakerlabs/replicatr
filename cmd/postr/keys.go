@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 )
 
 func getPubFromSec(sk string) (pubHex string, secHex string, e error) {
 	var s any
-	if _, s, e = nip19.Decode(sk); log.Fail(e) {
+	if _, s, e = bech32encoding.Decode(sk); log.Fail(e) {
 		return
 	}
 	secHex = s.(string)

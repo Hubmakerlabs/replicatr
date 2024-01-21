@@ -16,7 +16,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/timestamp"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 	"github.com/mdp/qrterminal/v3"
 	"github.com/urfave/cli/v2"
@@ -173,7 +173,7 @@ func doZap(cCtx *cli.Context) (e error) {
 	zr.Tags = zr.Tags.AppendUnique(rls)
 	var prefix string
 	var s any
-	if prefix, s, e = nip19.Decode(cCtx.Args().First()); !log.Fail(e) {
+	if prefix, s, e = bech32encoding.Decode(cCtx.Args().First()); !log.Fail(e) {
 		switch prefix {
 		case "nevent":
 			receipt = s.(pointers.Event).Author

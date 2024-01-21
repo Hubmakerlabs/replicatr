@@ -7,10 +7,10 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr-sdk"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/urfave/cli/v2"
 )
@@ -56,7 +56,7 @@ func Profile(cCtx *cli.Context) (e error) {
 		return e
 	}
 	var npub string
-	if npub, e = nip19.EncodePublicKey(pub); log.Fail(e) {
+	if npub, e = bech32encoding.EncodePublicKey(pub); log.Fail(e) {
 		return e
 	}
 	fmt.Printf(

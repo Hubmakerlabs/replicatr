@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip19"
 	"github.com/Hubmakerlabs/replicatr/pkg/pool"
 )
 
@@ -30,7 +30,7 @@ type ProfileMetadata struct {
 }
 
 func (p ProfileMetadata) Npub() string {
-	v, e := nip19.EncodePublicKey(p.PubKey)
+	v, e := bech32encoding.EncodePublicKey(p.PubKey)
 	log.D.Chk(e)
 	return v
 }
@@ -38,7 +38,7 @@ func (p ProfileMetadata) Npub() string {
 func (p ProfileMetadata) Nprofile(c context.T, sys *System,
 	nrelays int) string {
 
-	v, e := nip19.EncodeProfile(p.PubKey,
+	v, e := bech32encoding.EncodeProfile(p.PubKey,
 		sys.FetchOutboxRelays(c, p.PubKey))
 	log.D.Chk(e)
 	return v
