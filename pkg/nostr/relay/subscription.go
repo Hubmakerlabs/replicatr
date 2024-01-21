@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/subscriptionoption"
 
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
@@ -44,21 +45,13 @@ type EventMessage struct {
 	Relay string
 }
 
-// When instantiating relay connections, some options may be passed.
-
-// SubscriptionOption is the type of the argument passed for that.
-// Some examples are WithLabel.
-type SubscriptionOption interface {
-	IsSubscriptionOption()
-}
-
 // WithLabel puts a label on the subscription (it is prepended to the automatic
 // id) that is sent to relays.
 type WithLabel string
 
 func (_ WithLabel) IsSubscriptionOption() {}
 
-var _ SubscriptionOption = (WithLabel)("")
+var _ subscriptionoption.I = (WithLabel)("")
 
 // GetID return the Nostr subscription ID as given to the Relay it is a
 // concatenation of the label and a serial number.

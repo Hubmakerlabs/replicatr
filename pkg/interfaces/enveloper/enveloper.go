@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/byter"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/envelopes"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/arrayer"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/buffer"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/byter"
 	"github.com/Hubmakerlabs/replicatr/pkg/labeler"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 // I interface for envelopes
@@ -25,6 +25,6 @@ type I interface {
 	fmt.Stringer
 	byter.I
 	json.Marshaler
-	text.Unmarshaler
-	array.I
+	buffer.Unmarshaler
+	arrayer.I
 }
