@@ -9,12 +9,13 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
-
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/relayoption"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/subscriptionoption"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/connection"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
 	event2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
@@ -32,12 +33,6 @@ import (
 	"github.com/gobwas/ws/wsutil"
 )
 
-// Option is the type of the argument passed for that. Some examples of this are
-// WithNoticeHandler and WithAuthHandler.
-type Option interface {
-	IsRelayOption()
-}
-
 // WithNoticeHandler just takes notices and is expected to do something with
 // them. when not given, defaults to logging the notices.
 type WithNoticeHandler func(notice string)
@@ -45,7 +40,7 @@ type WithNoticeHandler func(notice string)
 func (_ WithNoticeHandler) IsRelayOption() {}
 
 // compile time interface check
-var _ Option = (WithNoticeHandler)(nil)
+var _ relayoption.I = (WithNoticeHandler)(nil)
 
 // WithAuthHandler takes an auth event and expects it to be signed. when not
 // given, AUTH messages from relays are ignored.
@@ -54,7 +49,7 @@ type WithAuthHandler func(c context.T, authEvent *event.T) (ok bool)
 func (_ WithAuthHandler) IsRelayOption() {}
 
 // compile time interface check
-var _ Option = (WithAuthHandler)(nil)
+var _ relayoption.I = (WithAuthHandler)(nil)
 
 type Status int
 
@@ -102,7 +97,7 @@ type WriteRequest struct {
 
 // New returns a new relay. The relay connection will be closed when the context
 // is canceled.
-func New(c context.T, url string, opts ...Option) (r *Relay) {
+func New(c context.T, url string, opts ...relayoption.I) (r *Relay) {
 	ctx, cancel := context.Cancel(c)
 	r = &Relay{
 		URL:                           normalize.URL(url),
@@ -153,7 +148,7 @@ func New(c context.T, url string, opts ...Option) (r *Relay) {
 // connected, cancelling ctx has no effect. To close the connection, call
 // r.Close().
 func RelayConnect(c context.T, url string,
-	opts ...Option) (r *Relay, e error) {
+	opts ...relayoption.I) (r *Relay, e error) {
 
 	r = New(context.Bg(), url, opts...)
 	e = r.Connect(c)
@@ -462,7 +457,7 @@ func (r *Relay) Auth(c context.T, event *event.T) (s Status, e error) {
 // ensuring their `context.T` will be canceled at some point. Failure to
 // do that will result in a huge number of halted goroutines being created.
 func (r *Relay) Subscribe(c context.T, filters filters.T,
-	opts ...SubscriptionOption) (s *Subscription, e error) {
+	opts ...subscriptionoption.I) (s *Subscription, e error) {
 
 	s = r.PrepareSubscription(c, filters, opts...)
 	if e = s.Fire(); log.Fail(e) {
@@ -478,7 +473,7 @@ func (r *Relay) Subscribe(c context.T, filters filters.T,
 // ensuring their `context.T` will be canceled at some point. Failure to
 // do that will result in a huge number of halted goroutines being created.
 func (r *Relay) PrepareSubscription(c context.T, filters filters.T,
-	opts ...SubscriptionOption) (s *Subscription) {
+	opts ...subscriptionoption.I) (s *Subscription) {
 
 	if r.Connection == nil {
 		panic(fmt.
@@ -509,7 +504,7 @@ func (r *Relay) PrepareSubscription(c context.T, filters filters.T,
 }
 
 func (r *Relay) QuerySync(c context.T, f *filter.T,
-	opts ...SubscriptionOption) (evs []*event.T, e error) {
+	opts ...subscriptionoption.I) (evs []*event.T, e error) {
 
 	var sub *Subscription
 	if sub, e = r.Subscribe(c, filters.T{f}, opts...); log.Fail(e) {
@@ -539,7 +534,7 @@ func (r *Relay) QuerySync(c context.T, f *filter.T,
 }
 
 func (r *Relay) Count(c context.T, filters filters.T,
-	opts ...SubscriptionOption) (cnt int64, e error) {
+	opts ...subscriptionoption.I) (cnt int64, e error) {
 
 	sub := r.PrepareSubscription(c, filters, opts...)
 	sub.CountResult = make(chan int64)

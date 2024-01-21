@@ -1,8 +1,8 @@
-package cache
+package cache32
 
 import "time"
 
-type Cache32[V any] interface {
+type I[V any] interface {
 	Get(k string) (v V, ok bool)
 	Delete(k string)
 	Set(k string, v V) bool

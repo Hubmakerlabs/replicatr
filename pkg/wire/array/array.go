@@ -21,12 +21,6 @@ var log = log2.GetStd()
 
 type T []interface{}
 
-// I is an interface for a type that can return an array.T - or in other
-// words []interface{} made into concrete.
-type I interface {
-	ToArray() T
-}
-
 func (t T) String() string { return t.Buffer().String() }
 
 func (t T) Bytes() []byte { return t.Buffer().Bytes() }

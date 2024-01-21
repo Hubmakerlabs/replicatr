@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"

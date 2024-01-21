@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/subscriptionoption"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -14,13 +15,7 @@ import (
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.
 type RelayInterface interface {
 	Publish(c context.T, event event.T) error
-	QuerySync(c context.T, f *filter.T, opts ...SubscriptionOption) ([]*event.T, error)
-}
-
-// SubscriptionOption is the type of the argument passed for that.
-// Some examples are WithLabel.
-type SubscriptionOption interface {
-	IsSubscriptionOption()
+	QuerySync(c context.T, f *filter.T, opts ...subscriptionoption.I) ([]*event.T, error)
 }
 
 // WithLabel puts a label on the subscription (it is prepended to the automatic id) that is sent to relays.
@@ -29,7 +24,7 @@ type WithLabel string
 func (_ WithLabel) IsSubscriptionOption() {}
 
 // compile time interface check
-var _ SubscriptionOption = (WithLabel)("")
+var _ subscriptionoption.I = (WithLabel)("")
 
 type RelayWrapper struct {
 	Store
@@ -83,7 +78,7 @@ func (w RelayWrapper) Publish(c context.T, ev event.T) (e error) {
 }
 
 func (w RelayWrapper) QuerySync(c context.T, f *filter.T,
-	opts ...SubscriptionOption) (evs []*event.T, e error) {
+	opts ...subscriptionoption.I) (evs []*event.T, e error) {
 	var ch chan *event.T
 	if ch, e = w.Store.QueryEvents(c, f); log.E.Chk(e) {
 		return nil, fmt.Errorf("failed to query: %w", e)

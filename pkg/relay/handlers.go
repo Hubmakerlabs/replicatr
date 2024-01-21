@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	auth2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"

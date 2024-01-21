@@ -5,11 +5,11 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closedenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"

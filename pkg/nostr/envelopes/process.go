@@ -1,8 +1,8 @@
 package envelopes
 
 import (
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
 	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/sentinel"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )

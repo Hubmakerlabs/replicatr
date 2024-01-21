@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/subscriptionoption"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 )
 
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.
 type RelayInterface interface {
 	Publish(c context.T, evt *event.T) error
-	QuerySync(c context.T, f *filter.T, opts ...relay.SubscriptionOption) ([]*event.T, error)
+	QuerySync(c context.T, f *filter.T, opts ...subscriptionoption.I) ([]*event.T, error)
 }
 
 type RelayWrapper struct {
@@ -60,7 +60,7 @@ func (w RelayWrapper) Publish(c context.T, evt *event.T) (e error) {
 	return nil
 }
 
-func (w RelayWrapper) QuerySync(c context.T, f *filter.T, opts ...relay.SubscriptionOption) ([]*event.T, error) {
+func (w RelayWrapper) QuerySync(c context.T, f *filter.T, opts ...subscriptionoption.I) ([]*event.T, error) {
 	ch, e := w.Store.QueryEvents(c, f)
 	if e != nil {
 		return nil, fmt.Errorf("failed to query: %w", e)

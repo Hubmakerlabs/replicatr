@@ -3,7 +3,7 @@ package authenvelope
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
 	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"

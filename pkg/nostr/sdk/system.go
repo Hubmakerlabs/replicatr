@@ -6,21 +6,21 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/cache32"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk/cache"
 	"github.com/Hubmakerlabs/replicatr/pkg/pool"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 )
 
 type System struct {
-	RelaysCache      cache.Cache32[[]Relay]
-	FollowsCache     cache.Cache32[[]Follow]
-	MetadataCache    cache.Cache32[*ProfileMetadata]
+	RelaysCache      cache32.I[[]Relay]
+	FollowsCache     cache32.I[[]Follow]
+	MetadataCache    cache32.I[*ProfileMetadata]
 	Pool             *pool.SimplePool
 	RelayListRelays  []string
 	FollowListRelays []string
