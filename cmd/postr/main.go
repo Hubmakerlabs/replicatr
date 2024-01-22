@@ -93,7 +93,8 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "a", Usage: "profile appName"},
 			&cli.StringFlag{Name: "relays", Usage: "relays"},
-			&cli.BoolFlag{Name: "V", Usage: "verbose"},
+			&cli.BoolFlag{Name: "v", Usage: "verbose"},
+			&cli.BoolFlag{Name: "t", Usage: "trace"},
 		},
 		Commands: []*cli.Command{
 			{
@@ -308,9 +309,11 @@ func main() {
 			cCtx.App.Metadata = map[string]any{
 				"config": cfg,
 			}
-			cfg.verbose = cCtx.Bool("V")
-			if cfg.verbose {
+			if cfg.verbose = cCtx.Bool("v"); cfg.verbose {
 				slog.SetLogLevel(slog.Debug)
+			}
+			if cfg.trace = cCtx.Bool("t"); cfg.trace {
+				slog.SetLogLevel(slog.Trace)
 			}
 			relays := cCtx.String("relays")
 			if strings.TrimSpace(relays) != "" {

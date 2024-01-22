@@ -64,6 +64,7 @@ type C struct {
 	NwcURI    string `json:"nwc-uri"`
 	NwcPub    string `json:"nwc-pub"`
 	verbose   bool
+	trace     bool
 	tempRelay bool
 	sk        string
 	sync.Mutex

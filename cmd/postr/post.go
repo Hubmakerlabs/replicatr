@@ -87,6 +87,7 @@ func Post(cCtx *cli.Context) (e error) {
 	}
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.TextNote
+	log.T.F("signing event `%s`", ev.ToObject())
 	if e = ev.Sign(sk); log.Fail(e) {
 		return e
 	}

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"net/http"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -67,17 +68,28 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
+	log.T.F("processing message '%s", string(msg))
 	en, _, e := envelopes.ProcessEnvelope(msg)
-	if en == nil {
-		// stop silently
+	if log.Fail(e) {
 		return
 	}
+	log.T.F("did not fail %v", en)
+	if en == nil {
+		log.T.Ln("silently ignoring message")
+		return
+	}
+	log.T.Ln("did not get silently ignored", reflect.TypeOf(en))
 	switch env := en.(type) {
 	case *eventenvelope.T:
+		log.T.Ln("event envelope")
 		// check id
-		hash := sha256.Sum256(env.Event.Serialize())
+		evs := env.Event.ToCanonical().Bytes()
+		log.T.F("serialized %s", evs)
+		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
+			log.T.F("id mismatch got %s, expected %s",
+				id, env.Event.ID.String())
 			rl.E.Chk(ws.WriteJSON(okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
@@ -85,13 +97,14 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			}))
 			return
 		}
+		log.T.Ln("ID was valid")
 		// check signature
 		var ok bool
 		if ok, e = env.Event.CheckSignature(); rl.E.Chk(e) {
 			rl.E.Chk(ws.WriteJSON(okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
-				Reason: "error: failed to verify signature"},
+				Reason: "error: failed to verify signature: " + e.Error()},
 			))
 			return
 		} else if !ok {
@@ -102,6 +115,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			))
 			return
 		}
+		log.T.Ln("signature was valid")
 		var writeErr error
 		if env.Event.Kind == 5 {
 			// this always returns "blocked: " whenever it returns an error
