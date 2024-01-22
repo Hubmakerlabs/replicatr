@@ -273,7 +273,7 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 							errmsg = e.Error()
 						}
 						log.D.F("{%s} bad signature on %s; %s",
-							r.URL, env.Event.ID, errmsg)
+							r.URL(), env.Event.ID, errmsg)
 						continue
 					}
 				}
@@ -300,7 +300,7 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 				okCallback(env.OK, env.Reason)
 			} else {
 				log.D.F("{%s} got an unexpected OK message for event %s",
-					r.URL, env.ID)
+					r.URL(), env.ID)
 			}
 		}
 	}
@@ -372,7 +372,7 @@ func (r *Relay) publish(c context.T, id string, env enveloper.I) error {
 
 	// publish event
 	envb, _ := env.MarshalJSON()
-	log.D.F("{%s} sending %v", r.URL, string(envb))
+	log.D.F("{%s} sending %v", r.URL(), string(envb))
 	if e := <-r.Write(envb); e != nil {
 		return e
 	}
@@ -392,19 +392,20 @@ func (r *Relay) publish(c context.T, id string, env enveloper.I) error {
 	}
 }
 
-// Subscribe sends a "REQ" command to the relay r as in NIP-01.
-// Events are returned through the channel sub.Events.
-// The subscription is closed when context ctx is cancelled ("CLOSE" in NIP-01).
+// Subscribe sends a "REQ" command to the relay r as in NIP-01. Events are
+// returned through the channel sub.Events. The subscription is closed when
+// context ctx is cancelled ("CLOSE" in NIP-01).
 //
-// Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.T` will be canceled at some point.
-// Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) Subscribe(c context.T, filters filters.T,
+// Remember to cancel subscriptions, either by calling `.Unsub()` on them or
+// ensuring their `context.T` will be canceled at some point. Failure to do that
+// will result in a huge number of halted goroutines being created.
+func (r *Relay) Subscribe(c context.T, f filters.T,
 	opts ...subscriptionoption.I) (*subscription.T, error) {
 
-	sub := r.PrepareSubscription(c, filters, opts...)
+	sub := r.PrepareSubscription(c, f, opts...)
 
 	if e := sub.Fire(); e != nil {
-		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", filters, r.URL, e)
+		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", f, r.URL(), e)
 	}
 
 	return sub, nil
@@ -412,9 +413,10 @@ func (r *Relay) Subscribe(c context.T, filters filters.T,
 
 // PrepareSubscription creates a subscription, but doesn't fire it.
 //
-// Remember to cancel subscriptions, either by calling `.Unsub()` on them or ensuring their `context.T` will be canceled at some point.
-// Failure to do that will result in a huge number of halted goroutines being created.
-func (r *Relay) PrepareSubscription(c context.T, filters filters.T,
+// Remember to cancel subscriptions, either by calling `.Unsub()` on them or
+// ensuring their `context.T` will be canceled at some point. Failure to do that
+// will result in a huge number of halted goroutines being created.
+func (r *Relay) PrepareSubscription(c context.T, f filters.T,
 	opts ...subscriptionoption.I) *subscription.T {
 
 	if r.Connection == nil {
@@ -432,7 +434,7 @@ func (r *Relay) PrepareSubscription(c context.T, filters filters.T,
 		Events:            make(chan *event.T),
 		EndOfStoredEvents: make(chan struct{}),
 		ClosedReason:      make(chan string, 1),
-		Filters:           filters,
+		Filters:           f,
 	}
 
 	for _, opt := range opts {

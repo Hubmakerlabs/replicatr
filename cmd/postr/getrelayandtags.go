@@ -20,6 +20,7 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
 		if log.Fail(e) {
 			return true
 		}
+		log.D.Ln("evs", len(evs[0].Tags))
 		for _, ev := range evs {
 			var rm Relays
 			if cfg.tempRelay == false {
@@ -37,15 +38,15 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
 			log.T.S(ev.Tags)
 			for _, tag := range ev.Tags {
 				if len(tag) >= 2 && tag[0] == "p" {
-					// log.D.Ln("p tag", tag.I(), tag.Key(), tag.Value())
+					log.T.Ln("p tag", tag.Relay(), tag.Key(), tag.Value())
 					cfg.Lock()
 					(*m)[tag[1]] = struct{}{}
 					cfg.Unlock()
 				}
 			}
-			// mu.Lock()
+			// cfg.Lock()
 			// log.D.S(*m)
-			// mu.Unlock()
+			// cfg.Unlock()
 		}
 		return true
 	}

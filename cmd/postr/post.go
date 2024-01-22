@@ -94,7 +94,7 @@ func Post(cCtx *cli.Context) (e error) {
 	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
 		e := rl.Publish(c, ev)
 		if log.Fail(e) {
-			log.D.Ln(rl.URL, e)
+			log.D.Ln(rl.URL(), e)
 		} else {
 			success.Add(1)
 		}

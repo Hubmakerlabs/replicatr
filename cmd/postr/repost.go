@@ -57,7 +57,7 @@ func Repost(cCtx *cli.Context) (e error) {
 			}
 		}
 		if e = rl.Publish(c, ev); log.Fail(e) {
-			log.D.Ln(rl.URL, e)
+			log.D.Ln(rl.URL(), e)
 		} else {
 			success.Add(1)
 		}

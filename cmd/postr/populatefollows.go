@@ -12,10 +12,11 @@ import (
 
 func (cfg *C) PopulateFollows(f *[]string, start, end *int) RelayIter {
 	return func(c context.T, rl *relay.Relay) bool {
-		log.T.Ln("populating follow list of profile", rl.URL, *f)
+		log.T.Ln("populating follow list of profile", rl.URL(), *f)
 		evs, e := rl.QuerySync(c, &filter.T{
 			Kinds:   kinds.T{kind.ProfileMetadata},
 			Authors: (*f)[*start:*end], // Use the updated end index
+			Limit:   *end - *start,
 		})
 		log.D.S(evs)
 		if log.Fail(e) {

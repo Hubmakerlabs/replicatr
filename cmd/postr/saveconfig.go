@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"os"
 	"path/filepath"
 )
 
@@ -31,6 +32,6 @@ func (cfg *C) save(profile string) (e error) {
 		return e
 	}
 	log.D.F("saving to file '%s'\n%s", fp, string(b))
-	return nil
-	// return os.WriteFile(fp, b, 0644)
+	// return nil
+	return os.WriteFile(fp, b, 0644)
 }

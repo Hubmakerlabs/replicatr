@@ -149,7 +149,7 @@ func (sub *T) Close() {
 		id := sub.GetID()
 		closeMsg := closeenvelope.New(subscriptionid.T(id))
 		closeb, _ := closeMsg.MarshalJSON()
-		log.D.F("{%s} sending %v", sub.Relay.URL, string(closeb))
+		log.D.F("{%s} sending %v", sub.Relay.URL(), string(closeb))
 		<-sub.Relay.Write(closeb)
 	}
 }
