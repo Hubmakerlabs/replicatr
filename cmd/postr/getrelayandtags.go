@@ -34,7 +34,7 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
 					cfg.Relays = rm
 				}
 			}
-			log.D.S(ev.Tags)
+			log.T.S(ev.Tags)
 			for _, tag := range ev.Tags {
 				if len(tag) >= 2 && tag[0] == "p" {
 					// log.D.Ln("p tag", tag.I(), tag.Key(), tag.Value())

@@ -21,6 +21,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscription"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
@@ -47,7 +48,7 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		_, e := rl.Publish(c, ev)
+		e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL, e)
 		} else {
@@ -214,7 +215,7 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		if _, e := rl.Publish(c, ev); !log.Fail(e) {
+		if e := rl.Publish(c, ev); !log.Fail(e) {
 			success.Add(1)
 		}
 		return true
@@ -265,7 +266,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		_, e := rl.Publish(c, ev)
+		e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL, e)
 		} else {
@@ -319,7 +320,7 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		_, e := rl.Publish(c, ev)
+		e := rl.Publish(c, ev)
 		if !log.Fail(e) {
 			success.Add(1)
 		}
@@ -353,7 +354,7 @@ func doDelete(cCtx *cli.Context) (e error) {
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		_, e := rl.Publish(c, ev)
+		e := rl.Publish(c, ev)
 		if !log.Fail(e) {
 			success.Add(1)
 		}
@@ -408,7 +409,7 @@ func doStream(cCtx *cli.Context) (e error) {
 		Authors: follows,
 		Since:   since,
 	}
-	var sub *relay.Subscription
+	var sub *subscription.T
 	sub, e = rl.Subscribe(context.Bg(), filters.T{&ff})
 	if log.Fail(e) {
 		return e
@@ -431,7 +432,7 @@ func doStream(cCtx *cli.Context) (e error) {
 					return e
 				}
 				cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-					if _, e = rl.Publish(c, evr); log.Fail(e) {
+					if e = rl.Publish(c, evr); log.Fail(e) {
 					}
 					return true
 				})

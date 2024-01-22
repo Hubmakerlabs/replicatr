@@ -131,25 +131,25 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 					id := hex.EncodeToString(hash[:])
 					if eventid.T(id) != env.Event.ID {
 						rl.E.Chk(ws.WriteJSON(okenvelope.T{
-							EventID: env.Event.ID,
-							OK:      false,
-							Reason:  "invalid: id is computed incorrectly",
+							ID:     env.Event.ID,
+							OK:     false,
+							Reason: "invalid: id is computed incorrectly",
 						}))
 						return
 					}
 					// check signature
 					if ok, e = env.Event.CheckSignature(); rl.E.Chk(e) {
 						rl.E.Chk(ws.WriteJSON(okenvelope.T{
-							EventID: env.Event.ID,
-							OK:      false,
-							Reason:  "error: failed to verify signature",
+							ID:     env.Event.ID,
+							OK:     false,
+							Reason: "error: failed to verify signature",
 						}))
 						return
 					} else if !ok {
 						rl.E.Chk(ws.WriteJSON(okenvelope.T{
-							EventID: env.Event.ID,
-							OK:      false,
-							Reason:  "invalid: signature is invalid",
+							ID:     env.Event.ID,
+							OK:     false,
+							Reason: "invalid: signature is invalid",
 						}))
 						return
 					}
@@ -173,11 +173,11 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						}
 					}
 					rl.D.Chk(ws.WriteJSON(okenvelope.T{
-						EventID: env.Event.ID, OK: ok, Reason: reason}))
+						ID: env.Event.ID, OK: ok, Reason: reason}))
 				case *countenvelope.Request:
 					if rl.CountEvents == nil {
 						rl.E.Chk(ws.WriteJSON(closedenvelope.T{
-							T: env.SubscriptionID,
+							ID: env.ID,
 							Reason: "unsupported: " +
 								"this relay does not support NIP-45",
 						}))
@@ -188,8 +188,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						total += rl.handleCountRequest(ctx, ws, f)
 					}
 					rl.D.Chk(ws.WriteJSON(countenvelope.Response{
-						SubscriptionID: env.SubscriptionID,
-						Count:          total,
+						ID:    env.ID,
+						Count: total,
 					}))
 				case *reqenvelope.T:
 					ee := sync.WaitGroup{}
@@ -211,7 +211,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 								RequestAuth(ctx)
 							}
 							rl.D.Chk(ws.WriteJSON(closedenvelope.T{
-								T:      env.SubscriptionID,
+								ID:     env.SubscriptionID,
 								Reason: reason,
 							}))
 							cancelReqCtx(errors.New("filter rejected"))
@@ -241,12 +241,12 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 						ws.AuthedPublicKey = pubkey
 						close(ws.Authed)
 						rl.E.Chk(ws.WriteJSON(okenvelope.T{
-							EventID: env.T.ID, OK: true}))
+							ID: env.T.ID, OK: true}))
 					} else {
 						rl.E.Chk(ws.WriteJSON(okenvelope.T{
-							EventID: env.T.ID,
-							OK:      false,
-							Reason:  "error: failed to authenticate",
+							ID:     env.T.ID,
+							OK:     false,
+							Reason: "error: failed to authenticate",
 						}))
 					}
 				}

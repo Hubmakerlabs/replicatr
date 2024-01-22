@@ -26,7 +26,7 @@ func TestEnveloper(t *testing.T) {
 		&eventenvelope.T{SubscriptionID: sub, Event: eventest.D[0]},
 		&eventenvelope.T{SubscriptionID: sub, Event: eventest.D[1]},
 		&eventenvelope.T{Event: eventest.D[0]},
-		&okenvelope.T{EventID: eventest.D[0].ID, OK: true,
+		&okenvelope.T{ID: eventest.D[0].ID, OK: true,
 			Reason: okenvelope.Message(okenvelope.PoW, "25>24 \\ ")},
 		&reqenvelope.T{SubscriptionID: sub, T: filtertest.D},
 		&noticeenvelope.T{Text: "this notice has been noticed } \\ \\\" ] "},

@@ -2,12 +2,9 @@ package relay
 
 import (
 	"bytes"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
-	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -15,17 +12,14 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
-	btcec "github.com/Hubmakerlabs/replicatr/pkg/ec"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-
 	"golang.org/x/net/websocket"
 )
 
@@ -36,7 +30,7 @@ func TestPublish(t *testing.T) {
 		Kind:      kind.TextNote,
 		Content:   "hello",
 		CreatedAt: timestamp.T(1672068534), // random fixed timestamp
-		Tags:      tags.T{[]string{"foo", "bar"}},
+		Tags:      tags.T{tag.T{"foo", "bar"}},
 		PubKey:    pub,
 	}
 	if e := textNote.Sign(priv); e != nil {
@@ -68,12 +62,11 @@ func TestPublish(t *testing.T) {
 	defer ws.Close()
 
 	// connect a client and send the text note
-	rl := MustRelayConnect(ws.URL)
-	status, _ := rl.Publish(context.Bg(), textNote)
-	if status != PublishStatusSucceeded {
-		t.Errorf("published status is %d, not %d", status, PublishStatusSucceeded)
+	rl := MustConnect(ws.URL)
+	e := rl.Publish(context.Bg(), textNote)
+	if e != nil {
+		t.Errorf("publish should have succeeded")
 	}
-
 	if !published {
 		t.Errorf("fake relay server saw no event")
 	}
@@ -81,7 +74,7 @@ func TestPublish(t *testing.T) {
 
 func TestPublishBlocked(t *testing.T) {
 	// test note to be sent over websocket
-	textNote := &event.T{Kind: kind.TextNote, Content: "hello"}
+	textNote := event.T{Kind: kind.TextNote, Content: "hello"}
 	textNote.ID = textNote.GetID()
 
 	// fake relay server
@@ -98,16 +91,16 @@ func TestPublishBlocked(t *testing.T) {
 	defer ws.Close()
 
 	// connect a client and send a text note
-	rl := MustRelayConnect(ws.URL)
-	status, _ := rl.Publish(context.Bg(), textNote)
-	if status != PublishStatusFailed {
-		t.Errorf("published status is %d, not %d", status, PublishStatusFailed)
+	rl := MustConnect(ws.URL)
+	e := rl.Publish(context.Bg(), &textNote)
+	if e == nil {
+		t.Errorf("should have failed to publish")
 	}
 }
 
 func TestPublishWriteFailed(t *testing.T) {
 	// test note to be sent over websocket
-	textNote := &event.T{Kind: kind.TextNote, Content: "hello"}
+	textNote := event.T{Kind: kind.TextNote, Content: "hello"}
 	textNote.ID = textNote.GetID()
 
 	// fake relay server
@@ -118,12 +111,12 @@ func TestPublishWriteFailed(t *testing.T) {
 	defer ws.Close()
 
 	// connect a client and send a text note
-	rl := MustRelayConnect(ws.URL)
+	rl := MustConnect(ws.URL)
 	// Force brief period of time so that publish always fails on closed socket.
 	time.Sleep(1 * time.Millisecond)
-	status, e := rl.Publish(context.Bg(), textNote)
-	if status != PublishStatusFailed {
-		t.Errorf("published status is %d, not %d, err: %v", status, PublishStatusFailed, e)
+	e := rl.Publish(context.Bg(), &textNote)
+	if e == nil {
+		t.Errorf("should have failed to publish")
 	}
 }
 
@@ -142,7 +135,7 @@ func TestConnectContext(t *testing.T) {
 	// relay client
 	ctx, cancel := context.Timeout(context.Bg(), 3*time.Second)
 	defer cancel()
-	r, e := RelayConnect(ctx, ws.URL)
+	r, e := Connect(ctx, ws.URL)
 	if e != nil {
 		t.Fatalf("RelayConnectContext: %v", e)
 	}
@@ -163,7 +156,7 @@ func TestConnectContextCanceled(t *testing.T) {
 	// relay client
 	ctx, cancel := context.Cancel(context.Bg())
 	cancel() // make ctx expired
-	_, e := RelayConnect(ctx, ws.URL)
+	_, e := Connect(ctx, ws.URL)
 	if !errors.Is(e, context.Canceled) {
 		t.Errorf("RelayConnectContext returned %v error; want context.Canceled", e)
 	}
@@ -176,7 +169,7 @@ func TestConnectWithOrigin(t *testing.T) {
 	defer ws.Close()
 
 	// relay client
-	r := New(context.Bg(), normalize.URL(ws.URL))
+	r := NewRelay(context.Bg(), normalize.URL(ws.URL))
 	r.RequestHeader = http.Header{"origin": {"https://example.com"}}
 	ctx, cancel := context.Timeout(context.Bg(), 3*time.Second)
 	defer cancel()
@@ -200,29 +193,21 @@ func newWebsocketServer(handler func(*websocket.Conn)) *httptest.Server {
 // anyOriginHandshake is an alternative to default in golang.org/x/net/websocket
 // which checks for origin. nostr client sends no origin and it makes no difference
 // for the tests here anyway.
-var anyOriginHandshake = func(conf *websocket.Config, r *http.Request) (e error) {
+var anyOriginHandshake = func(conf *websocket.Config, r *http.Request) error {
 	return nil
 }
 
 func makeKeyPair(t *testing.T) (priv, pub string) {
 	t.Helper()
-	privkey := GeneratePrivateKey()
-	pubkey, e := bech32encoding.GetPublicKey(privkey)
+	privkey := keys.GeneratePrivateKey()
+	pubkey, e := keys.GetPublicKey(privkey)
 	if e != nil {
 		t.Fatalf("GetPublicKey(%q): %v", privkey, e)
 	}
 	return privkey, pubkey
 }
 
-func MustRelayConnect(url string) *Relay {
-	rl, e := RelayConnect(context.Bg(), url)
-	if e != nil {
-		panic(e.Error())
-	}
-	return rl
-}
-
-func parseEventMessage(t *testing.T, raw []json.RawMessage) (evt *event.T) {
+func parseEventMessage(t *testing.T, raw []json.RawMessage) event.T {
 	t.Helper()
 	if len(raw) < 2 {
 		t.Fatalf("len(raw) = %d; want at least 2", len(raw))
@@ -232,22 +217,20 @@ func parseEventMessage(t *testing.T, raw []json.RawMessage) (evt *event.T) {
 	if typ != "EVENT" {
 		t.Errorf("typ = %q; want EVENT", typ)
 	}
-	evt = &event.T{}
-	if e := json.Unmarshal(raw[1], evt); e != nil {
+	var ev event.T
+	if e := json.Unmarshal(raw[1], &ev); e != nil {
 		t.Errorf("json.Unmarshal(`%s`): %v", string(raw[1]), e)
 	}
-	return evt
+	return ev
 }
 
-func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string,
-	ff filters.T) {
-
+func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string, filters []filter.T) {
 	t.Helper()
 	if len(raw) < 3 {
 		t.Fatalf("len(raw) = %d; want at least 3", len(raw))
 	}
 	var typ string
-	log.D.Chk(json.Unmarshal(raw[0], &typ))
+	json.Unmarshal(raw[0], &typ)
 	if typ != "REQ" {
 		t.Errorf("typ = %q; want REQ", typ)
 	}
@@ -255,29 +238,13 @@ func parseSubscriptionMessage(t *testing.T, raw []json.RawMessage) (subid string
 	if e := json.Unmarshal(raw[1], &id); e != nil {
 		t.Errorf("json.Unmarshal sub id: %v", e)
 	}
+	var ff []filter.T
 	for i, b := range raw[2:] {
-		f := &filter.T{}
-		if e := json.Unmarshal(b, f); e != nil {
+		var f filter.T
+		if e := json.Unmarshal(b, &f); e != nil {
 			t.Errorf("json.Unmarshal filter %d: %v", i, e)
 		}
 		ff = append(ff, f)
 	}
 	return id, ff
-}
-
-func GeneratePrivateKey() string {
-	params := btcec.S256().Params()
-	one := new(big.Int).SetInt64(1)
-
-	b := make([]byte, params.BitSize/8+8)
-	if _, e := io.ReadFull(rand.Reader, b); e != nil {
-		return ""
-	}
-
-	k := new(big.Int).SetBytes(b)
-	n := new(big.Int).Sub(params.N, one)
-	k.Mod(k, n)
-	k.Add(k, one)
-
-	return hex.EncodeToString(k.Bytes())
 }

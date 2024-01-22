@@ -14,13 +14,14 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
 var log = log2.GetStd()
 
-type Subscription struct {
+type T struct {
 	Label   string
 	Counter int
 
@@ -32,7 +33,7 @@ type Subscription struct {
 
 	// the Events channel emits all EVENTs that come in a Subscription
 	// will be closed when the subscription ends
-	Events chan *eventenvelope.T
+	Events chan *event.T
 	mu     sync.Mutex
 
 	// the EndOfStoredEvents channel gets closed when an EOSE comes for that
@@ -71,11 +72,11 @@ var _ subscriptionoption.I = (WithLabel)("")
 
 // GetID return the Nostr subscription ID as given to the I
 // it is a concatenation of the label and a serial number.
-func (sub *Subscription) GetID() string {
+func (sub *T) GetID() string {
 	return sub.Label + ":" + strconv.Itoa(sub.Counter)
 }
 
-func (sub *Subscription) Start() {
+func (sub *T) Start() {
 	<-sub.Context.Done()
 	// the subscription ends once the context is canceled (if not already)
 	sub.Unsub() // this will set sub.live to false
@@ -87,7 +88,7 @@ func (sub *Subscription) Start() {
 	sub.mu.Unlock()
 }
 
-func (sub *Subscription) DispatchEvent(evt *eventenvelope.T) {
+func (sub *T) DispatchEvent(evt *event.T) {
 	log.D.Ln("dispatching event to channel")
 	added := false
 	if !sub.eosed.Load() {
@@ -109,7 +110,7 @@ func (sub *Subscription) DispatchEvent(evt *eventenvelope.T) {
 	}()
 }
 
-func (sub *Subscription) DispatchEose() {
+func (sub *T) DispatchEose() {
 	if sub.eosed.CompareAndSwap(false, true) {
 		go func() {
 			sub.storedwg.Wait()
@@ -118,7 +119,7 @@ func (sub *Subscription) DispatchEose() {
 	}
 }
 
-func (sub *Subscription) DispatchClosed(reason string) {
+func (sub *T) DispatchClosed(reason string) {
 	if sub.closed.CompareAndSwap(false, true) {
 		go func() {
 			sub.ClosedReason <- reason
@@ -128,7 +129,7 @@ func (sub *Subscription) DispatchClosed(reason string) {
 
 // Unsub closes the subscription, sending "CLOSE" to relay as in NIP-01.
 // Unsub() also closes the channel sub.Events and makes a new one.
-func (sub *Subscription) Unsub() {
+func (sub *T) Unsub() {
 	// cancel the context (if it's not canceled already)
 	sub.Cancel()
 
@@ -143,7 +144,7 @@ func (sub *Subscription) Unsub() {
 }
 
 // Close just sends a CLOSE message. You probably want Unsub() instead.
-func (sub *Subscription) Close() {
+func (sub *T) Close() {
 	if sub.Relay.IsConnected() {
 		id := sub.GetID()
 		closeMsg := closeenvelope.New(subscriptionid.T(id))
@@ -155,13 +156,13 @@ func (sub *Subscription) Close() {
 
 // Sub sets sub.T and then calls sub.Fire(ctx).
 // The subscription will be closed if the context expires.
-func (sub *Subscription) Sub(_ context.T, filters filters.T) {
+func (sub *T) Sub(_ context.T, filters filters.T) {
 	sub.Filters = filters
 	log.Fail(sub.Fire())
 }
 
 // Fire sends the "REQ" command to the relay.
-func (sub *Subscription) Fire() error {
+func (sub *T) Fire() error {
 	id := sub.GetID()
 
 	var reqb []byte
@@ -172,8 +173,8 @@ func (sub *Subscription) Fire() error {
 		}).MarshalJSON()
 	} else {
 		reqb, _ = (&countenvelope.Request{
-			SubscriptionID: subscriptionid.T(id),
-			T:              sub.Filters,
+			ID: subscriptionid.T(id),
+			T:  sub.Filters,
 		}).MarshalJSON()
 	}
 	log.D.F("{%s} sending %v", sub.Relay.URL(), string(reqb))

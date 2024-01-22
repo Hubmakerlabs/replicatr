@@ -68,7 +68,7 @@ func Like(cCtx *cli.Context) (e error) {
 			}
 			return true
 		}
-		if _, e := rl.Publish(c, ev); log.Fail(e) {
+		if e = rl.Publish(c, ev); log.Fail(e) {
 			log.D.Ln(rl.URL, e)
 		} else {
 			success.Add(1)

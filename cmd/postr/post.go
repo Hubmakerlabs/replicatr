@@ -92,7 +92,7 @@ func Post(cCtx *cli.Context) (e error) {
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		_, e := rl.Publish(c, ev)
+		e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL, e)
 		} else {
