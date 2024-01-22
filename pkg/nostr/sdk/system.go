@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/cache32"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -15,7 +16,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscription"
 	"github.com/Hubmakerlabs/replicatr/pkg/pool"
-	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 )
 
 type System struct {
@@ -71,7 +71,7 @@ func (s *System) FetchOrStoreProfileMetadata(c context.T,
 
 	pm, fromInternal := s.fetchProfileMetadata(c, pubkey)
 	if !fromInternal {
-		s.StoreRelay().Publish(c, *pm.Event)
+		s.StoreRelay().Publish(c, pm.Event)
 	}
 	return pm
 }

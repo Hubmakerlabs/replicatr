@@ -10,14 +10,14 @@ import (
 	"net/http"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/gobwas/httphead"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsflate"
 	"github.com/gobwas/ws/wsutil"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 type C struct {
 	Conn              net.Conn

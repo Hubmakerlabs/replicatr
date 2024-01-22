@@ -6,17 +6,17 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/minio/sha256-simd"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 func Hash(in []byte) (out []byte) {
 	h := sha256.Sum256(in)

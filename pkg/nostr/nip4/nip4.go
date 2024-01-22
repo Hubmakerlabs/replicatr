@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 // ComputeSharedSecret computes an Elliptic Curve Diffie Hellman shared secret
 // out of one public key and another secret key.

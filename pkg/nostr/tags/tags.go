@@ -6,10 +6,11 @@ import (
 	"errors"
 	"fmt"
 
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
-var log = log2.GetStd()
+
+var log = slog.GetStd()
 
 // T is a list of T - which are lists of string elements with ordering and no
 // uniqueness constraint (not a set).

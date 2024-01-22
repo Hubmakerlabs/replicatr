@@ -20,11 +20,11 @@ import (
 	"strings"
 	"time"
 
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 type KV struct {
 	Key   string

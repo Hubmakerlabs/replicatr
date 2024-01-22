@@ -5,10 +5,10 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 // FirstHexCharToValue returns the hex value of a provided character from the
 // first place in an 8 bit value of two characters.

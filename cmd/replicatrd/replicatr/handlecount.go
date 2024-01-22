@@ -2,8 +2,8 @@ package replicatr
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/notice"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 )
 
 func (rl *Relay) handleCountRequest(c context.T, ws *WebSocket,
@@ -17,7 +17,7 @@ func (rl *Relay) handleCountRequest(c context.T, ws *WebSocket,
 	// then check if we'll reject this filter
 	for _, reject := range rl.RejectCountFilter {
 		if rej, msg := reject(c, f); rej {
-			rl.E.Chk(ws.WriteJSON(notice.Envelope(msg)))
+			rl.E.Chk(ws.WriteJSON(&noticeenvelope.T{Text: msg}))
 			return 0
 		}
 	}
@@ -26,7 +26,7 @@ func (rl *Relay) handleCountRequest(c context.T, ws *WebSocket,
 	var res int64
 	for _, count := range rl.CountEvents {
 		if res, e = count(c, f); rl.E.Chk(e) {
-			rl.E.Chk(ws.WriteJSON(notice.Envelope(e.Error())))
+			rl.E.Chk(ws.WriteJSON(&noticeenvelope.T{Text: e.Error()}))
 		}
 		subtotal += res
 	}

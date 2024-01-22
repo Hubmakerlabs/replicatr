@@ -2,12 +2,12 @@ package envelopes
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/sentinel"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 // ProcessEnvelope scans a message and if it finds a correctly formed
 // enveloper.I it unmarshals it and returns it.

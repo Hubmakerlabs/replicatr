@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	ristretto "github.com/fiatjaf/generic-ristretto"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 type RistrettoCache[V any] struct {
 	Cache *ristretto.Cache[string, V]

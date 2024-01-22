@@ -2,7 +2,9 @@ package replicatr
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"golang.org/x/exp/slices"
 )
 
@@ -46,12 +48,12 @@ func RemoveSearchQueries(c context.T, f *filter.T) {
 	f.Search = ""
 }
 
-func RemoveAllButKinds(k ...uint16) func(context.T, *filter.T) {
+func RemoveAllButKinds(k ...kind.T) func(context.T, *filter.T) {
 	return func(c context.T, f *filter.T) {
 		if n := len(f.Kinds); n > 0 {
-			newKinds := make([]int, 0, n)
+			newKinds := make(kinds.T, 0, n)
 			for i := 0; i < n; i++ {
-				if kk := f.Kinds[i]; slices.Contains(k, uint16(kk)) {
+				if kk := f.Kinds[i]; slices.Contains(k, kk) {
 					newKinds = append(newKinds, kk)
 				}
 			}

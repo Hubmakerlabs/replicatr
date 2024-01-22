@@ -9,7 +9,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/subscriptionoption"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
@@ -17,9 +16,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 type T struct {
 	Label   string

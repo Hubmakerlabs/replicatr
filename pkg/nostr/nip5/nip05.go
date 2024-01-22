@@ -9,11 +9,11 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 type (
 	name2KeyMap   map[string]string

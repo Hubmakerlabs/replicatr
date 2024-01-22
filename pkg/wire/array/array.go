@@ -12,12 +12,12 @@ import (
 	"reflect"
 	"time"
 
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 type T []interface{}
 

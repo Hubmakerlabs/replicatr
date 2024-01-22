@@ -5,16 +5,16 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 type Request struct {
 	ID subscriptionid.T

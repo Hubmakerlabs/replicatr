@@ -4,13 +4,13 @@ import (
 	"encoding/binary"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"golang.org/x/exp/slices"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 func getTagIndexPrefix(tagValue string) ([]byte, int) {
 	// the key with full length for created_at and idx at the end, but not
@@ -51,7 +51,7 @@ func getIndexKeysForEvent(evt *event.T, idx []byte) [][]byte {
 	// indexes
 	{
 		// ~ by id
-		idPrefix8, _ := hex.Dec(evt.ID[0 : 8*2])
+		idPrefix8, _ := hex.Dec(evt.ID[0 : 8*2].String())
 		k := make([]byte, 1+8+4)
 		k[0] = indexIdPrefix
 		copy(k[1:], idPrefix8)

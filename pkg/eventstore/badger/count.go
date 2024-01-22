@@ -6,9 +6,9 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
-	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -58,7 +58,7 @@ func (b *BadgerBackend) CountEvents(c context.T, f *filter.T) (int64, error) {
 						if errors.Is(e, badger.ErrDiscardedTxn) {
 							return
 						}
-						log.D.F("badger: count (%v) failed to get %d from raw " +
+						log.D.F("badger: count (%v) failed to get %d from raw "+
 							"event store: %s", q, idx)
 						return
 					}

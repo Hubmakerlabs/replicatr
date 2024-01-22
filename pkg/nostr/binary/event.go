@@ -2,15 +2,15 @@ package binary
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 type Event struct {
 	PubKey    [32]byte

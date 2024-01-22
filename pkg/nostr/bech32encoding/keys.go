@@ -5,14 +5,14 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 const (
 	// MinKeyStringLen is 56 because Bech32 needs 52 characters plus 4 for the HRP,
