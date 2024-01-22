@@ -20,8 +20,11 @@ import (
 	"strings"
 	"time"
 
+	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
+
+var log = log2.GetStd()
 
 type KV struct {
 	Key   string
@@ -44,6 +47,7 @@ func (t T) Buffer() *bytes.Buffer {
 	buf := new(bytes.Buffer)
 	_, _ = fmt.Fprint(buf, "{")
 	last := len(t) - 1
+
 	var ok bool
 	var str string
 	var ts time.Time

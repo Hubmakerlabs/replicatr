@@ -17,7 +17,7 @@ var log = log2.GetStd()
 // for some other envelope outside of nip-01 to decode.
 func ProcessEnvelope(b []byte) (env enveloper.I, buf *text.Buffer, e error) {
 
-	log.D.F("processing envelope:\n%s", string(b))
+	log.T.F("processing envelope:\n%s", string(b))
 	var match string
 	if match, buf, e = sentinel.Identify(b); log.Fail(e) {
 		return

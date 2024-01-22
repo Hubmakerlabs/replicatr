@@ -149,7 +149,7 @@ func (r *Relay) Connect(c context.T) error {
 	}
 
 	if r.url == "" {
-		return fmt.Errorf("invalid relay URL '%s'", r.URL)
+		return fmt.Errorf("invalid relay URL '%s'", r.URL())
 	}
 
 	if _, ok := c.Deadline(); !ok {
@@ -161,7 +161,7 @@ func (r *Relay) Connect(c context.T) error {
 
 	conn, e := connection.NewConnection(c, r.url, r.RequestHeader)
 	if e != nil {
-		return fmt.Errorf("error opening websocket to '%s': %w", r.URL, e)
+		return fmt.Errorf("error opening websocket to '%s': %w", r.URL(), e)
 	}
 	r.Connection = conn
 
@@ -193,7 +193,7 @@ func (r *Relay) Connect(c context.T) error {
 				e = wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil)
 				if e != nil {
 					log.D.F("{%s} error writing ping: %v; closing websocket",
-						r.URL, e)
+						r.URL(), e)
 					log.Fail(r.Close()) // this should trigger a context cancelation
 					return
 				}
@@ -227,7 +227,7 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 		}
 
 		message := buf.Bytes()
-		log.D.F("{%s} received %v", r.URL, string(message))
+		log.D.F("{%s} received %v", r.URL(), string(message))
 		envelope := envelope2.ParseMessage(message)
 		if envelope == nil {
 			continue
@@ -239,7 +239,7 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 			if r.notices != nil {
 				r.notices <- string(*env)
 			} else {
-				log.D.F("NOTICE from %s: '%s'", r.URL, string(*env))
+				log.D.F("NOTICE from %s: '%s'", r.URL(), string(*env))
 			}
 		case *auth.Envelope:
 			if env.Challenge == nil {
@@ -252,13 +252,13 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 			}
 			if s, ok := r.Subscriptions.Load(*env.SubscriptionID); !ok {
 				log.D.F("{%s} no subscription with id '%s'",
-					r.URL, *env.SubscriptionID)
+					r.URL(), *env.SubscriptionID)
 				continue
 			} else {
 				// check if the event matches the desired filter, ignore otherwise
 				if !s.Filters.Match(&env.T) {
 					log.D.F("{%s} filter does not match: %v ~ %v",
-						r.URL, s.Filters, env.T)
+						r.URL(), s.Filters, env.T)
 					continue
 				}
 				// check signature, ignore invalid, except from trusted (AssumeValid) relays
@@ -269,7 +269,7 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 							errmsg = e.Error()
 						}
 						log.D.F("{%s} bad signature on %s; %s",
-							r.URL, env.T.ID, errmsg)
+							r.URL(), env.T.ID, errmsg)
 						continue
 					}
 				}
@@ -296,7 +296,7 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 				okCallback(env.OK, env.Reason)
 			} else {
 				log.D.F("{%s} got an unexpected OK message for event %s",
-					r.URL, env.EventID)
+					r.URL(), env.EventID)
 			}
 		}
 	}
@@ -367,7 +367,7 @@ func (r *Relay) publish(c context.T, id string, env envelopes.E) error {
 
 	// publish event
 	envb, _ := env.MarshalJSON()
-	log.D.F("{%s} sending %v", r.URL, string(envb))
+	log.D.F("{%s} sending %v", r.URL(), string(envb))
 	if e := <-r.Write(envb); e != nil {
 		return e
 	}
@@ -397,7 +397,7 @@ func (r *Relay) Subscribe(c context.T, filters filters.T, opts ...subscription.S
 	sub := r.PrepareSubscription(c, filters, opts...)
 
 	if e := sub.Fire(); e != nil {
-		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", filters, r.URL, e)
+		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", filters, r.URL(), e)
 	}
 
 	return sub, nil

@@ -36,7 +36,7 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 
 	buf := make([]byte, 4096)
 	buffer := bytes.NewBuffer(buf)
-	fgHiRed := color.New(color.FgHiRed)
+	fgHiRed := color.New(color.FgHiRed, color.Bold)
 	fgRed := color.New(color.FgRed)
 	fgNormal := color.New(color.Reset)
 	fgHiBlue := color.Set(color.FgHiBlue)
@@ -44,13 +44,14 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 		profile, ok := f[ev.PubKey]
 		if ok {
 			color.Set(color.FgHiRed)
-			fgHiRed.Fprint(buffer, profile.Name, " ")
-			fgHiBlue.Fprintln(buffer, ev.CreatedAt.Time())
-			fgRed.Fprint(buffer, "pubkey ")
-			fgRed.Fprint(buffer, ev.PubKey)
-			fgHiBlue.Fprint(buffer, " note ID: ")
-			fgHiBlue.Fprintln(buffer, ev.ID)
+			fgHiRed.Fprintln(buffer, profile.Name)
 			fgNormal.Fprintln(buffer, ev.Content)
+			note, e := bech32encoding.EncodeNote(ev.ID.String())
+			if e != nil {
+				note = ev.ID.String()
+			}
+			fgHiBlue.Fprint(buffer, note)
+			fgHiBlue.Fprintln(buffer, " ", ev.CreatedAt.Time())
 		} else {
 			fgRed.Fprint(buffer, "pubkey ")
 			fgRed.Fprint(buffer, ev.PubKey)
@@ -66,5 +67,5 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 		}
 		fgNormal.Fprintln(buffer)
 	}
-	fgNormal.Println(buffer.String())
+	fgNormal.Print(buffer.String())
 }
