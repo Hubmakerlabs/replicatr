@@ -7,7 +7,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/arrayer"
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/buffer"
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/byter"
-	"github.com/Hubmakerlabs/replicatr/pkg/labeler"
+	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/labeler"
 )
 
 // I interface for envelopes
