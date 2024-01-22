@@ -64,8 +64,8 @@ func (b *BadgerBackend) CountEvents(c context.T, f *filter.T) (int64, error) {
 					}
 
 					e = item.Value(func(val []byte) (e error) {
-						evt := &event.T{}
-						if e := nostr_binary.Unmarshal(val, evt); e != nil {
+						var evt *event.T
+						if evt, e = nostr_binary.Unmarshal(val); e != nil {
 							return e
 						}
 

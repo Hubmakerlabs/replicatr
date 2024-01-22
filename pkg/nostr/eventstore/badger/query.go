@@ -3,6 +3,7 @@ package badger
 import (
 	"container/heap"
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
@@ -69,18 +70,18 @@ func (b BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, err
 						copy(idx[1:], key[idxOffset:])
 
 						// fetch actual event
-						item, e := txn.Get(idx)
+						item, e = txn.Get(idx)
 						if e != nil {
-							if e == badger.ErrDiscardedTxn {
+							if errors.Is(e, badger.ErrDiscardedTxn) {
 								return
 							}
 							log.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
 								idx, q.prefix, key, e)
 							return
 						}
-						item.Value(func(val []byte) (e error) {
-							evt := &event.T{}
-							if e := nostr_binary.Unmarshal(val, evt); e != nil {
+						log.Fail(item.Value(func(val []byte) (e error) {
+							var evt *event.T
+							if evt, e = nostr_binary.Unmarshal(val); e != nil {
 								log.D.F("badger: value read error (id %x): %s", val[0:32], e)
 								return e
 							}
@@ -91,7 +92,7 @@ func (b BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, err
 							}
 
 							return nil
-						})
+						}))
 					}
 				}(i, q)
 			}
