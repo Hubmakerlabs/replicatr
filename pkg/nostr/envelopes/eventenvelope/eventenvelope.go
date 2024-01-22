@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 var log = slog.GetStd()
@@ -48,11 +48,11 @@ func NewEventEnvelope(si string, ev *event.T) (ee *T, e error) {
 	return &T{SubscriptionID: sid, Event: ev}, nil
 }
 
-func (env *T) Label() string { return l.EVENT }
+func (env *T) Label() string { return labels.EVENT }
 
 func (env *T) ToArray() (a array.T) {
 	a = make(array.T, 0, 3)
-	a = append(a, l.EVENT)
+	a = append(a, labels.EVENT)
 	if env.SubscriptionID.IsValid() {
 		a = append(a, env.SubscriptionID)
 	}

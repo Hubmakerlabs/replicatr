@@ -10,9 +10,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
 	"github.com/minio/sha256-simd"
 )
 

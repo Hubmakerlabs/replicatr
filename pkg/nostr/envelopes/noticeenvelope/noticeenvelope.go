@@ -3,11 +3,11 @@ package noticeenvelope
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 var log = slog.GetStd()
@@ -32,9 +32,9 @@ func NewNoticeEnvelope(text string) (E *T) {
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *T) Label() string { return l.NOTICE }
+func (E *T) Label() string { return labels.NOTICE }
 
-func (E *T) ToArray() array.T { return array.T{l.NOTICE, E.Text} }
+func (E *T) ToArray() array.T { return array.T{labels.NOTICE, E.Text} }
 
 func (E *T) String() (s string) { return E.ToArray().String() }
 

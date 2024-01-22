@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 // The tag position meanings so they are clear when reading.

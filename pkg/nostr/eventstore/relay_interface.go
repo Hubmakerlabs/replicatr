@@ -5,11 +5,10 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/subscriptionoption"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/subscriptionoption"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 )
 
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.

@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 var log = slog.GetStd()

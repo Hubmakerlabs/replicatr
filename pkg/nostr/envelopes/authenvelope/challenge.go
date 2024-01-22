@@ -3,10 +3,10 @@ package authenvelope
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 type Challenge struct {
@@ -24,13 +24,13 @@ func NewChallenge(c string) (a *Challenge) {
 	return &Challenge{Challenge: c}
 }
 
-func (a *Challenge) Label() string { return l.AUTH }
+func (a *Challenge) Label() string { return labels.AUTH }
 
 func (a *Challenge) String() string { return a.ToArray().String() }
 
 func (a *Challenge) Bytes() []byte { return a.ToArray().Bytes() }
 
-func (a *Challenge) ToArray() array.T { return array.T{l.AUTH, a.Challenge} }
+func (a *Challenge) ToArray() array.T { return array.T{labels.AUTH, a.Challenge} }
 
 func (a *Challenge) MarshalJSON() ([]byte, error) { return a.Bytes(), nil }
 

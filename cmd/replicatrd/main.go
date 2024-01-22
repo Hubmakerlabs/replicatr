@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/cmd/replicatrd/replicatr"
-	"github.com/Hubmakerlabs/replicatr/pkg/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 

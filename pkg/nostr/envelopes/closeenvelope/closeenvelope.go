@@ -3,12 +3,12 @@ package closeenvelope
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 var log = slog.GetStd()
@@ -27,9 +27,9 @@ func (E *T) UnmarshalJSON(bytes []byte) error {
 
 func New(s subscriptionid.T) (ce *T) { return &T{T: s} }
 
-func (E *T) Label() string { return l.CLOSE }
+func (E *T) Label() string { return labels.CLOSE }
 
-func (E *T) ToArray() array.T { return array.T{l.CLOSE, E.T} }
+func (E *T) ToArray() array.T { return array.T{labels.CLOSE, E.T} }
 
 func (E *T) String() string { return E.ToArray().String() }
 
