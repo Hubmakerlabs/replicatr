@@ -15,7 +15,7 @@ var log = log2.GetStd()
 
 // T is a wrapper for a signal to cancel a subscription.
 type T struct {
-	subscriptionid.T
+	ID     subscriptionid.T
 	Reason string
 }
 
@@ -27,10 +27,10 @@ func (E *T) UnmarshalJSON(bytes []byte) error {
 }
 
 func New(s subscriptionid.T, reason string) *T {
-	return &T{T: s, Reason: reason}
+	return &T{ID: s, Reason: reason}
 }
 
-func (E *T) ToArray() array.T { return array.T{l.CLOSED, E.T, E.Reason} }
+func (E *T) ToArray() array.T { return array.T{l.CLOSED, E.ID, E.Reason} }
 
 func (E *T) Label() string { return l.CLOSED }
 
@@ -60,7 +60,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (e error) {
 	if sid, e = buf.ReadUntil('"'); log.Fail(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
-	E.T = subscriptionid.T(sid[:])
+	E.ID = subscriptionid.T(sid[:])
 	// Next must be a string, which can be empty, but must be at minimum a pair
 	// of quotes.
 	if e = buf.ScanThrough('"'); e != nil {

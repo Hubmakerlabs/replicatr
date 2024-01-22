@@ -52,6 +52,7 @@ func (a *Response) Bytes() []byte { return a.ToArray().Bytes() }
 func (a *Response) MarshalJSON() ([]byte, error) { return a.Bytes(), nil }
 
 func (a *Response) Unmarshal(buf *text.Buffer) (e error) {
+	log.D.F("AUTH '%s'", buf.Tail())
 	if a == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}

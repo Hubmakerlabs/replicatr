@@ -39,17 +39,17 @@ func (env *T) UnmarshalJSON(bytes []byte) error {
 // readable reason type, as listed in the RejectReason* constants above,
 // followed by ": " and a human readable message.
 type T struct {
-	EventID eventid.T
-	OK      bool
-	Reason  string
+	ID     eventid.T
+	OK     bool
+	Reason string
 }
 
 func NewOKEnvelope(eventID eventid.T, ok bool, reason string) (o *T,
 	e error) {
 	o = &T{
-		EventID: eventID,
-		OK:      ok,
-		Reason:  reason,
+		ID:     eventID,
+		OK:     ok,
+		Reason: reason,
 	}
 	return
 }
@@ -57,7 +57,7 @@ func NewOKEnvelope(eventID eventid.T, ok bool, reason string) (o *T,
 func (env *T) Label() (l string) { return labels.OK }
 
 func (env *T) ToArray() (a array.T) {
-	return array.T{labels.OK, env.EventID, env.OK, env.Reason}
+	return array.T{labels.OK, env.ID, env.OK, env.Reason}
 }
 
 func (env *T) String() (s string) { return env.ToArray().String() }
@@ -121,7 +121,7 @@ next:
 				string(eventID))
 		}
 	}
-	env.EventID = eventid.T(eventID)
+	env.ID = eventid.T(eventID)
 	// next another comma
 	if e = buf.ScanThrough(','); e != nil {
 		return

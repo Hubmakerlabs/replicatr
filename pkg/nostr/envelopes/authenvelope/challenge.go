@@ -35,7 +35,7 @@ func (a *Challenge) ToArray() array.T { return array.T{l.AUTH, a.Challenge} }
 func (a *Challenge) MarshalJSON() ([]byte, error) { return a.Bytes(), nil }
 
 func (a *Challenge) Unmarshal(buf *text.Buffer) (e error) {
-	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
+	log.D.Ln("auth challenge envelope unmarshal", string(buf.Buf))
 	if a == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}

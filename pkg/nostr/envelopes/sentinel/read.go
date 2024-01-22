@@ -105,7 +105,7 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, e error) {
 			// we found a valid count response object, probably, the rest of the
 			// object should be a count response.
 			env = &countenvelope.Response{
-				SubscriptionID: s,
+				ID: s,
 			}
 		}
 		// we only check if it matches one of the two possible count
@@ -118,7 +118,7 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, e error) {
 		// because we are only concerned with correctly identifying whether
 		// this is a count response or request
 		env = &countenvelope.Request{
-			SubscriptionID: s,
+			ID: s,
 		}
 	case labels.AUTH:
 		// this has two subtypes, a request and a response, but backwards, the
@@ -133,7 +133,7 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, e error) {
 		}
 		switch which {
 		case '"':
-			env = &authenvelope.Response{}
+			env = &authenvelope.Challenge{}
 		case '{':
 			env = &authenvelope.Response{}
 		default:

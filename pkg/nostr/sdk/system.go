@@ -13,6 +13,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscription"
 	"github.com/Hubmakerlabs/replicatr/pkg/pool"
 	"github.com/Hubmakerlabs/replicatr/pkg/relay/eventstore"
 )
@@ -123,7 +124,7 @@ func (s *System) FetchUserEvents(c context.T,
 			defer wg.Done()
 			f.Limit = f.Limit *
 				len(f.Authors) // hack
-			var sub *relay.Subscription
+			var sub *subscription.T
 			if sub, e = rl.Subscribe(c,
 				filters.T{f}); log.Fail(e) {
 

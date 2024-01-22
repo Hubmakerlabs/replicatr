@@ -10,6 +10,8 @@ import (
 // as a request or session identifier.
 type T string
 
+func (si T) String() string { return string(si) }
+
 func (si T) MarshalJSON() (b []byte, e error) {
 	return text.EscapeJSONStringAndWrap(string(si)), nil
 }

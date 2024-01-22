@@ -77,7 +77,7 @@ func pay(cfg *C, invoice string) (e error) {
 		return e
 	}
 
-	rl, e := relay.RelayConnect(context.Bg(), host)
+	rl, e := relay.Connect(context.Bg(), host)
 	if log.Fail(e) {
 		return e
 	}
@@ -125,7 +125,7 @@ func pay(cfg *C, invoice string) (e error) {
 		return e
 	}
 
-	_, e = rl.Publish(context.Bg(), ev)
+	e = rl.Publish(context.Bg(), ev)
 	if log.Fail(e) {
 		return e
 	}

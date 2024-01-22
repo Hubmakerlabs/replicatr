@@ -13,9 +13,9 @@ import (
 )
 
 type Response struct {
-	SubscriptionID subscriptionid.T
-	Count          int64
-	Approximate    bool
+	ID          subscriptionid.T
+	Count       int64
+	Approximate bool
 }
 
 var _ enveloper.I = &Response{}
@@ -27,9 +27,9 @@ func (env *Response) UnmarshalJSON(bytes []byte) error {
 
 func New(sid subscriptionid.T, count int64, approx bool) (C *Response) {
 	C = &Response{
-		SubscriptionID: sid,
-		Count:          count,
-		Approximate:    approx,
+		ID:          sid,
+		Count:       count,
+		Approximate: approx,
 	}
 	return
 }
@@ -43,7 +43,7 @@ func (env *Response) ToArray() array.T {
 		count = append(count,
 			object.KV{Key: "approximate", Value: env.Approximate})
 	}
-	return array.T{l.COUNT, env.SubscriptionID, count}
+	return array.T{l.COUNT, env.ID, count}
 }
 
 func (env *Response) String() (s string) { return env.ToArray().String() }
@@ -71,7 +71,7 @@ func (env *Response) Unmarshal(buf *text.Buffer) (e error) {
 		return fmt.Errorf("unterminated quotes in JSON, " +
 			"probably truncated read")
 	}
-	env.SubscriptionID = subscriptionid.T(sid)
+	env.ID = subscriptionid.T(sid)
 	// Next, find the comma after the subscription ID.
 	if e = buf.ScanThrough(','); e != nil {
 		return

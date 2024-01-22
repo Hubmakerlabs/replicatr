@@ -248,9 +248,10 @@ func (b *Buffer) WriteBytes(bb []byte) (e error) {
 	if len(bb) == 0 {
 		return
 	}
-	// log.D.F("writing '%s'", string(bb))
+	log.D.F("buf len: %d, pos: %d writing %d '%s'", len(b.Buf), b.Pos, len(bb),
+		string(bb))
 	until := b.Pos + len(bb)
-	if until < len(b.Buf) {
+	if until <= len(b.Buf) {
 		copy(b.Buf[b.Pos:until], bb)
 		b.Pos = until
 	} else {

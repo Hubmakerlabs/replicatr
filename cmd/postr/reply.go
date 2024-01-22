@@ -87,14 +87,14 @@ func Reply(cCtx *cli.Context) (e error) {
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
 		if !quote {
-			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, rl.URL, "reply"})
+			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, rl.URL(), "reply"})
 		} else {
-			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, rl.URL, "mention"})
+			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, rl.URL(), "mention"})
 		}
 		if e := ev.Sign(sk); log.Fail(e) {
 			return true
 		}
-		if _, e = rl.Publish(c, ev); log.Fail(e) {
+		if e = rl.Publish(c, ev); log.Fail(e) {
 			log.D.Ln(rl.URL, e)
 		} else {
 			success.Add(1)

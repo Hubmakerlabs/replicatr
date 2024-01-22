@@ -11,6 +11,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
+const RELAY = "wss://nostr.mom"
+
 var log = log2.GetStd()
 
 // T is a message that indicates that all cached events have been

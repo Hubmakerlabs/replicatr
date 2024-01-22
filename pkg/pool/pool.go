@@ -67,7 +67,7 @@ func (p *SimplePool) EnsureRelay(url string) (*relay.Relay, error) {
 		// we use this ctx here so when the pool dies everything dies
 		c, cancel := context.Timeout(p.Context, time.Second*15)
 		defer cancel()
-		if rl, e = relay.RelayConnect(c, nm); e != nil {
+		if rl, e = relay.Connect(c, nm); e != nil {
 			return nil, fmt.Errorf("failed to connect: %w", e)
 		}
 

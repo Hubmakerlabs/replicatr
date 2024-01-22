@@ -91,7 +91,7 @@ func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.Relay {
 			continue
 		}
 		log.D.F("trying relay: %s", k)
-		rl, e := relay.RelayConnect(c, k)
+		rl, e := relay.Connect(c, k)
 		if log.Fail(e) {
 			continue
 		}
@@ -120,9 +120,8 @@ func (cfg *C) Do(r *RelayPerms, f RelayIter) {
 		go func(wg *sync.WaitGroup, k string, v *RelayPerms) {
 			defer wg.Done()
 			log.D.Ln("connecting to relay", k)
-			rl, e := relay.RelayConnect(c, k)
+			rl, e := relay.Connect(c, k)
 			if log.Fail(e) {
-				log.D.Ln(e)
 				return
 			}
 			if !f(c, rl) {

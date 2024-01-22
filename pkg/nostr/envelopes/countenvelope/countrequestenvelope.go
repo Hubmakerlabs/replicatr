@@ -17,7 +17,7 @@ import (
 var log = log2.GetStd()
 
 type Request struct {
-	SubscriptionID subscriptionid.T
+	ID subscriptionid.T
 	filters.T
 }
 
@@ -31,7 +31,7 @@ func (C *Request) UnmarshalJSON(bytes []byte) error {
 func (C *Request) Label() string { return l.COUNT }
 
 func (C *Request) ToArray() array.T {
-	return array.T{l.COUNT, C.SubscriptionID, C.T}
+	return array.T{l.COUNT, C.ID, C.T}
 }
 
 func (C *Request) String() string { return C.ToArray().String() }
@@ -58,7 +58,7 @@ func (C *Request) Unmarshal(buf *text.Buffer) (e error) {
 	if sid, e = buf.ReadUntil('"'); log.Fail(e) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
-	C.SubscriptionID = subscriptionid.T(sid)
+	C.ID = subscriptionid.T(sid)
 	// find the opening brace of the first or only filter object.
 	if e = buf.ScanUntil('{'); e != nil {
 		return fmt.Errorf("event not found in event envelope")
