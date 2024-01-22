@@ -11,8 +11,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventest"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filtertest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event/eventest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters/filtertest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
