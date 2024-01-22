@@ -26,19 +26,19 @@ func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (e error) {
 		}
 
 		// encode to binary
-		bin, e := nostr_binary.Marshal(evt)
-		if e != nil {
+		var bin []byte
+		if bin, e = nostr_binary.Marshal(evt); log.Fail(e) {
 			return e
 		}
 
 		idx := b.Serial()
 		// raw event store
-		if e := txn.Set(idx, bin); e != nil {
+		if e = txn.Set(idx, bin); e != nil {
 			return e
 		}
 
 		for _, k := range getIndexKeysForEvent(evt, idx[1:]) {
-			if e := txn.Set(k, nil); e != nil {
+			if e = txn.Set(k, nil); e != nil {
 				return e
 			}
 		}
