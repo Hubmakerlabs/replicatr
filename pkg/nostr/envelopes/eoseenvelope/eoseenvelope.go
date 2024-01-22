@@ -3,12 +3,12 @@ package eoseenvelope
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 // const RELAY = "wss://nos.lol"
@@ -29,9 +29,9 @@ func (E *T) UnmarshalJSON(bytes []byte) error {
 	panic("implement me")
 }
 
-func (E *T) Label() string { return l.EOSE }
+func (E *T) Label() string { return labels.EOSE }
 
-func (E *T) ToArray() array.T { return array.T{l.EOSE, E.T} }
+func (E *T) ToArray() array.T { return array.T{labels.EOSE, E.T} }
 
 func (E *T) String() (s string) { return E.ToArray().String() }
 

@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 var log = slog.GetStd()
@@ -41,9 +41,9 @@ func NewResponse(ac *Challenge, rl string) (ae *Response) {
 	return
 }
 
-func (a *Response) Label() string { return l.AUTH }
+func (a *Response) Label() string { return labels.AUTH }
 
-func (a *Response) ToArray() array.T { return array.T{l.AUTH, a.Event.ToObject()} }
+func (a *Response) ToArray() array.T { return array.T{labels.AUTH, a.Event.ToObject()} }
 
 func (a *Response) String() string { return a.ToArray().String() }
 

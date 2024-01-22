@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
-	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
@@ -14,6 +13,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filtertest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
@@ -31,7 +31,7 @@ func TestEnveloper(t *testing.T) {
 		&reqenvelope.T{SubscriptionID: sub, T: filtertest.D},
 		&noticeenvelope.T{Text: "this notice has been noticed } \\ \\\" ] "},
 		&eoseenvelope.T{T: sub},
-		&close2.T{T: sub},
+		&closeenvelope.T{T: sub},
 	}
 	var e error
 	var b []byte

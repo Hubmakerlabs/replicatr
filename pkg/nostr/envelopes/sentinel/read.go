@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closedenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
@@ -16,8 +15,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 var countString = []byte("count")

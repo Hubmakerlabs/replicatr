@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/object"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 type Response struct {
@@ -33,7 +33,7 @@ func New(sid subscriptionid.T, count int64, approx bool) (C *Response) {
 	}
 	return
 }
-func (env *Response) Label() string { return l.EVENT }
+func (env *Response) Label() string { return labels.EVENT }
 
 func (env *Response) ToArray() array.T {
 	count := object.T{
@@ -43,7 +43,7 @@ func (env *Response) ToArray() array.T {
 		count = append(count,
 			object.KV{Key: "approximate", Value: env.Approximate})
 	}
-	return array.T{l.COUNT, env.ID, count}
+	return array.T{labels.COUNT, env.ID, count}
 }
 
 func (env *Response) String() (s string) { return env.ToArray().String() }

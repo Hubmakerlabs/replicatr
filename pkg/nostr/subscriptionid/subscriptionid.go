@@ -3,7 +3,7 @@ package subscriptionid
 import (
 	"errors"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 // T is an arbitrary string of 1-64 characters in length generated

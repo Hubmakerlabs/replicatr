@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/arrayer"
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/buffer"
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/byter"
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/labeler"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/arrayer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/buffer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/byter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/labeler"
 )
 
 // I interface for envelopes

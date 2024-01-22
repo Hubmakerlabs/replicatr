@@ -3,12 +3,12 @@ package closedenvelope
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
-	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
 var log = slog.GetStd()
@@ -30,9 +30,9 @@ func New(s subscriptionid.T, reason string) *T {
 	return &T{ID: s, Reason: reason}
 }
 
-func (E *T) ToArray() array.T { return array.T{l.CLOSED, E.ID, E.Reason} }
+func (E *T) ToArray() array.T { return array.T{labels.CLOSED, E.ID, E.Reason} }
 
-func (E *T) Label() string { return l.CLOSED }
+func (E *T) Label() string { return labels.CLOSED }
 
 func (E *T) String() (s string) { return E.ToArray().String() }
 

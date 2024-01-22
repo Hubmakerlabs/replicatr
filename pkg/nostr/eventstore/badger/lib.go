@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/dgraph-io/badger/v4"
 )
 

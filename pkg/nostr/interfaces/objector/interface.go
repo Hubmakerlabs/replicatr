@@ -1,6 +1,6 @@
 package objector
 
-import "github.com/Hubmakerlabs/replicatr/pkg/wire/object"
+import "github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 
 // Objector is an interface for types that can be converted to object.T - a
 // key-value type that can be summarised as
