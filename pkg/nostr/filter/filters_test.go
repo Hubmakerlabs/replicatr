@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filtertest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters/filtertest"
 )
 
 func TestFilterString(t *testing.T) {

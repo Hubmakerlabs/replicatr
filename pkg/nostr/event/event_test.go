@@ -9,7 +9,7 @@ import (
 	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event/eventest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/quotes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
