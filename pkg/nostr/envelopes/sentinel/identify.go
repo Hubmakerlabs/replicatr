@@ -3,12 +3,12 @@ package sentinel
 import (
 	"fmt"
 
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 // Identify takes a byte slice and scans it as a nostr Envelope array, and
 // returns the label type and a text.Buffer that is ready for the Read function

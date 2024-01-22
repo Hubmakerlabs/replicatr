@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
 
 func GetAddrTagElements(tagValue string) (k uint16, pkb []byte, d string) {
@@ -20,7 +20,7 @@ func GetAddrTagElements(tagValue string) (k uint16, pkb []byte, d string) {
 	return 0, nil, ""
 }
 
-func TagSorter(a, b tags.Tag) int {
+func TagSorter(a, b tag.T) int {
 	if len(a) < 2 {
 		if len(b) < 2 {
 			return 0

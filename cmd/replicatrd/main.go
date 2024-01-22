@@ -6,13 +6,13 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/cmd/replicatrd/replicatr"
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore/badger"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 const appName = "replicatr"
 
 func main() {
-	log2.SetLogLevel(log2.Trace)
+	slog.SetLogLevel(slog.Trace)
 	rl := replicatr.NewRelay(appName)
 	db := &badger.BadgerBackend{Path: "/home/me/.replicatr-badger"}
 	if e := db.Init(); rl.E.Chk(e) {

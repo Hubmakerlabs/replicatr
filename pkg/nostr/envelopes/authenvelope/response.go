@@ -5,19 +5,19 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 type Response struct {
-	*event.T
+	Event *event.T
 }
 
 var _ enveloper.I = &Response{}
@@ -43,7 +43,7 @@ func NewResponse(ac *Challenge, rl string) (ae *Response) {
 
 func (a *Response) Label() string { return l.AUTH }
 
-func (a *Response) ToArray() array.T { return array.T{l.AUTH, a.T.ToObject()} }
+func (a *Response) ToArray() array.T { return array.T{l.AUTH, a.Event.ToObject()} }
 
 func (a *Response) String() string { return a.ToArray().String() }
 
@@ -75,8 +75,8 @@ func (a *Response) Unmarshal(buf *text.Buffer) (e error) {
 		return fmt.Errorf("event not found in auth envelope")
 	}
 	// allocate an event to unmarshal into
-	a.T = &event.T{}
-	if e = json.Unmarshal(eventObj, a.T); log.Fail(e) {
+	a.Event = &event.T{}
+	if e = json.Unmarshal(eventObj, a.Event); log.Fail(e) {
 		log.D.S(string(eventObj))
 		return
 	}

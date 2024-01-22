@@ -8,10 +8,10 @@ import (
 	"unsafe"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/auth"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filters"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/sebest/xff"
 )
 
@@ -20,7 +20,7 @@ const (
 	subscriptionIdKey
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 func RequestAuth(c context.T) {
 	ws := GetConnection(c)
@@ -29,7 +29,7 @@ func RequestAuth(c context.T) {
 		ws.Authed = make(chan struct{})
 	}
 	ws.authLock.Unlock()
-	log.E.Chk(ws.WriteJSON(auth.Envelope{Challenge: &ws.Challenge}))
+	log.E.Chk(ws.WriteJSON(authenvelope.Challenge{Challenge: ws.Challenge}))
 }
 
 func GetConnection(c context.T) *WebSocket { return c.Value(wsKey).(*WebSocket) }

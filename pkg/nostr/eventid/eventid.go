@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/Hubmakerlabs/replicatr/pkg/wire/text"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 // T is the SHA256 hash in hexadecimal of the canonical form of an event
 // as produced by the output of T.ToCanonical().Bytes().

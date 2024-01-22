@@ -6,12 +6,10 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip11"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
-
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
 )
@@ -59,7 +57,7 @@ type Relay struct {
 	OnEventSaved             []OnEventSaved
 	// editing info will affect
 	Info *nip11.Info
-	*log2.Log
+	*slog.Log
 	// for establishing websockets
 	upgrader websocket.Upgrader
 	// keep a connection reference to all connected clients for Server.Shutdown
@@ -77,7 +75,7 @@ type Relay struct {
 
 func NewRelay(appName string) (r *Relay) {
 	r = &Relay{
-		Log: log2.New(os.Stderr, appName, 0),
+		Log: slog.New(os.Stderr, appName, 0),
 		Info: &nip11.Info{
 			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/replicatrd",
 			Version:       "n/a",

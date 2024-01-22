@@ -10,18 +10,18 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/OK"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/auth"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/closed"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/closer"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/count"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/envelope"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/eose"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/nip42"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/req"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closedenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip42"
 	"github.com/fasthttp/websocket"
 )
 
@@ -66,50 +66,49 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	go rl.websocketWatcher(c, kill, ticker, ws)
 }
 
-func (rl *Relay) websocketProcessMessages(message []byte, c context.T, ws *WebSocket) {
-	var e error
-	env := envelope.ParseMessage(message)
-	if env == nil {
+func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
+	en, _, e := envelopes.ProcessEnvelope(msg)
+	if en == nil {
 		// stop silently
 		return
 	}
-	switch env := env.(type) {
-	case *event.E:
+	switch env := en.(type) {
+	case *eventenvelope.T:
 		// check id
-		hash := sha256.Sum256(env.T.Serialize())
+		hash := sha256.Sum256(env.Event.Serialize())
 		id := hex.Enc(hash[:])
-		if id != env.T.ID {
-			rl.E.Chk(ws.WriteJSON(OK.Envelope{
-				EventID: env.T.ID,
-				OK:      false,
-				Reason:  "invalid: id is computed incorrectly",
+		if id != env.Event.ID.String() {
+			rl.E.Chk(ws.WriteJSON(okenvelope.T{
+				ID:     env.Event.ID,
+				OK:     false,
+				Reason: "invalid: id is computed incorrectly",
 			}))
 			return
 		}
 		// check signature
 		var ok bool
-		if ok, e = env.T.CheckSignature(); rl.E.Chk(e) {
-			rl.E.Chk(ws.WriteJSON(OK.Envelope{
-				EventID: env.T.ID,
-				OK:      false,
-				Reason:  "error: failed to verify signature"},
+		if ok, e = env.Event.CheckSignature(); rl.E.Chk(e) {
+			rl.E.Chk(ws.WriteJSON(okenvelope.T{
+				ID:     env.Event.ID,
+				OK:     false,
+				Reason: "error: failed to verify signature"},
 			))
 			return
 		} else if !ok {
-			rl.E.Chk(ws.WriteJSON(OK.Envelope{
-				EventID: env.T.ID,
-				OK:      false,
-				Reason:  "invalid: signature is invalid"},
+			rl.E.Chk(ws.WriteJSON(okenvelope.T{
+				ID:     env.Event.ID,
+				OK:     false,
+				Reason: "invalid: signature is invalid"},
 			))
 			return
 		}
 		var writeErr error
-		if env.T.Kind == 5 {
+		if env.Event.Kind == 5 {
 			// this always returns "blocked: " whenever it returns an error
-			writeErr = rl.handleDeleteRequest(c, &env.T)
+			writeErr = rl.handleDeleteRequest(c, env.Event)
 		} else {
 			// this will also always return a prefixed reason
-			writeErr = rl.AddEvent(c, &env.T)
+			writeErr = rl.AddEvent(c, env.Event)
 		}
 		var reason string
 		if ok = !rl.E.Chk(writeErr); !ok {
@@ -120,28 +119,28 @@ func (rl *Relay) websocketProcessMessages(message []byte, c context.T, ws *WebSo
 		} else {
 			ok = true
 		}
-		rl.E.Chk(ws.WriteJSON(OK.Envelope{
-			EventID: env.T.ID,
-			OK:      ok,
-			Reason:  reason,
+		rl.E.Chk(ws.WriteJSON(okenvelope.T{
+			ID:     env.Event.ID,
+			OK:     ok,
+			Reason: reason,
 		}))
-	case *count.Envelope:
+	case *countenvelope.Request:
 		if rl.CountEvents == nil {
-			rl.E.Chk(ws.WriteJSON(closed.Envelope{
-				SubscriptionID: env.SubscriptionID,
-				Reason:         "unsupported: this relay does not support NIP-45",
+			rl.E.Chk(ws.WriteJSON(closedenvelope.T{
+				ID:     env.ID,
+				Reason: "unsupported: this relay does not support NIP-45",
 			}))
 			return
 		}
 		var total int64
 		for _, f := range env.T {
-			total += rl.handleCountRequest(c, ws, &f)
+			total += rl.handleCountRequest(c, ws, f)
 		}
-		rl.E.Chk(ws.WriteJSON(count.Envelope{
-			SubscriptionID: env.SubscriptionID,
-			Count:          &total,
+		rl.E.Chk(ws.WriteJSON(countenvelope.Response{
+			ID:    env.ID,
+			Count: total,
 		}))
-	case *req.Envelope:
+	case *reqenvelope.T:
 		wg := sync.WaitGroup{}
 		wg.Add(len(env.T))
 		// a context just for the "stored events" request handler
@@ -150,16 +149,16 @@ func (rl *Relay) websocketProcessMessages(message []byte, c context.T, ws *WebSo
 		reqCtx = context.Value(reqCtx, subscriptionIdKey, env.SubscriptionID)
 		// handle each filter separately -- dispatching events as they're loaded from databases
 		for _, f := range env.T {
-			e = rl.handleFilter(reqCtx, env.SubscriptionID, &wg, ws, &f)
+			e = rl.handleFilter(reqCtx, env.SubscriptionID.String(), &wg, ws, f)
 			if rl.E.Chk(e) {
 				// fail everything if any filter is rejected
 				reason := e.Error()
 				if strings.HasPrefix(reason, "auth-required:") {
 					RequestAuth(c)
 				}
-				rl.E.Chk(ws.WriteJSON(closed.Envelope{
-					SubscriptionID: env.SubscriptionID,
-					Reason:         reason},
+				rl.E.Chk(ws.WriteJSON(closedenvelope.T{
+					ID:     env.SubscriptionID,
+					Reason: reason},
 				))
 				cancelReqCtx(errors.New("filter rejected"))
 				return
@@ -170,14 +169,14 @@ func (rl *Relay) websocketProcessMessages(message []byte, c context.T, ws *WebSo
 			// we can cancel the context and fire the EOSE message
 			wg.Wait()
 			cancelReqCtx(nil)
-			rl.E.Chk(ws.WriteJSON(eose.Envelope(env.SubscriptionID)))
+			rl.E.Chk(ws.WriteJSON(eoseenvelope.T{T: env.SubscriptionID}))
 		}()
-		SetListener(env.SubscriptionID, ws, env.T, cancelReqCtx)
-	case *closer.Envelope:
-		RemoveListenerId(ws, string(*env))
-	case *auth.Envelope:
+		SetListener(env.SubscriptionID.String(), ws, env.T, cancelReqCtx)
+	case *closeenvelope.T:
+		RemoveListenerId(ws, env.T.String())
+	case *authenvelope.Response:
 		wsBaseUrl := strings.Replace(rl.ServiceURL, "http", "ws", 1)
-		if pubkey, ok := nip42.ValidateAuthEvent(&env.Event, ws.Challenge, wsBaseUrl); ok {
+		if pubkey, ok := nip42.ValidateAuthEvent(env.Event, ws.Challenge, wsBaseUrl); ok {
 			ws.AuthedPublicKey = pubkey
 			ws.authLock.Lock()
 			if ws.Authed != nil {
@@ -185,15 +184,15 @@ func (rl *Relay) websocketProcessMessages(message []byte, c context.T, ws *WebSo
 				ws.Authed = nil
 			}
 			ws.authLock.Unlock()
-			rl.E.Chk(ws.WriteJSON(OK.Envelope{
-				EventID: env.Event.ID,
-				OK:      true},
-			))
+			rl.E.Chk(ws.WriteJSON(okenvelope.T{
+				ID: env.Event.ID,
+				OK: true,
+			}))
 		} else {
-			rl.E.Chk(ws.WriteJSON(OK.Envelope{
-				EventID: env.Event.ID,
-				OK:      false,
-				Reason:  "error: failed to authenticate"},
+			rl.E.Chk(ws.WriteJSON(okenvelope.T{
+				ID:     env.Event.ID,
+				OK:     false,
+				Reason: "error: failed to authenticate"},
 			))
 		}
 	}
@@ -235,7 +234,7 @@ func (rl *Relay) websocketReadMessages(c context.T, kill func(),
 			rl.E.Chk(ws.WriteMessage(websocket.PongMessage, nil))
 			continue
 		}
-		go rl.websocketProcessMessages(message, c, ws)
+		go rl.wsProcessMessages(message, c, ws)
 	}
 }
 

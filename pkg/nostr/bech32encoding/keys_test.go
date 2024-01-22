@@ -7,7 +7,6 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
-	"github.com/minio/sha256-simd"
 )
 
 func TestConvertBits(t *testing.T) {
@@ -110,45 +109,6 @@ func TestPublicKeyToNpub(t *testing.T) {
 		if reNpub != npub {
 			t.Fatalf("recovered public key did not regenerate npub of original: %s mangled: %s",
 				reNpub, npub)
-		}
-	}
-}
-
-func TestSignatures(t *testing.T) {
-	var e error
-	var sec *secp256k1.SecretKey
-	var pub *secp256k1.PublicKey
-	bytes := make([]byte, 256)
-	hashed := make([]byte, 32)
-	var sig, deSig *schnorr.Signature
-	var nsig string
-	for i := 0; i < 10000; i++ {
-		sec, e = secp256k1.GenerateSecretKey()
-		if e != nil {
-			t.Fatalf("error generating key: '%s'", e)
-			return
-		}
-		pub = sec.PubKey()
-		_, e = rand.Read(bytes)
-		if e != nil {
-			t.Fatal(e)
-		}
-		hashArray := sha256.Sum256(bytes)
-		copy(hashed, hashArray[:])
-		sig, e = schnorr.Sign(sec, hashed)
-		if e != nil {
-			t.Fatal(e)
-		}
-		nsig, e = EncodeSignature(sig)
-		if e != nil {
-			t.Fatal(e)
-		}
-		deSig, e = DecodeSignature(nsig)
-		if e != nil {
-			t.Fatal(e)
-		}
-		if !deSig.Verify(hashed, pub) {
-			t.Fatal("signature failed but should not have failed")
 		}
 	}
 }

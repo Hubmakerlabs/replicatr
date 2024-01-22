@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 func TestUnescapeByteString(t *testing.T) {
-	log2.SetLogLevel(log2.Debug)
+	slog.SetLogLevel(slog.Debug)
 	b := make([]byte, 256)
 	for i := range b {
 		b[i] = byte(i)

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	close2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
@@ -15,12 +14,13 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filtertest"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 func TestEnveloper(t *testing.T) {
-	log2.SetLogLevel(log2.Debug)
+	slog.SetLogLevel(slog.Debug)
 	const sub = "subscription000001"
 	envs := []enveloper.I{
 		&eventenvelope.T{SubscriptionID: sub, Event: eventest.D[0]},

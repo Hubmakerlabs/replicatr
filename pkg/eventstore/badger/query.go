@@ -6,11 +6,10 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
-	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/binary"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/dgraph-io/badger/v4"
 )
 

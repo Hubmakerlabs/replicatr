@@ -1,8 +1,7 @@
 package sdk
 
 import (
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = log2.GetStd()
-
+var log = slog.GetStd()

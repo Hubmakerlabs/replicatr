@@ -11,7 +11,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/subscriptionoption"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/connection"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
@@ -30,12 +29,13 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 type Status int
 
@@ -152,7 +152,7 @@ func (r *Relay) Connect(c context.T) (e error) {
 	}
 
 	if r.url == "" {
-		return fmt.Errorf("invalid relay URL '%s'", r.URL)
+		return fmt.Errorf("invalid relay URL '%s'", r.URL())
 	}
 
 	if _, ok := c.Deadline(); !ok {
@@ -340,7 +340,7 @@ func (r *Relay) Auth(c context.T, sign func(ev *event.T) error) error {
 	}
 
 	return r.publish(c, authEvent.ID.String(),
-		&authenvelope.Response{T: authEvent})
+		&authenvelope.Response{Event: authEvent})
 }
 
 // publish can be used both for EVENT and for AUTH

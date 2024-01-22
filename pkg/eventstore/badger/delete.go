@@ -3,8 +3,8 @@ package badger
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -18,7 +18,7 @@ func (b *BadgerBackend) DeleteEvent(c context.T, evt *event.T) (e error) {
 		idx[0] = rawEventStorePrefix
 
 		// query event by id to get its idx
-		idPrefix8, _ := hex.Dec(evt.ID[0 : 8*2])
+		idPrefix8, _ := hex.Dec(evt.ID[0 : 8*2].String())
 		prefix := make([]byte, 1+8)
 		prefix[0] = indexIdPrefix
 		copy(prefix[1:], idPrefix8)

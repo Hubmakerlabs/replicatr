@@ -6,8 +6,9 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/eventstore"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
@@ -42,7 +43,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (e error) {
 				var ch chan *event.T
 				ch, e = query(c, &filter.T{
 					Authors: tag.T{ev.PubKey},
-					Kinds:   []int{ev.Kind},
+					Kinds:   kinds.T{ev.Kind},
 				})
 				if rl.E.Chk(e) {
 					continue
@@ -61,7 +62,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (e error) {
 					var ch chan *event.T
 					if ch, e = query(c, &filter.T{
 						Authors: tag.T{ev.PubKey},
-						Kinds:   []int{ev.Kind},
+						Kinds:   kinds.T{ev.Kind},
 						Tags:    filter.TagMap{"d": []string{d.Value()}},
 					}); rl.E.Chk(e) {
 						continue

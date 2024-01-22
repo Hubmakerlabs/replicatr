@@ -8,11 +8,11 @@ import (
 	"runtime"
 	"strings"
 
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/urfave/cli/v2"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 const appName = "postr"
 
@@ -310,7 +310,7 @@ func main() {
 			}
 			cfg.verbose = cCtx.Bool("V")
 			if cfg.verbose {
-				log2.SetLogLevel(log2.Debug)
+				slog.SetLogLevel(slog.Debug)
 			}
 			relays := cCtx.String("relays")
 			if strings.TrimSpace(relays) != "" {

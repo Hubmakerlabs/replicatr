@@ -7,18 +7,18 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/fiatjaf/generic-ristretto/z"
 
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
-var log = log2.GetStd()
+var log = slog.GetStd()
 
 const MAX_LOCKS = 50
 

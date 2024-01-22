@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/arrayer"
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/buffer"
 	"github.com/Hubmakerlabs/replicatr/pkg/interfaces/byter"
@@ -20,7 +19,6 @@ import (
 // and with omitempty marking the mandatory ones, acting as a "kind" of
 // sentinel.
 type I interface {
-	envelopes.E // transitional
 	labeler.I
 	fmt.Stringer
 	byter.I

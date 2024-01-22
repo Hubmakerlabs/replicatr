@@ -5,11 +5,12 @@ import (
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	event2 "github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/notice"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
 func (rl *Relay) handleFilter(c context.T, id string,
@@ -32,7 +33,7 @@ func (rl *Relay) handleFilter(c context.T, id string,
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(c, f); rej {
-			rl.E.Chk(ws.WriteJSON(notice.Envelope(msg)))
+			rl.E.Chk(ws.WriteJSON(&noticeenvelope.T{Text: msg}))
 			return errors.New(normalize.OKMessage(msg, "blocked"))
 		}
 	}
@@ -42,7 +43,7 @@ func (rl *Relay) handleFilter(c context.T, id string,
 	for _, query := range rl.QueryEvents {
 		var ch chan *event.T
 		if ch, e = query(c, f); rl.E.Chk(e) {
-			rl.E.Chk(ws.WriteJSON(notice.Envelope(e.Error())))
+			rl.E.Chk(ws.WriteJSON(&noticeenvelope.T{Text: e.Error()}))
 			eose.Done()
 			continue
 		}
@@ -51,9 +52,9 @@ func (rl *Relay) handleFilter(c context.T, id string,
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(c, ev)
 				}
-				rl.E.Chk(ws.WriteJSON(event2.E{
-					SubscriptionID: &id,
-					T:              *ev,
+				rl.E.Chk(ws.WriteJSON(eventenvelope.T{
+					SubscriptionID: subscriptionid.T(id),
+					Event:          ev,
 				}))
 			}
 			eose.Done()

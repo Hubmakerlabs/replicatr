@@ -1,5 +1,6 @@
-// Package log is a logging subsystem that provides code optional location tracing and semi-automated subsystem registration and output control.
-package log
+// Package slog is a logging subsystem that provides code optional location
+// tracing and semi-automated subsystem registration and output control.
+package slog
 
 import (
 	"fmt"

@@ -1,10 +1,10 @@
-package log_test
+package slog_test
 
 import (
 	"errors"
 	"testing"
 
-	l "github.com/Hubmakerlabs/replicatr/pkg/log"
+	l "github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 var log = l.GetStd()

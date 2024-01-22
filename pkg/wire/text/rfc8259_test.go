@@ -3,9 +3,9 @@ package text
 import (
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/minio/sha256-simd"
 	"lukechampine.com/frand"
-	log2 "github.com/Hubmakerlabs/replicatr/pkg/log"
 )
 
 func GenRandString(l int, src *frand.RNG) (str string) {
@@ -40,7 +40,7 @@ func TestRandomEscapeJSONStringAndWrap(t *testing.T) {
 	// random content that ensures the escaping is correct without creating a
 	// fixed set of test vectors.
 
-	log2.SetLogLevel(log2.Debug)
+	slog.SetLogLevel(slog.Debug)
 	for i := 0; i < 1000; i++ {
 		l := src.Intn(1<<8) + 32
 		s1 := GenRandString(l, src)

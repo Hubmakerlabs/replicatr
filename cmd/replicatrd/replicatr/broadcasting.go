@@ -1,7 +1,9 @@
 package replicatr
 
 import (
-	"github.com/Hubmakerlabs/replicatr/pkg/go-nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
 // BroadcastEvent emits an event to all listeners whose filters' match, skipping all filters and actions
@@ -12,9 +14,9 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 			if !listener.filters.Match(evt) {
 				return true
 			}
-			log.E.Chk(ws.WriteJSON(event.E{
-				SubscriptionID: &id,
-				T:              *evt},
+			log.E.Chk(ws.WriteJSON(eventenvelope.T{
+				SubscriptionID: subscriptionid.T(id),
+				Event:          evt},
 			))
 			return true
 		})
