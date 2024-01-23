@@ -13,7 +13,7 @@ import (
 )
 
 func (cfg *C) publish(ev *event.T, s *atomic.Int64) RelayIter {
-	return func(c context.T, rl *relay.Relay) bool {
+	return func(c context.T, rl *relay.T) bool {
 		e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL(), e)

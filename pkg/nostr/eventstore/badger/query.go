@@ -75,14 +75,14 @@ func (b *BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, er
 							if errors.Is(e, badger.ErrDiscardedTxn) {
 								return
 							}
-							log.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
+							b.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
 								idx, q.prefix, key, e)
 							return
 						}
-						log.Fail(item.Value(func(val []byte) (e error) {
+						b.Fail(item.Value(func(val []byte) (e error) {
 							var evt *event.T
 							if evt, e = nostr_binary.Unmarshal(val); e != nil {
-								log.D.F("badger: value read error (id %x): %s", val[0:32], e)
+								b.D.F("badger: value read error (id %x): %s", val[0:32], e)
 								return e
 							}
 
@@ -160,7 +160,7 @@ func (b *BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, er
 			return nil
 		})
 		if e != nil {
-			log.D.F("badger: query txn error: %s", e)
+			b.D.F("badger: query txn error: %s", e)
 		}
 	}()
 

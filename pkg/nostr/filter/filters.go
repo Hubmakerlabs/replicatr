@@ -3,6 +3,7 @@ package filter
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -13,7 +14,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = slog.GetStd()
+var log = slog.New(os.Stderr, "nostr/filter")
 
 // T is a query where one or all elements can be filled in.
 //

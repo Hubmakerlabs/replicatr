@@ -10,11 +10,13 @@ import (
 // it also doesn't attempt to store the event or trigger any reactions or callbacks
 func (rl *Relay) BroadcastEvent(evt *event.T) {
 	listeners.Range(func(ws *WebSocket, subs ListenerMap) bool {
+
+		rl.D.Ln("broadcasting event")
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {
 				return true
 			}
-			log.E.Chk(ws.WriteJSON(eventenvelope.T{
+			rl.E.Chk(ws.WriteJSON(eventenvelope.T{
 				SubscriptionID: subscriptionid.T(id),
 				Event:          evt},
 			))

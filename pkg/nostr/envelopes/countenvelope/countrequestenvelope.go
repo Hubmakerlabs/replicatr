@@ -17,8 +17,8 @@ import (
 var log = slog.GetStd()
 
 type Request struct {
-	ID subscriptionid.T
-	filters.T
+	ID      subscriptionid.T
+	Filters filters.T
 }
 
 var _ enveloper.I = &Request{}
@@ -31,7 +31,7 @@ func (C *Request) UnmarshalJSON(bytes []byte) error {
 func (C *Request) Label() string { return l.COUNT }
 
 func (C *Request) ToArray() array.T {
-	return array.T{l.COUNT, C.ID, C.T}
+	return array.T{l.COUNT, C.ID, C.Filters}
 }
 
 func (C *Request) String() string { return C.ToArray().String() }
@@ -75,7 +75,7 @@ func (C *Request) Unmarshal(buf *text.Buffer) (e error) {
 		if e = json.Unmarshal(filterArray, &f); log.Fail(e) {
 			return
 		}
-		C.T = append(C.T, f)
+		C.Filters = append(C.Filters, f)
 		cur := buf.Pos
 		// Next, find the comma after filter.
 		if e = buf.ScanThrough(','); e != nil {
@@ -86,7 +86,7 @@ func (C *Request) Unmarshal(buf *text.Buffer) (e error) {
 	}
 	// If we found at least one filter, there is no error, the io.EOF is
 	// expected at any point after at least one filter.
-	if len(C.T) > 0 {
+	if len(C.Filters) > 0 {
 		e = nil
 	}
 	// // Technically we maybe should read ahead further to make sure the JSON

@@ -34,10 +34,12 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (e error) {
 			}
 		}
 	}
-	if 20000 <= ev.Kind && ev.Kind < 30000 {
+	if ev.Kind.IsEphemeral() {
+		rl.D.Ln("ephemeral event")
 		// do not store ephemeral events
 	} else {
-		if ev.Kind == 0 || ev.Kind == 3 || (10000 <= ev.Kind && ev.Kind < 20000) {
+		if ev.Kind.IsReplaceable() {
+			rl.D.Ln("replaceable event")
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
 				var ch chan *event.T
@@ -54,7 +56,8 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (e error) {
 					}
 				}
 			}
-		} else if 30000 <= ev.Kind && ev.Kind < 40000 {
+		} else if ev.Kind.IsParameterizedReplaceable() {
+			rl.D.Ln("parameterized replaceable event")
 			// parameterized replaceable event, delete before storing
 			d := ev.Tags.GetFirst([]string{"d", ""})
 			if d != nil {
@@ -76,13 +79,17 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (e error) {
 			}
 		}
 		// store
-		for _, store := range rl.StoreEvent {
+		for i, store := range rl.StoreEvent {
+			rl.D.Ln("running event store function", i)
 			if saveErr := store(c, ev); rl.E.Chk(saveErr) {
 				switch {
 				case errors.Is(saveErr, eventstore.ErrDupEvent):
+					rl.D.Ln(saveErr)
 					return nil
 				default:
-					return fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))
+					e = fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))
+					rl.D.Ln(e)
+					return
 				}
 			}
 		}

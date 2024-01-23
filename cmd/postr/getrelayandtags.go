@@ -11,7 +11,7 @@ import (
 )
 
 func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
-	return func(c context.T, rl *relay.Relay) bool {
+	return func(c context.T, rl *relay.T) bool {
 		evs, e := rl.QuerySync(c, &filter.T{
 			Kinds:   kinds.T{kind.FollowList},
 			Authors: []string{pub},
@@ -20,7 +20,6 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
 		if log.Fail(e) {
 			return true
 		}
-		log.D.Ln("evs", len(evs[0].Tags))
 		for _, ev := range evs {
 			var rm Relays
 			if cfg.tempRelay == false {

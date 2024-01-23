@@ -52,7 +52,7 @@ func GetOpenSubscriptions(c context.T) filters.T {
 	return nil
 }
 
-func pointerHasher[V any](_ maphash.Seed, k *V) uint64 {
+func PointerHasher[V any](_ maphash.Seed, k *V) uint64 {
 	return uint64(uintptr(unsafe.Pointer(k)))
 }
 

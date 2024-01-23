@@ -39,7 +39,7 @@ func GetPublicKey(sk string) (string, error) {
 	return hex.Enc(schnorr.SerializePubKey(pk)), nil
 }
 
-func IsValidPublicKeyHex(pk string) bool {
+func IsValid32ByteHex(pk string) bool {
 	if strings.ToLower(pk) != pk {
 		return false
 	}

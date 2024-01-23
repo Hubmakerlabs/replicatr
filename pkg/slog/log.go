@@ -169,7 +169,7 @@ func GetLoc(skip int) (output string) {
 //
 // this copies the interface of stdlib log but we don't respect the settings
 // because a logger without timestamps is retarded
-func New(writer io.Writer, appID string, _ int) (l *Log) {
+func New(writer io.Writer, appID string) (l *Log) {
 	l = &Log{
 		F: getOnePrinter(writer, appID, Fatal),
 		E: getOnePrinter(writer, appID, Error),
@@ -183,7 +183,7 @@ func New(writer io.Writer, appID string, _ int) (l *Log) {
 }
 
 func GetStd() (l *Log) {
-	l = New(os.Stderr, "", 0)
+	l = New(os.Stderr, "")
 	return
 }
 

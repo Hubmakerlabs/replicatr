@@ -18,7 +18,7 @@ import (
 func Profile(cCtx *cli.Context) (e error) {
 	user, j := cCtx.String("u"), cCtx.Bool("json")
 	cfg := cCtx.App.Metadata["config"].(*C)
-	var rl *relay.Relay
+	var rl *relay.T
 	if rl = cfg.FindRelay(context.Bg(), readPerms); rl == nil {
 		return errors.New("cannot connect relays")
 	}

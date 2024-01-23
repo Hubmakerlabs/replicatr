@@ -75,7 +75,7 @@ type Relay struct {
 
 func NewRelay(appName string) (r *Relay) {
 	r = &Relay{
-		Log: slog.New(os.Stderr, appName, 0),
+		Log: slog.New(os.Stderr, appName),
 		Info: &nip11.Info{
 			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/replicatrd",
 			Version:       "n/a",
@@ -86,7 +86,7 @@ func NewRelay(appName string) (r *Relay) {
 			WriteBufferSize: WriteBufferSize,
 			CheckOrigin:     func(r *http.Request) bool { return true },
 		},
-		clients:        xsync.NewTypedMapOf[*websocket.Conn, struct{}](pointerHasher[websocket.Conn]),
+		clients:        xsync.NewTypedMapOf[*websocket.Conn, struct{}](PointerHasher[websocket.Conn]),
 		serveMux:       &http.ServeMux{},
 		WriteWait:      WriteWait,
 		PongWait:       PongWait,

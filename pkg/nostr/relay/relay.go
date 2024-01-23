@@ -41,7 +41,7 @@ type Status int
 
 var subscriptionIDCounter atomic.Int32
 
-type Relay struct {
+type T struct {
 	closeMutex sync.Mutex
 
 	url           string
@@ -65,9 +65,9 @@ type Relay struct {
 	AssumeValid bool // this will skip verifying signatures for events received from this relay
 }
 
-func (r *Relay) URL() string { return r.url }
+func (r *T) URL() string { return r.url }
 
-func (r *Relay) Delete(key string) { r.Subscriptions.Delete(key) }
+func (r *T) Delete(key string) { r.Subscriptions.Delete(key) }
 
 type writeRequest struct {
 	msg    []byte
@@ -76,9 +76,9 @@ type writeRequest struct {
 
 // NewRelay returns a new relay. The relay connection will be closed when the
 // context is canceled.
-func NewRelay(c context.T, url string, opts ...RelayOption) *Relay {
+func NewRelay(c context.T, url string, opts ...RelayOption) *T {
 	ctx, cancel := context.Cancel(c)
-	r := &Relay{
+	r := &T{
 		url:                           normalize.URL(url),
 		connectionContext:             ctx,
 		connectionContextCancel:       cancel,
@@ -106,7 +106,7 @@ func NewRelay(c context.T, url string, opts ...RelayOption) *Relay {
 // Connect returns a relay object connected to url. Once successfully
 // connected, cancelling ctx has no effect. To close the connection, call
 // r.Close().
-func Connect(c context.T, url string, opts ...RelayOption) (*Relay, error) {
+func Connect(c context.T, url string, opts ...RelayOption) (*T, error) {
 	r := NewRelay(context.Bg(), url, opts...)
 	e := r.Connect(c)
 	return r, e
@@ -128,15 +128,15 @@ func (_ WithNoticeHandler) IsRelayOption() {}
 var _ RelayOption = (WithNoticeHandler)(nil)
 
 // String just returns the relay URL.
-func (r *Relay) String() string {
+func (r *T) String() string {
 	return r.url
 }
 
 // Context retrieves the context that is associated with this relay connection.
-func (r *Relay) Context() context.T { return r.connectionContext }
+func (r *T) Context() context.T { return r.connectionContext }
 
 // IsConnected returns true if the connection to this relay seems to be active.
-func (r *Relay) IsConnected() bool { return r.connectionContext.Err() == nil }
+func (r *T) IsConnected() bool { return r.connectionContext.Err() == nil }
 
 // Connect tries to establish a websocket connection to r.URL. If the context
 // expires before the connection is complete, an error is returned. Once
@@ -146,7 +146,7 @@ func (r *Relay) IsConnected() bool { return r.connectionContext.Err() == nil }
 // The underlying relay connection will use a background context. If you want to
 // pass a custom context to the underlying relay connection, use NewRelay() and
 // then Relay.Connect().
-func (r *Relay) Connect(c context.T) (e error) {
+func (r *T) Connect(c context.T) (e error) {
 	if r.connectionContext == nil || r.Subscriptions == nil {
 		return fmt.Errorf("relay must be initialized with a call to NewRelay()")
 	}
@@ -218,7 +218,7 @@ func (r *Relay) Connect(c context.T) (e error) {
 	return nil
 }
 
-func (r *Relay) MessageReadLoop(conn *connection.C) {
+func (r *T) MessageReadLoop(conn *connection.C) {
 	buf := new(bytes.Buffer)
 	var e error
 	for {
@@ -307,7 +307,7 @@ func (r *Relay) MessageReadLoop(conn *connection.C) {
 }
 
 // Write queues a message to be sent to the relay.
-func (r *Relay) Write(msg []byte) <-chan error {
+func (r *T) Write(msg []byte) <-chan error {
 	ch := make(chan error)
 	select {
 	case r.writeQueue <- writeRequest{msg: msg, answer: ch}:
@@ -319,13 +319,13 @@ func (r *Relay) Write(msg []byte) <-chan error {
 
 // Publish sends an "EVENT" command to the relay r as in NIP-01 and waits for an
 // OK response.
-func (r *Relay) Publish(c context.T, ev *event.T) error {
+func (r *T) Publish(c context.T, ev *event.T) error {
 	return r.publish(c, ev.ID.String(), &eventenvelope.T{Event: ev})
 }
 
 // Auth sends an "AUTH" command client->relay as in NIP-42 and waits for an OK
 // response.
-func (r *Relay) Auth(c context.T, sign func(ev *event.T) error) error {
+func (r *T) Auth(c context.T, sign func(ev *event.T) error) error {
 	authEvent := &event.T{
 		CreatedAt: timestamp.Now(),
 		Kind:      kind.ClientAuthentication,
@@ -344,7 +344,7 @@ func (r *Relay) Auth(c context.T, sign func(ev *event.T) error) error {
 }
 
 // publish can be used both for EVENT and for AUTH
-func (r *Relay) publish(c context.T, id string, env enveloper.I) error {
+func (r *T) publish(c context.T, id string, env enveloper.I) error {
 	var e error
 	var cancel context.F
 
@@ -399,7 +399,7 @@ func (r *Relay) publish(c context.T, id string, env enveloper.I) error {
 // Remember to cancel subscriptions, either by calling `.Unsub()` on them or
 // ensuring their `context.T` will be canceled at some point. Failure to do that
 // will result in a huge number of halted goroutines being created.
-func (r *Relay) Subscribe(c context.T, f filters.T,
+func (r *T) Subscribe(c context.T, f filters.T,
 	opts ...subscriptionoption.I) (*subscription.T, error) {
 
 	sub := r.PrepareSubscription(c, f, opts...)
@@ -416,7 +416,7 @@ func (r *Relay) Subscribe(c context.T, f filters.T,
 // Remember to cancel subscriptions, either by calling `.Unsub()` on them or
 // ensuring their `context.T` will be canceled at some point. Failure to do that
 // will result in a huge number of halted goroutines being created.
-func (r *Relay) PrepareSubscription(c context.T, f filters.T,
+func (r *T) PrepareSubscription(c context.T, f filters.T,
 	opts ...subscriptionoption.I) *subscription.T {
 
 	if r.Connection == nil {
@@ -453,7 +453,7 @@ func (r *Relay) PrepareSubscription(c context.T, f filters.T,
 	return sub
 }
 
-func (r *Relay) QuerySync(c context.T, f *filter.T,
+func (r *T) QuerySync(c context.T, f *filter.T,
 	opts ...subscriptionoption.I) ([]*event.T, error) {
 	sub, e := r.Subscribe(c, filters.T{f}, opts...)
 	if e != nil {
@@ -486,7 +486,7 @@ func (r *Relay) QuerySync(c context.T, f *filter.T,
 	}
 }
 
-func (r *Relay) Count(c context.T, filters filters.T,
+func (r *T) Count(c context.T, filters filters.T,
 	opts ...subscriptionoption.I) (int64, error) {
 
 	sub := r.PrepareSubscription(c, filters, opts...)
@@ -515,7 +515,7 @@ func (r *Relay) Count(c context.T, filters filters.T,
 	}
 }
 
-func (r *Relay) Close() error {
+func (r *T) Close() error {
 	r.closeMutex.Lock()
 	defer r.closeMutex.Unlock()
 

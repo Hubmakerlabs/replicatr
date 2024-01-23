@@ -55,7 +55,7 @@ func (p ProfileMetadata) ShortName() string {
 	return npub[0:7] + "…" + npub[58:]
 }
 
-func FetchProfileMetadata(c context.T, pool *pool.SimplePool,
+func FetchProfileMetadata(c context.T, pool *pool.Simple,
 	pubkey string, relays ...string) (pm *ProfileMetadata) {
 
 	c, cancel := context.Cancel(c)
@@ -66,10 +66,10 @@ func FetchProfileMetadata(c context.T, pool *pool.SimplePool,
 			Authors: []string{pubkey},
 			Limit:   1,
 		},
-	})
+	}, true)
 	var e error
 	for ie := range ch {
-		if pm, e = ParseMetadata(ie.T); !log.E.Chk(e) {
+		if pm, e = ParseMetadata(ie.Event); !log.E.Chk(e) {
 			return
 		}
 	}

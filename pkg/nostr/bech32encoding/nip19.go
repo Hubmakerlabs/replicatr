@@ -150,7 +150,9 @@ func Decode(bech32string string) (prefix string, value any, e error) {
 	return prefix, data, fmt.Errorf("unknown tag %s", prefix)
 }
 
-func EncodePrivateKey(privateKeyHex string) (string, error) {
+var EncodePrivateKey = EncodeSecretKey
+
+func EncodeSecretKey(privateKeyHex string) (string, error) {
 	b, e := hex.Dec(privateKeyHex)
 	if e != nil {
 		return "", fmt.Errorf("failed to decode private key hex: %w", e)

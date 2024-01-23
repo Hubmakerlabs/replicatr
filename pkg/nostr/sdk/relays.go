@@ -20,7 +20,7 @@ type Relay struct {
 	Outbox bool
 }
 
-func FetchRelaysForPubkey(c context.T, pool *pool.SimplePool, pubkey string, relays ...string) (r []Relay) {
+func FetchRelaysForPubkey(c context.T, pool *pool.Simple, pubkey string, relays ...string) (r []Relay) {
 	c, cancel := context.Cancel(c)
 	defer cancel()
 	ch := pool.SubManyEose(c, relays, filters.T{
@@ -32,15 +32,15 @@ func FetchRelaysForPubkey(c context.T, pool *pool.SimplePool, pubkey string, rel
 			Authors: []string{pubkey},
 			Limit:   2,
 		},
-	})
+	}, true)
 	r = make([]Relay, 0, 20)
 	i := 0
 	for ie := range ch {
-		switch ie.T.Kind {
+		switch ie.Event.Kind {
 		case kind.RelayListMetadata:
-			r = append(r, ParseRelaysFromKind10002(ie.T)...)
+			r = append(r, ParseRelaysFromKind10002(ie.Event)...)
 		case kind.FollowList:
-			r = append(r, ParseRelaysFromKind3(ie.T)...)
+			r = append(r, ParseRelaysFromKind3(ie.Event)...)
 		}
 		i++
 		if i >= 2 {

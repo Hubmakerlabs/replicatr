@@ -47,7 +47,7 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL(), e)
@@ -214,7 +214,7 @@ func doDMPost(cCtx *cli.Context) (e error) {
 		return
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		if e := rl.Publish(c, ev); !log.Fail(e) {
 			success.Add(1)
 		}
@@ -245,7 +245,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 	var repostID string
 	var mu sync.Mutex
-	cfg.Do(readPerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
 		evs, e := rl.QuerySync(c, &f)
 		if log.Fail(e) {
 			return true
@@ -265,7 +265,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		e := rl.Publish(c, ev)
 		if log.Fail(e) {
 			log.D.Ln(rl.URL(), e)
@@ -299,7 +299,7 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 	var likeID string
 	var mu sync.Mutex
-	cfg.Do(readPerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
 		evs, e := rl.QuerySync(c, &f)
 		if log.Fail(e) {
 			return true
@@ -319,7 +319,7 @@ func doUnlike(cCtx *cli.Context) (e error) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		e := rl.Publish(c, ev)
 		if !log.Fail(e) {
 			success.Add(1)
@@ -353,7 +353,7 @@ func doDelete(cCtx *cli.Context) (e error) {
 		return e
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		e := rl.Publish(c, ev)
 		if !log.Fail(e) {
 			success.Add(1)
@@ -431,7 +431,7 @@ func doStream(cCtx *cli.Context) (e error) {
 				if e := evr.Sign(sk); log.Fail(e) {
 					return e
 				}
-				cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+				cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 					if e = rl.Publish(c, evr); log.Fail(e) {
 					}
 					return true
