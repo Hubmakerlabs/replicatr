@@ -9,7 +9,7 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 )
 
 // These constants define the lengths of serialized public keys.
@@ -35,7 +35,7 @@ func ParsePubKey(pubKeyStr []byte) (p *btcec.PublicKey, err error) {
 	// We'll manually prepend the compressed byte so we can re-use the
 	// existing pubkey parsing routine of the main btcec package.
 	var keyCompressed [btcec.PubKeyBytesLenCompressed]byte
-	keyCompressed[0] = secp.PubKeyFormatCompressedEven
+	keyCompressed[0] = secp256k1.PubKeyFormatCompressedEven
 	copy(keyCompressed[1:], pubKeyStr)
 
 	return btcec.ParsePubKey(keyCompressed[:])

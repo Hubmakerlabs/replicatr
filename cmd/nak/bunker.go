@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"os"
 
-	nip19 "github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
@@ -69,7 +69,7 @@ var bunker = &cli.Command{
 		if err != nil {
 			return err
 		}
-		npub, _ := nip19.EncodePublicKey(pubkey)
+		npub, _ := bech32encoding.EncodePublicKey(pubkey)
 		log.I.F("listening at %s%v%s:\n  %spubkey:%s %s\n  %snpub:%s %s\n  %sconnection code:%s %s\n  %sbunker:%s %s\n",
 			BOLD_ON, relayURLs, BOLD_OFF,
 			BOLD_ON, BOLD_OFF, pubkey,

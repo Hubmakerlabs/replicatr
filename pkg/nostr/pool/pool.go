@@ -15,7 +15,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/fiatjaf/generic-ristretto/z"
-
 	"github.com/puzpuzpuz/xsync/v2"
 )
 

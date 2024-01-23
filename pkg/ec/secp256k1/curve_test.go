@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/bits"
-	mrand "math/rand"
+	"math/rand"
 	"testing"
 	"time"
 )
@@ -449,7 +449,7 @@ func TestNAF(t *testing.T) {
 func TestNAFRandom(t *testing.T) {
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
-	rng := mrand.New(mrand.NewSource(seed))
+	rng := rand.New(rand.NewSource(seed))
 	defer func(t *testing.T, seed int64) {
 		if t.Failed() {
 			t.Logf("random seed: %d", seed)
@@ -728,7 +728,7 @@ func TestSplitK(t *testing.T) {
 func TestSplitKRandom(t *testing.T) {
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
-	rng := mrand.New(mrand.NewSource(seed))
+	rng := rand.New(rand.NewSource(seed))
 	defer func(t *testing.T, seed int64) {
 		if t.Failed() {
 			t.Logf("random seed: %d", seed)
@@ -754,7 +754,7 @@ func TestSplitKRandom(t *testing.T) {
 func TestScalarMultJacobianRandom(t *testing.T) {
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
-	rng := mrand.New(mrand.NewSource(seed))
+	rng := rand.New(rand.NewSource(seed))
 	defer func(t *testing.T, seed int64) {
 		if t.Failed() {
 			t.Logf("random seed: %d", seed)
@@ -946,7 +946,7 @@ func TestDecompressY(t *testing.T) {
 func TestDecompressYRandom(t *testing.T) {
 	// Use a unique random seed each test instance and log it if the tests fail.
 	seed := time.Now().Unix()
-	rng := mrand.New(mrand.NewSource(seed))
+	rng := rand.New(rand.NewSource(seed))
 	defer func(t *testing.T, seed int64) {
 		if t.Failed() {
 			t.Logf("random seed: %d", seed)

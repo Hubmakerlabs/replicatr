@@ -8,7 +8,7 @@ package schnorr
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 )
 
 // These constants define the lengths of serialized public keys.

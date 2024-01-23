@@ -20,31 +20,31 @@ package btcec
 // reverse the transform than to operate in affine coordinates.
 
 import (
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 )
 
 // KoblitzCurve provides an implementation for secp256k1 that fits the ECC
 // Curve interface from crypto/elliptic.
-type KoblitzCurve = secp.KoblitzCurve
+type KoblitzCurve = secp256k1.KoblitzCurve
 
 // S256 returns a Curve which implements secp256k1.
 func S256() *KoblitzCurve {
-	return secp.S256()
+	return secp256k1.S256()
 }
 
 // CurveParams contains the parameters for the secp256k1 curve.
-type CurveParams = secp.CurveParams
+type CurveParams = secp256k1.CurveParams
 
 // Params returns the secp256k1 curve parameters for convenience.
 func Params() *CurveParams {
-	return secp.Params()
+	return secp256k1.Params()
 }
 
 // Generator returns the public key at the Generator Point.
 func Generator() *PublicKey {
 	var (
 		result JacobianPoint
-		k      secp.ModNScalar
+		k      secp256k1.ModNScalar
 	)
 
 	k.SetInt(1)

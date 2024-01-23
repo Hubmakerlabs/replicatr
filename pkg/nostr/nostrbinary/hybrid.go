@@ -1,4 +1,4 @@
-package binary
+package nostrbinary
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = slog.New(os.Stderr, "nostr/binary")
+var log = slog.New(os.Stderr, "nostrbinary")
 
 func Unmarshal(data []byte) (evt *event.T, err error) {
 

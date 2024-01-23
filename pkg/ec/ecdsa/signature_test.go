@@ -15,10 +15,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/dchest/blake256"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 // hexToBytes converts the passed hex string into bytes and will panic if there

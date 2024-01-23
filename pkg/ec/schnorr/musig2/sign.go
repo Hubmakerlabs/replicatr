@@ -7,11 +7,10 @@ import (
 	"fmt"
 	"io"
 
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/chainhash"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 )
 
 var (
@@ -349,7 +348,7 @@ func Sign(secNonce [SecNonceSize]byte, privKey *btcec.SecretKey,
 	pubKey := privKey.PubKey()
 	combinedKeyYIsOdd := func() bool {
 		combinedKeyBytes := combinedKey.FinalKey.SerializeCompressed()
-		return combinedKeyBytes[0] == secp.PubKeyFormatCompressedOdd
+		return combinedKeyBytes[0] == secp256k1.PubKeyFormatCompressedOdd
 	}()
 
 	// Next we'll compute the two parity factors for Q, the combined key.
@@ -566,7 +565,7 @@ func verifyPartialSig(partialSig *PartialSignature, pubNonce [PubNonceSize]byte,
 	// parity factor for the signing key.
 	parityCombinedKey := new(btcec.ModNScalar).SetInt(1)
 	combinedKeyBytes := combinedKey.FinalKey.SerializeCompressed()
-	if combinedKeyBytes[0] == secp.PubKeyFormatCompressedOdd {
+	if combinedKeyBytes[0] == secp256k1.PubKeyFormatCompressedOdd {
 		parityCombinedKey.Negate()
 	}
 
@@ -695,7 +694,7 @@ func CombineSigs(combinedNonce *btcec.PublicKey,
 		// negating it if the combined key has an even y coordinate.
 		parityFactor := new(btcec.ModNScalar).SetInt(1)
 		combinedKeyBytes := opts.combinedKey.SerializeCompressed()
-		if combinedKeyBytes[0] == secp.PubKeyFormatCompressedOdd {
+		if combinedKeyBytes[0] == secp256k1.PubKeyFormatCompressedOdd {
 			parityFactor.Negate()
 		}
 

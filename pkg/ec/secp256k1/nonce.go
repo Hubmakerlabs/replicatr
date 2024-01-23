@@ -7,8 +7,9 @@ package secp256k1
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"hash"
+
+	"github.com/minio/sha256-simd"
 )
 
 // References:

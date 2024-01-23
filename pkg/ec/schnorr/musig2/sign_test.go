@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/stretchr/testify/require"
 )
 
@@ -163,7 +163,7 @@ func TestMusig2SignVerify(t *testing.T) {
 				t, testCase.Indices, testCases.PubKeys,
 			)
 			if err != nil {
-				require.ErrorIs(t, err, secp.ErrPubKeyNotOnCurve)
+				require.ErrorIs(t, err, secp256k1.ErrPubKeyNotOnCurve)
 				return
 			}
 
@@ -252,13 +252,13 @@ func TestMusig2SignVerify(t *testing.T) {
 					t, testCase.NonceIndices, testCases.PubNonces,
 				)
 				_, err := AggregateNonces(pubNonces)
-				require.ErrorIs(t, err, secp.ErrPubKeyNotOnCurve)
+				require.ErrorIs(t, err, secp256k1.ErrPubKeyNotOnCurve)
 
 			case "Invalid pubkey":
 				_, err := keysFromIndices(
 					t, testCase.Indices, testCases.PubKeys,
 				)
-				require.ErrorIs(t, err, secp.ErrPubKeyNotOnCurve)
+				require.ErrorIs(t, err, secp256k1.ErrPubKeyNotOnCurve)
 
 			default:
 				t.Fatalf("unhandled case: %v", testCase.Comment)

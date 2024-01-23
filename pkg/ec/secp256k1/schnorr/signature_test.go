@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/minio/sha256-simd"
 )
 

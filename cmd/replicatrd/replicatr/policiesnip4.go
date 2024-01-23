@@ -2,7 +2,6 @@ package replicatr
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"golang.org/x/exp/slices"
 )

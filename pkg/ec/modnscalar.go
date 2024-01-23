@@ -4,7 +4,7 @@
 package btcec
 
 import (
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 )
 
 // ModNScalar implements optimized 256-bit constant-time fixed-precision
@@ -24,7 +24,7 @@ import (
 // that should typically be avoided when possible as conversion to big.Ints
 // requires allocations, is not constant time, and is slower when working modulo
 // the group order.
-type ModNScalar = secp.ModNScalar
+type ModNScalar = secp256k1.ModNScalar
 
 // NonceRFC6979 generates a nonce deterministically according to RFC 6979 using
 // HMAC-SHA256 for the hashing function.  It takes a 32-byte hash as an input
@@ -41,5 +41,5 @@ type ModNScalar = secp.ModNScalar
 func NonceRFC6979(privKey []byte, hash []byte, extra []byte, version []byte,
 	extraIterations uint32) *ModNScalar {
 
-	return secp.NonceRFC6979(privKey, hash, extra, version, extraIterations)
+	return secp256k1.NonceRFC6979(privKey, hash, extra, version, extraIterations)
 }

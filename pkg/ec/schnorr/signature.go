@@ -7,8 +7,8 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/chainhash"
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
-	ecdsa_schnorr "github.com/Hubmakerlabs/replicatr/pkg/ec/secp/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1/schnorr"
 )
 
 const (
@@ -73,12 +73,12 @@ func ParseSignature(sig []byte) (*Signature, error) {
 	if sigLen < SignatureSize {
 		str := fmt.Sprintf("malformed signature: too short: %d < %d", sigLen,
 			SignatureSize)
-		return nil, signatureError(ecdsa_schnorr.ErrSigTooShort, str)
+		return nil, signatureError(schnorr.ErrSigTooShort, str)
 	}
 	if sigLen > SignatureSize {
 		str := fmt.Sprintf("malformed signature: too long: %d > %d", sigLen,
 			SignatureSize)
-		return nil, signatureError(ecdsa_schnorr.ErrSigTooLong, str)
+		return nil, signatureError(schnorr.ErrSigTooLong, str)
 	}
 
 	// The signature is validly encoded at this point, however, enforce
@@ -88,7 +88,7 @@ func ParseSignature(sig []byte) (*Signature, error) {
 	var r btcec.FieldVal
 	if overflow := r.SetByteSlice(sig[0:32]); overflow {
 		str := "invalid signature: r >= field prime"
-		return nil, signatureError(ecdsa_schnorr.ErrSigRTooBig, str)
+		return nil, signatureError(schnorr.ErrSigRTooBig, str)
 	}
 	var s btcec.ModNScalar
 	s.SetByteSlice(sig[32:64])
@@ -147,7 +147,7 @@ func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (err error) 
 	}
 	if !pubKey.IsOnCurve() {
 		str := "pubkey point is not on curve"
-		return signatureError(ecdsa_schnorr.ErrPubKeyNotOnCurve, str)
+		return signatureError(schnorr.ErrPubKeyNotOnCurve, str)
 	}
 
 	// Step 3.
@@ -194,7 +194,7 @@ func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (err error) 
 	// Fail if R is the point at infinity
 	if (R.X.IsZero() && R.Y.IsZero()) || R.Z.IsZero() {
 		str := "calculated R point is the point at infinity"
-		return signatureError(ecdsa_schnorr.ErrSigRNotOnCurve, str)
+		return signatureError(schnorr.ErrSigRNotOnCurve, str)
 	}
 
 	// Step 8.
@@ -205,7 +205,7 @@ func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (err error) 
 	R.ToAffine()
 	if R.Y.IsOdd() {
 		str := "calculated R y-value is odd"
-		return signatureError(ecdsa_schnorr.ErrSigRYIsOdd, str)
+		return signatureError(schnorr.ErrSigRYIsOdd, str)
 	}
 
 	// Step 9.
@@ -215,7 +215,7 @@ func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (err error) 
 	// Note that R must be in affine coordinates for this check.
 	if !sig.r.Equals(&R.X) {
 		str := "calculated R point was not given R"
-		return signatureError(ecdsa_schnorr.ErrUnequalRValues, str)
+		return signatureError(schnorr.ErrUnequalRValues, str)
 	}
 
 	// Step 10.
@@ -316,7 +316,7 @@ func schnorrSign(privKey, nonce *btcec.ModNScalar, pubKey *btcec.PublicKey,
 	if overflow := err.SetBytes((*[32]byte)(commitment)); overflow != 0 {
 		k.Zero()
 		str := "hash of (r || P || m) too big"
-		return nil, signatureError(ecdsa_schnorr.ErrSchnorrHashValue, str)
+		return nil, signatureError(schnorr.ErrSchnorrHashValue, str)
 	}
 
 	// Step 13.
@@ -453,7 +453,7 @@ func Sign(privKey *btcec.SecretKey, hash []byte,
 	// Fail if d = 0 or d >= n
 	if privKeyScalar.IsZero() {
 		str := "secret key is zero"
-		return nil, signatureError(ecdsa_schnorr.ErrSecretKeyIsZero, str)
+		return nil, signatureError(schnorr.ErrSecretKeyIsZero, str)
 	}
 
 	// Step 4.
@@ -465,7 +465,7 @@ func Sign(privKey *btcec.SecretKey, hash []byte,
 	//
 	// Negate d if P.y is odd.
 	pubKeyBytes := pub.SerializeCompressed()
-	if pubKeyBytes[0] == secp.PubKeyFormatCompressedOdd {
+	if pubKeyBytes[0] == secp256k1.PubKeyFormatCompressedOdd {
 		privKeyScalar.Negate()
 	}
 
@@ -505,7 +505,7 @@ func Sign(privKey *btcec.SecretKey, hash []byte,
 		// Fail if k' = 0
 		if kPrime.IsZero() {
 			str := fmt.Sprintf("generated nonce is zero")
-			return nil, signatureError(ecdsa_schnorr.ErrSchnorrHashValue, str)
+			return nil, signatureError(schnorr.ErrSchnorrHashValue, str)
 		}
 
 		sig, err := schnorrSign(&privKeyScalar, &kPrime, pub, hash, opts)
@@ -521,7 +521,7 @@ func Sign(privKey *btcec.SecretKey, hash []byte,
 	privKeyScalar.PutBytes(&privKeyBytes)
 	defer zeroArray(&privKeyBytes)
 	for iteration := uint32(0); ; iteration++ {
-		var k *secp.ModNScalar
+		var k *secp256k1.ModNScalar
 
 		// Step 6-9.
 		//

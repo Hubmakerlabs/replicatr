@@ -3,13 +3,12 @@ package bech32encoding
 import (
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 var log = slog.GetStd()
@@ -37,7 +36,7 @@ func ConvertFromBech32(b5 []byte) (b8 []byte, err error) {
 }
 
 // SecretKeyToNsec encodes an secp256k1 secret key as a Bech32 string (nsec).
-func SecretKeyToNsec(sk *secp.SecretKey) (encoded string, err error) {
+func SecretKeyToNsec(sk *secp256k1.SecretKey) (encoded string, err error) {
 
 	var b5 []byte
 	if b5, err = ConvertForBech32(sk.Serialize()); err != nil {
@@ -47,7 +46,7 @@ func SecretKeyToNsec(sk *secp.SecretKey) (encoded string, err error) {
 }
 
 // PublicKeyToNpub encodes a public kxey as a bech32 string (npub).
-func PublicKeyToNpub(pk *secp.PublicKey) (encoded string, err error) {
+func PublicKeyToNpub(pk *secp256k1.PublicKey) (encoded string, err error) {
 
 	var bits5 []byte
 	if bits5, err = ConvertForBech32(schnorr.SerializePubKey(pk)); err != nil {
@@ -58,7 +57,7 @@ func PublicKeyToNpub(pk *secp.PublicKey) (encoded string, err error) {
 
 // NsecToSecretKey decodes a nostr secret key (nsec) and returns the secp256k1
 // secret key.
-func NsecToSecretKey(encoded string) (sk *secp.SecretKey, err error) {
+func NsecToSecretKey(encoded string) (sk *secp256k1.SecretKey, err error) {
 
 	var b5, b8 []byte
 	var hrp string
@@ -75,13 +74,13 @@ func NsecToSecretKey(encoded string) (sk *secp.SecretKey, err error) {
 	if err != nil {
 		return
 	}
-	sk = secp.SecKeyFromBytes(b8)
+	sk = secp256k1.SecKeyFromBytes(b8)
 	return
 }
 
 // NpubToPublicKey decodes an nostr public key (npub) and returns an secp256k1
 // public key.
-func NpubToPublicKey(encoded string) (pk *secp.PublicKey, err error) {
+func NpubToPublicKey(encoded string) (pk *secp256k1.PublicKey, err error) {
 	var b5, b8 []byte
 	var hrp string
 	hrp, b5, err = bech32.Decode(encoded)
@@ -132,7 +131,7 @@ func HexToSecretKey(sk string) (s *btcec.SecretKey, err error) {
 	if pb, err = hex.Dec(sk); log.Fail(err) {
 		return
 	}
-	if s = secp.SecKeyFromBytes(pb); log.Fail(err) {
+	if s = secp256k1.SecKeyFromBytes(pb); log.Fail(err) {
 		return
 	}
 	return

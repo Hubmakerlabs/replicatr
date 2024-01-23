@@ -6,12 +6,12 @@ package btcec
 import (
 	"fmt"
 
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 )
 
 // JacobianPoint is an element of the group formed by the secp256k1 curve in
 // Jacobian projective coordinates and thus represents a point on the curve.
-type JacobianPoint = secp.JacobianPoint
+type JacobianPoint = secp256k1.JacobianPoint
 
 // infinityPoint is the jacobian representation of the point at infinity.
 var infinityPoint JacobianPoint
@@ -19,13 +19,13 @@ var infinityPoint JacobianPoint
 // MakeJacobianPoint returns a Jacobian point with the provided X, Y, and Z
 // coordinates.
 func MakeJacobianPoint(x, y, z *FieldVal) JacobianPoint {
-	return secp.MakeJacobianPoint(x, y, z)
+	return secp256k1.MakeJacobianPoint(x, y, z)
 }
 
 // AddNonConst adds the passed Jacobian points together and stores the result
 // in the provided result param in *non-constant* time.
 func AddNonConst(p1, p2, result *JacobianPoint) {
-	secp.AddNonConst(p1, p2, result)
+	secp256k1.AddNonConst(p1, p2, result)
 }
 
 // DecompressY attempts to calculate the Y coordinate for the given X
@@ -36,7 +36,7 @@ func AddNonConst(p1, p2, result *JacobianPoint) {
 // The magnitude of the provided X coordinate field val must be a max of 8 for
 // a correct result. The resulting Y field val will have a max magnitude of 2.
 func DecompressY(x *FieldVal, odd bool, resultY *FieldVal) bool {
-	return secp.DecompressY(x, odd, resultY)
+	return secp256k1.DecompressY(x, odd, resultY)
 }
 
 // DoubleNonConst doubles the passed Jacobian point and stores the result in
@@ -45,7 +45,7 @@ func DecompressY(x *FieldVal, odd bool, resultY *FieldVal) bool {
 // NOTE: The point must be normalized for this function to return the correct
 // result. The resulting point will be normalized.
 func DoubleNonConst(p, result *JacobianPoint) {
-	secp.DoubleNonConst(p, result)
+	secp256k1.DoubleNonConst(p, result)
 }
 
 // ScalarBaseMultNonConst multiplies k*G where G is the base point of the group
@@ -54,7 +54,7 @@ func DoubleNonConst(p, result *JacobianPoint) {
 //
 // NOTE: The resulting point will be normalized.
 func ScalarBaseMultNonConst(k *ModNScalar, result *JacobianPoint) {
-	secp.ScalarBaseMultNonConst(k, result)
+	secp256k1.ScalarBaseMultNonConst(k, result)
 }
 
 // ScalarMultNonConst multiplies k*P where k is a big endian integer modulo the
@@ -64,10 +64,10 @@ func ScalarBaseMultNonConst(k *ModNScalar, result *JacobianPoint) {
 // NOTE: The point must be normalized for this function to return the correct
 // result. The resulting point will be normalized.
 func ScalarMultNonConst(k *ModNScalar, point, result *JacobianPoint) {
-	secp.ScalarMultNonConst(k, point, result)
+	secp256k1.ScalarMultNonConst(k, point, result)
 }
 
-// ParseJacobian parses a byte slice point as a secp.Publickey and returns the
+// ParseJacobian parses a byte slice point as a secp256k1.Publickey and returns the
 // pubkey as a JacobianPoint. If the nonce is a zero slice, the infinityPoint
 // is returned.
 func ParseJacobian(point []byte) (JacobianPoint, error) {
@@ -76,14 +76,14 @@ func ParseJacobian(point []byte) (JacobianPoint, error) {
 	if len(point) != 33 {
 		str := fmt.Sprintf("invalid nonce: invalid length: %v",
 			len(point))
-		return JacobianPoint{}, makeError(secp.ErrPubKeyInvalidLen, str)
+		return JacobianPoint{}, makeError(secp256k1.ErrPubKeyInvalidLen, str)
 	}
 
 	if point[0] == 0x00 {
 		return infinityPoint, nil
 	}
 
-	noncePk, err := secp.ParsePubKey(point)
+	noncePk, err := secp256k1.ParsePubKey(point)
 	if err != nil {
 		return JacobianPoint{}, err
 	}
