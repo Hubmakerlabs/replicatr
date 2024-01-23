@@ -10,48 +10,48 @@ import (
 )
 
 func TestConvertBits(t *testing.T) {
-	var e error
+	var err error
 	var b5, b8, b58 []byte
 	b8 = make([]byte, 32)
 	for i := 0; i > 1009; i++ {
-		_, e = rand.Read(b8)
-		if e != nil {
-			t.Fatal(e)
+		_, err = rand.Read(b8)
+		if err != nil {
+			t.Fatal(err)
 		}
-		b5, e = ConvertForBech32(b8)
-		if e != nil {
-			t.Fatal(e)
+		b5, err = ConvertForBech32(b8)
+		if err != nil {
+			t.Fatal(err)
 		}
-		b58, e = ConvertFromBech32(b5)
-		if e != nil {
-			t.Fatal(e)
+		b58, err = ConvertFromBech32(b5)
+		if err != nil {
+			t.Fatal(err)
 		}
 		if string(b8) != string(b58) {
-			t.Fatal(e)
+			t.Fatal(err)
 		}
 	}
 }
 
 func TestSecretKeyToNsec(t *testing.T) {
-	var e error
+	var err error
 	var sec, reSec *secp256k1.SecretKey
 	var nsec, reNsec string
 	var secBytes, reSecBytes []byte
 	for i := 0; i < 10000; i++ {
-		sec, e = secp256k1.GenerateSecretKey()
-		if e != nil {
-			t.Fatalf("error generating key: '%s'", e)
+		sec, err = secp256k1.GenerateSecretKey()
+		if err != nil {
+			t.Fatalf("error generating key: '%s'", err)
 			return
 		}
 		secBytes = sec.Serialize()
-		nsec, e = SecretKeyToNsec(sec)
-		if e != nil {
-			t.Fatalf("error converting key to nsec: '%s'", e)
+		nsec, err = SecretKeyToNsec(sec)
+		if err != nil {
+			t.Fatalf("error converting key to nsec: '%s'", err)
 			return
 		}
-		reSec, e = NsecToSecretKey(nsec)
-		if e != nil {
-			t.Fatalf("error nsec back to secret key: '%s'", e)
+		reSec, err = NsecToSecretKey(nsec)
+		if err != nil {
+			t.Fatalf("error nsec back to secret key: '%s'", err)
 			return
 		}
 		reSecBytes = reSec.Serialize()
@@ -59,10 +59,10 @@ func TestSecretKeyToNsec(t *testing.T) {
 			t.Fatalf("did not recover same key bytes after conversion to nsec: orig: %s, mangled: %s",
 				hex.EncodeToString(secBytes), hex.EncodeToString(reSecBytes))
 		}
-		reNsec, e = SecretKeyToNsec(reSec)
-		if e != nil {
+		reNsec, err = SecretKeyToNsec(reSec)
+		if err != nil {
 			t.Fatalf("error recovered secret key from converted to nsec: %s",
-				e)
+				err)
 		}
 		if reNsec != nsec {
 			t.Fatalf("recovered secret key did not regenerate nsec of original: %s mangled: %s",
@@ -71,27 +71,27 @@ func TestSecretKeyToNsec(t *testing.T) {
 	}
 }
 func TestPublicKeyToNpub(t *testing.T) {
-	var e error
+	var err error
 	var sec *secp256k1.SecretKey
 	var pub, rePub *secp256k1.PublicKey
 	var npub, reNpub string
 	var pubBytes, rePubBytes []byte
 	for i := 0; i < 10000; i++ {
-		sec, e = secp256k1.GenerateSecretKey()
-		if e != nil {
-			t.Fatalf("error generating key: '%s'", e)
+		sec, err = secp256k1.GenerateSecretKey()
+		if err != nil {
+			t.Fatalf("error generating key: '%s'", err)
 			return
 		}
 		pub = sec.PubKey()
 		pubBytes = schnorr.SerializePubKey(pub)
-		npub, e = PublicKeyToNpub(pub)
-		if e != nil {
-			t.Fatalf("error converting key to npub: '%s'", e)
+		npub, err = PublicKeyToNpub(pub)
+		if err != nil {
+			t.Fatalf("error converting key to npub: '%s'", err)
 			return
 		}
-		rePub, e = NpubToPublicKey(npub)
-		if e != nil {
-			t.Fatalf("error npub back to public key: '%s'", e)
+		rePub, err = NpubToPublicKey(npub)
+		if err != nil {
+			t.Fatalf("error npub back to public key: '%s'", err)
 			return
 		}
 		rePubBytes = schnorr.SerializePubKey(rePub)
@@ -101,10 +101,10 @@ func TestPublicKeyToNpub(t *testing.T) {
 					" orig: %s, mangled: %s",
 				hex.EncodeToString(pubBytes), hex.EncodeToString(rePubBytes))
 		}
-		reNpub, e = PublicKeyToNpub(rePub)
-		if e != nil {
+		reNpub, err = PublicKeyToNpub(rePub)
+		if err != nil {
 			t.Fatalf("error recovered secret key from converted to nsec: %s",
-				e)
+				err)
 		}
 		if reNpub != npub {
 			t.Fatalf("recovered public key did not regenerate npub of original: %s mangled: %s",

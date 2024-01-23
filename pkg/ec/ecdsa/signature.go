@@ -227,8 +227,8 @@ func (sig *Signature) Verify(hash []byte, pubKey *secp256k1.PublicKey) bool {
 	// Step 2.
 	//
 	// e = H(m)
-	var e secp256k1.ModNScalar
-	e.SetByteSlice(hash)
+	var err secp256k1.ModNScalar
+	err.SetByteSlice(hash)
 
 	// Step 3.
 	//
@@ -239,7 +239,7 @@ func (sig *Signature) Verify(hash []byte, pubKey *secp256k1.PublicKey) bool {
 	//
 	// u1 = e * w mod N
 	// u2 = R * w mod N
-	u1 := new(secp256k1.ModNScalar).Mul2(&e, w)
+	u1 := new(secp256k1.ModNScalar).Mul2(&err, w)
 	u2 := new(secp256k1.ModNScalar).Mul2(&sig.r, w)
 
 	// Step 5.
@@ -628,8 +628,8 @@ func sign(secKey, nonce *secp256k1.ModNScalar, hash []byte) (*Signature, byte,
 	//
 	// Note that this actually sets e = H(m) mod N which is correct since
 	// it is only used in step 5 which itself is mod N.
-	var e secp256k1.ModNScalar
-	e.SetByteSlice(hash)
+	var err secp256k1.ModNScalar
+	err.SetByteSlice(hash)
 
 	// Step 5 with modification B.
 	//
@@ -637,7 +637,7 @@ func sign(secKey, nonce *secp256k1.ModNScalar, hash []byte) (*Signature, byte,
 	// Repeat from step 1 if s = 0
 	// s = -s if s > N/2
 	kinv := new(secp256k1.ModNScalar).InverseValNonConst(k)
-	s := new(secp256k1.ModNScalar).Mul2(secKey, &r).Add(&e).Mul(kinv)
+	s := new(secp256k1.ModNScalar).Mul2(secKey, &r).Add(&err).Mul(kinv)
 	if s.IsZero() {
 		return nil, 0, false
 	}
@@ -953,8 +953,8 @@ func RecoverCompact(signature, hash []byte) (*secp256k1.PublicKey, bool,
 	// Step 6.
 	//
 	// e = H(m) mod N
-	var e secp256k1.ModNScalar
-	e.SetByteSlice(hash)
+	var err secp256k1.ModNScalar
+	err.SetByteSlice(hash)
 
 	// Step 7.
 	//
@@ -965,7 +965,7 @@ func RecoverCompact(signature, hash []byte) (*secp256k1.PublicKey, bool,
 	//
 	// u1 = -(e * w) mod N
 	// u2 = s * w mod N
-	u1 := new(secp256k1.ModNScalar).Mul2(&e, w).Negate()
+	u1 := new(secp256k1.ModNScalar).Mul2(&err, w).Negate()
 	u2 := new(secp256k1.ModNScalar).Mul2(&s, w)
 
 	// Step 9.

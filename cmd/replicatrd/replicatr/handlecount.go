@@ -22,11 +22,11 @@ func (rl *Relay) handleCountRequest(c context.T, ws *WebSocket,
 		}
 	}
 	// run the functions to count (generally it will be just one)
-	var e error
+	var err error
 	var res int64
 	for _, count := range rl.CountEvents {
-		if res, e = count(c, f); rl.E.Chk(e) {
-			rl.E.Chk(ws.WriteJSON(&noticeenvelope.T{Text: e.Error()}))
+		if res, err = count(c, f); rl.E.Chk(err) {
+			rl.E.Chk(ws.WriteJSON(&noticeenvelope.T{Text: err.Error()}))
 		}
 		subtotal += res
 	}

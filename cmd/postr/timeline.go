@@ -14,9 +14,9 @@ import (
 
 func (cfg *C) publish(ev *event.T, s *atomic.Int64) RelayIter {
 	return func(c context.T, rl *relay.T) bool {
-		e := rl.Publish(c, ev)
-		if log.Fail(e) {
-			log.D.Ln(rl.URL(), e)
+		err := rl.Publish(c, ev)
+		if log.Fail(err) {
+			log.D.Ln(rl.URL(), err)
 		} else {
 			s.Add(1)
 		}
@@ -24,14 +24,14 @@ func (cfg *C) publish(ev *event.T, s *atomic.Int64) RelayIter {
 	}
 }
 
-func Timeline(cCtx *cli.Context) (e error) {
+func Timeline(cCtx *cli.Context) (err error) {
 	n := cCtx.Int("n")
 	j := cCtx.Bool("json")
 	extra := cCtx.Bool("extra")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	// get followers
 	var followsMap Follows
-	if followsMap, e = cfg.GetFollows(cCtx.String("a")); log.Fail(e) {
+	if followsMap, err = cfg.GetFollows(cCtx.String("a")); log.Fail(err) {
 		return
 	}
 	var follows []string

@@ -45,7 +45,7 @@ type T struct {
 }
 
 func NewOKEnvelope(eventID eventid.T, ok bool, reason string) (o *T,
-	e error) {
+	err error) {
 	o = &T{
 		ID:     eventID,
 		OK:     ok,
@@ -75,21 +75,21 @@ const (
 )
 
 // Unmarshal the envelope.
-func (env *T) Unmarshal(buf *text.Buffer) (e error) {
+func (env *T) Unmarshal(buf *text.Buffer) (err error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
 	if env == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label
-	if e = buf.ScanThrough(','); e != nil {
+	if err = buf.ScanThrough(','); err != nil {
 		return
 	}
 	// next comes an event ID
-	if e = buf.ScanThrough('"'); e != nil {
+	if err = buf.ScanThrough('"'); err != nil {
 		return
 	}
 	var eventID []byte
-	if eventID, e = buf.ReadUntil('"'); log.Fail(e) {
+	if eventID, err = buf.ReadUntil('"'); log.Fail(err) {
 		return fmt.Errorf("did not find event ID value in ok envelope")
 	}
 	// check event is a valid length
@@ -123,12 +123,12 @@ next:
 	}
 	env.ID = eventid.T(eventID)
 	// next another comma
-	if e = buf.ScanThrough(','); e != nil {
+	if err = buf.ScanThrough(','); err != nil {
 		return
 	}
 	// next comes a boolean value
 	var isOK []byte
-	if isOK, e = buf.ReadUntil(','); log.Fail(e) {
+	if isOK, err = buf.ReadUntil(','); log.Fail(err) {
 		return fmt.Errorf("did not find OK value in ok envelope")
 	}
 	isOK = isOK[:]
@@ -159,15 +159,15 @@ maybeOK:
 	}
 	// Next must be a string, which can be empty, but must be at minimum a pair
 	// of quotes.
-	if e = buf.ScanThrough('"'); e != nil {
+	if err = buf.ScanThrough('"'); err != nil {
 		return
 	}
 	var reason []byte
-	if reason, e = buf.ReadUntil('"'); log.Fail(e) {
+	if reason, err = buf.ReadUntil('"'); log.Fail(err) {
 		return fmt.Errorf("did not find reason value in ok envelope")
 	}
 	// Scan for the proper envelope ending.
-	if e = buf.ScanThrough(']'); e != nil {
+	if err = buf.ScanThrough(']'); err != nil {
 		log.D.Ln("envelope unterminated but all fields found")
 	}
 	env.Reason = string(text.UnescapeByteString(reason))

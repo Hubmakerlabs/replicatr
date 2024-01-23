@@ -21,14 +21,14 @@ var log = slog.GetStd()
 //
 // The public key and secret key for this can be either hex or bech32 formatted,
 // since this is easily determined by reading the first 4 bytes of the string
-func ComputeSharedSecret(pub string, sec string) (secret []byte, e error) {
+func ComputeSharedSecret(pub string, sec string) (secret []byte, err error) {
 	if len(pub) < bech32encoding.MinKeyStringLen {
-		e = fmt.Errorf("public key is too short, must be at least %d, "+
+		err = fmt.Errorf("public key is too short, must be at least %d, "+
 			"'%s' is only %d chars", bech32encoding.MinKeyStringLen, pub, len(pub))
 		return
 	}
 	if len(sec) < bech32encoding.MinKeyStringLen {
-		e = fmt.Errorf("public key is too short, must be at least %d, "+
+		err = fmt.Errorf("public key is too short, must be at least %d, "+
 			"'%s' is only %d chars", bech32encoding.MinKeyStringLen, pub, len(pub))
 		return
 	}
@@ -36,25 +36,25 @@ func ComputeSharedSecret(pub string, sec string) (secret []byte, e error) {
 	var p *secp.PublicKey
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
 	if pub[:bech32encoding.Bech32HRPLen] == bech32encoding.PubHRP {
-		if p, e = bech32encoding.NpubToPublicKey(pub); log.Fail(e) {
+		if p, err = bech32encoding.NpubToPublicKey(pub); log.Fail(err) {
 			return
 		}
 	} else {
-		if p, e = bech32encoding.HexToPublicKey(pub); log.Fail(e) {
+		if p, err = bech32encoding.HexToPublicKey(pub); log.Fail(err) {
 			return
 		}
 	}
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
 	if sec[:bech32encoding.Bech32HRPLen] == bech32encoding.SecHRP {
-		if s, e = bech32encoding.NsecToSecretKey(sec); log.Fail(e) {
+		if s, err = bech32encoding.NsecToSecretKey(sec); log.Fail(err) {
 			return
 		}
 	} else {
-		if s, e = bech32encoding.HexToSecretKey(sec); log.Fail(e) {
+		if s, err = bech32encoding.HexToSecretKey(sec); log.Fail(err) {
 			return
 		}
 	}
-	return secp.GenerateSharedSecret(s, p), e
+	return secp.GenerateSharedSecret(s, p), err
 }
 
 func GenerateSharedSecret(s *secp.SecretKey, p *secp.PublicKey) []byte {
@@ -72,13 +72,13 @@ func Encrypt(message string, key []byte) (string, error) {
 	// perfectly random; math/rand? ed: https://github.com/lukechampine/frand
 	// but this is not high volume throughput and only one good IV is needed per
 	// 4gb of data at most.
-	if _, e := rand.Read(iv); e != nil {
-		return "", fmt.Errorf("error creating initization vector: %w", e)
+	if _, err := rand.Read(iv); err != nil {
+		return "", fmt.Errorf("error creating initization vector: %w", err)
 	}
 	// automatically picks aes-256 based on key length (32 bytes)
-	block, e := aes.NewCipher(key)
-	if e != nil {
-		return "", fmt.Errorf("error creating block cipher: %w", e)
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", fmt.Errorf("error creating block cipher: %w", err)
 	}
 	mode := cipher.NewCBCEncrypter(block, iv)
 	plaintext := []byte(message)
@@ -104,20 +104,20 @@ func Decrypt(content string, key []byte) ([]byte, error) {
 		return nil, fmt.Errorf(
 			"error parsing encrypted message: no initialization vector")
 	}
-	ciphertext, e := base64.StdEncoding.DecodeString(parts[0])
-	if e != nil {
+	ciphertext, err := base64.StdEncoding.DecodeString(parts[0])
+	if err != nil {
 		return nil, fmt.Errorf(
-			"error decoding ciphertext from base64: %w", e)
+			"error decoding ciphertext from base64: %w", err)
 	}
 	var iv []byte
-	iv, e = base64.StdEncoding.DecodeString(parts[1])
-	if e != nil {
-		return nil, fmt.Errorf("error decoding iv from base64: %w", e)
+	iv, err = base64.StdEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("error decoding iv from base64: %w", err)
 	}
 	var block cipher.Block
-	block, e = aes.NewCipher(key)
-	if e != nil {
-		return nil, fmt.Errorf("error creating block cipher: %w", e)
+	block, err = aes.NewCipher(key)
+	if err != nil {
+		return nil, fmt.Errorf("error creating block cipher: %w", err)
 	}
 	mode := cipher.NewCBCDecrypter(block, iv)
 	plaintext := make([]byte, len(ciphertext))

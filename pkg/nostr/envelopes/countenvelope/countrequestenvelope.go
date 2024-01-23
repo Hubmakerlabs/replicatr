@@ -40,27 +40,27 @@ func (C *Request) Bytes() []byte { return C.ToArray().Bytes() }
 
 func (C *Request) MarshalJSON() ([]byte, error) { return C.Bytes(), nil }
 
-func (C *Request) Unmarshal(buf *text.Buffer) (e error) {
+func (C *Request) Unmarshal(buf *text.Buffer) (err error) {
 	log.D.Ln("ok envelope unmarshal", string(buf.Buf))
 	if C == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label.
-	if e = buf.ScanThrough(','); e != nil {
+	if err = buf.ScanThrough(','); err != nil {
 		return
 	}
 	// Next character we find will be open quotes for the subscription ID.
-	if e = buf.ScanThrough('"'); e != nil {
+	if err = buf.ScanThrough('"'); err != nil {
 		return
 	}
 	var sid []byte
 	// read the string
-	if sid, e = buf.ReadUntil('"'); log.Fail(e) {
+	if sid, err = buf.ReadUntil('"'); log.Fail(err) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	C.ID = subscriptionid.T(sid)
 	// find the opening brace of the first or only filter object.
-	if e = buf.ScanUntil('{'); e != nil {
+	if err = buf.ScanUntil('{'); err != nil {
 		return fmt.Errorf("event not found in event envelope")
 	}
 	// T in the count envelope are variadic, there can be more than one,
@@ -68,17 +68,17 @@ func (C *Request) Unmarshal(buf *text.Buffer) (e error) {
 	// breaking when we don't find a comma after.
 	for {
 		var filterArray []byte
-		if filterArray, e = buf.ReadEnclosed(); log.Fail(e) {
+		if filterArray, err = buf.ReadEnclosed(); log.Fail(err) {
 			return
 		}
 		f := &filter.T{}
-		if e = json.Unmarshal(filterArray, &f); log.Fail(e) {
+		if err = json.Unmarshal(filterArray, &f); log.Fail(err) {
 			return
 		}
 		C.Filters = append(C.Filters, f)
 		cur := buf.Pos
 		// Next, find the comma after filter.
-		if e = buf.ScanThrough(','); e != nil {
+		if err = buf.ScanThrough(','); err != nil {
 			// we didn't find one, so break the loop.
 			buf.Pos = cur
 			break
@@ -87,7 +87,7 @@ func (C *Request) Unmarshal(buf *text.Buffer) (e error) {
 	// If we found at least one filter, there is no error, the io.EOF is
 	// expected at any point after at least one filter.
 	if len(C.Filters) > 0 {
-		e = nil
+		err = nil
 	}
 	// // Technically we maybe should read ahead further to make sure the JSON
 	// // closes correctly. Not going to abort because of this.

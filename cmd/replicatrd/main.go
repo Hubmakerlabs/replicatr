@@ -16,8 +16,8 @@ func main() {
 	rl := replicatr.NewRelay(appName)
 	db := &badger.BadgerBackend{Path: "/home/me/.replicatr-badger",
 		Log: slog.New(os.Stderr, "replicatr-badger")}
-	if e := db.Init(); rl.E.Chk(e) {
-		rl.E.F("unable to start database: '%s'", e)
+	if err := db.Init(); rl.E.Chk(err) {
+		rl.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
 	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)

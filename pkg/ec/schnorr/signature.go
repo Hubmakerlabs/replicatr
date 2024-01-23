@@ -111,7 +111,7 @@ func (sig Signature) IsEqual(otherSig *Signature) bool {
 // This differs from the exported Verify method in that it returns a specific
 // error to support better testing while the exported method simply returns a
 // bool indicating success or failure.
-func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (e error) {
+func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (err error) {
 	// The algorithm for producing a BIP-340 signature is described in
 	// README.md and is reproduced here for reference:
 	//
@@ -141,9 +141,9 @@ func schnorrVerify(sig *Signature, hash []byte, pubKeyBytes []byte) (e error) {
 	// P = lift_x(int(pk))
 	//
 	// Fail if P is not a point on the curve
-	pubKey, e := ParsePubKey(pubKeyBytes)
-	if e != nil {
-		return e
+	pubKey, err := ParsePubKey(pubKeyBytes)
+	if err != nil {
+		return err
 	}
 	if !pubKey.IsOnCurve() {
 		str := "pubkey point is not on curve"
@@ -312,8 +312,8 @@ func schnorrSign(privKey, nonce *btcec.ModNScalar, pubKey *btcec.PublicKey,
 		chainhash.TagBIP0340Challenge, rBytes[:], pBytes, hash,
 	)
 
-	var e btcec.ModNScalar
-	if overflow := e.SetBytes((*[32]byte)(commitment)); overflow != 0 {
+	var err btcec.ModNScalar
+	if overflow := err.SetBytes((*[32]byte)(commitment)); overflow != 0 {
 		k.Zero()
 		str := "hash of (r || P || m) too big"
 		return nil, signatureError(ecdsa_schnorr.ErrSchnorrHashValue, str)
@@ -322,7 +322,7 @@ func schnorrSign(privKey, nonce *btcec.ModNScalar, pubKey *btcec.PublicKey,
 	// Step 13.
 	//
 	// s = k + e*d mod n
-	s := new(btcec.ModNScalar).Mul2(&e, privKey).Add(&k)
+	s := new(btcec.ModNScalar).Mul2(&err, privKey).Add(&k)
 	k.Zero()
 
 	sig := NewSignature(r, s)
@@ -331,8 +331,8 @@ func schnorrSign(privKey, nonce *btcec.ModNScalar, pubKey *btcec.PublicKey,
 	//
 	// If Verify(bytes(P), m, sig) fails, abort.
 	if !opts.fastSign {
-		if e := schnorrVerify(sig, hash, pBytes); e != nil {
-			return nil, e
+		if err := schnorrVerify(sig, hash, pBytes); err != nil {
+			return nil, err
 		}
 	}
 
@@ -508,10 +508,10 @@ func Sign(privKey *btcec.SecretKey, hash []byte,
 			return nil, signatureError(ecdsa_schnorr.ErrSchnorrHashValue, str)
 		}
 
-		sig, e := schnorrSign(&privKeyScalar, &kPrime, pub, hash, opts)
+		sig, err := schnorrSign(&privKeyScalar, &kPrime, pub, hash, opts)
 		kPrime.Zero()
-		if e != nil {
-			return nil, e
+		if err != nil {
+			return nil, err
 		}
 
 		return sig, nil
@@ -532,9 +532,9 @@ func Sign(privKey *btcec.SecretKey, hash []byte,
 			privKeyBytes[:], hash, rfc6979ExtraDataV0[:], nil, iteration,
 		)
 		// Steps 10-15.
-		sig, e := schnorrSign(&privKeyScalar, k, pub, hash, opts)
+		sig, err := schnorrSign(&privKeyScalar, k, pub, hash, opts)
 		k.Zero()
-		if e != nil {
+		if err != nil {
 			// Try again with a new nonce.
 			continue
 		}

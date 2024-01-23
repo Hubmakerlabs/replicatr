@@ -32,8 +32,8 @@ import (
 // errors in the source code can be detected. It will only (and must only) be
 // called with hard-coded values.
 func hexToFieldVal(s string) *FieldVal {
-	b, e := hex.Dec(s)
-	if e != nil {
+	b, err := hex.Dec(s)
+	if err != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var f FieldVal
@@ -56,8 +56,8 @@ func hexToModNScalar(s string) *ModNScalar {
 	if len(s)%2 != 0 {
 		s = "0" + s
 	}
-	b, e := hex.Dec(s)
-	if e != nil {
+	b, err := hex.Dec(s)
+	if err != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var scalar ModNScalar
@@ -265,7 +265,7 @@ func addZ1EqualsZ2(p1, p2, result *JacobianPoint) {
 
 	// Calculate X3, Y3, and Z3 according to the intermediate elements
 	// breakdown above.
-	var a, b, c, d, e, f FieldVal
+	var a, b, c, d, err, f FieldVal
 	var negX1, negY1, negE, negX3 FieldVal
 	negX1.Set(x1).Negate(1)                // negX1 = -X1 (mag: 2)
 	negY1.Set(y1).Negate(1)                // negY1 = -Y1 (mag: 2)
@@ -273,13 +273,13 @@ func addZ1EqualsZ2(p1, p2, result *JacobianPoint) {
 	b.SquareVal(&a)                        // B = A^2 (mag: 1)
 	c.Set(&negY1).Add(y2)                  // C = Y2-Y1 (mag: 3)
 	d.SquareVal(&c)                        // D = C^2 (mag: 1)
-	e.Mul2(x1, &b)                         // E = X1*B (mag: 1)
-	negE.Set(&e).Negate(1)                 // negE = -E (mag: 2)
+	err.Mul2(x1, &b)                       // E = X1*B (mag: 1)
+	negE.Set(&err).Negate(1)               // negE = -E (mag: 2)
 	f.Mul2(x2, &b)                         // F = X2*B (mag: 1)
-	x3.Add2(&e, &f).Negate(2).Add(&d)      // X3 = D-E-F (mag: 4)
+	x3.Add2(&err, &f).Negate(2).Add(&d)    // X3 = D-E-F (mag: 4)
 	negX3.Set(x3).Negate(4)                // negX3 = -X3 (mag: 5)
 	y3.Set(y1).Mul(f.Add(&negE)).Negate(1) // Y3 = -(Y1*(F-E)) (mag: 2)
-	y3.Add(e.Add(&negX3).Mul(&c))          // Y3 = C*(E-X3)+Y3 (mag: 3)
+	y3.Add(err.Add(&negX3).Mul(&c))        // Y3 = C*(E-X3)+Y3 (mag: 3)
 	z3.Mul2(z1, &a)                        // Z3 = Z1*A (mag: 1)
 
 	// Normalize the resulting field values as needed.
@@ -526,7 +526,7 @@ func doubleZ1EqualsOne(p, result *JacobianPoint) {
 	// 6 field additions, and 5 integer multiplications.
 	x1, y1 := &p.X, &p.Y
 	x3, y3, z3 := &result.X, &result.Y, &result.Z
-	var a, b, c, d, e, f FieldVal
+	var a, b, c, d, err, f FieldVal
 	z3.Set(y1).MulInt(2)                     // Z3 = 2*Y1 (mag: 2)
 	a.SquareVal(x1)                          // A = X1^2 (mag: 1)
 	b.SquareVal(y1)                          // B = Y1^2 (mag: 1)
@@ -534,13 +534,13 @@ func doubleZ1EqualsOne(p, result *JacobianPoint) {
 	b.Add(x1).Square()                       // B = (X1+B)^2 (mag: 1)
 	d.Set(&a).Add(&c).Negate(2)              // D = -(A+C) (mag: 3)
 	d.Add(&b).MulInt(2)                      // D = 2*(B+D)(mag: 8)
-	e.Set(&a).MulInt(3)                      // E = 3*A (mag: 3)
-	f.SquareVal(&e)                          // F = E^2 (mag: 1)
+	err.Set(&a).MulInt(3)                    // E = 3*A (mag: 3)
+	f.SquareVal(&err)                        // F = E^2 (mag: 1)
 	x3.Set(&d).MulInt(2).Negate(16)          // X3 = -(2*D) (mag: 17)
 	x3.Add(&f)                               // X3 = F+X3 (mag: 18)
 	f.Set(x3).Negate(18).Add(&d).Normalize() // F = D-X3 (mag: 1)
 	y3.Set(&c).MulInt(8).Negate(8)           // Y3 = -(8*C) (mag: 9)
-	y3.Add(f.Mul(&e))                        // Y3 = E*F+Y3 (mag: 10)
+	y3.Add(f.Mul(&err))                      // Y3 = E*F+Y3 (mag: 10)
 
 	// Normalize the resulting field values as needed.
 	x3.Normalize()
@@ -580,7 +580,7 @@ func doubleGeneric(p, result *JacobianPoint) {
 	// 6 field additions, and 5 integer multiplications.
 	x1, y1, z1 := &p.X, &p.Y, &p.Z
 	x3, y3, z3 := &result.X, &result.Y, &result.Z
-	var a, b, c, d, e, f FieldVal
+	var a, b, c, d, err, f FieldVal
 	z3.Mul2(y1, z1).MulInt(2)                // Z3 = 2*Y1*Z1 (mag: 2)
 	a.SquareVal(x1)                          // A = X1^2 (mag: 1)
 	b.SquareVal(y1)                          // B = Y1^2 (mag: 1)
@@ -588,13 +588,13 @@ func doubleGeneric(p, result *JacobianPoint) {
 	b.Add(x1).Square()                       // B = (X1+B)^2 (mag: 1)
 	d.Set(&a).Add(&c).Negate(2)              // D = -(A+C) (mag: 3)
 	d.Add(&b).MulInt(2)                      // D = 2*(B+D)(mag: 8)
-	e.Set(&a).MulInt(3)                      // E = 3*A (mag: 3)
-	f.SquareVal(&e)                          // F = E^2 (mag: 1)
+	err.Set(&a).MulInt(3)                    // E = 3*A (mag: 3)
+	f.SquareVal(&err)                        // F = E^2 (mag: 1)
 	x3.Set(&d).MulInt(2).Negate(16)          // X3 = -(2*D) (mag: 17)
 	x3.Add(&f)                               // X3 = F+X3 (mag: 18)
 	f.Set(x3).Negate(18).Add(&d).Normalize() // F = D-X3 (mag: 1)
 	y3.Set(&c).MulInt(8).Negate(8)           // Y3 = -(8*C) (mag: 9)
-	y3.Add(f.Mul(&e))                        // Y3 = E*F+Y3 (mag: 10)
+	y3.Add(f.Mul(&err))                      // Y3 = E*F+Y3 (mag: 10)
 
 	// Normalize the resulting field values as needed.
 	x3.Normalize()

@@ -18,9 +18,9 @@ const (
 )
 
 func mustParseHex(str string) []byte {
-	b, e := hex.Dec(str)
-	if e != nil {
-		panic(fmt.Errorf("unable to parse hex: %v", e))
+	b, err := hex.Dec(str)
+	if err != nil {
+		panic(fmt.Errorf("unable to parse hex: %v", err))
 	}
 
 	return b
@@ -82,9 +82,9 @@ func testMultiPartySign(t *testing.T, taprootTweak []byte,
 	signerKeys := make([]*btcec.SecretKey, numSigners)
 	signSet := make([]*btcec.PublicKey, numSigners)
 	for i := 0; i < numSigners; i++ {
-		privKey, e := btcec.NewSecretKey()
-		if e != nil {
-			t.Fatalf("unable to gen priv key: %v", e)
+		privKey, err := btcec.NewSecretKey()
+		if err != nil {
+			t.Fatalf("unable to gen priv key: %v", err)
 		}
 
 		pubKey := privKey.PubKey()
@@ -112,23 +112,23 @@ func testMultiPartySign(t *testing.T, taprootTweak []byte,
 	// generation).
 	signers := make([]*Session, numSigners)
 	for i, signerKey := range signerKeys {
-		signCtx, e := NewContext(
+		signCtx, err := NewContext(
 			signerKey, false, ctxOpts...,
 		)
-		if e != nil {
-			t.Fatalf("unable to generate context: %v", e)
+		if err != nil {
+			t.Fatalf("unable to generate context: %v", err)
 		}
 
 		if combinedKey == nil {
-			combinedKey, e = signCtx.CombinedKey()
-			if e != nil {
-				t.Fatalf("combined key not available: %v", e)
+			combinedKey, err = signCtx.CombinedKey()
+			if err != nil {
+				t.Fatalf("combined key not available: %v", err)
 			}
 		}
 
-		session, e := signCtx.NewSession()
-		if e != nil {
-			t.Fatalf("unable to generate new session: %v", e)
+		session, err := signCtx.NewSession()
+		if err != nil {
+			t.Fatalf("unable to generate new session: %v", err)
 		}
 		signers[i] = session
 	}
@@ -149,8 +149,8 @@ func testMultiPartySign(t *testing.T, taprootTweak []byte,
 				}
 
 				nonce := otherCtx.PublicNonce()
-				haveAll, e := signer.RegisterPubNonce(nonce)
-				if e != nil {
+				haveAll, err := signer.RegisterPubNonce(nonce)
+				if err != nil {
 					t.Fatalf("unable to add public nonce")
 				}
 
@@ -171,17 +171,17 @@ func testMultiPartySign(t *testing.T, taprootTweak []byte,
 	combiner := signers[0]
 	for i := range signers {
 		signer := signers[i]
-		partialSig, e := signer.Sign(msg)
-		if e != nil {
-			t.Fatalf("unable to generate partial sig: %v", e)
+		partialSig, err := signer.Sign(msg)
+		if err != nil {
+			t.Fatalf("unable to generate partial sig: %v", err)
 		}
 
 		// We don't need to combine the signature for the very first
 		// signer, as it already has that partial signature.
 		if i != 0 {
-			haveAll, e := combiner.CombineSig(partialSig)
-			if e != nil {
-				t.Fatalf("unable to combine sigs: %v", e)
+			haveAll, err := combiner.CombineSig(partialSig)
+			if err != nil {
+				t.Fatalf("unable to combine sigs: %v", err)
 			}
 
 			if i == len(signers)-1 && !haveAll {
@@ -201,8 +201,8 @@ func testMultiPartySign(t *testing.T, taprootTweak []byte,
 	// signers, then we'll get an error as the nonces have already been
 	// used.
 	for _, signer := range signers {
-		_, e := signer.Sign(msg)
-		if e != ErrSigningContextReuse {
+		_, err := signer.Sign(msg)
+		if err != ErrSigningContextReuse {
 			t.Fatalf("expected to get signing context reuse")
 		}
 	}
@@ -262,59 +262,59 @@ func TestMuSigMultiParty(t *testing.T) {
 func TestMuSigEarlyNonce(t *testing.T) {
 	t.Parallel()
 
-	privKey1, e := btcec.NewSecretKey()
-	if e != nil {
-		t.Fatalf("unable to gen priv key: %v", e)
+	privKey1, err := btcec.NewSecretKey()
+	if err != nil {
+		t.Fatalf("unable to gen priv key: %v", err)
 	}
-	privKey2, e := btcec.NewSecretKey()
-	if e != nil {
-		t.Fatalf("unable to gen priv key: %v", e)
+	privKey2, err := btcec.NewSecretKey()
+	if err != nil {
+		t.Fatalf("unable to gen priv key: %v", err)
 	}
 
 	// If we try to make a context, with just the secret key and sorting
 	// value, we should get an error.
-	_, e = NewContext(privKey1, true)
-	if !errors.Is(e, ErrSignersNotSpecified) {
-		t.Fatalf("unexpected ctx error: %v", e)
+	_, err = NewContext(privKey1, true)
+	if !errors.Is(err, ErrSignersNotSpecified) {
+		t.Fatalf("unexpected ctx error: %v", err)
 	}
 
 	signers := []*btcec.PublicKey{privKey1.PubKey(), privKey2.PubKey()}
 	numSigners := len(signers)
 
-	ctx1, e := NewContext(
+	ctx1, err := NewContext(
 		privKey1, true, WithNumSigners(numSigners), WithEarlyNonceGen(),
 	)
-	if e != nil {
-		t.Fatalf("unable to make ctx: %v", e)
+	if err != nil {
+		t.Fatalf("unable to make ctx: %v", err)
 	}
 	pubKey1 := ctx1.PubKey()
 
-	ctx2, e := NewContext(
+	ctx2, err := NewContext(
 		privKey2, true, WithKnownSigners(signers), WithEarlyNonceGen(),
 	)
-	if e != nil {
-		t.Fatalf("unable to make ctx: %v", e)
+	if err != nil {
+		t.Fatalf("unable to make ctx: %v", err)
 	}
 	pubKey2 := ctx2.PubKey()
 
 	// At this point, the combined key shouldn't be available for signer 1,
 	// but should be for signer 2, as they know about all signers.
-	if _, e := ctx1.CombinedKey(); !errors.Is(e, ErrNotEnoughSigners) {
-		t.Fatalf("unepxected error: %v", e)
+	if _, err := ctx1.CombinedKey(); !errors.Is(err, ErrNotEnoughSigners) {
+		t.Fatalf("unepxected error: %v", err)
 	}
-	_, e = ctx2.CombinedKey()
-	if e != nil {
-		t.Fatalf("unable to get combined key: %v", e)
+	_, err = ctx2.CombinedKey()
+	if err != nil {
+		t.Fatalf("unable to get combined key: %v", err)
 	}
 
 	// The early nonces _should_ be available at this point.
-	nonce1, e := ctx1.EarlySessionNonce()
-	if e != nil {
-		t.Fatalf("session nonce not available: %v", e)
+	nonce1, err := ctx1.EarlySessionNonce()
+	if err != nil {
+		t.Fatalf("session nonce not available: %v", err)
 	}
-	nonce2, e := ctx2.EarlySessionNonce()
-	if e != nil {
-		t.Fatalf("session nonce not available: %v", e)
+	nonce2, err := ctx2.EarlySessionNonce()
+	if err != nil {
+		t.Fatalf("session nonce not available: %v", err)
 	}
 
 	// The number of registered signers should still be 1 for both parties.
@@ -329,99 +329,99 @@ func TestMuSigEarlyNonce(t *testing.T) {
 
 	// If we try to make a session, we should get an error since we dn't
 	// have all the signers yet.
-	if _, e := ctx1.NewSession(); !errors.Is(e, ErrNotEnoughSigners) {
-		t.Fatalf("unexpected session key error: %v", e)
+	if _, err := ctx1.NewSession(); !errors.Is(err, ErrNotEnoughSigners) {
+		t.Fatalf("unexpected session key error: %v", err)
 	}
 
 	// The combined key should also be unavailable as well.
-	if _, e := ctx1.CombinedKey(); !errors.Is(e, ErrNotEnoughSigners) {
-		t.Fatalf("unexpected combined key error: %v", e)
+	if _, err := ctx1.CombinedKey(); !errors.Is(err, ErrNotEnoughSigners) {
+		t.Fatalf("unexpected combined key error: %v", err)
 	}
 
 	// We'll now register the other signer for party 1.
-	done, e := ctx1.RegisterSigner(&pubKey2)
-	if e != nil {
-		t.Fatalf("unable to register signer: %v", e)
+	done, err := ctx1.RegisterSigner(&pubKey2)
+	if err != nil {
+		t.Fatalf("unable to register signer: %v", err)
 	}
 	if !done {
 		t.Fatalf("signer 1 doesn't have all keys")
 	}
 
 	// If we try to register the signer again, we should get an error.
-	_, e = ctx2.RegisterSigner(&pubKey1)
-	if !errors.Is(e, ErrAlreadyHaveAllSigners) {
+	_, err = ctx2.RegisterSigner(&pubKey1)
+	if !errors.Is(err, ErrAlreadyHaveAllSigners) {
 		t.Fatalf("should not be able to register too many signers")
 	}
 
 	// We should be able to create the session at this point.
-	session1, e := ctx1.NewSession()
-	if e != nil {
-		t.Fatalf("unable to create new session: %v", e)
+	session1, err := ctx1.NewSession()
+	if err != nil {
+		t.Fatalf("unable to create new session: %v", err)
 	}
-	session2, e := ctx2.NewSession()
-	if e != nil {
-		t.Fatalf("unable to create new session: %v", e)
+	session2, err := ctx2.NewSession()
+	if err != nil {
+		t.Fatalf("unable to create new session: %v", err)
 	}
 
 	msg := sha256.Sum256([]byte("let's get taprooty, LN style"))
 
 	// If we try to sign before we have the combined nonce, we shoudl get
 	// an error.
-	_, e = session1.Sign(msg)
-	if !errors.Is(e, ErrCombinedNonceUnavailable) {
-		t.Fatalf("unable to gen sig: %v", e)
+	_, err = session1.Sign(msg)
+	if !errors.Is(err, ErrCombinedNonceUnavailable) {
+		t.Fatalf("unable to gen sig: %v", err)
 	}
 
 	// Now we can exchange nonces to continue with the rest of the signing
 	// process as normal.
-	done, e = session1.RegisterPubNonce(nonce2.PubNonce)
-	if e != nil {
-		t.Fatalf("unable to register nonce: %v", e)
+	done, err = session1.RegisterPubNonce(nonce2.PubNonce)
+	if err != nil {
+		t.Fatalf("unable to register nonce: %v", err)
 	}
 	if !done {
 		t.Fatalf("signer 1 doesn't have all nonces")
 	}
-	done, e = session2.RegisterPubNonce(nonce1.PubNonce)
-	if e != nil {
-		t.Fatalf("unable to register nonce: %v", e)
+	done, err = session2.RegisterPubNonce(nonce1.PubNonce)
+	if err != nil {
+		t.Fatalf("unable to register nonce: %v", err)
 	}
 	if !done {
 		t.Fatalf("signer 2 doesn't have all nonces")
 	}
 
 	// Registering the nonce again should error out.
-	_, e = session2.RegisterPubNonce(nonce1.PubNonce)
-	if !errors.Is(e, ErrAlredyHaveAllNonces) {
+	_, err = session2.RegisterPubNonce(nonce1.PubNonce)
+	if !errors.Is(err, ErrAlredyHaveAllNonces) {
 		t.Fatalf("shouldn't be able to register nonces twice")
 	}
 
 	// Sign the message and combine the two partial sigs into one.
-	_, e = session1.Sign(msg)
-	if e != nil {
-		t.Fatalf("unable to gen sig: %v", e)
+	_, err = session1.Sign(msg)
+	if err != nil {
+		t.Fatalf("unable to gen sig: %v", err)
 	}
-	sig2, e := session2.Sign(msg)
-	if e != nil {
-		t.Fatalf("unable to gen sig: %v", e)
+	sig2, err := session2.Sign(msg)
+	if err != nil {
+		t.Fatalf("unable to gen sig: %v", err)
 	}
-	done, e = session1.CombineSig(sig2)
-	if e != nil {
-		t.Fatalf("unable to combine sig: %v", e)
+	done, err = session1.CombineSig(sig2)
+	if err != nil {
+		t.Fatalf("unable to combine sig: %v", err)
 	}
 	if !done {
-		t.Fatalf("all sigs should be known now: %v", e)
+		t.Fatalf("all sigs should be known now: %v", err)
 	}
 
 	// If we try to combine another sig, then we should get an error.
-	_, e = session1.CombineSig(sig2)
-	if !errors.Is(e, ErrAlredyHaveAllSigs) {
+	_, err = session1.CombineSig(sig2)
+	if !errors.Is(err, ErrAlredyHaveAllSigs) {
 		t.Fatalf("shouldn't be able to combine again")
 	}
 
 	// Finally, verify that the final signature is valid.
-	combinedKey, e := ctx1.CombinedKey()
-	if e != nil {
-		t.Fatalf("unexpected combined key error: %v", e)
+	combinedKey, err := ctx1.CombinedKey()
+	if err != nil {
+		t.Fatalf("unexpected combined key error: %v", err)
 	}
 	finalSig := session1.FinalSig()
 	if !finalSig.Verify(msg[:], combinedKey) {
@@ -433,7 +433,7 @@ type memsetRandReader struct {
 	i int
 }
 
-func (mr *memsetRandReader) Read(buf []byte) (n int, e error) {
+func (mr *memsetRandReader) Read(buf []byte) (n int, err error) {
 	for i := range buf {
 		buf[i] = byte(mr.i)
 	}

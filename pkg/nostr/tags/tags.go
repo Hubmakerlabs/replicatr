@@ -76,7 +76,7 @@ func (t T) AppendUnique(tag tag.T) T {
 
 // Scan parses a string or raw bytes that should be a string and embeds the
 // values into the tags variable from which this method is invoked.
-func (t T) Scan(src any) (e error) {
+func (t T) Scan(src any) (err error) {
 	var jtags []byte
 	switch v := src.(type) {
 	case []byte:
@@ -86,8 +86,8 @@ func (t T) Scan(src any) (e error) {
 	default:
 		return errors.New("couldn'tag scan tag, it's not a json string")
 	}
-	e = json.Unmarshal(jtags, &t)
-	log.E.Chk(e)
+	err = json.Unmarshal(jtags, &t)
+	log.E.Chk(err)
 	return
 }
 

@@ -559,15 +559,15 @@ var s256BaseMultTests = []baseMultTest{
 // TODO: test different curves as well?
 func TestBaseMult(t *testing.T) {
 	s256 := S256()
-	for i, e := range s256BaseMultTests {
-		k, ok := new(big.Int).SetString(e.k, 16)
+	for i, err := range s256BaseMultTests {
+		k, ok := new(big.Int).SetString(err.k, 16)
 		if !ok {
-			t.Errorf("%d: bad value for k: %s", i, e.k)
+			t.Errorf("%d: bad value for k: %s", i, err.k)
 		}
 		x, y := s256.ScalarBaseMult(k.Bytes())
-		if fmt.Sprintf("%X", x) != e.x || fmt.Sprintf("%X", y) != e.y {
+		if fmt.Sprintf("%X", x) != err.x || fmt.Sprintf("%X", y) != err.y {
 			t.Errorf("%d: bad output for k=%s: got (%X, %X), want (%s, %s)", i,
-				e.k, x, y, e.x, e.y)
+				err.k, x, y, err.x, err.y)
 		}
 		if testing.Short() && i > 5 {
 			break
@@ -580,8 +580,8 @@ func TestBaseMultVerify(t *testing.T) {
 	for bytes := 1; bytes < 40; bytes++ {
 		for i := 0; i < 30; i++ {
 			data := make([]byte, bytes)
-			_, e := rand.Read(data)
-			if e != nil {
+			_, err := rand.Read(data)
+			if err != nil {
 				t.Errorf("failed to read random data for %d", i)
 				continue
 			}
@@ -651,8 +651,8 @@ func TestScalarMultRand(t *testing.T) {
 	exponent := big.NewInt(1)
 	for i := 0; i < 1024; i++ {
 		data := make([]byte, 32)
-		_, e := rand.Read(data)
-		if e != nil {
+		_, err := rand.Read(data)
+		if err != nil {
 			t.Fatalf("failed to read random data at %d", i)
 			break
 		}
@@ -815,8 +815,8 @@ func TestSplitKRand(t *testing.T) {
 	s256 := S256()
 	for i := 0; i < 1024; i++ {
 		bytesK := make([]byte, 32)
-		_, e := rand.Read(bytesK)
-		if e != nil {
+		_, err := rand.Read(bytesK)
+		if err != nil {
 			t.Fatalf("failed to read random data at %d", i)
 			break
 		}
@@ -840,14 +840,14 @@ func TestSplitKRand(t *testing.T) {
 // Test this curve's usage with the ecdsa package.
 
 func testKeyGeneration(t *testing.T, c *KoblitzCurve, tag string) {
-	priv, e := NewSecretKey()
-	if e != nil {
-		t.Errorf("%s: error: %s", tag, e)
+	priv, err := NewSecretKey()
+	if err != nil {
+		t.Errorf("%s: error: %s", tag, err)
 		return
 	}
 	pub := priv.PubKey()
 	if !c.IsOnCurve(pub.X(), pub.Y()) {
-		t.Errorf("%s: public key invalid: %s", tag, e)
+		t.Errorf("%s: public key invalid: %s", tag, err)
 	}
 }
 
@@ -858,7 +858,7 @@ func TestKeyGeneration(t *testing.T) {
 // checkNAFEncoding returns an error if the provided positive and negative
 // portions of an overall NAF encoding do not adhere to the requirements or they
 // do not sum back to the provided original value.
-func checkNAFEncoding(pos, neg []byte, origValue *big.Int) (e error) {
+func checkNAFEncoding(pos, neg []byte, origValue *big.Int) (err error) {
 	// NAF must not have a leading zero byte and the number of negative
 	// bytes must not exceed the positive portion.
 	if len(pos) > 0 && pos[0] == 0 {

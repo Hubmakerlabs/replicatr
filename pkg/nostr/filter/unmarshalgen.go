@@ -72,8 +72,8 @@ func CopyUnmarshalFilterToFilter(uf *UnmarshalingFilter, f *Filter) (e error) {
 	return
 }
 `)
-	e := os.WriteFile("unmarshalfilter.go", f.Bytes(), 0600)
-	if e != nil {
-		panic(e)
+	err := os.WriteFile("unmarshalfilter.go", f.Bytes(), 0600)
+	if err != nil {
+		panic(err)
 	}
 }

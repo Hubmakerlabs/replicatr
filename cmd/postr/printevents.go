@@ -46,8 +46,8 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 			color.Set(color.FgHiRed)
 			fgHiRed.Fprintln(buffer, profile.Name)
 			fgNormal.Fprintln(buffer, ev.Content)
-			note, e := bech32encoding.EncodeNote(ev.ID.String())
-			if e != nil {
+			note, err := bech32encoding.EncodeNote(ev.ID.String())
+			if err != nil {
 				note = ev.ID.String()
 			}
 			fgHiBlue.Fprint(buffer, note)
@@ -56,8 +56,8 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 			fgRed.Fprint(buffer, "pubkey ")
 			fgRed.Fprint(buffer, ev.PubKey)
 			// fgHiBlue.Fprint(buffer, " note ID: ")
-			note, e := bech32encoding.EncodeNote(ev.ID.String())
-			if e != nil {
+			note, err := bech32encoding.EncodeNote(ev.ID.String())
+			if err != nil {
 				note = ev.ID.String()
 			}
 			fgHiBlue.Fprint(buffer, " ", note)

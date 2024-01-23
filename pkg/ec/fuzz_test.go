@@ -27,20 +27,20 @@ func FuzzParsePubKey(f *testing.F) {
 		"04A7640409AA2083FDAD38B2D8DE1263B2251799591D840653FB02DBBA503D7745FCB83D80E08A1E02896BE691EA6AFFB8A35939A646F1FC79052A744B1C82EDC3",
 	}
 	for _, pubKey := range recoveryTestPubKeys {
-		seed, e := hex.Dec(pubKey)
-		if e != nil {
-			f.Fatal(e)
+		seed, err := hex.Dec(pubKey)
+		if err != nil {
+			f.Fatal(err)
 		}
 		f.Add(seed)
 	}
 
 	// Now run the fuzzer.
 	f.Fuzz(func(t *testing.T, input []byte) {
-		key, e := ParsePubKey(input)
-		if key == nil && e == nil {
+		key, err := ParsePubKey(input)
+		if key == nil && err == nil {
 			panic("key==nil && err==nil")
 		}
-		if key != nil && e != nil {
+		if key != nil && err != nil {
 			panic("key!=nil yet err!=nil")
 		}
 	})

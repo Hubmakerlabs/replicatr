@@ -36,8 +36,8 @@ func setHex(hexString string) *FieldVal {
 // errors in the source code can be detected. It will only (and must only) be
 // called with hard-coded values.
 func hexToFieldVal(s string) *FieldVal {
-	b, e := hex.Dec(s)
-	if e != nil {
+	b, err := hex.Dec(s)
+	if err != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var f FieldVal
@@ -153,8 +153,8 @@ func BenchmarkScalarMult(b *testing.B) {
 // constants so errors in the source code can be detected. It will only (and
 // must only) be called with hard-coded values.
 func hexToModNScalar(s string) *ModNScalar {
-	b, e := hex.Dec(s)
-	if e != nil {
+	b, err := hex.Dec(s)
+	if err != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var scalar ModNScalar
@@ -181,14 +181,14 @@ func BenchmarkParseCompressedPubKey(b *testing.B) {
 
 	var (
 		pk  *PublicKey
-		e error
+		err error
 	)
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		pk, e = ParsePubKey(rawPk)
+		pk, err = ParsePubKey(rawPk)
 	}
 	_ = pk
-	_ = e
+	_ = err
 }

@@ -39,8 +39,8 @@ func randModNScalar(t *testing.T, rng *rand.Rand) *ModNScalar {
 	t.Helper()
 
 	var buf [32]byte
-	if _, e := rng.Read(buf[:]); e != nil {
-		t.Fatalf("failed to read random: %v", e)
+	if _, err := rng.Read(buf[:]); err != nil {
+		t.Fatalf("failed to read random: %v", err)
 	}
 
 	// Create and return a mod N scalar.
@@ -55,8 +55,8 @@ func randIntAndModNScalar(t *testing.T, rng *rand.Rand) (*big.Int, *ModNScalar) 
 	t.Helper()
 
 	var buf [32]byte
-	if _, e := rng.Read(buf[:]); e != nil {
-		t.Fatalf("failed to read random: %v", e)
+	if _, err := rng.Read(buf[:]); err != nil {
+		t.Fatalf("failed to read random: %v", err)
 	}
 
 	// Create and return both a big integer and a mod N scalar.

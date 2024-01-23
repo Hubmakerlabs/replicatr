@@ -863,8 +863,8 @@ func randFieldVal(t *testing.T, rng *rand.Rand) *FieldVal {
 	t.Helper()
 
 	var buf [32]byte
-	if _, e := rng.Read(buf[:]); e != nil {
-		t.Fatalf("failed to read random: %v", e)
+	if _, err := rng.Read(buf[:]); err != nil {
+		t.Fatalf("failed to read random: %v", err)
 	}
 
 	// Create and return both a big integer and a field value.
@@ -977,8 +977,8 @@ func TestFieldSquareRoot(t *testing.T) {
 // the source code can be detected. It will only (and must only) be called with
 // hard-coded values.
 func hexToBytes(s string) []byte {
-	b, e := hex.Dec(s)
-	if e != nil {
+	b, err := hex.Dec(s)
+	if err != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	return b

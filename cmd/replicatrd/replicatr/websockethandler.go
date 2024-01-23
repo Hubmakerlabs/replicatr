@@ -27,19 +27,19 @@ import (
 )
 
 func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
-	var e error
+	var err error
 	var conn *websocket.Conn
-	conn, e = rl.upgrader.Upgrade(w, r, nil)
-	if rl.E.Chk(e) {
-		rl.E.F("failed to upgrade websocket: %v", e)
+	conn, err = rl.upgrader.Upgrade(w, r, nil)
+	if rl.E.Chk(err) {
+		rl.E.F("failed to upgrade websocket: %v", err)
 		return
 	}
 	rl.clients.Store(conn, struct{}{})
 	ticker := time.NewTicker(rl.PingPeriod)
 	// NIP-42 challenge
 	challenge := make([]byte, 8)
-	_, e = rand.Read(challenge)
-	rl.E.Chk(e)
+	_, err = rand.Read(challenge)
+	rl.E.Chk(err)
 	ws := &WebSocket{
 		conn:      conn,
 		Request:   r,
@@ -69,8 +69,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 	rl.T.F("processing message '%s", string(msg))
-	en, _, e := envelopes.ProcessEnvelope(msg)
-	if log.Fail(e) {
+	en, _, err := envelopes.ProcessEnvelope(msg)
+	if log.Fail(err) {
 		return
 	}
 	if en == nil {
@@ -98,11 +98,11 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		rl.T.Ln("ID was valid")
 		// check signature
 		var ok bool
-		if ok, e = env.Event.CheckSignature(); rl.E.Chk(e) {
+		if ok, err = env.Event.CheckSignature(); rl.E.Chk(err) {
 			rl.E.Chk(ws.WriteJSON(okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
-				Reason: "error: failed to verify signature: " + e.Error()},
+				Reason: "error: failed to verify signature: " + err.Error()},
 			))
 			return
 		} else if !ok {
@@ -164,10 +164,10 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		reqCtx = context.Value(reqCtx, subscriptionIdKey, env.SubscriptionID)
 		// handle each filter separately -- dispatching events as they're loaded from databases
 		for _, f := range env.Filters {
-			e = rl.handleFilter(reqCtx, env.SubscriptionID.String(), &wg, ws, f)
-			if rl.E.Chk(e) {
+			err = rl.handleFilter(reqCtx, env.SubscriptionID.String(), &wg, ws, f)
+			if rl.E.Chk(err) {
 				// fail everything if any filter is rejected
-				reason := e.Error()
+				reason := err.Error()
 				if strings.HasPrefix(reason, "auth-required:") {
 					RequestAuth(c)
 				}
@@ -219,29 +219,29 @@ func (rl *Relay) websocketReadMessages(c context.T, kill func(),
 	defer kill()
 	conn.SetReadLimit(rl.MaxMessageSize)
 	rl.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
-	conn.SetPongHandler(func(string) (e error) {
-		e = conn.SetReadDeadline(time.Now().Add(rl.PongWait))
-		rl.E.Chk(e)
+	conn.SetPongHandler(func(string) (err error) {
+		err = conn.SetReadDeadline(time.Now().Add(rl.PongWait))
+		rl.E.Chk(err)
 		return
 	})
 	for _, onConnect := range rl.OnConnect {
 		onConnect(c)
 	}
 	for {
-		var e error
+		var err error
 		var typ int
 		var message []byte
-		typ, message, e = conn.ReadMessage()
-		if e != nil {
+		typ, message, err = conn.ReadMessage()
+		if err != nil {
 			if websocket.IsUnexpectedCloseError(
-				e,
+				err,
 				websocket.CloseNormalClosure,    // 1000
 				websocket.CloseGoingAway,        // 1001
 				websocket.CloseNoStatusReceived, // 1005
 				websocket.CloseAbnormalClosure,  // 1006
 			) {
 				rl.E.F("unexpected close error from %s: %v",
-					r.Header.Get("X-Forwarded-For"), e)
+					r.Header.Get("X-Forwarded-For"), err)
 			}
 			return
 		}
@@ -254,16 +254,16 @@ func (rl *Relay) websocketReadMessages(c context.T, kill func(),
 }
 
 func (rl *Relay) websocketWatcher(c context.T, kill func(), t *time.Ticker, ws *WebSocket) {
-	var e error
+	var err error
 	defer kill()
 	for {
 		select {
 		case <-c.Done():
 			return
 		case <-t.C:
-			if e = ws.WriteMessage(websocket.PingMessage, nil); rl.E.Chk(e) {
-				if !strings.HasSuffix(e.Error(), "use of closed network connection") {
-					rl.E.F("error writing ping: %v; closing websocket", e)
+			if err = ws.WriteMessage(websocket.PingMessage, nil); rl.E.Chk(err) {
+				if !strings.HasSuffix(err.Error(), "use of closed network connection") {
+					rl.E.F("error writing ping: %v; closing websocket", err)
 				}
 				return
 			}

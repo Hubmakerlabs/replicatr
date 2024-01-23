@@ -62,8 +62,8 @@ func generateSecretKey(rand io.Reader) (*SecretKey, error) {
 	var key SecretKey
 	var b32 [32]byte
 	for valid := false; !valid; {
-		if _, e := io.ReadFull(rand, b32[:]); e != nil {
-			return nil, e
+		if _, err := io.ReadFull(rand, b32[:]); err != nil {
+			return nil, err
 		}
 
 		// The secret key is only valid when it is in the range [1, N-1], where

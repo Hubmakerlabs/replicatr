@@ -64,39 +64,39 @@ type PayResponse struct {
 	} `json:"result"`
 }
 
-func pay(cfg *C, invoice string) (e error) {
-	uri, e := url.Parse(cfg.NwcURI)
-	if log.Fail(e) {
-		return e
+func pay(cfg *C, invoice string) (err error) {
+	uri, err := url.Parse(cfg.NwcURI)
+	if log.Fail(err) {
+		return err
 	}
 	wallet := uri.Host
 	host := uri.Query().Get("relay")
 	secret := uri.Query().Get("secret")
-	pub, e := keys.GetPublicKey(secret)
-	if log.Fail(e) {
-		return e
+	pub, err := keys.GetPublicKey(secret)
+	if log.Fail(err) {
+		return err
 	}
 
-	rl, e := relay.Connect(context.Bg(), host)
-	if log.Fail(e) {
-		return e
+	rl, err := relay.Connect(context.Bg(), host)
+	if log.Fail(err) {
+		return err
 	}
 	defer log.Fail(rl.Close())
 
-	ss, e := nip4.ComputeSharedSecret(wallet, secret)
-	if log.Fail(e) {
-		return e
+	ss, err := nip4.ComputeSharedSecret(wallet, secret)
+	if log.Fail(err) {
+		return err
 	}
 	var req PayRequest
 	req.Method = "pay_invoice"
 	req.Params.Invoice = invoice
-	b, e := json.Marshal(req)
-	if log.Fail(e) {
-		return e
+	b, err := json.Marshal(req)
+	if log.Fail(err) {
+		return err
 	}
-	content, e := nip4.Encrypt(string(b), ss)
-	if log.Fail(e) {
-		return e
+	content, err := nip4.Encrypt(string(b), ss)
+	if log.Fail(err) {
+		return err
 	}
 
 	ev := &event.T{
@@ -106,9 +106,9 @@ func pay(cfg *C, invoice string) (e error) {
 		Tags:      tags.T{{"p", wallet}},
 		Content:   content,
 	}
-	e = ev.Sign(secret)
-	if log.Fail(e) {
-		return e
+	err = ev.Sign(secret)
+	if log.Fail(err) {
+		return err
 	}
 
 	f := filters.T{{
@@ -120,27 +120,27 @@ func pay(cfg *C, invoice string) (e error) {
 			kind.NWCWalletRequest},
 		Limit: 1,
 	}}
-	sub, e := rl.Subscribe(context.Bg(), f)
-	if log.Fail(e) {
-		return e
+	sub, err := rl.Subscribe(context.Bg(), f)
+	if log.Fail(err) {
+		return err
 	}
 
-	e = rl.Publish(context.Bg(), ev)
-	if log.Fail(e) {
-		return e
+	err = rl.Publish(context.Bg(), ev)
+	if log.Fail(err) {
+		return err
 	}
 
 	er := <-sub.Events
 	var c []byte
-	c, e = nip4.Decrypt(er.Content, ss)
+	c, err = nip4.Decrypt(er.Content, ss)
 	content = string(c)
-	if log.Fail(e) {
-		return e
+	if log.Fail(err) {
+		return err
 	}
 	var resp PayResponse
-	e = json.Unmarshal([]byte(content), &resp)
-	if log.Fail(e) {
-		return e
+	err = json.Unmarshal([]byte(content), &resp)
+	if log.Fail(err) {
+		return err
 	}
 	if resp.Err != nil {
 		return fmt.Errorf(resp.Err.Message)
@@ -149,7 +149,7 @@ func pay(cfg *C, invoice string) (e error) {
 	return nil
 }
 
-func doZap(cCtx *cli.Context) (e error) {
+func doZap(cCtx *cli.Context) (err error) {
 	amount := cCtx.Uint64("amount")
 	comment := cCtx.String("comment")
 	if cCtx.Args().Len() == 0 {
@@ -162,7 +162,7 @@ func doZap(cCtx *cli.Context) (e error) {
 
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var pub, sk string
-	if pub, sk, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	receipt := ""
@@ -180,7 +180,7 @@ func doZap(cCtx *cli.Context) (e error) {
 	zr.Tags = zr.Tags.AppendUnique(rls)
 	var prefix string
 	var s any
-	if prefix, s, e = bech32encoding.Decode(cCtx.Args().First()); !log.Fail(e) {
+	if prefix, s, err = bech32encoding.Decode(cCtx.Args().First()); !log.Fail(err) {
 		switch prefix {
 		case "nevent":
 			receipt = s.(pointers.Event).Author
@@ -204,34 +204,34 @@ func doZap(cCtx *cli.Context) (e error) {
 	zr.Kind = kind.ZapRequest // 9734
 	zr.CreatedAt = timestamp.Now()
 	zr.Content = comment
-	if e = zr.Sign(sk); log.Fail(e) {
-		return e
+	if err = zr.Sign(sk); log.Fail(err) {
+		return err
 	}
 	var b []byte
-	if b, e = zr.MarshalJSON(); log.Fail(e) {
-		return e
+	if b, err = zr.MarshalJSON(); log.Fail(err) {
+		return err
 	}
 	var zi *Lnurlp
-	if zi, e = cfg.ZapInfo(receipt); log.Fail(e) {
-		return e
+	if zi, err = cfg.ZapInfo(receipt); log.Fail(err) {
+		return err
 	}
 	var u *url.URL
-	u, e = url.Parse(zi.Callback)
-	if log.Fail(e) {
-		return e
+	u, err = url.Parse(zi.Callback)
+	if log.Fail(err) {
+		return err
 	}
 	param := url.Values{}
 	param.Set("amount", fmt.Sprint(amount*1000))
 	param.Set("nostr", string(b))
 	u.RawQuery = param.Encode()
 	var resp *http.Response
-	if resp, e = http.Get(u.String()); log.Fail(e) {
-		return e
+	if resp, err = http.Get(u.String()); log.Fail(err) {
+		return err
 	}
 	defer log.Fail(resp.Body.Close())
 	var iv Invoice
-	if e = json.NewDecoder(resp.Body).Decode(&iv); log.Fail(e) {
-		return e
+	if err = json.NewDecoder(resp.Body).Decode(&iv); log.Fail(err) {
+		return err
 	}
 	if cfg.NwcURI == "" {
 		config := qrterminal.Config{

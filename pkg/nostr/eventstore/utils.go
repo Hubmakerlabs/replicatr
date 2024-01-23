@@ -12,7 +12,7 @@ func GetAddrTagElements(tagValue string) (k uint16, pkb []byte, d string) {
 	spl := strings.Split(tagValue, ":")
 	if len(spl) == 3 {
 		if pkb, _ = hex.Dec(spl[1]); len(pkb) == 32 {
-			if k, e := strconv.ParseUint(spl[0], 10, 16); e == nil {
+			if k, err := strconv.ParseUint(spl[0], 10, 16); err == nil {
 				return uint16(k), pkb, spl[2]
 			}
 		}

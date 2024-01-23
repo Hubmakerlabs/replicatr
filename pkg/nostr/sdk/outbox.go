@@ -12,7 +12,7 @@ import (
 func (s *System) ExpandQueriesByAuthorAndRelays(
 	c context.T,
 	f *filter.T,
-) (filters map[*relay.T]*filter.T, e error) {
+) (filters map[*relay.T]*filter.T, err error) {
 
 	n := len(f.Authors)
 	if n == 0 {
@@ -28,7 +28,7 @@ func (s *System) ExpandQueriesByAuthorAndRelays(
 			c := 0
 			for _, r := range relayURLs {
 				var rl *relay.T
-				if rl, e = s.Pool.EnsureRelay(r); log.E.Chk(e) {
+				if rl, err = s.Pool.EnsureRelay(r); log.E.Chk(err) {
 					continue
 				}
 				relaysForPubkey[pubkey] = append(relaysForPubkey[pubkey], rl)

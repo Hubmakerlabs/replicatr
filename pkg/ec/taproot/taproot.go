@@ -58,9 +58,9 @@ func newAddressTaproot(hrp string,
 // returns the witness version and witness program byte representation.
 func decodeSegWitAddress(address string) (byte, []byte, error) {
 	// Decode the bech32 encoded address.
-	_, data, bech32version, e := bech32.DecodeGeneric(address)
-	if e != nil {
-		return 0, nil, e
+	_, data, bech32version, err := bech32.DecodeGeneric(address)
+	if err != nil {
+		return 0, nil, err
 	}
 
 	// The first byte of the decoded address is the witness version, it must
@@ -78,9 +78,9 @@ func decodeSegWitAddress(address string) (byte, []byte, error) {
 	// The remaining characters of the address returned are grouped into
 	// words of 5 bits. In order to restore the original witness program
 	// bytes, we'll need to regroup into 8 bit words.
-	regrouped, e := bech32.ConvertBits(data[1:], 5, 8, false)
-	if e != nil {
-		return 0, nil, e
+	regrouped, err := bech32.ConvertBits(data[1:], 5, 8, false)
+	if err != nil {
+		return 0, nil, err
 	}
 
 	// The regrouped data must be between 2 and 40 bytes.
@@ -115,9 +115,9 @@ func encodeSegWitAddress(hrp string, witnessVersion byte,
 	witnessProgram []byte) (string, error) {
 	// Group the address bytes into 5 bit groups, as this is what is used to
 	// encode each character in the address string.
-	converted, e := bech32.ConvertBits(witnessProgram, 8, 5, true)
-	if e != nil {
-		return "", e
+	converted, err := bech32.ConvertBits(witnessProgram, 8, 5, true)
+	if err != nil {
+		return "", err
 	}
 
 	// Concatenate the witness version and program, and encode the resulting
@@ -129,23 +129,23 @@ func encodeSegWitAddress(hrp string, witnessVersion byte,
 	var bech string
 	switch witnessVersion {
 	case 0:
-		bech, e = bech32.Encode(hrp, combined)
+		bech, err = bech32.Encode(hrp, combined)
 
 	case 1:
-		bech, e = bech32.EncodeM(hrp, combined)
+		bech, err = bech32.EncodeM(hrp, combined)
 
 	default:
 		return "", fmt.Errorf("unsupported witness version %d",
 			witnessVersion)
 	}
-	if e != nil {
-		return "", e
+	if err != nil {
+		return "", err
 	}
 
 	// Check validity by decoding the created address.
-	version, program, e := decodeSegWitAddress(bech)
-	if e != nil {
-		return "", fmt.Errorf("invalid segwit address: %v", e)
+	version, program, err := decodeSegWitAddress(bech)
+	if err != nil {
+		return "", fmt.Errorf("invalid segwit address: %v", err)
 	}
 
 	if version != witnessVersion || !bytes.Equal(program, witnessProgram) {
@@ -160,10 +160,10 @@ func encodeSegWitAddress(hrp string, witnessVersion byte,
 //
 // NOTE: This method is part of the Address interface.
 func (a *AddressSegWit) EncodeAddress() string {
-	str, e := encodeSegWitAddress(
+	str, err := encodeSegWitAddress(
 		a.hrp, a.witnessVersion, a.witnessProgram[:],
 	)
-	if e != nil {
+	if err != nil {
 		return ""
 	}
 	return str

@@ -13,20 +13,20 @@ var log = slog.GetStd()
 // Identify takes a byte slice and scans it as a nostr Envelope array, and
 // returns the label type and a text.Buffer that is ready for the Read function
 // to generate the appropriate structure.
-func Identify(b []byte) (match string, buf *text.Buffer, e error) {
+func Identify(b []byte) (match string, buf *text.Buffer, err error) {
 	// The bytes must be valid JSON but we can't assume they are free of
 	// whitespace... So we will use some tools.
 	buf = text.NewBuffer(b)
 	// First there must be an opening bracket.
-	if e = buf.ScanThrough('['); e != nil {
+	if err = buf.ScanThrough('['); err != nil {
 		return
 	}
 	// Then a quote.
-	if e = buf.ScanThrough('"'); e != nil {
+	if err = buf.ScanThrough('"'); err != nil {
 		return
 	}
 	var candidate []byte
-	if candidate, e = buf.ReadUntil('"'); e != nil {
+	if candidate, err = buf.ReadUntil('"'); err != nil {
 		return
 	}
 	// log.D.F("label: '%s' %v", string(candidate), List)
@@ -51,7 +51,7 @@ matched:
 	// if there was no match we still have zero.
 	if match == "" {
 		// no match
-		e = fmt.Errorf("label '%s' not recognised as envelope label",
+		err = fmt.Errorf("label '%s' not recognised as envelope label",
 			string(candidate))
 		return
 	}

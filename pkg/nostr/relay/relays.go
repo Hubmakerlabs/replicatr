@@ -5,9 +5,9 @@ import (
 )
 
 func MustConnect(url string) *T {
-	rl, e := Connect(context.Bg(), url)
-	if e != nil {
-		panic(e.Error())
+	rl, err := Connect(context.Bg(), url)
+	if err != nil {
+		panic(err.Error())
 	}
 	return rl
 }

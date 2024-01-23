@@ -106,8 +106,8 @@ func TestMusig2SignVerify(t *testing.T) {
 	testVectorPath := path.Join(
 		testVectorBaseDir, signVerifyTestVectorFileName,
 	)
-	testVectorBytes, e := os.ReadFile(testVectorPath)
-	require.NoError(t, e)
+	testVectorBytes, err := os.ReadFile(testVectorPath)
+	require.NoError(t, err)
 
 	var testCases signVerifyTestVectors
 	require.NoError(t, json.Unmarshal(testVectorBytes, &testCases))
@@ -119,17 +119,17 @@ func TestMusig2SignVerify(t *testing.T) {
 
 		testName := fmt.Sprintf("valid_case_%v", i)
 		t.Run(testName, func(t *testing.T) {
-			pubKeys, e := keysFromIndices(
+			pubKeys, err := keysFromIndices(
 				t, testCase.Indices, testCases.PubKeys,
 			)
-			require.NoError(t, e)
+			require.NoError(t, err)
 
 			pubNonces := pubNoncesFromIndices(
 				t, testCase.NonceIndices, testCases.PubNonces,
 			)
 
-			combinedNonce, e := AggregateNonces(pubNonces)
-			require.NoError(t, e)
+			combinedNonce, err := AggregateNonces(pubNonces)
+			require.NoError(t, err)
 
 			var msg [32]byte
 			copy(msg[:], mustParseHex(testCases.Msgs[testCase.MsgIndex]))
@@ -137,7 +137,7 @@ func TestMusig2SignVerify(t *testing.T) {
 			var secNonce [SecNonceSize]byte
 			copy(secNonce[:], mustParseHex(testCases.PrivNonces[0]))
 
-			partialSig, e := Sign(
+			partialSig, err := Sign(
 				secNonce, privKey, combinedNonce, pubKeys,
 				msg,
 			)
@@ -159,11 +159,11 @@ func TestMusig2SignVerify(t *testing.T) {
 			strings.ToLower(testCase.Comment))
 
 		t.Run(testName, func(t *testing.T) {
-			pubKeys, e := keysFromIndices(
+			pubKeys, err := keysFromIndices(
 				t, testCase.Indices, testCases.PubKeys,
 			)
-			if e != nil {
-				require.ErrorIs(t, e, secp.ErrPubKeyNotOnCurve)
+			if err != nil {
+				require.ErrorIs(t, err, secp.ErrPubKeyNotOnCurve)
 				return
 			}
 
@@ -186,11 +186,11 @@ func TestMusig2SignVerify(t *testing.T) {
 				),
 			)
 
-			_, e = Sign(
+			_, err = Sign(
 				secNonce, privKey, aggNonce, pubKeys,
 				msg,
 			)
-			require.Error(t, e)
+			require.Error(t, err)
 		})
 	}
 
@@ -200,17 +200,17 @@ func TestMusig2SignVerify(t *testing.T) {
 		testName := fmt.Sprintf("verify_fail_%v",
 			strings.ToLower(testCase.Comment))
 		t.Run(testName, func(t *testing.T) {
-			pubKeys, e := keysFromIndices(
+			pubKeys, err := keysFromIndices(
 				t, testCase.Indices, testCases.PubKeys,
 			)
-			require.NoError(t, e)
+			require.NoError(t, err)
 
 			pubNonces := pubNoncesFromIndices(
 				t, testCase.NonceIndices, testCases.PubNonces,
 			)
 
-			combinedNonce, e := AggregateNonces(pubNonces)
-			require.NoError(t, e)
+			combinedNonce, err := AggregateNonces(pubNonces)
+			require.NoError(t, err)
 
 			var msg [32]byte
 			copy(
@@ -224,19 +224,19 @@ func TestMusig2SignVerify(t *testing.T) {
 			signerNonce := secNonceToPubNonce(secNonce)
 
 			var partialSig PartialSignature
-			e = partialSig.Decode(
+			err = partialSig.Decode(
 				bytes.NewReader(mustParseHex(testCase.Sig)),
 			)
-			if e != nil && strings.Contains(testCase.Comment, "group size") {
-				require.ErrorIs(t, e, ErrPartialSigInvalid)
+			if err != nil && strings.Contains(testCase.Comment, "group size") {
+				require.ErrorIs(t, err, ErrPartialSigInvalid)
 			}
 
-			e = verifyPartialSig(
+			err = verifyPartialSig(
 				&partialSig, signerNonce, combinedNonce,
 				pubKeys, privKey.PubKey().SerializeCompressed(),
 				msg,
 			)
-			require.Error(t, e)
+			require.Error(t, err)
 		})
 	}
 
@@ -251,14 +251,14 @@ func TestMusig2SignVerify(t *testing.T) {
 				pubNonces := pubNoncesFromIndices(
 					t, testCase.NonceIndices, testCases.PubNonces,
 				)
-				_, e := AggregateNonces(pubNonces)
-				require.ErrorIs(t, e, secp.ErrPubKeyNotOnCurve)
+				_, err := AggregateNonces(pubNonces)
+				require.ErrorIs(t, err, secp.ErrPubKeyNotOnCurve)
 
 			case "Invalid pubkey":
-				_, e := keysFromIndices(
+				_, err := keysFromIndices(
 					t, testCase.Indices, testCases.PubKeys,
 				)
-				require.ErrorIs(t, e, secp.ErrPubKeyNotOnCurve)
+				require.ErrorIs(t, err, secp.ErrPubKeyNotOnCurve)
 
 			default:
 				t.Fatalf("unhandled case: %v", testCase.Comment)
@@ -303,8 +303,8 @@ func pSigsFromIndicies(t *testing.T, sigs []string,
 	pSigs := make([]*PartialSignature, len(indices))
 	for i, idx := range indices {
 		var pSig PartialSignature
-		e := pSig.Decode(bytes.NewReader(mustParseHex(sigs[idx])))
-		require.NoError(t, e)
+		err := pSig.Decode(bytes.NewReader(mustParseHex(sigs[idx])))
+		require.NoError(t, err)
 
 		pSigs[i] = &pSig
 	}
@@ -319,8 +319,8 @@ func TestMusig2SignCombine(t *testing.T) {
 	testVectorPath := path.Join(
 		testVectorBaseDir, sigCombineTestVectorFileName,
 	)
-	testVectorBytes, e := os.ReadFile(testVectorPath)
-	require.NoError(t, e)
+	testVectorBytes, err := os.ReadFile(testVectorPath)
+	require.NoError(t, err)
 
 	var testCases sigCombineTestVectors
 	require.NoError(t, json.Unmarshal(testVectorBytes, &testCases))
@@ -333,10 +333,10 @@ func TestMusig2SignCombine(t *testing.T) {
 
 		testName := fmt.Sprintf("valid_case_%v", i)
 		t.Run(testName, func(t *testing.T) {
-			pubKeys, e := keysFromIndices(
+			pubKeys, err := keysFromIndices(
 				t, testCase.Indices, testCases.PubKeys,
 			)
-			require.NoError(t, e)
+			require.NoError(t, err)
 
 			pubNonces := pubNoncesFromIndices(
 				t, testCase.NonceIndices, testCases.PubNonces,
@@ -363,15 +363,15 @@ func TestMusig2SignCombine(t *testing.T) {
 				keyOpts = append(keyOpts, WithKeyTweaks(tweaks...))
 			}
 
-			combinedKey, _, _, e := AggregateKeys(
+			combinedKey, _, _, err := AggregateKeys(
 				pubKeys, false, keyOpts...,
 			)
-			require.NoError(t, e)
+			require.NoError(t, err)
 
-			combinedNonce, e := AggregateNonces(pubNonces)
-			require.NoError(t, e)
+			combinedNonce, err := AggregateNonces(pubNonces)
+			require.NoError(t, err)
 
-			finalNonceJ, _, e := computeSigningNonce(
+			finalNonceJ, _, err := computeSigningNonce(
 				combinedNonce, combinedKey.FinalKey, msg,
 			)
 

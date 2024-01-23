@@ -62,37 +62,37 @@ func TestParseReferences(t *testing.T) {
 		t.Errorf("got %d references, expected %d", len(got), len(expected))
 	}
 	for i, g := range got {
-		e := expected[i]
-		if g.Text != e.Text {
-			t.Errorf("%d: got text %s, expected %s", i, g.Text, e.Text)
+		err := expected[i]
+		if g.Text != err.Text {
+			t.Errorf("%d: got text %s, expected %s", i, g.Text, err.Text)
 		}
-		if g.Start != e.Start {
-			t.Errorf("%d: got start %d, expected %d", i, g.Start, e.Start)
+		if g.Start != err.Start {
+			t.Errorf("%d: got start %d, expected %d", i, g.Start, err.Start)
 		}
-		if g.End != e.End {
-			t.Errorf("%d: got end %d, expected %d", i, g.End, e.End)
+		if g.End != err.End {
+			t.Errorf("%d: got end %d, expected %d", i, g.End, err.End)
 		}
-		if (g.Entity == nil && e.Entity != nil) ||
-			(g.Event == nil && e.Event != nil) ||
-			(g.Profile == nil && e.Profile != nil) {
+		if (g.Entity == nil && err.Entity != nil) ||
+			(g.Event == nil && err.Event != nil) ||
+			(g.Profile == nil && err.Profile != nil) {
 			t.Errorf("%d: got some unexpected nil", i)
 		}
-		if g.Profile != nil && (g.Profile.PublicKey != e.Profile.PublicKey ||
-			len(g.Profile.Relays) != len(e.Profile.Relays) ||
-			(len(g.Profile.Relays) > 0 && g.Profile.Relays[0] != e.Profile.Relays[0])) {
+		if g.Profile != nil && (g.Profile.PublicKey != err.Profile.PublicKey ||
+			len(g.Profile.Relays) != len(err.Profile.Relays) ||
+			(len(g.Profile.Relays) > 0 && g.Profile.Relays[0] != err.Profile.Relays[0])) {
 			t.Errorf("%d: profile value is wrong", i)
 		}
-		if g.Event != nil && (g.Event.ID != e.Event.ID ||
-			g.Event.Author != e.Event.Author ||
-			len(g.Event.Relays) != len(e.Event.Relays) ||
-			(len(g.Event.Relays) > 0 && g.Event.Relays[0] != e.Event.Relays[0])) {
+		if g.Event != nil && (g.Event.ID != err.Event.ID ||
+			g.Event.Author != err.Event.Author ||
+			len(g.Event.Relays) != len(err.Event.Relays) ||
+			(len(g.Event.Relays) > 0 && g.Event.Relays[0] != err.Event.Relays[0])) {
 			fmt.Println(g.Event.ID, g.Event.Relays, len(g.Event.Relays), g.Event.Relays[0] == "")
-			fmt.Println(e.Event.Relays, len(e.Event.Relays))
+			fmt.Println(err.Event.Relays, len(err.Event.Relays))
 			t.Errorf("%d: event value is wrong", i)
 		}
-		if g.Entity != nil && (g.Entity.PublicKey != e.Entity.PublicKey ||
-			g.Entity.Identifier != e.Entity.Identifier ||
-			g.Entity.Kind != e.Entity.Kind ||
+		if g.Entity != nil && (g.Entity.PublicKey != err.Entity.PublicKey ||
+			g.Entity.Identifier != err.Entity.Identifier ||
+			g.Entity.Kind != err.Entity.Kind ||
 			len(g.Entity.Relays) != len(g.Entity.Relays)) {
 			t.Errorf("%d: entity value is wrong", i)
 		}

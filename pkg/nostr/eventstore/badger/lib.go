@@ -32,19 +32,19 @@ type BadgerBackend struct {
 	seq *badger.Sequence
 }
 
-func (b *BadgerBackend) Init() (e error) {
-	db, e := badger.Open(badger.DefaultOptions(b.Path))
-	if e != nil {
-		return e
+func (b *BadgerBackend) Init() (err error) {
+	db, err := badger.Open(badger.DefaultOptions(b.Path))
+	if err != nil {
+		return err
 	}
 	b.DB = db
-	b.seq, e = db.GetSequence([]byte("events"), 1000)
-	if e != nil {
-		return e
+	b.seq, err = db.GetSequence([]byte("events"), 1000)
+	if err != nil {
+		return err
 	}
 
-	if e := b.runMigrations(); e != nil {
-		return fmt.Errorf("error running migrations: %w", e)
+	if err := b.runMigrations(); err != nil {
+		return fmt.Errorf("error running migrations: %w", err)
 	}
 
 	if b.MaxLimit == 0 {

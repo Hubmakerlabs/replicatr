@@ -131,7 +131,7 @@ type cryptoRandAdapter struct {
 // Read implements the io.Reader interface for the crypto/rand package.  By
 // default, we always use the crypto/rand reader, but the caller is able to
 // specify their own generation, which can be useful for deterministic tests.
-func (c *cryptoRandAdapter) Read(p []byte) (n int, e error) {
+func (c *cryptoRandAdapter) Read(p []byte) (n int, err error) {
 	return rand.Read(p)
 }
 
@@ -217,34 +217,34 @@ type lengthWriter func(w io.Writer, b []byte) error
 
 // uint8Writer is an implementation of lengthWriter that writes the length of
 // the byte slice using 1 byte.
-func uint8Writer(w io.Writer, b []byte) (e error) {
+func uint8Writer(w io.Writer, b []byte) (err error) {
 	return binary.Write(w, byteOrder, uint8(len(b)))
 }
 
 // uint32Writer is an implementation of lengthWriter that writes the length of
 // the byte slice using 4 bytes.
-func uint32Writer(w io.Writer, b []byte) (e error) {
+func uint32Writer(w io.Writer, b []byte) (err error) {
 	return binary.Write(w, byteOrder, uint32(len(b)))
 }
 
 // uint32Writer is an implementation of lengthWriter that writes the length of
 // the byte slice using 8 bytes.
-func uint64Writer(w io.Writer, b []byte) (e error) {
+func uint64Writer(w io.Writer, b []byte) (err error) {
 	return binary.Write(w, byteOrder, uint64(len(b)))
 }
 
 // writeBytesPrefix is used to write out: len(b) || b, to the passed io.Writer.
 // The lengthWriter function closure is used to allow the caller to specify the
 // precise byte packing of the length.
-func writeBytesPrefix(w io.Writer, b []byte, lenWriter lengthWriter) (e error) {
+func writeBytesPrefix(w io.Writer, b []byte, lenWriter lengthWriter) (err error) {
 	// Write out the length of the byte first, followed by the set of bytes
 	// itself.
-	if e := lenWriter(w, b); e != nil {
-		return e
+	if err := lenWriter(w, b); err != nil {
+		return err
 	}
 
-	if _, e := w.Write(b); e != nil {
-		return e
+	if _, err := w.Write(b); err != nil {
+		return err
 	}
 
 	return nil
@@ -265,28 +265,28 @@ func genNonceAuxBytes(rand []byte, pubkey []byte, i int,
 	var w bytes.Buffer
 
 	// First, write out the randomness generated in the prior step.
-	if _, e := w.Write(rand); e != nil {
-		return nil, e
+	if _, err := w.Write(rand); err != nil {
+		return nil, err
 	}
 
 	// Next, we'll write out: len(pk) || pk
-	e := writeBytesPrefix(&w, pubkey, uint8Writer)
-	if e != nil {
-		return nil, e
+	err := writeBytesPrefix(&w, pubkey, uint8Writer)
+	if err != nil {
+		return nil, err
 	}
 
 	// Next, we'll write out: len(aggpk) || aggpk.
-	e = writeBytesPrefix(&w, opts.combinedKey, uint8Writer)
-	if e != nil {
-		return nil, e
+	err = writeBytesPrefix(&w, opts.combinedKey, uint8Writer)
+	if err != nil {
+		return nil, err
 	}
 
 	switch {
 	// If the message isn't present, then we'll just write out a single
 	// uint8 of a zero byte: m_prefixed = bytes(1, 0).
 	case opts.msg == nil:
-		if _, e := w.Write([]byte{0x00}); e != nil {
-			return nil, e
+		if _, err := w.Write([]byte{0x00}); err != nil {
+			return nil, err
 		}
 
 	// Otherwise, we'll write a single byte of 0x01 with a 1 byte length
@@ -295,27 +295,27 @@ func genNonceAuxBytes(rand []byte, pubkey []byte, i int,
 	case len(opts.msg) == 0:
 		fallthrough
 	default:
-		if _, e := w.Write([]byte{0x01}); e != nil {
-			return nil, e
+		if _, err := w.Write([]byte{0x01}); err != nil {
+			return nil, err
 		}
 
-		e = writeBytesPrefix(&w, opts.msg, uint64Writer)
-		if e != nil {
-			return nil, e
+		err = writeBytesPrefix(&w, opts.msg, uint64Writer)
+		if err != nil {
+			return nil, err
 		}
 	}
 
 	// Finally we'll write out the auxiliary input.
-	e = writeBytesPrefix(&w, opts.auxInput, uint32Writer)
-	if e != nil {
-		return nil, e
+	err = writeBytesPrefix(&w, opts.auxInput, uint32Writer)
+	if err != nil {
+		return nil, err
 	}
 
 	// Next we'll write out the interaction/index number which will
 	// uniquely generate two nonces given the rest of the possibly static
 	// parameters.
-	if e := binary.Write(&w, byteOrder, uint8(i)); e != nil {
-		return nil, e
+	if err := binary.Write(&w, byteOrder, uint8(i)); err != nil {
+		return nil, err
 	}
 
 	// With the message buffer complete, we'll now derive the tagged hash
@@ -339,8 +339,8 @@ func GenNonces(options ...NonceGenOption) (*Nonces, error) {
 	// First, we'll start out by generating 32 random bytes drawn from our
 	// CSPRNG.
 	var randBytes [32]byte
-	if _, e := opts.randReader.Read(randBytes[:]); e != nil {
-		return nil, e
+	if _, err := opts.randReader.Read(randBytes[:]); err != nil {
+		return nil, err
 	}
 
 	// If the options contain a secret key, we XOR it with with the tagged
@@ -355,13 +355,13 @@ func GenNonces(options ...NonceGenOption) (*Nonces, error) {
 
 	// Using our randomness, pubkey and the set of optional params, generate our
 	// two secret nonces: k1 and k2.
-	k1, e := genNonceAuxBytes(randBytes[:], opts.publicKey, 0, opts)
-	if e != nil {
-		return nil, e
+	k1, err := genNonceAuxBytes(randBytes[:], opts.publicKey, 0, opts)
+	if err != nil {
+		return nil, err
 	}
-	k2, e := genNonceAuxBytes(randBytes[:], opts.publicKey, 1, opts)
-	if e != nil {
-		return nil, e
+	k2, err := genNonceAuxBytes(randBytes[:], opts.publicKey, 1, opts)
+	if err != nil {
+		return nil, err
 	}
 
 	var k1Mod, k2Mod btcec.ModNScalar
@@ -401,9 +401,9 @@ func AggregateNonces(pubNonces [][PubNonceSize]byte) ([PubNonceSize]byte,
 			// decode.
 			var nonceJ btcec.JacobianPoint
 
-			nonceJ, e := btcec.ParseJacobian(slicer(pubNonceBytes))
-			if e != nil {
-				return btcec.JacobianPoint{}, e
+			nonceJ, err := btcec.ParseJacobian(slicer(pubNonceBytes))
+			if err != nil {
+				return btcec.JacobianPoint{}, err
 			}
 
 			pubNonceJs[i] = &nonceJ
@@ -426,18 +426,18 @@ func AggregateNonces(pubNonces [][PubNonceSize]byte) ([PubNonceSize]byte,
 	// aggregate the first nonce of all the parties, and the other that
 	// aggregates the second nonce of all the parties.
 	var finalNonce [PubNonceSize]byte
-	combinedNonce1, e := combineNonces(func(n [PubNonceSize]byte) []byte {
+	combinedNonce1, err := combineNonces(func(n [PubNonceSize]byte) []byte {
 		return n[:btcec.PubKeyBytesLenCompressed]
 	})
-	if e != nil {
-		return finalNonce, e
+	if err != nil {
+		return finalNonce, err
 	}
 
-	combinedNonce2, e := combineNonces(func(n [PubNonceSize]byte) []byte {
+	combinedNonce2, err := combineNonces(func(n [PubNonceSize]byte) []byte {
 		return n[btcec.PubKeyBytesLenCompressed:]
 	})
-	if e != nil {
-		return finalNonce, e
+	if err != nil {
+		return finalNonce, err
 	}
 
 	copy(finalNonce[:], btcec.JacobianToByteSlice(combinedNonce1))

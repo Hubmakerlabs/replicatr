@@ -20,8 +20,8 @@ import (
 // the source code can be detected. It will only (and must only) be called with
 // hard-coded values.
 func hexToBytes(s string) []byte {
-	b, e := hex.Dec(s)
-	if e != nil {
+	b, err := hex.Dec(s)
+	if err != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	return b
@@ -32,8 +32,8 @@ func hexToBytes(s string) []byte {
 // constants so errors in the source code can be detected. It will only (and
 // must only) be called with hard-coded values.
 func hexToModNScalar(s string) *btcec.ModNScalar {
-	b, e := hex.Dec(s)
-	if e != nil {
+	b, err := hex.Dec(s)
+	if err != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var scalar btcec.ModNScalar
@@ -48,8 +48,8 @@ func hexToModNScalar(s string) *btcec.ModNScalar {
 // errors in the source code can be detected. It will only (and must only) be
 // called with hard-coded values.
 func hexToFieldVal(s string) *btcec.FieldVal {
-	b, e := hex.Dec(s)
-	if e != nil {
+	b, err := hex.Dec(s)
+	if err != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	var f btcec.FieldVal
@@ -87,9 +87,9 @@ func BenchmarkSigVerify(b *testing.B) {
 
 	// Double sha256 of []byte{0x01, 0x02, 0x03, 0x04}
 	msgHash := sha256.Sum256([]byte("benchmark"))
-	sig, e := Sign(privKey, msgHash[:])
-	if e != nil {
-		b.Fatalf("unable to sign: %v", e)
+	sig, err := Sign(privKey, msgHash[:])
+	if err != nil {
+		b.Fatalf("unable to sign: %v", err)
 	}
 
 	if !sig.Verify(msgHash[:], pubKey) {
@@ -129,19 +129,19 @@ func BenchmarkSign(b *testing.B) {
 
 	var (
 		sig *Signature
-		e error
+		err error
 	)
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		sig, e = Sign(
+		sig, err = Sign(
 			privKey, msgHash, CustomNonce(auxBytes), FastSign(),
 		)
 	}
 
 	testSig = sig
-	testErr = e
+	testErr = err
 }
 
 // BenchmarkSignRfc6979 benchmarks how long it takes to sign a message.
@@ -155,15 +155,15 @@ func BenchmarkSignRfc6979(b *testing.B) {
 
 	var (
 		sig *Signature
-		e error
+		err error
 	)
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		sig, e = Sign(privKey, msgHash, FastSign())
+		sig, err = Sign(privKey, msgHash, FastSign())
 	}
 
 	testSig = sig
-	testErr = e
+	testErr = err
 }

@@ -17,10 +17,10 @@ func (rl *Relay) Router() *http.ServeMux {
 }
 
 // Start creates an http server and starts listening on given host and port.
-func (rl *Relay) Start(host string, port int, started ...chan bool) (e error) {
+func (rl *Relay) Start(host string, port int, started ...chan bool) (err error) {
 	addr := net.JoinHostPort(host, strconv.Itoa(port))
 	var ln net.Listener
-	if ln, e = net.Listen("tcp", addr); rl.E.Chk(e) {
+	if ln, err = net.Listen("tcp", addr); rl.E.Chk(err) {
 		return
 	}
 	rl.Addr = ln.Addr().String()
@@ -35,9 +35,9 @@ func (rl *Relay) Start(host string, port int, started ...chan bool) (e error) {
 	for _, s := range started {
 		close(s)
 	}
-	if e = rl.httpServer.Serve(ln); errors.Is(e, http.ErrServerClosed) {
+	if err = rl.httpServer.Serve(ln); errors.Is(err, http.ErrServerClosed) {
 		return nil
-	} else if rl.Log.E.Chk(e) {
+	} else if rl.Log.E.Chk(err) {
 		return
 	}
 	return

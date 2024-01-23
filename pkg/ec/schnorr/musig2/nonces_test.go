@@ -42,8 +42,8 @@ func TestMusig2NonceGenTestVectors(t *testing.T) {
 	testVectorPath := path.Join(
 		testVectorBaseDir, nonceGenTestVectorsFileName,
 	)
-	testVectorBytes, e := os.ReadFile(testVectorPath)
-	require.NoError(t, e)
+	testVectorBytes, err := os.ReadFile(testVectorPath)
+	require.NoError(t, err)
 
 	var testCases nonceGenTestCases
 	require.NoError(t, json.Unmarshal(testVectorBytes, &testCases))
@@ -63,9 +63,9 @@ func TestMusig2NonceGenTestVectors(t *testing.T) {
 		}
 
 		t.Run(fmt.Sprintf("test_case=%v", i), func(t *testing.T) {
-			nonce, e := GenNonces(withCustomOptions(customOpts))
-			if e != nil {
-				t.Fatalf("err gen nonce aux bytes %v", e)
+			nonce, err := GenNonces(withCustomOptions(customOpts))
+			if err != nil {
+				t.Fatalf("err gen nonce aux bytes %v", err)
 			}
 
 			expectedBytes, _ := hex.Dec(c.Expected)
@@ -118,8 +118,8 @@ func TestMusig2AggregateNoncesTestVectors(t *testing.T) {
 	testVectorPath := path.Join(
 		testVectorBaseDir, nonceAggTestVectorsFileName,
 	)
-	testVectorBytes, e := os.ReadFile(testVectorPath)
-	require.NoError(t, e)
+	testVectorBytes, err := os.ReadFile(testVectorPath)
+	require.NoError(t, err)
 
 	var testCases nonceAggTestCases
 	require.NoError(t, json.Unmarshal(testVectorBytes, &testCases))
@@ -141,8 +141,8 @@ func TestMusig2AggregateNoncesTestVectors(t *testing.T) {
 		}
 
 		t.Run(fmt.Sprintf("valid_case=%v", i), func(t *testing.T) {
-			aggregatedNonce, e := AggregateNonces(testNonces)
-			require.NoError(t, e)
+			aggregatedNonce, err := AggregateNonces(testNonces)
+			require.NoError(t, err)
 
 			var expectedNonce [PubNonceSize]byte
 			copy(expectedNonce[:], mustParseHex(testCase.Expected))
@@ -158,9 +158,9 @@ func TestMusig2AggregateNoncesTestVectors(t *testing.T) {
 		}
 
 		t.Run(fmt.Sprintf("invalid_case=%v", i), func(t *testing.T) {
-			_, e := AggregateNonces(testNonces)
-			require.True(t, e != nil)
-			require.Equal(t, testCase.ExpectedErr, e.Error())
+			_, err := AggregateNonces(testNonces)
+			require.True(t, err != nil)
+			require.Equal(t, testCase.ExpectedErr, err.Error())
 		})
 	}
 }

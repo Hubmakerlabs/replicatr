@@ -39,16 +39,16 @@ func TestMusig2KeySort(t *testing.T) {
 	testVectorPath := path.Join(
 		testVectorBaseDir, keySortTestVectorFileName,
 	)
-	testVectorBytes, e := os.ReadFile(testVectorPath)
-	require.NoError(t, e)
+	testVectorBytes, err := os.ReadFile(testVectorPath)
+	require.NoError(t, err)
 
 	var testCase keySortTestVector
 	require.NoError(t, json.Unmarshal(testVectorBytes, &testCase))
 
 	keys := make([]*btcec.PublicKey, len(testCase.PubKeys))
 	for i, keyStr := range testCase.PubKeys {
-		pubKey, e := btcec.ParsePubKey(mustParseHex(keyStr))
-		require.NoError(t, e)
+		pubKey, err := btcec.ParsePubKey(mustParseHex(keyStr))
+		require.NoError(t, err)
 
 		keys[i] = pubKey
 	}
@@ -57,8 +57,8 @@ func TestMusig2KeySort(t *testing.T) {
 
 	expectedKeys := make([]*btcec.PublicKey, len(testCase.PubKeys))
 	for i, keyStr := range testCase.SortedKeys {
-		pubKey, e := btcec.ParsePubKey(mustParseHex(keyStr))
-		require.NoError(t, e)
+		pubKey, err := btcec.ParsePubKey(mustParseHex(keyStr))
+		require.NoError(t, err)
 
 		expectedKeys[i] = pubKey
 	}
@@ -104,12 +104,12 @@ func keysFromIndices(t *testing.T, indices []int,
 
 	inputKeys := make([]*btcec.PublicKey, len(indices))
 	for i, keyIdx := range indices {
-		var e error
-		inputKeys[i], e = btcec.ParsePubKey(
+		var err error
+		inputKeys[i], err = btcec.ParsePubKey(
 			mustParseHex(pubKeys[keyIdx]),
 		)
-		if e != nil {
-			return nil, e
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -143,8 +143,8 @@ func TestMuSig2KeyAggTestVectors(t *testing.T) {
 	testVectorPath := path.Join(
 		testVectorBaseDir, keyAggTestVectorFileName,
 	)
-	testVectorBytes, e := os.ReadFile(testVectorPath)
-	require.NoError(t, e)
+	testVectorBytes, err := os.ReadFile(testVectorPath)
+	require.NoError(t, err)
 
 	var testCases keyAggTestVectors
 	require.NoError(t, json.Unmarshal(testVectorBytes, &testCases))
@@ -160,19 +160,19 @@ func TestMuSig2KeyAggTestVectors(t *testing.T) {
 		// Assemble the set of keys we'll pass in based on their key
 		// index. We don't use sorting to ensure we send the keys in
 		// the exact same order as the test vectors do.
-		inputKeys, e := keysFromIndices(
+		inputKeys, err := keysFromIndices(
 			t, testCase.Indices, testCases.PubKeys,
 		)
-		require.NoError(t, e)
+		require.NoError(t, err)
 
 		t.Run(fmt.Sprintf("test_case=%v", i), func(t *testing.T) {
 			uniqueKeyIndex := secondUniqueKeyIndex(inputKeys, false)
 			opts := []KeyAggOption{WithUniqueKeyIndex(uniqueKeyIndex)}
 
-			combinedKey, _, _, e := AggregateKeys(
+			combinedKey, _, _, err := AggregateKeys(
 				inputKeys, false, opts...,
 			)
-			require.NoError(t, e)
+			require.NoError(t, err)
 
 			require.Equal(
 				t, schnorr.SerializePubKey(combinedKey.FinalKey),
@@ -190,33 +190,33 @@ func TestMuSig2KeyAggTestVectors(t *testing.T) {
 			// For each test, we'll extract the set of input keys
 			// as well as the tweaks since this set of cases also
 			// exercises error cases related to the set of tweaks.
-			inputKeys, e := keysFromIndices(
+			inputKeys, err := keysFromIndices(
 				t, testCase.Indices, testCases.PubKeys,
 			)
 
 			// In this set of test cases, we should only get this
 			// for the very first vector.
-			if e != nil {
+			if err != nil {
 				switch testCase.Comment {
 				case "Invalid public key":
 					require.ErrorIs(
-						t, e,
+						t, err,
 						secp.ErrPubKeyNotOnCurve,
 					)
 
 				case "Public key exceeds field size":
 					require.ErrorIs(
-						t, e, secp.ErrPubKeyXTooBig,
+						t, err, secp.ErrPubKeyXTooBig,
 					)
 
 				case "First byte of public key is not 2 or 3":
 					require.ErrorIs(
-						t, e,
+						t, err,
 						secp.ErrPubKeyInvalidFormat,
 					)
 
 				default:
-					t.Fatalf("uncaught err: %v", e)
+					t.Fatalf("uncaught err: %v", err)
 				}
 
 				return
@@ -239,21 +239,21 @@ func TestMuSig2KeyAggTestVectors(t *testing.T) {
 				opts = append(opts, WithKeyTweaks(tweaks...))
 			}
 
-			_, _, _, e = AggregateKeys(
+			_, _, _, err = AggregateKeys(
 				inputKeys, false, opts...,
 			)
-			require.Error(t, e)
+			require.Error(t, err)
 
 			switch testCase.Comment {
 			case "Tweak is out of range":
-				require.ErrorIs(t, e, ErrTweakedKeyOverflows)
+				require.ErrorIs(t, err, ErrTweakedKeyOverflows)
 
 			case "Intermediate tweaking result is point at infinity":
 
-				require.ErrorIs(t, e, ErrTweakedKeyIsInfinity)
+				require.ErrorIs(t, err, ErrTweakedKeyIsInfinity)
 
 			default:
-				t.Fatalf("uncaught err: %v", e)
+				t.Fatalf("uncaught err: %v", err)
 			}
 		})
 	}
@@ -332,8 +332,8 @@ func TestMuSig2TweakTestVectors(t *testing.T) {
 	testVectorPath := path.Join(
 		testVectorBaseDir, keyTweakTestVectorFileName,
 	)
-	testVectorBytes, e := os.ReadFile(testVectorPath)
-	require.NoError(t, e)
+	testVectorBytes, err := os.ReadFile(testVectorPath)
+	require.NoError(t, err)
 
 	var testCases keyTweakVector
 	require.NoError(t, json.Unmarshal(testVectorBytes, &testCases))
@@ -352,10 +352,10 @@ func TestMuSig2TweakTestVectors(t *testing.T) {
 		testName := fmt.Sprintf("valid_%v",
 			strings.ToLower(testCase.Comment))
 		t.Run(testName, func(t *testing.T) {
-			pubKeys, e := keysFromIndices(
+			pubKeys, err := keysFromIndices(
 				t, testCase.Indices, testCases.PubKeys,
 			)
-			require.NoError(t, e)
+			require.NoError(t, err)
 
 			var tweaks []KeyTweakDesc
 			if len(testCase.TweakIndices) != 0 {
@@ -369,15 +369,15 @@ func TestMuSig2TweakTestVectors(t *testing.T) {
 				t, testCase.NonceIndices, testCases.PubNonces,
 			)
 
-			combinedNonce, e := AggregateNonces(pubNonces)
-			require.NoError(t, e)
+			combinedNonce, err := AggregateNonces(pubNonces)
+			require.NoError(t, err)
 
 			var opts []SignOption
 			if len(tweaks) != 0 {
 				opts = append(opts, WithTweaks(tweaks...))
 			}
 
-			partialSig, e := Sign(
+			partialSig, err := Sign(
 				secNonce, privKey, combinedNonce, pubKeys,
 				msg, opts...,
 			)

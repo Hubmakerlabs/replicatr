@@ -21,13 +21,13 @@ func Validate(evt *event.T, challenge string,
 		return "", false
 	}
 	var expected, found *url.URL
-	var e error
-	expected, e = parseURL(relayURL)
-	if e != nil {
+	var err error
+	expected, err = parseURL(relayURL)
+	if err != nil {
 		return "", false
 	}
-	found, e = parseURL(evt.Tags.GetFirst([]string{"relay", ""}).Value())
-	if e != nil {
+	found, err = parseURL(evt.Tags.GetFirst([]string{"relay", ""}).Value())
+	if err != nil {
 		return "", false
 	}
 	if expected.Scheme != found.Scheme ||
@@ -41,7 +41,7 @@ func Validate(evt *event.T, challenge string,
 
 		return "", false
 	}
-	if ok, e = evt.CheckSignature(); !ok || log.Fail(e) {
+	if ok, err = evt.CheckSignature(); !ok || log.Fail(err) {
 		return "", false
 	}
 	return evt.PubKey, true

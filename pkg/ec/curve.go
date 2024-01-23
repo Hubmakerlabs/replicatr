@@ -83,9 +83,9 @@ func ParseJacobian(point []byte) (JacobianPoint, error) {
 		return infinityPoint, nil
 	}
 
-	noncePk, e := secp.ParsePubKey(point)
-	if e != nil {
-		return JacobianPoint{}, e
+	noncePk, err := secp.ParsePubKey(point)
+	if err != nil {
+		return JacobianPoint{}, err
 	}
 	noncePk.AsJacobian(&result)
 

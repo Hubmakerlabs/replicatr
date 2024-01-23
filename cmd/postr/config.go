@@ -92,8 +92,8 @@ func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.T {
 			continue
 		}
 		log.D.F("trying relay: %s", k)
-		rl, e := relay.Connect(c, k)
-		if log.Fail(e) {
+		rl, err := relay.Connect(c, k)
+		if log.Fail(err) {
 			continue
 		}
 		return rl
@@ -121,8 +121,8 @@ func (cfg *C) Do(r *RelayPerms, f RelayIter) {
 		go func(wg *sync.WaitGroup, k string, v *RelayPerms) {
 			defer wg.Done()
 			log.T.Ln("connecting to relay", k)
-			rl, e := relay.Connect(c, k)
-			if log.Fail(e) {
+			rl, err := relay.Connect(c, k)
+			if log.Fail(err) {
 				return
 			}
 			if !f(c, rl) {
@@ -136,10 +136,10 @@ func (cfg *C) Do(r *RelayPerms, f RelayIter) {
 }
 
 // Decode is
-func (cfg *C) Decode(ev *event.T) (e error) {
+func (cfg *C) Decode(ev *event.T) (err error) {
 	var sk string
 	var pub string
-	if pub, _, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, _, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	tag := ev.Tags.GetFirst([]string{"p"})
@@ -154,13 +154,13 @@ func (cfg *C) Decode(ev *event.T) (e error) {
 	} else {
 		sp = ev.PubKey
 	}
-	ss, e := nip4.ComputeSharedSecret(sp, sk)
-	if log.Fail(e) {
-		return e
+	ss, err := nip4.ComputeSharedSecret(sp, sk)
+	if log.Fail(err) {
+		return err
 	}
-	content, e := nip4.Decrypt(ev.Content, ss)
-	if log.Fail(e) {
-		return e
+	content, err := nip4.Decrypt(ev.Content, ss)
+	if log.Fail(err) {
+		return err
 	}
 	ev.Content = string(content)
 	return nil
@@ -168,12 +168,12 @@ func (cfg *C) Decode(ev *event.T) (e error) {
 
 func (cfg *C) GetEvents(ids []string) (evs []*event.T) {
 	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
-		events, e := rl.QuerySync(c, &filter.T{
+		events, err := rl.QuerySync(c, &filter.T{
 			IDs:   ids,
 			Kinds: kinds.T{kind.TextNote},
 			Limit: len(ids),
 		})
-		if log.Fail(e) {
+		if log.Fail(err) {
 			return false
 		}
 		evs = append(evs, events...)
@@ -195,15 +195,15 @@ func (cfg *C) Events(f filter.T) []*event.T {
 			return false
 		}
 		mu.Unlock()
-		evs, e := rl.QuerySync(c, &f)
-		if log.Fail(e) {
+		evs, err := rl.QuerySync(c, &f)
+		if log.Fail(err) {
 			return true
 		}
 		log.D.Ln("number of events found", len(evs))
 		for _, ev := range evs {
 			if _, ok := m.Load(ev.ID); !ok {
 				if ev.Kind == kind.EncryptedDirectMessage {
-					if e = cfg.Decode(ev); log.Fail(e) {
+					if err = cfg.Decode(ev); log.Fail(err) {
 						continue
 					}
 				}
@@ -253,27 +253,27 @@ func (cfg *C) ZapInfo(pub string) (*Lnurlp, error) {
 		return nil, errors.New("cannot find user")
 	}
 	var profile Metadata
-	e := json.Unmarshal([]byte(evs[0].Content), &profile)
-	if log.Fail(e) {
-		return nil, e
+	err := json.Unmarshal([]byte(evs[0].Content), &profile)
+	if log.Fail(err) {
+		return nil, err
 	}
 	tok := strings.SplitN(profile.Lud16, "@", 2)
-	if log.Fail(e) {
-		return nil, e
+	if log.Fail(err) {
+		return nil, err
 	}
 	if len(tok) != 2 {
 		return nil, errors.New("receipt address is not valid")
 	}
 	var resp *http.Response
-	resp, e = http.Get("https://" + tok[1] + "/.well-known/lnurlp/" + tok[0])
-	if log.Fail(e) {
-		return nil, e
+	resp, err = http.Get("https://" + tok[1] + "/.well-known/lnurlp/" + tok[0])
+	if log.Fail(err) {
+		return nil, err
 	}
 	defer log.Fail(resp.Body.Close())
 
 	var lp Lnurlp
-	if e = json.NewDecoder(resp.Body).Decode(&lp); log.Fail(e) {
-		return nil, e
+	if err = json.NewDecoder(resp.Body).Decode(&lp); log.Fail(err) {
+		return nil, err
 	}
 	return &lp, nil
 }

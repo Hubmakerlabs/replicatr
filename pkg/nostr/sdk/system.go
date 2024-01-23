@@ -83,11 +83,11 @@ func (s *System) fetchProfileMetadata(c context.T,
 		return v, true
 	}
 	if s.Store != nil {
-		res, e := s.StoreRelay().QuerySync(c, &filter.T{Kinds: kinds.T{kind.ProfileMetadata},
+		res, err := s.StoreRelay().QuerySync(c, &filter.T{Kinds: kinds.T{kind.ProfileMetadata},
 			Authors: []string{pubkey}})
-		log.D.Chk(e)
+		log.D.Chk(err)
 		if len(res) != 0 {
-			if pm, e = ParseMetadata(res[0]); !log.E.Chk(e) {
+			if pm, err = ParseMetadata(res[0]); !log.E.Chk(err) {
 				pm.PubKey = pubkey
 				pm.Event = res[0]
 				s.MetadataCache.SetWithTTL(pubkey, pm, time.Hour*6)
@@ -108,13 +108,13 @@ func (s *System) fetchProfileMetadata(c context.T,
 // FetchUserEvents fetches events from each users' outbox relays, grouping
 // queries when possible.
 func (s *System) FetchUserEvents(c context.T,
-	f *filter.T) (r map[string][]*event.T, e error) {
+	f *filter.T) (r map[string][]*event.T, err error) {
 
 	var ff map[*relay.T]*filter.T
-	if ff, e = s.ExpandQueriesByAuthorAndRelays(c,
-		f); log.Fail(e) {
+	if ff, err = s.ExpandQueriesByAuthorAndRelays(c,
+		f); log.Fail(err) {
 
-		return nil, fmt.Errorf("failed to expand queries: %w", e)
+		return nil, fmt.Errorf("failed to expand queries: %w", err)
 	}
 	r = make(map[string][]*event.T)
 	wg := sync.WaitGroup{}
@@ -125,8 +125,8 @@ func (s *System) FetchUserEvents(c context.T,
 			f.Limit = f.Limit *
 				len(f.Authors) // hack
 			var sub *subscription.T
-			if sub, e = rl.Subscribe(c,
-				filters.T{f}); log.Fail(e) {
+			if sub, err = rl.Subscribe(c,
+				filters.T{f}); log.Fail(err) {
 
 				return
 			}
