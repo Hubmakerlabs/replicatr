@@ -59,8 +59,8 @@ const (
 )
 
 // Error satisfies the error interface and prints human-readable errors.
-func (e ErrorKind) Error() string {
-	return string(e)
+func (err ErrorKind) Error() string {
+	return string(err)
 }
 
 // Error identifies an error related to a schnorr signature. It has full
@@ -72,16 +72,16 @@ type Error struct {
 }
 
 // Error satisfies the error interface and prints human-readable errors.
-func (e Error) Error() string {
-	return e.Description
+func (err Error) Error() string {
+	return err.Description
 }
 
 // Unwrap returns the underlying wrapped error.
-func (e Error) Unwrap() (ee error) {
-	return e.Err
+func (err Error) Unwrap() (ee error) {
+	return err.Err
 }
 
 // signatureError creates an Error given a set of arguments.
-func signatureError(kind ErrorKind, desc string) (e error) {
+func signatureError(kind ErrorKind, desc string) (err error) {
 	return Error{Err: kind, Description: desc}
 }

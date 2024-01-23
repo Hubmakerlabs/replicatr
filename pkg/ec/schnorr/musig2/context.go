@@ -221,8 +221,8 @@ func NewContext(signingKey *btcec.SecretKey, shouldSort bool,
 	// with all the other intermediate state we need to do signing and
 	// verification.
 	case opts.keySet != nil:
-		if e := ctx.combineSignerKeys(); e != nil {
-			return nil, e
+		if err := ctx.combineSignerKeys(); err != nil {
+			return nil, err
 		}
 
 	// The total signers are known, so we add ourselves, and skip key
@@ -241,13 +241,13 @@ func NewContext(signingKey *btcec.SecretKey, shouldSort bool,
 	// If early nonce generation is specified, then we'll generate the
 	// nonce now to pass in to the session once all the callers are known.
 	if opts.earlyNonce {
-		var e error
-		ctx.sessionNonce, e = GenNonces(
+		var err error
+		ctx.sessionNonce, err = GenNonces(
 			WithPublicKey(ctx.pubKey),
 			WithNonceSecretKeyAux(signingKey),
 		)
-		if e != nil {
-			return nil, e
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -256,7 +256,7 @@ func NewContext(signingKey *btcec.SecretKey, shouldSort bool,
 
 // combineSignerKeys is used to compute the aggregated signer key once all the
 // signers are known.
-func (c *Context) combineSignerKeys() (e error) {
+func (c *Context) combineSignerKeys() (err error) {
 	// As a sanity check, make sure the signing key is actually
 	// amongst the sit of signers.
 	var keyFound bool
@@ -297,11 +297,11 @@ func (c *Context) combineSignerKeys() (e error) {
 
 	// Next, we'll use this information to compute the aggregated
 	// public key that'll be used for signing in practice.
-	c.combinedKey, _, _, e = AggregateKeys(
+	c.combinedKey, _, _, err = AggregateKeys(
 		c.opts.keySet, c.shouldSort, keyAggOpts...,
 	)
-	if e != nil {
-		return e
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -337,8 +337,8 @@ func (c *Context) RegisterSigner(pub *btcec.PublicKey) (bool, error) {
 	// generate the aggregated key and other necessary information.
 	haveAllSigners = len(c.opts.keySet) == c.opts.numSigners
 	if haveAllSigners {
-		if e := c.combineSignerKeys(); e != nil {
-			return false, e
+		if err := c.combineSignerKeys(); err != nil {
+			return false, err
 		}
 	}
 
@@ -476,18 +476,18 @@ func (c *Context) NewSession(options ...SessionOption) (*Session, error) {
 
 	// Now that we know we have enough signers, we'll either use the caller
 	// specified nonce, or generate a fresh set.
-	var e error
+	var err error
 	if localNonces == nil {
 		// At this point we need to generate a fresh nonce. We'll pass
 		// in some auxiliary information to strengthen the nonce
 		// generated.
-		localNonces, e = GenNonces(
+		localNonces, err = GenNonces(
 			WithPublicKey(c.pubKey),
 			WithNonceSecretKeyAux(c.signingKey),
 			WithNonceCombinedKeyAux(c.combinedKey.FinalKey),
 		)
-		if e != nil {
-			return nil, e
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -536,9 +536,9 @@ func (s *Session) RegisterPubNonce(nonce [PubNonceSize]byte) (bool, error) {
 	// If we have all the nonces, then we can go ahead and combine them
 	// now.
 	if haveAllNonces {
-		combinedNonce, e := AggregateNonces(s.pubNonces)
-		if e != nil {
-			return false, e
+		combinedNonce, err := AggregateNonces(s.pubNonces)
+		if err != nil {
+			return false, err
 		}
 
 		s.combinedNonce = &combinedNonce
@@ -578,7 +578,7 @@ func (s *Session) Sign(msg [32]byte,
 		signOpts = append(signOpts, WithTweaks(s.ctx.opts.tweaks...))
 	}
 
-	partialSig, e := Sign(
+	partialSig, err := Sign(
 		s.localNonces.SecNonce, s.ctx.signingKey, *s.combinedNonce,
 		s.ctx.opts.keySet, msg, signOpts...,
 	)
@@ -587,8 +587,8 @@ func (s *Session) Sign(msg [32]byte,
 	// our signing nonce.
 	s.localNonces = nil
 
-	if e != nil {
-		return nil, e
+	if err != nil {
+		return nil, err
 	}
 
 	s.msg = msg

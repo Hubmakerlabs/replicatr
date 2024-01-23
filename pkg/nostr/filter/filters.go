@@ -93,22 +93,22 @@ func (f *T) ToObject() (o object.T) {
 	return
 }
 
-func (f *T) MarshalJSON() (b []byte, e error) {
+func (f *T) MarshalJSON() (b []byte, err error) {
 	return f.ToObject().Bytes(), nil
 }
 
 // UnmarshalJSON correctly unpacks a JSON encoded T rolling up the Tags as
 // they should be.
-func (f *T) UnmarshalJSON(b []byte) (e error) {
+func (f *T) UnmarshalJSON(b []byte) (err error) {
 	if f == nil {
 		return fmt.Errorf("cannot unmarshal into nil T")
 	}
 	log.D.F("unmarshaling filter `%s`", b)
 	var uf UnmarshalingFilter
-	if e = json.Unmarshal(b, &uf); log.Fail(e) {
+	if err = json.Unmarshal(b, &uf); log.Fail(err) {
 		return
 	}
-	if e = CopyUnmarshalFilterToFilter(&uf, f); log.Fail(e) {
+	if err = CopyUnmarshalFilterToFilter(&uf, f); log.Fail(err) {
 		return
 	}
 	return

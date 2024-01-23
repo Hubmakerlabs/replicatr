@@ -103,7 +103,7 @@ type (
 	// it is not being viewed
 	Printc func(closure func() string)
 	// Chk is a shortcut for printing if there is an error, or returning true
-	Chk func(e error) bool
+	Chk func(err error) bool
 	// LevelPrinter defines a set of terminal printing primitives that output
 	// with extra data, time, level, and code location
 	LevelPrinter struct {
@@ -216,13 +216,13 @@ func _c(writer io.Writer, appID string, level Level) Printc {
 	}
 }
 func _chk(writer io.Writer, appID string, level Level) Chk {
-	return func(e error) (is bool) {
-		if e != nil {
+	return func(err error) (is bool) {
+		if err != nil {
 			logPrint(writer, appID, level,
 				joinStrings(
 					" ",
 					"CHECK:",
-					e,
+					err,
 				))()
 			is = true
 		}

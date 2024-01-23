@@ -11,12 +11,12 @@ import (
 
 var log = slog.New(os.Stderr, "nostr/binary")
 
-func Unmarshal(data []byte) (evt *event.T, e error) {
+func Unmarshal(data []byte) (evt *event.T, err error) {
 
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
 	evt = &event.T{}
-	if e = dec.Decode(evt); log.Fail(e) {
+	if err = dec.Decode(evt); log.Fail(err) {
 		return
 	}
 	return
@@ -60,11 +60,11 @@ func Unmarshal(data []byte) (evt *event.T, e error) {
 	// return e
 }
 
-func Marshal(evt *event.T) (b []byte, e error) {
+func Marshal(evt *event.T) (b []byte, err error) {
 
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
-	if e = enc.Encode(evt); log.Fail(e) {
+	if err = enc.Encode(evt); log.Fail(err) {
 		return
 	}
 	b = buf.Bytes()

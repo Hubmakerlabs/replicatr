@@ -4,7 +4,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Get(cCtx *cli.Context) (e error) {
+func Get(cCtx *cli.Context) (err error) {
 	asJSON := cCtx.Bool("json")
 	ids := cCtx.Args().Slice()
 	cfg := cCtx.App.Metadata["config"].(*C)

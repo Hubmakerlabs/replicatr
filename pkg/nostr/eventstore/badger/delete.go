@@ -10,10 +10,10 @@ import (
 
 var serialDelete uint32 = 0
 
-func (b *BadgerBackend) DeleteEvent(c context.T, evt *event.T) (e error) {
+func (b *BadgerBackend) DeleteEvent(c context.T, evt *event.T) (err error) {
 	deletionHappened := false
 
-	e = b.Update(func(txn *badger.Txn) (e error) {
+	err = b.Update(func(txn *badger.Txn) (err error) {
 		idx := make([]byte, 1, 5)
 		idx[0] = rawEventStorePrefix
 
@@ -42,24 +42,24 @@ func (b *BadgerBackend) DeleteEvent(c context.T, evt *event.T) (e error) {
 
 		// calculate all index keys we have for this event and delete them
 		for _, k := range getIndexKeysForEvent(evt, idx[1:]) {
-			if e := txn.Delete(k); e != nil {
-				return e
+			if err := txn.Delete(k); err != nil {
+				return err
 			}
 		}
 
 		// delete the raw event
 		return txn.Delete(idx)
 	})
-	if e != nil {
-		return e
+	if err != nil {
+		return err
 	}
 
 	// after deleting, run garbage collector (sometimes)
 	if deletionHappened {
 		serialDelete = (serialDelete + 1) % 256
 		if serialDelete == 0 {
-			if e := b.RunValueLogGC(0.8); e != nil && e != badger.ErrNoRewrite {
-				log.D.Ln("badger gc error:" + e.Error())
+			if err := b.RunValueLogGC(0.8); err != nil && err != badger.ErrNoRewrite {
+				log.D.Ln("badger gc error:" + err.Error())
 			}
 		}
 	}

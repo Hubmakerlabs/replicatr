@@ -43,12 +43,12 @@ func ValidateAuthEvent(evt *event.T, challenge string,
 	if evt.Tags.GetFirst([]string{"challenge", challenge}) == nil {
 		return "", false
 	}
-	expected, e := parseURL(relayURL)
-	if e != nil {
+	expected, err := parseURL(relayURL)
+	if err != nil {
 		return "", false
 	}
-	found, e := parseURL(evt.Tags.GetFirst([]string{"relay", ""}).Value())
-	if e != nil {
+	found, err := parseURL(evt.Tags.GetFirst([]string{"relay", ""}).Value())
+	if err != nil {
 		return "", false
 	}
 	if expected.Scheme != found.Scheme ||

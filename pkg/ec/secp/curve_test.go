@@ -355,7 +355,7 @@ func TestDoubleJacobian(t *testing.T) {
 // checkNAFEncoding returns an error if the provided positive and negative
 // portions of an overall NAF encoding do not adhere to the requirements or they
 // do not sum back to the provided original value.
-func checkNAFEncoding(pos, neg []byte, origValue *big.Int) (e error) {
+func checkNAFEncoding(pos, neg []byte, origValue *big.Int) (err error) {
 	// NAF must not have a leading zero byte and the number of negative
 	// bytes must not exceed the positive portion.
 	if len(pos) > 0 && pos[0] == 0 {
@@ -438,8 +438,8 @@ func TestNAF(t *testing.T) {
 		// they sum back to the original value.
 		result := naf(hexToBytes(test.in))
 		pos, neg := result.Pos(), result.Neg()
-		if e := checkNAFEncoding(pos, neg, fromHex(test.in)); e != nil {
-			t.Errorf("%q: %v", test.name, e)
+		if err := checkNAFEncoding(pos, neg, fromHex(test.in)); err != nil {
+			t.Errorf("%q: %v", test.name, err)
 		}
 	}
 }
@@ -464,8 +464,8 @@ func TestNAFRandom(t *testing.T) {
 		valBytes := modNVal.Bytes()
 		result := naf(valBytes[:])
 		pos, neg := result.Pos(), result.Neg()
-		if e := checkNAFEncoding(pos, neg, bigIntVal); e != nil {
-			t.Fatalf("encoding err: %v\nin: %x\npos: %x\nneg: %x", e,
+		if err := checkNAFEncoding(pos, neg, bigIntVal); err != nil {
+			t.Fatalf("encoding err: %v\nin: %x\npos: %x\nneg: %x", err,
 				bigIntVal, pos, neg)
 		}
 	}
@@ -611,7 +611,7 @@ func modNBitLen(s *ModNScalar) uint16 {
 
 // checkLambdaDecomposition returns an error if the provided decomposed scalars
 // do not satisfy the required equation or they are not small in magnitude.
-func checkLambdaDecomposition(origK, k1, k2 *ModNScalar) (e error) {
+func checkLambdaDecomposition(origK, k1, k2 *ModNScalar) (err error) {
 	// Recompose the scalar from the decomposed scalars to ensure they satisfy
 	// the required equation.
 	calcK := new(ModNScalar).Mul2(k2, endoLambda).Add(k1)
@@ -717,8 +717,8 @@ func TestSplitK(t *testing.T) {
 		// the required equation and consists of scalars that are small in
 		// magnitude.
 		k1, k2 := splitK(test.k)
-		if e := checkLambdaDecomposition(test.k, &k1, &k2); e != nil {
-			t.Errorf("%q: %v", test.name, e)
+		if err := checkLambdaDecomposition(test.k, &k1, &k2); err != nil {
+			t.Errorf("%q: %v", test.name, err)
 		}
 	}
 }
@@ -741,8 +741,8 @@ func TestSplitKRandom(t *testing.T) {
 		// that are small in magnitude.
 		origK := randModNScalar(t, rng)
 		k1, k2 := splitK(origK)
-		if e := checkLambdaDecomposition(origK, &k1, &k2); e != nil {
-			t.Fatalf("decomposition err: %v\nin: %v\nk1: %v\nk2: %v", e,
+		if err := checkLambdaDecomposition(origK, &k1, &k2); err != nil {
+			t.Fatalf("decomposition err: %v\nin: %v\nk1: %v\nk2: %v", err,
 				origK, k1, k2)
 		}
 	}

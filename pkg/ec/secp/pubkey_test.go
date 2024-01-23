@@ -17,7 +17,7 @@ func TestParsePubKey(t *testing.T) {
 	tests := []struct {
 		name  string // test description
 		key   string // hex encoded public key
-		e   error  // expected error
+		err   error  // expected error
 		wantX string // expected x coordinate
 		wantY string // expected y coordinate
 	}{{
@@ -25,7 +25,7 @@ func TestParsePubKey(t *testing.T) {
 		key: "04" +
 			"11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c" +
 			"b2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3",
-		e:   nil,
+		err:   nil,
 		wantX: "11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c",
 		wantY: "b2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3",
 	}, {
@@ -33,25 +33,25 @@ func TestParsePubKey(t *testing.T) {
 		key: "04" +
 			"15db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c" +
 			"b2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3",
-		e: ErrPubKeyNotOnCurve,
+		err: ErrPubKeyNotOnCurve,
 	}, {
 		name: "uncompressed y changed (not on curve)",
 		key: "04" +
 			"11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c" +
 			"b2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a4",
-		e: ErrPubKeyNotOnCurve,
+		err: ErrPubKeyNotOnCurve,
 	}, {
 		name: "uncompressed claims compressed",
 		key: "03" +
 			"11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c" +
 			"b2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3",
-		e: ErrPubKeyInvalidFormat,
+		err: ErrPubKeyInvalidFormat,
 	}, {
 		name: "uncompressed as hybrid ok (ybit = 0)",
 		key: "06" +
 			"11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c" +
 			"4d1f1522047b33068bbb9b07d1e9f40564749b062b3fc0666479bc08a94be98c",
-		e:   nil,
+		err:   nil,
 		wantX: "11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c",
 		wantY: "4d1f1522047b33068bbb9b07d1e9f40564749b062b3fc0666479bc08a94be98c",
 	}, {
@@ -59,7 +59,7 @@ func TestParsePubKey(t *testing.T) {
 		key: "07" +
 			"11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c" +
 			"b2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3",
-		e:   nil,
+		err:   nil,
 		wantX: "11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c",
 		wantY: "b2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3",
 	}, {
@@ -67,65 +67,65 @@ func TestParsePubKey(t *testing.T) {
 		key: "06" +
 			"11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c" +
 			"b2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3",
-		e: ErrPubKeyMismatchedOddness,
+		err: ErrPubKeyMismatchedOddness,
 	}, {
 		name: "compressed ok (ybit = 0)",
 		key: "02" +
 			"ce0b14fb842b1ba549fdd675c98075f12e9c510f8ef52bd021a9a1f4809d3b4d",
-		e:   nil,
+		err:   nil,
 		wantX: "ce0b14fb842b1ba549fdd675c98075f12e9c510f8ef52bd021a9a1f4809d3b4d",
 		wantY: "0890ff84d7999d878a57bee170e19ef4b4803b4bdede64503a6ac352b03c8032",
 	}, {
 		name: "compressed ok (ybit = 1)",
 		key: "03" +
 			"2689c7c2dab13309fb143e0e8fe396342521887e976690b6b47f5b2a4b7d448e",
-		e:   nil,
+		err:   nil,
 		wantX: "2689c7c2dab13309fb143e0e8fe396342521887e976690b6b47f5b2a4b7d448e",
 		wantY: "499dd7852849a38aa23ed9f306f07794063fe7904e0f347bc209fdddaf37691f",
 	}, {
 		name: "compressed claims uncompressed (ybit = 0)",
 		key: "04" +
 			"ce0b14fb842b1ba549fdd675c98075f12e9c510f8ef52bd021a9a1f4809d3b4d",
-		e: ErrPubKeyInvalidFormat,
+		err: ErrPubKeyInvalidFormat,
 	}, {
 		name: "compressed claims uncompressed (ybit = 1)",
 		key: "04" +
 			"2689c7c2dab13309fb143e0e8fe396342521887e976690b6b47f5b2a4b7d448e",
-		e: ErrPubKeyInvalidFormat,
+		err: ErrPubKeyInvalidFormat,
 	}, {
 		name: "compressed claims hybrid (ybit = 0)",
 		key: "06" +
 			"ce0b14fb842b1ba549fdd675c98075f12e9c510f8ef52bd021a9a1f4809d3b4d",
-		e: ErrPubKeyInvalidFormat,
+		err: ErrPubKeyInvalidFormat,
 	}, {
 		name: "compressed claims hybrid (ybit = 1)",
 		key: "07" +
 			"2689c7c2dab13309fb143e0e8fe396342521887e976690b6b47f5b2a4b7d448e",
-		e: ErrPubKeyInvalidFormat,
+		err: ErrPubKeyInvalidFormat,
 	}, {
 		name: "compressed with invalid x coord (ybit = 0)",
 		key: "03" +
 			"ce0b14fb842b1ba549fdd675c98075f12e9c510f8ef52bd021a9a1f4809d3b4c",
-		e: ErrPubKeyNotOnCurve,
+		err: ErrPubKeyNotOnCurve,
 	}, {
 		name: "compressed with invalid x coord (ybit = 1)",
 		key: "03" +
 			"2689c7c2dab13309fb143e0e8fe396342521887e976690b6b47f5b2a4b7d448d",
-		e: ErrPubKeyNotOnCurve,
+		err: ErrPubKeyNotOnCurve,
 	}, {
 		name: "empty",
 		key:  "",
-		e:  ErrPubKeyInvalidLen,
+		err:  ErrPubKeyInvalidLen,
 	}, {
 		name: "wrong length",
 		key:  "05",
-		e:  ErrPubKeyInvalidLen,
+		err:  ErrPubKeyInvalidLen,
 	}, {
 		name: "uncompressed x == p",
 		key: "04" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f" +
 			"b2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3",
-		e: ErrPubKeyXTooBig,
+		err: ErrPubKeyXTooBig,
 	}, {
 		// The y coordinate produces a valid point for x == 1 (mod p), but it
 		// should fail to parse instead of wrapping around.
@@ -133,13 +133,13 @@ func TestParsePubKey(t *testing.T) {
 		key: "04" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc30" +
 			"bde70df51939b94c9c24979fa7dd04ebd9b3572da7802290438af2a681895441",
-		e: ErrPubKeyXTooBig,
+		err: ErrPubKeyXTooBig,
 	}, {
 		name: "uncompressed y == p",
 		key: "04" +
 			"11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f",
-		e: ErrPubKeyYTooBig,
+		err: ErrPubKeyYTooBig,
 	}, {
 		// The x coordinate produces a valid point for y == 1 (mod p), but it
 		// should fail to parse instead of wrapping around.
@@ -147,37 +147,37 @@ func TestParsePubKey(t *testing.T) {
 		key: "04" +
 			"1fe1e5ef3fceb5c135ab7741333ce5a6e80d68167653f6b2b24bcbcfaaaff507" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc30",
-		e: ErrPubKeyYTooBig,
+		err: ErrPubKeyYTooBig,
 	}, {
 		name: "compressed x == p (ybit = 0)",
 		key: "02" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f",
-		e: ErrPubKeyXTooBig,
+		err: ErrPubKeyXTooBig,
 	}, {
 		name: "compressed x == p (ybit = 1)",
 		key: "03" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f",
-		e: ErrPubKeyXTooBig,
+		err: ErrPubKeyXTooBig,
 	}, {
 		// This would be valid for x == 2 (mod p), but it should fail to parse
 		// instead of wrapping around.
 		name: "compressed x > p (p + 2 -- aka 2) (ybit = 0)",
 		key: "02" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc31",
-		e: ErrPubKeyXTooBig,
+		err: ErrPubKeyXTooBig,
 	}, {
 		// This would be valid for x == 1 (mod p), but it should fail to parse
 		// instead of wrapping around.
 		name: "compressed x > p (p + 1 -- aka 1) (ybit = 1)",
 		key: "03" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc30",
-		e: ErrPubKeyXTooBig,
+		err: ErrPubKeyXTooBig,
 	}, {
 		name: "hybrid x == p (ybit = 1)",
 		key: "07" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f" +
 			"b2e0eaddfb84ccf9744464f82e160bfa9b8b64f9d4c03f999b8643f656b412a3",
-		e: ErrPubKeyXTooBig,
+		err: ErrPubKeyXTooBig,
 	}, {
 		// The y coordinate produces a valid point for x == 1 (mod p), but it
 		// should fail to parse instead of wrapping around.
@@ -185,13 +185,13 @@ func TestParsePubKey(t *testing.T) {
 		key: "06" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc30" +
 			"bde70df51939b94c9c24979fa7dd04ebd9b3572da7802290438af2a681895441",
-		e: ErrPubKeyXTooBig,
+		err: ErrPubKeyXTooBig,
 	}, {
 		name: "hybrid y == p (ybit = 0 when mod p)",
 		key: "06" +
 			"11db93e1dcdb8a016b49840f8c53bc1eb68a382e97b1482ecad7b148a6909a5c" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f",
-		e: ErrPubKeyYTooBig,
+		err: ErrPubKeyYTooBig,
 	}, {
 		// The x coordinate produces a valid point for y == 1 (mod p), but it
 		// should fail to parse instead of wrapping around.
@@ -199,18 +199,18 @@ func TestParsePubKey(t *testing.T) {
 		key: "07" +
 			"1fe1e5ef3fceb5c135ab7741333ce5a6e80d68167653f6b2b24bcbcfaaaff507" +
 			"fffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc30",
-		e: ErrPubKeyYTooBig,
+		err: ErrPubKeyYTooBig,
 	}}
 
 	for _, test := range tests {
 		pubKeyBytes := hexToBytes(test.key)
-		pubKey, e := ParsePubKey(pubKeyBytes)
-		if !errors.Is(e, test.e) {
-			t.Errorf("%s mismatched e -- got %v, want %v", test.name, e,
-				test.e)
+		pubKey, err := ParsePubKey(pubKeyBytes)
+		if !errors.Is(err, test.err) {
+			t.Errorf("%s mismatched e -- got %v, want %v", test.name, err,
+				test.err)
 			continue
 		}
-		if e != nil {
+		if err != nil {
 			continue
 		}
 
@@ -397,9 +397,9 @@ func TestPublicKeyAsJacobian(t *testing.T) {
 		pubKeyBytes := hexToBytes(test.pubKey)
 		wantX := hexToFieldVal(test.wantX)
 		wantY := hexToFieldVal(test.wantY)
-		pubKey, e := ParsePubKey(pubKeyBytes)
-		if e != nil {
-			t.Errorf("%s: failed to parse public key: %v", test.name, e)
+		pubKey, err := ParsePubKey(pubKeyBytes)
+		if err != nil {
+			t.Errorf("%s: failed to parse public key: %v", test.name, err)
 			continue
 		}
 

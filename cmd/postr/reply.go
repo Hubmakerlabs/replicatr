@@ -20,7 +20,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Reply(cCtx *cli.Context) (e error) {
+func Reply(cCtx *cli.Context) (err error) {
 	stdin, id, quote := cCtx.Bool("stdin"), cCtx.String("id"),
 		cCtx.Bool("quote")
 	if !stdin && cCtx.Args().Len() == 0 {
@@ -29,7 +29,7 @@ func Reply(cCtx *cli.Context) (e error) {
 	sensitive, geohash := cCtx.String("sensitive"), cCtx.String("geohash")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var sk, pub string
-	if pub, sk, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	ev := &event.T{}
@@ -43,7 +43,7 @@ func Reply(cCtx *cli.Context) (e error) {
 	ev.Kind = kind.TextNote
 	if stdin {
 		var b []byte
-		if b, e = io.ReadAll(os.Stdin); log.Fail(e) {
+		if b, err = io.ReadAll(os.Stdin); log.Fail(err) {
 			return
 		}
 		ev.Content = string(b)
@@ -91,11 +91,11 @@ func Reply(cCtx *cli.Context) (e error) {
 		} else {
 			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, rl.URL(), "mention"})
 		}
-		if e := ev.Sign(sk); log.Fail(e) {
+		if err := ev.Sign(sk); log.Fail(err) {
 			return true
 		}
-		if e = rl.Publish(c, ev); log.Fail(e) {
-			log.D.Ln(rl.URL(), e)
+		if err = rl.Publish(c, ev); log.Fail(err) {
+			log.D.Ln(rl.URL(), err)
 		} else {
 			success.Add(1)
 		}

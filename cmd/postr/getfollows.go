@@ -5,9 +5,9 @@ import (
 )
 
 // GetFollows is
-func (cfg *C) GetFollows(profile string) (profiles Follows, e error) {
+func (cfg *C) GetFollows(profile string) (profiles Follows, err error) {
 	var pub string
-	if pub, _, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, _, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	log.D.Ln("pub", pub)
@@ -39,8 +39,8 @@ func (cfg *C) GetFollows(profile string) (profiles Follows, e error) {
 			}
 		}
 		cfg.Touch()
-		if e = cfg.save(profile); log.Fail(e) {
-			return nil, e
+		if err = cfg.save(profile); log.Fail(err) {
+			return nil, err
 		}
 	}
 	return cfg.Follows, nil

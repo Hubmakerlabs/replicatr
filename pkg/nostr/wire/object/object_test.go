@@ -53,10 +53,10 @@ func EventToObject(ev Event) (t T) {
 
 func TestObject(t *testing.T) {
 	var b []byte
-	var e error
-	b, e = json.Marshal(literal)
-	if e != nil {
-		t.Fatal(e)
+	var err error
+	b, err = json.Marshal(literal)
+	if err != nil {
+		t.Fatal(err)
 	}
 	t.Log(string(b))
 	t.Log(literal)
@@ -81,19 +81,19 @@ func TestEventToObject(t *testing.T) {
 
 	obj := EventToObject(structLiteral)
 	var b []byte
-	var e error
-	b, e = json.Marshal(structLiteral)
-	if e != nil {
-		t.Fatal(e)
+	var err error
+	b, err = json.Marshal(structLiteral)
+	if err != nil {
+		t.Fatal(err)
 	}
 	var ifc interface{}
-	e = json.Unmarshal(b, &ifc)
-	if e != nil {
-		t.Fatal(e)
+	err = json.Unmarshal(b, &ifc)
+	if err != nil {
+		t.Fatal(err)
 	}
-	b, e = json.Marshal(ifc)
-	if e != nil {
-		t.Fatal(e)
+	b, err = json.Marshal(ifc)
+	if err != nil {
+		t.Fatal(err)
 	}
 	t.Log("wrong", string(b))
 	t.Log("right", obj)

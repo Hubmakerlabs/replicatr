@@ -18,8 +18,8 @@ import (
 // the source code can be detected. It will only (and must only) be called with
 // hard-coded values.
 func hexToBytes(s string) []byte {
-	b, e := hex.Dec(s)
-	if e != nil {
+	b, err := hex.Dec(s)
+	if err != nil {
 		panic("invalid hex in source file: " + s)
 	}
 	return b

@@ -33,8 +33,8 @@ type (
 	Events                    func(c context.T, ev *event.T) error
 	Hook                      func(c context.T)
 	OverwriteRelayInformation func(c context.T, r *http.Request, info *nip11.Info) *nip11.Info
-	QueryEvents               func(c context.T, f *filter.T) (eventC chan *event.T, e error)
-	CountEvents               func(c context.T, f *filter.T) (cnt int64, e error)
+	QueryEvents               func(c context.T, f *filter.T) (eventC chan *event.T, err error)
+	CountEvents               func(c context.T, f *filter.T) (cnt int64, err error)
 	OnEventSaved              func(c context.T, ev *event.T)
 )
 

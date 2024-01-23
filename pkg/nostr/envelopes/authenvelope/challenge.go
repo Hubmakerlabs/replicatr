@@ -34,26 +34,26 @@ func (a *Challenge) ToArray() array.T { return array.T{labels.AUTH, a.Challenge}
 
 func (a *Challenge) MarshalJSON() ([]byte, error) { return a.Bytes(), nil }
 
-func (a *Challenge) Unmarshal(buf *text.Buffer) (e error) {
+func (a *Challenge) Unmarshal(buf *text.Buffer) (err error) {
 	log.D.Ln("auth challenge envelope unmarshal", string(buf.Buf))
 	if a == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label
-	if e = buf.ScanThrough(','); e != nil {
+	if err = buf.ScanThrough(','); err != nil {
 		return
 	}
 	// next comes the challenge string
-	if e = buf.ScanThrough('"'); e != nil {
+	if err = buf.ScanThrough('"'); err != nil {
 		return
 	}
 	var challengeString []byte
-	if challengeString, e = buf.ReadUntil('"'); log.Fail(e) {
+	if challengeString, err = buf.ReadUntil('"'); log.Fail(err) {
 		return fmt.Errorf("did not find challenge string in auth challenge envelope")
 	}
 	a.Challenge = string(text.UnescapeByteString(challengeString))
 	// Scan for the proper envelope ending.
-	if e = buf.ScanThrough(']'); e != nil {
+	if err = buf.ScanThrough(']'); err != nil {
 		log.D.Ln("envelope unterminated but all fields found")
 	}
 	return

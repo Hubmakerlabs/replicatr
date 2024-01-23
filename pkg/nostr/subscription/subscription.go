@@ -180,9 +180,9 @@ func (sub *T) Fire() error {
 	log.D.F("{%s} sending %v", sub.Relay.URL(), string(reqb))
 
 	sub.live.Store(true)
-	if e := <-sub.Relay.Write(reqb); e != nil {
+	if err := <-sub.Relay.Write(reqb); err != nil {
 		sub.Cancel()
-		return fmt.Errorf("failed to write: %w", e)
+		return fmt.Errorf("failed to write: %w", err)
 	}
 
 	return nil

@@ -108,8 +108,8 @@ func NewRelay(c context.T, url string, opts ...RelayOption) *T {
 // r.Close().
 func Connect(c context.T, url string, opts ...RelayOption) (*T, error) {
 	r := NewRelay(context.Bg(), url, opts...)
-	e := r.Connect(c)
-	return r, e
+	err := r.Connect(c)
+	return r, err
 }
 
 // When instantiating relay connections, some options may be passed.
@@ -146,7 +146,7 @@ func (r *T) IsConnected() bool { return r.connectionContext.Err() == nil }
 // The underlying relay connection will use a background context. If you want to
 // pass a custom context to the underlying relay connection, use NewRelay() and
 // then Relay.Connect().
-func (r *T) Connect(c context.T) (e error) {
+func (r *T) Connect(c context.T) (err error) {
 	if r.connectionContext == nil || r.Subscriptions == nil {
 		return fmt.Errorf("relay must be initialized with a call to NewRelay()")
 	}
@@ -162,9 +162,9 @@ func (r *T) Connect(c context.T) (e error) {
 		defer cancel()
 	}
 	var conn *connection.C
-	conn, e = connection.NewConnection(c, r.url, r.RequestHeader)
-	if e != nil {
-		return fmt.Errorf("error opening websocket to '%s': %w", r.URL(), e)
+	conn, err = connection.NewConnection(c, r.url, r.RequestHeader)
+	if err != nil {
+		return fmt.Errorf("error opening websocket to '%s': %w", r.URL(), err)
 	}
 	r.Connection = conn
 
@@ -189,21 +189,21 @@ func (r *T) Connect(c context.T) (e error) {
 
 	// queue all write operations here so we don't do mutex spaghetti
 	go func() {
-		var e error
+		var err error
 		for {
 			select {
 			case <-ticker.C:
-				e = wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil)
-				if e != nil {
+				err = wsutil.WriteClientMessage(r.Connection.Conn, ws.OpPing, nil)
+				if err != nil {
 					log.D.F("{%s} error writing ping: %v; closing websocket",
-						r.URL(), e)
+						r.URL(), err)
 					log.Fail(r.Close()) // this should trigger a context cancelation
 					return
 				}
 			case wr := <-r.writeQueue:
 				// all write requests will go through this to prevent races
-				if e = r.Connection.WriteMessage(wr.msg); e != nil {
-					wr.answer <- e
+				if err = r.Connection.WriteMessage(wr.msg); err != nil {
+					wr.answer <- err
 				}
 				close(wr.answer)
 			case <-r.connectionContext.Done():
@@ -220,11 +220,11 @@ func (r *T) Connect(c context.T) (e error) {
 
 func (r *T) MessageReadLoop(conn *connection.C) {
 	buf := new(bytes.Buffer)
-	var e error
+	var err error
 	for {
 		buf.Reset()
-		if e = conn.ReadMessage(r.connectionContext, buf); e != nil {
-			r.ConnectionError = e
+		if err = conn.ReadMessage(r.connectionContext, buf); err != nil {
+			r.ConnectionError = err
 			log.Fail(r.Close())
 			break
 		}
@@ -232,7 +232,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 		message := buf.Bytes()
 		log.D.F("{%s} received %v", r.URL(), string(message))
 		var envelope enveloper.I
-		envelope, _, e = envelopes.ProcessEnvelope(message)
+		envelope, _, err = envelopes.ProcessEnvelope(message)
 		if envelope == nil {
 			continue
 		}
@@ -267,10 +267,10 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 				}
 				// check signature, ignore invalid, except from trusted (AssumeValid) relays
 				if !r.AssumeValid {
-					if ok, e = env.Event.CheckSignature(); !ok {
+					if ok, err = env.Event.CheckSignature(); !ok {
 						errmsg := ""
-						if log.Fail(e) {
-							errmsg = e.Error()
+						if log.Fail(err) {
+							errmsg = err.Error()
 						}
 						log.D.F("{%s} bad signature on %s; %s",
 							r.URL(), env.Event.ID, errmsg)
@@ -335,8 +335,8 @@ func (r *T) Auth(c context.T, sign func(ev *event.T) error) error {
 		},
 		Content: "",
 	}
-	if e := sign(authEvent); e != nil {
-		return fmt.Errorf("error signing auth event: %w", e)
+	if err := sign(authEvent); err != nil {
+		return fmt.Errorf("error signing auth event: %w", err)
 	}
 
 	return r.publish(c, authEvent.ID.String(),
@@ -345,7 +345,7 @@ func (r *T) Auth(c context.T, sign func(ev *event.T) error) error {
 
 // publish can be used both for EVENT and for AUTH
 func (r *T) publish(c context.T, id string, env enveloper.I) error {
-	var e error
+	var err error
 	var cancel context.F
 
 	if _, ok := c.Deadline(); !ok {
@@ -364,7 +364,7 @@ func (r *T) publish(c context.T, id string, env enveloper.I) error {
 	r.okCallbacks.Store(id, func(ok bool, reason string) {
 		gotOk = true
 		if !ok {
-			e = fmt.Errorf("msg: %s", reason)
+			err = fmt.Errorf("msg: %s", reason)
 		}
 		cancel()
 	})
@@ -373,8 +373,8 @@ func (r *T) publish(c context.T, id string, env enveloper.I) error {
 	// publish event
 	envb, _ := env.MarshalJSON()
 	log.D.F("{%s} sending %v", r.URL(), string(envb))
-	if e := <-r.Write(envb); e != nil {
-		return e
+	if err := <-r.Write(envb); err != nil {
+		return err
 	}
 
 	for {
@@ -382,12 +382,12 @@ func (r *T) publish(c context.T, id string, env enveloper.I) error {
 		case <-c.Done():
 			// this will be called when we get an OK or when the context has been canceled
 			if gotOk {
-				return e
+				return err
 			}
 			return c.Err()
 		case <-r.connectionContext.Done():
 			// this is caused when we lose connectivity
-			return e
+			return err
 		}
 	}
 }
@@ -404,8 +404,8 @@ func (r *T) Subscribe(c context.T, f filters.T,
 
 	sub := r.PrepareSubscription(c, f, opts...)
 
-	if e := sub.Fire(); e != nil {
-		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", f, r.URL(), e)
+	if err := sub.Fire(); err != nil {
+		return nil, fmt.Errorf("couldn't subscribe to %v at %s: %w", f, r.URL(), err)
 	}
 
 	return sub, nil
@@ -455,9 +455,9 @@ func (r *T) PrepareSubscription(c context.T, f filters.T,
 
 func (r *T) QuerySync(c context.T, f *filter.T,
 	opts ...subscriptionoption.I) ([]*event.T, error) {
-	sub, e := r.Subscribe(c, filters.T{f}, opts...)
-	if e != nil {
-		return nil, e
+	sub, err := r.Subscribe(c, filters.T{f}, opts...)
+	if err != nil {
+		return nil, err
 	}
 
 	defer sub.Unsub()
@@ -492,8 +492,8 @@ func (r *T) Count(c context.T, filters filters.T,
 	sub := r.PrepareSubscription(c, filters, opts...)
 	sub.CountResult = make(chan int64)
 
-	if e := sub.Fire(); e != nil {
-		return 0, e
+	if err := sub.Fire(); err != nil {
+		return 0, err
 	}
 
 	defer sub.Unsub()

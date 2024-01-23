@@ -15,21 +15,21 @@ import (
 
 // AddEvent sends an event through then normal add pipeline, as if it was
 // received from a websocket.
-func (rl *Relay) AddEvent(c context.T, ev *event.T) (e error) {
+func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 	if ev == nil {
-		e = errors.New("error: event is nil")
-		rl.E.Ln(e)
+		err = errors.New("error: event is nil")
+		rl.E.Ln(err)
 		return
 	}
 	for _, rej := range rl.RejectEvent {
 		if reject, msg := rej(c, ev); reject {
 			if msg == "" {
-				e = errors.New("blocked: no reason")
-				rl.E.Ln(e)
+				err = errors.New("blocked: no reason")
+				rl.E.Ln(err)
 				return
 			} else {
-				e = errors.New(normalize.OKMessage(msg, "blocked"))
-				rl.E.Ln(e)
+				err = errors.New(normalize.OKMessage(msg, "blocked"))
+				rl.E.Ln(err)
 				return
 			}
 		}
@@ -43,11 +43,11 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (e error) {
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
 				var ch chan *event.T
-				ch, e = query(c, &filter.T{
+				ch, err = query(c, &filter.T{
 					Authors: tag.T{ev.PubKey},
 					Kinds:   kinds.T{ev.Kind},
 				})
-				if rl.E.Chk(e) {
+				if rl.E.Chk(err) {
 					continue
 				}
 				if previous := <-ch; previous != nil && isOlder(previous, ev) {
@@ -63,11 +63,11 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (e error) {
 			if d != nil {
 				for _, query := range rl.QueryEvents {
 					var ch chan *event.T
-					if ch, e = query(c, &filter.T{
+					if ch, err = query(c, &filter.T{
 						Authors: tag.T{ev.PubKey},
 						Kinds:   kinds.T{ev.Kind},
 						Tags:    filter.TagMap{"d": []string{d.Value()}},
-					}); rl.E.Chk(e) {
+					}); rl.E.Chk(err) {
 						continue
 					}
 					if previous := <-ch; previous != nil && isOlder(previous, ev) {
@@ -87,8 +87,8 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (e error) {
 					rl.D.Ln(saveErr)
 					return nil
 				default:
-					e = fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))
-					rl.D.Ln(e)
+					err = fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))
+					rl.D.Ln(err)
 					return
 				}
 			}

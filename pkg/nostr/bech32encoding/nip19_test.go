@@ -9,9 +9,9 @@ import (
 )
 
 func TestEncodeNpub(t *testing.T) {
-	npub, e := EncodePublicKey("3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d")
-	if e != nil {
-		t.Errorf("shouldn't error: %s", e)
+	npub, err := EncodePublicKey("3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d")
+	if err != nil {
+		t.Errorf("shouldn't error: %s", err)
 	}
 	if npub != "npub180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsyjh6w6" {
 		t.Error("produced an unexpected npub string")
@@ -19,9 +19,9 @@ func TestEncodeNpub(t *testing.T) {
 }
 
 func TestEncodeNsec(t *testing.T) {
-	nsec, e := EncodePrivateKey("3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d")
-	if e != nil {
-		t.Errorf("shouldn't error: %s", e)
+	nsec, err := EncodePrivateKey("3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d")
+	if err != nil {
+		t.Errorf("shouldn't error: %s", err)
 	}
 	if nsec != "nsec180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsgyumg0" {
 		t.Error("produced an unexpected nsec string")
@@ -29,9 +29,9 @@ func TestEncodeNsec(t *testing.T) {
 }
 
 func TestDecodeNpub(t *testing.T) {
-	prefix, pubkey, e := Decode("npub180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsyjh6w6")
-	if e != nil {
-		t.Errorf("shouldn't error: %s", e)
+	prefix, pubkey, err := Decode("npub180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsyjh6w6")
+	if err != nil {
+		t.Errorf("shouldn't error: %s", err)
 	}
 	if prefix != "npub" {
 		t.Error("returned invalid prefix")
@@ -42,15 +42,15 @@ func TestDecodeNpub(t *testing.T) {
 }
 
 func TestFailDecodeBadChecksumNpub(t *testing.T) {
-	_, _, e := Decode("npub180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsyjh6w4")
-	if e == nil {
-		t.Errorf("should have errored: %s", e)
+	_, _, err := Decode("npub180cvv07tjdrrgpa0j7j7tmnyl2yr6yr7l8j4s3evf6u64th6gkwsyjh6w4")
+	if err == nil {
+		t.Errorf("should have errored: %s", err)
 	}
 }
 
 func TestDecodeNprofile(t *testing.T) {
-	prefix, data, e := Decode("nprofile1qqsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8gpp4mhxue69uhhytnc9e3k7mgpz4mhxue69uhkg6nzv9ejuumpv34kytnrdaksjlyr9p")
-	if e != nil {
+	prefix, data, err := Decode("nprofile1qqsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8gpp4mhxue69uhhytnc9e3k7mgpz4mhxue69uhkg6nzv9ejuumpv34kytnrdaksjlyr9p")
+	if err != nil {
 		t.Error("failed to decode nprofile")
 	}
 	if prefix != "nprofile" {
@@ -74,8 +74,8 @@ func TestDecodeNprofile(t *testing.T) {
 }
 
 func TestDecodeOtherNprofile(t *testing.T) {
-	prefix, data, e := Decode("nprofile1qqsw3dy8cpumpanud9dwd3xz254y0uu2m739x0x9jf4a9sgzjshaedcpr4mhxue69uhkummnw3ez6ur4vgh8wetvd3hhyer9wghxuet5qyw8wumn8ghj7mn0wd68yttjv4kxz7fww4h8get5dpezumt9qyvhwumn8ghj7un9d3shjetj9enxjct5dfskvtnrdakstl69hg")
-	if e != nil {
+	prefix, data, err := Decode("nprofile1qqsw3dy8cpumpanud9dwd3xz254y0uu2m739x0x9jf4a9sgzjshaedcpr4mhxue69uhkummnw3ez6ur4vgh8wetvd3hhyer9wghxuet5qyw8wumn8ghj7mn0wd68yttjv4kxz7fww4h8get5dpezumt9qyvhwumn8ghj7un9d3shjetj9enxjct5dfskvtnrdakstl69hg")
+	if err != nil {
 		t.Error("failed to decode nprofile")
 	}
 	if prefix != "nprofile" {
@@ -99,12 +99,12 @@ func TestDecodeOtherNprofile(t *testing.T) {
 }
 
 func TestEncodeNprofile(t *testing.T) {
-	nprofile, e := EncodeProfile("3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d", []string{
+	nprofile, err := EncodeProfile("3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d", []string{
 		"wss://r.x.com",
 		"wss://djbas.sadkb.com",
 	})
-	if e != nil {
-		t.Errorf("shouldn't error: %s", e)
+	if err != nil {
+		t.Errorf("shouldn't error: %s", err)
 	}
 	if nprofile != "nprofile1qqsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8gpp4mhxue69uhhytnc9e3k7mgpz4mhxue69uhkg6nzv9ejuumpv34kytnrdaksjlyr9p" {
 		t.Error("produced an unexpected nprofile string")
@@ -113,8 +113,8 @@ func TestEncodeNprofile(t *testing.T) {
 
 func TestEncodeDecodeNaddr(t *testing.T) {
 	var naddr string
-	var e error
-	naddr, e = EncodeEntity(
+	var err error
+	naddr, err = EncodeEntity(
 		"3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d",
 		kind.Article,
 		"banana",
@@ -122,18 +122,18 @@ func TestEncodeDecodeNaddr(t *testing.T) {
 			"wss://relay.nostr.example.mydomain.example.com",
 			"wss://nostr.banana.com",
 		})
-	if e != nil {
-		t.Errorf("shouldn't error: %s", e)
+	if err != nil {
+		t.Errorf("shouldn't error: %s", err)
 	}
 	if naddr != "naddr1qqrxyctwv9hxzqfwwaehxw309aex2mrp0yhxummnw3ezuetcv9khqmr99ekhjer0d4skjm3wv4uxzmtsd3jjucm0d5q3vamnwvaz7tmwdaehgu3wvfskuctwvyhxxmmdqgsrhuxx8l9ex335q7he0f09aej04zpazpl0ne2cgukyawd24mayt8grqsqqqa28a3lkds" {
 		t.Errorf("produced an unexpected naddr string: %s", naddr)
 	}
 	var prefix string
 	var data any
-	prefix, data, e = Decode(naddr)
+	prefix, data, err = Decode(naddr)
 	// log.D.S(prefix, data, e)
-	if log.Fail(e) {
-		t.Errorf("shouldn't error: %s", e)
+	if log.Fail(err) {
+		t.Errorf("shouldn't error: %s", err)
 	}
 	if prefix != NentityHRP {
 		t.Error("returned invalid prefix")
@@ -157,9 +157,9 @@ func TestEncodeDecodeNaddr(t *testing.T) {
 }
 
 func TestDecodeNaddrWithoutRelays(t *testing.T) {
-	prefix, data, e := Decode("naddr1qq98yetxv4ex2mnrv4esygrl54h466tz4v0re4pyuavvxqptsejl0vxcmnhfl60z3rth2xkpjspsgqqqw4rsf34vl5")
-	if e != nil {
-		t.Errorf("shouldn't error: %s", e)
+	prefix, data, err := Decode("naddr1qq98yetxv4ex2mnrv4esygrl54h466tz4v0re4pyuavvxqptsejl0vxcmnhfl60z3rth2xkpjspsgqqqw4rsf34vl5")
+	if err != nil {
+		t.Errorf("shouldn't error: %s", err)
 	}
 	if prefix != "naddr" {
 		t.Error("returned invalid prefix")
@@ -180,18 +180,18 @@ func TestDecodeNaddrWithoutRelays(t *testing.T) {
 }
 
 func TestEncodeDecodeNEventTestEncodeDecodeNEvent(t *testing.T) {
-	nevent, e := EncodeEvent(
+	nevent, err := EncodeEvent(
 		"45326f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751ac194",
 		[]string{"wss://banana.com"},
 		"7fa56f5d6962ab1e3cd424e758c3002b8665f7b0d8dcee9fe9e288d7751abb88",
 	)
-	if e != nil {
-		t.Errorf("shouldn't error: %s", e)
+	if err != nil {
+		t.Errorf("shouldn't error: %s", err)
 	}
 
-	prefix, res, e := Decode(nevent)
-	if e != nil {
-		t.Errorf("shouldn't error: %s", e)
+	prefix, res, err := Decode(nevent)
+	if err != nil {
+		t.Errorf("shouldn't error: %s", err)
 	}
 
 	if prefix != "nevent" {

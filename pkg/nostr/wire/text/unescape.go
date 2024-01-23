@@ -126,18 +126,18 @@ func UnescapeByteString(bs []byte) (o []byte) {
 	log.D.F("'%s'", bs)
 	in := NewBuffer(bs)  // read side
 	out := NewBuffer(bs) // write side
-	var e error
+	var err error
 	var segment []byte
 	var c byte
 next:
 	for {
 		// find the first escape character.
 		// start := in.Pos
-		if segment, e = in.ReadUntil('\\'); e != nil {
+		if segment, err = in.ReadUntil('\\'); err != nil {
 			log.D.F("'%s'", string(in.Buf[in.Pos:]))
 			if len(segment) > 0 {
 				log.D.F("'%s'", string(segment))
-				if e = out.WriteBytes(segment); log.Fail(e) {
+				if err = out.WriteBytes(segment); log.Fail(err) {
 					break next
 				}
 			}
@@ -150,14 +150,14 @@ next:
 		// )
 		if len(segment) > 0 {
 			// write the segment to the out side
-			if e = out.WriteBytes(segment); log.Fail(e) {
+			if err = out.WriteBytes(segment); log.Fail(err) {
 				break next
 			}
 		}
 		// skip the backslash
 		in.Pos++
 		// get the next byte to check for a 'u'
-		if c, e = in.Read(); log.Fail(e) {
+		if c, err = in.Read(); log.Fail(err) {
 			break next
 		}
 		// log.D.F("'%s'", string(c))
@@ -166,7 +166,7 @@ next:
 			// we are only handling 8 bit escapes so we must see 2 0s before two
 			// hex digits.
 			for i := 2; i < 4; i++ {
-				if c, e = in.Read(); log.Fail(e) {
+				if c, err = in.Read(); log.Fail(err) {
 					break next
 				}
 				if c != '0' {
@@ -181,7 +181,7 @@ next:
 			// value.
 			var charByte byte
 			for i := 4; i < 6; i++ {
-				if c, e = in.Read(); log.Fail(e) {
+				if c, err = in.Read(); log.Fail(err) {
 					break next
 				}
 				switch c {
@@ -204,7 +204,7 @@ next:
 
 			}
 			// we now have the character to write into the out buffer.
-			if e = out.Write(charByte); log.Fail(e) {
+			if err = out.Write(charByte); log.Fail(err) {
 				break next
 			}
 		default:
@@ -231,7 +231,7 @@ next:
 				log.D.F("UNESCAPE \\%s", string(c))
 			}
 			// we now have the character to write into the out buffer.
-			if e = out.Write(writeChar); log.Fail(e) {
+			if err = out.Write(writeChar); log.Fail(err) {
 				break next
 			}
 

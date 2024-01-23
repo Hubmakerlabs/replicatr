@@ -10,8 +10,8 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (e error) {
-	return b.Update(func(txn *badger.Txn) (e error) {
+func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (err error) {
+	return b.Update(func(txn *badger.Txn) (err error) {
 		b.D.Ln("saving event")
 		// query event by id to ensure we don't save duplicates
 		id, _ := hex.Dec(evt.ID.String())
@@ -28,21 +28,21 @@ func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (e error) {
 		b.D.Ln("encoding to binary")
 		// encode to binary
 		var bin []byte
-		if bin, e = nostr_binary.Marshal(evt); b.Fail(e) {
-			return e
+		if bin, err = nostr_binary.Marshal(evt); b.Fail(err) {
+			return err
 		}
 		b.D.F("binary encoded %x", bin)
 		idx := b.Serial()
 		// raw event store
 		b.D.F("setting event")
-		if e = txn.Set(idx, bin); b.Fail(e) {
-			return e
+		if err = txn.Set(idx, bin); b.Fail(err) {
+			return err
 		}
 		b.D.F("get index keys for event")
 		for _, k := range getIndexKeysForEvent(evt, idx[1:]) {
 			b.D.F("index key %x", k)
-			if e = txn.Set(k, nil); b.Fail(e) {
-				return e
+			if err = txn.Set(k, nil); b.Fail(err) {
+				return err
 			}
 		}
 		b.D.F("event saved")

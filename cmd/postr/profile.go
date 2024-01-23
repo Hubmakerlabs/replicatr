@@ -15,7 +15,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Profile(cCtx *cli.Context) (e error) {
+func Profile(cCtx *cli.Context) (err error) {
 	user, j := cCtx.String("u"), cCtx.Bool("json")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var rl *relay.T
@@ -25,7 +25,7 @@ func Profile(cCtx *cli.Context) (e error) {
 	defer log.E.Chk(rl.Close())
 	var pub string
 	if user == "" {
-		if pub, _, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+		if pub, _, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 			return
 		}
 	} else {
@@ -51,13 +51,13 @@ func Profile(cCtx *cli.Context) (e error) {
 		return nil
 	}
 	var p Metadata
-	e = json.Unmarshal([]byte(evs[0].Content), &p)
-	if log.Fail(e) {
-		return e
+	err = json.Unmarshal([]byte(evs[0].Content), &p)
+	if log.Fail(err) {
+		return err
 	}
 	var npub string
-	if npub, e = bech32encoding.EncodePublicKey(pub); log.Fail(e) {
-		return e
+	if npub, err = bech32encoding.EncodePublicKey(pub); log.Fail(err) {
+		return err
 	}
 	fmt.Printf(
 		"Name:\n\t%v\n"+

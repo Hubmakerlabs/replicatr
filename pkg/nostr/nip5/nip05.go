@@ -25,7 +25,7 @@ type WellKnownResponse struct {
 	Relays key2RelaysMap `json:"relays"` // NIP-35
 }
 
-func QueryIdentifier(c context.T, fullname string) (pp *pointers.Profile, e error) {
+func QueryIdentifier(c context.T, fullname string) (pp *pointers.Profile, err error) {
 	spl := strings.Split(fullname, "@")
 	var name, domain string
 	switch len(spl) {
@@ -42,31 +42,31 @@ func QueryIdentifier(c context.T, fullname string) (pp *pointers.Profile, e erro
 		return nil, fmt.Errorf("hostname doesn't have a dot")
 	}
 	var req *http.Request
-	req, e = http.NewRequestWithContext(c, "GET",
+	req, err = http.NewRequestWithContext(c, "GET",
 		fmt.Sprintf("https://%s/.well-known/nostr.json?name=%s", domain, name), nil)
-	if log.E.Chk(e) {
-		return nil, fmt.Errorf("failed to create a request: %w", e)
+	if log.E.Chk(err) {
+		return nil, fmt.Errorf("failed to create a request: %w", err)
 	}
 	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) (e error) {
+		CheckRedirect: func(req *http.Request, via []*http.Request) (err error) {
 			return http.ErrUseLastResponse
 		},
 	}
 	var res *http.Response
-	if res, e = client.Do(req); log.E.Chk(e) {
-		return nil, fmt.Errorf("request failed: %w", e)
+	if res, err = client.Do(req); log.E.Chk(err) {
+		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer res.Body.Close()
 	var result WellKnownResponse
-	if e = json.NewDecoder(res.Body).Decode(&result); log.E.Chk(e) {
-		return nil, fmt.Errorf("failed to decode json response: %w", e)
+	if err = json.NewDecoder(res.Body).Decode(&result); log.E.Chk(err) {
+		return nil, fmt.Errorf("failed to decode json response: %w", err)
 	}
 	pubkey, ok := result.Names[name]
 	if !ok {
 		return &pointers.Profile{}, nil
 	}
 	if len(pubkey) == 64 {
-		if _, e := hex.Dec(pubkey); e != nil {
+		if _, err := hex.Dec(pubkey); err != nil {
 			return &pointers.Profile{}, nil
 		}
 	}

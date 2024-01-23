@@ -38,23 +38,23 @@ func (E *T) Bytes() []byte { return E.ToArray().Bytes() }
 func (E *T) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
 
 // Unmarshal the envelope.
-func (E *T) Unmarshal(buf *text.Buffer) (e error) {
+func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label (note we aren't checking that only
 	// whitespace intervenes because laziness, usually this is the very next
 	// character).
-	if e = buf.ScanUntil(','); e != nil {
+	if err = buf.ScanUntil(','); err != nil {
 		return
 	}
 	// Next character we find will be open quotes for the subscription ID.
-	if e = buf.ScanThrough('"'); e != nil {
+	if err = buf.ScanThrough('"'); err != nil {
 		return
 	}
 	var sid []byte
 	// read the string
-	if sid, e = buf.ReadUntil('"'); log.Fail(e) {
+	if sid, err = buf.ReadUntil('"'); log.Fail(err) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	E.T = subscriptionid.T(sid[:])

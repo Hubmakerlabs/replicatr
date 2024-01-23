@@ -20,10 +20,10 @@ const version = "0.0.54"
 
 var revision = "HEAD"
 
-func configDir() (dir string, e error) {
+func configDir() (dir string, err error) {
 	switch runtime.GOOS {
 	case "darwin":
-		if dir, e = os.UserHomeDir(); log.Fail(e) {
+		if dir, err = os.UserHomeDir(); log.Fail(err) {
 			return
 		}
 		return filepath.Join(dir, ".config"), nil
@@ -32,10 +32,10 @@ func configDir() (dir string, e error) {
 	}
 }
 
-func loadConfig(profile string) (cfg *C, e error) {
+func loadConfig(profile string) (cfg *C, err error) {
 	var dir string
-	if dir, e = configDir(); log.Fail(e) {
-		return nil, e
+	if dir, err = configDir(); log.Fail(err) {
+		return nil, err
 	}
 	dir = filepath.Join(dir, appName)
 	var fp string
@@ -45,7 +45,7 @@ func loadConfig(profile string) (cfg *C, e error) {
 	case "?":
 		var nn []string
 		p := filepath.Join(dir, "config-*.json")
-		if nn, e = filepath.Glob(p); log.Fail(e) {
+		if nn, err = filepath.Glob(p); log.Fail(err) {
 			return
 		}
 		for _, n := range nn {
@@ -57,15 +57,15 @@ func loadConfig(profile string) (cfg *C, e error) {
 	default:
 		fp = filepath.Join(dir, "config-"+profile+".json")
 	}
-	if e = os.MkdirAll(filepath.Dir(fp), 0700); log.Fail(e) {
+	if err = os.MkdirAll(filepath.Dir(fp), 0700); log.Fail(err) {
 		return
 	}
 	var b []byte
-	if b, e = os.ReadFile(fp); log.Fail(e) {
+	if b, err = os.ReadFile(fp); log.Fail(err) {
 		return
 	}
 	cfg = new(C)
-	if e = json.Unmarshal(b, cfg); log.Fail(e) {
+	if err = json.Unmarshal(b, cfg); log.Fail(err) {
 		return
 	}
 	log.D.Ln("relays", cfg.Relays)
@@ -81,7 +81,7 @@ func loadConfig(profile string) (cfg *C, e error) {
 	return
 }
 
-func doVersion(_ *cli.Context) (e error) {
+func doVersion(_ *cli.Context) (err error) {
 	fmt.Println(version)
 	return nil
 }
@@ -297,14 +297,14 @@ func main() {
 				Action:    doVersion,
 			},
 		},
-		Before: func(cCtx *cli.Context) (e error) {
+		Before: func(cCtx *cli.Context) (err error) {
 			if cCtx.Args().Get(0) == "version" {
 				return nil
 			}
 			profile := cCtx.String("a")
 			var cfg *C
-			if cfg, e = loadConfig(profile); log.Fail(e) {
-				return e
+			if cfg, err = loadConfig(profile); log.Fail(err) {
+				return err
 			}
 			cCtx.App.Metadata = map[string]any{
 				"config": cfg,
@@ -329,7 +329,7 @@ func main() {
 			return nil
 		},
 	}
-	if e := app.Run(os.Args); log.E.Chk(e) {
+	if err := app.Run(os.Args); log.E.Chk(err) {
 		os.Exit(1)
 	}
 }

@@ -24,46 +24,46 @@ type RelayWrapper struct {
 
 var _ RelayInterface = (*RelayWrapper)(nil)
 
-func (w RelayWrapper) Publish(c context.T, evt *event.T) (e error) {
+func (w RelayWrapper) Publish(c context.T, evt *event.T) (err error) {
 	var ch chan *event.T
 	if 20000 <= evt.Kind && evt.Kind < 30000 {
 		// do not store ephemeral events
 		return nil
 	} else if evt.Kind == 0 || evt.Kind == 3 || (10000 <= evt.Kind && evt.Kind < 20000) {
 		// replaceable event, delete before storing
-		ch, e = w.Store.QueryEvents(c, &filter.T{
+		ch, err = w.Store.QueryEvents(c, &filter.T{
 			Authors: []string{evt.PubKey},
 			Kinds:   kinds.T{evt.Kind},
 		})
-		if e != nil {
-			return fmt.Errorf("failed to query before replacing: %w", e)
+		if err != nil {
+			return fmt.Errorf("failed to query before replacing: %w", err)
 		}
 		if previous := <-ch; previous != nil && isOlder(previous, evt) {
-			if e := w.Store.DeleteEvent(c, previous); e != nil {
-				return fmt.Errorf("failed to delete event for replacing: %w", e)
+			if err := w.Store.DeleteEvent(c, previous); err != nil {
+				return fmt.Errorf("failed to delete event for replacing: %w", err)
 			}
 		}
 	} else if 30000 <= evt.Kind && evt.Kind < 40000 {
 		// parameterized replaceable event, delete before storing
 		d := evt.Tags.GetFirst([]string{"d", ""})
 		if d != nil {
-			ch, e = w.Store.QueryEvents(c, &filter.T{
+			ch, err = w.Store.QueryEvents(c, &filter.T{
 				Authors: []string{evt.PubKey},
 				Kinds:   kinds.T{evt.Kind},
 				Tags:    filter.TagMap{"d": []string{d.Value()}},
 			})
-			if e != nil {
-				return fmt.Errorf("failed to query before parameterized replacing: %w", e)
+			if err != nil {
+				return fmt.Errorf("failed to query before parameterized replacing: %w", err)
 			}
 			if previous := <-ch; previous != nil && isOlder(previous, evt) {
-				if e = w.Store.DeleteEvent(c, previous); log.Fail(e) {
-					return fmt.Errorf("failed to delete event for parameterized replacing: %w", e)
+				if err = w.Store.DeleteEvent(c, previous); log.Fail(err) {
+					return fmt.Errorf("failed to delete event for parameterized replacing: %w", err)
 				}
 			}
 		}
 	}
-	if e = w.SaveEvent(c, evt); e != nil && !errors.Is(e, ErrDupEvent) {
-		return fmt.Errorf("failed to save: %w", e)
+	if err = w.SaveEvent(c, evt); err != nil && !errors.Is(err, ErrDupEvent) {
+		return fmt.Errorf("failed to save: %w", err)
 	}
 	return nil
 }
@@ -71,9 +71,9 @@ func (w RelayWrapper) Publish(c context.T, evt *event.T) (e error) {
 func (w RelayWrapper) QuerySync(c context.T, f *filter.T,
 	opts ...subscriptionoption.I) ([]*event.T, error) {
 
-	ch, e := w.Store.QueryEvents(c, f)
-	if e != nil {
-		return nil, fmt.Errorf("failed to query: %w", e)
+	ch, err := w.Store.QueryEvents(c, f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query: %w", err)
 	}
 	n := f.Limit
 	if n == 0 {

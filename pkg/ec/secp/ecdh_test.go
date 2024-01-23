@@ -11,14 +11,14 @@ import (
 )
 
 func TestGenerateSharedSecret(t *testing.T) {
-	secKey1, e := GenerateSecretKey()
-	if e != nil {
-		t.Errorf("secret key generation error: %s", e)
+	secKey1, err := GenerateSecretKey()
+	if err != nil {
+		t.Errorf("secret key generation error: %s", err)
 		return
 	}
-	secKey2, e := GenerateSecretKey()
-	if e != nil {
-		t.Errorf("secret key generation error: %s", e)
+	secKey2, err := GenerateSecretKey()
+	if err != nil {
+		t.Errorf("secret key generation error: %s", err)
 		return
 	}
 

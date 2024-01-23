@@ -106,7 +106,7 @@ func NewPublicKey(x, y *FieldVal) *PublicKey {
 // NOTE: The hybrid format makes little sense in practice an therefore this
 // package will not produce public keys serialized in this format.  However,
 // this function will properly parse them since they exist in the wild.
-func ParsePubKey(serialized []byte) (key *PublicKey, e error) {
+func ParsePubKey(serialized []byte) (key *PublicKey, err error) {
 	var x, y FieldVal
 	switch len(serialized) {
 	case PubKeyBytesLenUncompressed:

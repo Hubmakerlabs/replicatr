@@ -12,18 +12,18 @@ import (
 
 func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
 	return func(c context.T, rl *relay.T) bool {
-		evs, e := rl.QuerySync(c, &filter.T{
+		evs, err := rl.QuerySync(c, &filter.T{
 			Kinds:   kinds.T{kind.FollowList},
 			Authors: []string{pub},
 			Limit:   1,
 		})
-		if log.Fail(e) {
+		if log.Fail(err) {
 			return true
 		}
 		for _, ev := range evs {
 			var rm Relays
 			if cfg.tempRelay == false {
-				if e = json.Unmarshal([]byte(ev.Content), &rm); log.Fail(e) {
+				if err = json.Unmarshal([]byte(ev.Content), &rm); log.Fail(err) {
 					// continue
 				} else {
 					for k, v1 := range cfg.Relays {

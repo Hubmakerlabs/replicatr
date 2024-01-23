@@ -6,8 +6,8 @@ import (
 )
 
 func IsValidRelayURL(u string) bool {
-	parsed, e := url.Parse(u)
-	if e != nil {
+	parsed, err := url.Parse(u)
+	if err != nil {
 		return false
 	}
 	if parsed.Scheme != "wss" && parsed.Scheme != "ws" {

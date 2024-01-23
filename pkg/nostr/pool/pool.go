@@ -80,7 +80,7 @@ func NewSimplePool(c context.T, opts ...Option) (p *Simple) {
 	return
 }
 
-func (p *Simple) EnsureRelay(url string) (rl *relay.T, e error) {
+func (p *Simple) EnsureRelay(url string) (rl *relay.T, err error) {
 	nm := normalize.URL(url)
 
 	defer namedLock(url)()
@@ -93,8 +93,8 @@ func (p *Simple) EnsureRelay(url string) (rl *relay.T, e error) {
 		// we use this ctx here so when the pool dies everything dies
 		c, cancel := context.Timeout(p.Context, time.Second*15)
 		defer cancel()
-		if rl, e = relay.Connect(c, nm); e != nil {
-			return nil, fmt.Errorf("failed to connect: %w", e)
+		if rl, err = relay.Connect(c, nm); err != nil {
+			return nil, fmt.Errorf("failed to connect: %w", err)
 		}
 		p.Relays.Store(nm, rl)
 		return
@@ -123,8 +123,8 @@ func (p *Simple) subMany(c context.T, urls []string, filters filters.T, unique b
 	pending.Add(int64(initial))
 	for _, url := range urls {
 		go func(nm string) {
-			rl, e := p.EnsureRelay(nm)
-			if e != nil {
+			rl, err := p.EnsureRelay(nm)
+			if err != nil {
 				return
 			}
 
@@ -189,14 +189,14 @@ func (p *Simple) subManyEose(c context.T, urls []string, f filters.T, unique boo
 		go func(nm string) {
 			defer wg.Done()
 
-			rl, e := p.EnsureRelay(nm)
-			if e != nil {
+			rl, err := p.EnsureRelay(nm)
+			if err != nil {
 				return
 			}
 
-			sub, e := rl.Subscribe(c, f)
+			sub, err := rl.Subscribe(c, f)
 			if sub == nil {
-				log.E.F("error subscribing to %s with %v: %s", rl, f, e)
+				log.E.F("error subscribing to %s with %v: %s", rl, f, err)
 				return
 			}
 

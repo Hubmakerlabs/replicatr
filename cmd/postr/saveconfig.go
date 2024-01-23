@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 )
 
-func (cfg *C) save(profile string) (e error) {
+func (cfg *C) save(profile string) (err error) {
 	if cfg.tempRelay {
 		return nil
 	}
@@ -14,9 +14,9 @@ func (cfg *C) save(profile string) (e error) {
 		log.D.Ln("not saving config with no relays, possibly was lost")
 	}
 	var dir string
-	dir, e = configDir()
-	if log.Fail(e) {
-		return e
+	dir, err = configDir()
+	if log.Fail(err) {
+		return err
 	}
 	dir = filepath.Join(dir, appName)
 
@@ -27,9 +27,9 @@ func (cfg *C) save(profile string) (e error) {
 		fp = filepath.Join(dir, "config-"+profile+".json")
 	}
 	var b []byte
-	b, e = json.MarshalIndent(&cfg, "", "\t")
-	if log.Fail(e) {
-		return e
+	b, err = json.MarshalIndent(&cfg, "", "\t")
+	if log.Fail(err) {
+		return err
 	}
 	log.D.F("saving to file '%s'\n%s", fp, string(b))
 	// return nil

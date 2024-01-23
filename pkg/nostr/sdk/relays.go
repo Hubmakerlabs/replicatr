@@ -80,8 +80,8 @@ func ParseRelaysFromKind3(evt *event.T) (r []Relay) {
 		Write bool `json:"write"`
 	}
 	items := make(map[string]Item, 20)
-	var e error
-	if e = json.Unmarshal([]byte(evt.Content), &items); log.Fail(e) {
+	var err error
+	if err = json.Unmarshal([]byte(evt.Content), &items); log.Fail(err) {
 		// shouldn't this be fatal?
 	}
 	r = make([]Relay, len(items))
@@ -106,8 +106,8 @@ func ParseRelaysFromKind3(evt *event.T) (r []Relay) {
 }
 
 func IsValidRelayURL(u string) bool {
-	parsed, e := url.Parse(u)
-	if log.Fail(e) {
+	parsed, err := url.Parse(u)
+	if log.Fail(err) {
 		return false
 	}
 	if parsed.Scheme != "wss" && parsed.Scheme != "ws" {

@@ -8,9 +8,9 @@ package schnorr
 import (
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 	"github.com/dchest/blake256"
 	"github.com/minio/sha256-simd"
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 )
 
 const (
@@ -175,8 +175,8 @@ func schnorrVerify(sig *Signature, hash []byte,
 	// Step 6.
 	//
 	// Fail if e >= n
-	var e secp256k1.ModNScalar
-	if overflow := e.SetBytes(&commitment); overflow != 0 {
+	var err secp256k1.ModNScalar
+	if overflow := err.SetBytes(&commitment); overflow != 0 {
 		str := "hash of (R || m) too big"
 		return signatureError(ErrSchnorrHashValue, str)
 	}
@@ -187,7 +187,7 @@ func schnorrVerify(sig *Signature, hash []byte,
 	var Q, R, sG, eQ secp256k1.JacobianPoint
 	pubKey.AsJacobian(&Q)
 	secp256k1.ScalarBaseMultNonConst(&sig.s, &sG)
-	secp256k1.ScalarMultNonConst(&e, &Q, &eQ)
+	secp256k1.ScalarMultNonConst(&err, &Q, &eQ)
 	secp256k1.AddNonConst(&sG, &eQ, &R)
 
 	// Step 8.
@@ -230,7 +230,7 @@ func schnorrVerify(sig *Signature, hash []byte,
 // error to support better testing while the exported method simply returns a
 // bool indicating success or failure.
 func schnorrVerifyBlake256(sig *Signature, hash []byte,
-	pubKey *secp256k1.PublicKey) (e error) {
+	pubKey *secp256k1.PublicKey) (err error) {
 	// The algorithm for producing a EC-Schnorr-DCRv0 signature is described in
 	// README.md and is reproduced here for reference:
 	//
@@ -422,8 +422,8 @@ func schnorrSignBlake256(secKey, nonce *secp256k1.ModNScalar,
 	// Step 8.
 	//
 	// Repeat from step 1 (with iteration + 1) if e >= N
-	var e secp256k1.ModNScalar
-	if overflow := e.SetBytes(&commitment); overflow != 0 {
+	var err secp256k1.ModNScalar
+	if overflow := err.SetBytes(&commitment); overflow != 0 {
 		k.Zero()
 		str := "hash of (R || m) too big"
 		return nil, signatureError(ErrSchnorrHashValue, str)
@@ -432,7 +432,7 @@ func schnorrSignBlake256(secKey, nonce *secp256k1.ModNScalar,
 	// Step 9.
 	//
 	// s = k - e*d mod n
-	s := new(secp256k1.ModNScalar).Mul2(&e, secKey).Negate().Add(&k)
+	s := new(secp256k1.ModNScalar).Mul2(&err, secKey).Negate().Add(&k)
 	k.Zero()
 
 	// Step 10.
@@ -509,8 +509,8 @@ func schnorrSign(secKey, nonce *secp256k1.ModNScalar, hash []byte) (*Signature,
 	// Step 8.
 	//
 	// Repeat from step 1 (with iteration + 1) if e >= N
-	var e secp256k1.ModNScalar
-	if overflow := e.SetBytes(&commitment); overflow != 0 {
+	var err secp256k1.ModNScalar
+	if overflow := err.SetBytes(&commitment); overflow != 0 {
 		k.Zero()
 		str := "hash of (R || m) too big"
 		return nil, signatureError(ErrSchnorrHashValue, str)
@@ -519,7 +519,7 @@ func schnorrSign(secKey, nonce *secp256k1.ModNScalar, hash []byte) (*Signature,
 	// Step 9.
 	//
 	// s = k - e*d mod n
-	s := new(secp256k1.ModNScalar).Mul2(&e, secKey).Negate().Add(&k)
+	s := new(secp256k1.ModNScalar).Mul2(&err, secKey).Negate().Add(&k)
 	k.Zero()
 
 	// Step 10.
@@ -593,9 +593,9 @@ func Sign(secKey *secp256k1.SecretKey, hash []byte) (*Signature, error) {
 			nil, iteration)
 
 		// Steps 4-10.
-		sig, e := schnorrSign(secKeyScalar, k, hash)
+		sig, err := schnorrSign(secKeyScalar, k, hash)
 		k.Zero()
-		if e != nil {
+		if err != nil {
 			// Try again with a new nonce.
 			continue
 		}

@@ -65,7 +65,7 @@ func (ev *T) ToObject() (o object.T) {
 	}
 }
 
-func (ev *T) MarshalJSON() (bytes []byte, e error) {
+func (ev *T) MarshalJSON() (bytes []byte, err error) {
 	return ev.ToObject().Bytes(), nil
 }
 
@@ -86,33 +86,33 @@ func (ev *T) GetID() eventid.T { return eventid.T(hex.Enc(ev.GetIDBytes())) }
 // CheckSignature checks if the signature is valid for the id (which is a hash
 // of the serialized event content). returns an error if the signature itself is
 // invalid.
-func (ev *T) CheckSignature() (valid bool, e error) {
+func (ev *T) CheckSignature() (valid bool, err error) {
 
 	// decode pubkey hex to bytes.
 	var pkBytes []byte
-	if pkBytes, e = hex.Dec(ev.PubKey); log.Fail(e) {
-		e = fmt.Errorf("event pubkey '%s' is invalid hex: %w", ev.PubKey, e)
+	if pkBytes, err = hex.Dec(ev.PubKey); log.Fail(err) {
+		err = fmt.Errorf("event pubkey '%s' is invalid hex: %w", ev.PubKey, err)
 		return
 	}
 
 	// parse pubkey bytes.
 	var pk *secp256k1.PublicKey
-	if pk, e = schnorr.ParsePubKey(pkBytes); log.Fail(e) {
-		e = fmt.Errorf("event has invalid pubkey '%s': %w", ev.PubKey, e)
+	if pk, err = schnorr.ParsePubKey(pkBytes); log.Fail(err) {
+		err = fmt.Errorf("event has invalid pubkey '%s': %w", ev.PubKey, err)
 		return
 	}
 
 	// decode signature hex to bytes.
 	var sigBytes []byte
-	if sigBytes, e = hex.Dec(ev.Sig); log.Fail(e) {
-		e = fmt.Errorf("signature '%s' is invalid hex: %w", ev.Sig, e)
+	if sigBytes, err = hex.Dec(ev.Sig); log.Fail(err) {
+		err = fmt.Errorf("signature '%s' is invalid hex: %w", ev.Sig, err)
 		return
 	}
 
 	// parse signature bytes.
 	var sig *schnorr.Signature
-	if sig, e = schnorr.ParseSignature(sigBytes); log.Fail(e) {
-		e = fmt.Errorf("failed to parse signature: %w", e)
+	if sig, err = schnorr.ParseSignature(sigBytes); log.Fail(err) {
+		err = fmt.Errorf("failed to parse signature: %w", err)
 		return
 	}
 
@@ -122,7 +122,7 @@ func (ev *T) CheckSignature() (valid bool, e error) {
 }
 
 // Sign signs an event with a given Secret Key encoded in hexadecimal.
-func (ev *T) Sign(skStr string, so ...schnorr.SignOption) (e error) {
+func (ev *T) Sign(skStr string, so ...schnorr.SignOption) (err error) {
 
 	// secret key hex must be 64 characters.
 	if len(skStr) != 64 {
@@ -132,9 +132,9 @@ func (ev *T) Sign(skStr string, so ...schnorr.SignOption) (e error) {
 
 	// decode secret key hex to bytes
 	var skBytes []byte
-	if skBytes, e = hex.Dec(skStr); log.Fail(e) {
+	if skBytes, err = hex.Dec(skStr); log.Fail(err) {
 		return fmt.Errorf("sign called with invalid secret key '%s': %w",
-			skStr, e)
+			skStr, err)
 	}
 
 	// parse bytes to get secret key (size checks have been done).
@@ -145,13 +145,13 @@ func (ev *T) Sign(skStr string, so ...schnorr.SignOption) (e error) {
 
 // SignWithSecKey signs an event with a given *secp256xk1.SecretKey.
 func (ev *T) SignWithSecKey(sk *secp256k1.SecretKey,
-	so ...schnorr.SignOption) (e error) {
+	so ...schnorr.SignOption) (err error) {
 
 	// sign the event.
 	var sig *schnorr.Signature
 	id := ev.GetIDBytes()
-	if sig, e = schnorr.Sign(sk, id, so...); log.Fail(e) {
-		return e
+	if sig, err = schnorr.Sign(sk, id, so...); log.Fail(err) {
+		return err
 	}
 
 	// we know ID is good so just coerce type.

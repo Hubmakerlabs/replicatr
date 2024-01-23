@@ -20,7 +20,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Post(cCtx *cli.Context) (e error) {
+func Post(cCtx *cli.Context) (err error) {
 	stdin := cCtx.Bool("stdin")
 	if !stdin && cCtx.Args().Len() == 0 {
 		return cli.ShowSubcommandHelp(cCtx)
@@ -28,14 +28,14 @@ func Post(cCtx *cli.Context) (e error) {
 	sensitive, geohash := cCtx.String("sensitive"), cCtx.String("geohash")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var pub, sk string
-	if pub, sk, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	ev := &event.T{}
 	ev.PubKey = pub
 	if stdin {
 		var b []byte
-		if b, e = io.ReadAll(os.Stdin); log.Fail(e) {
+		if b, err = io.ReadAll(os.Stdin); log.Fail(err) {
 			return
 		}
 		ev.Content = string(b)
@@ -88,14 +88,14 @@ func Post(cCtx *cli.Context) (e error) {
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.TextNote
 	log.T.F("signing event `%s`", ev.ToObject())
-	if e = ev.Sign(sk); log.Fail(e) {
-		return e
+	if err = ev.Sign(sk); log.Fail(err) {
+		return err
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
-		e := rl.Publish(c, ev)
-		if log.Fail(e) {
-			log.D.Ln(rl.URL(), e)
+		err := rl.Publish(c, ev)
+		if log.Fail(err) {
+			log.D.Ln(rl.URL(), err)
 		} else {
 			success.Add(1)
 		}

@@ -33,23 +33,23 @@ func TestEnveloper(t *testing.T) {
 		&eoseenvelope.T{T: sub},
 		&closeenvelope.T{T: sub},
 	}
-	var e error
+	var err error
 	var b []byte
 	for i := range envs {
-		b, e = json.Marshal(envs[i])
-		if e != nil {
-			t.Fatal(e)
+		b, err = json.Marshal(envs[i])
+		if err != nil {
+			t.Fatal(err)
 		}
 		marshaled := string(b)
 		log.D.Ln("marshaled  ", marshaled)
 		var env enveloper.I
-		env, _, e = envelopes.ProcessEnvelope(b)
-		if e != nil {
-			t.Fatal(e)
+		env, _, err = envelopes.ProcessEnvelope(b)
+		if err != nil {
+			t.Fatal(err)
 		}
 		var um []byte
 		log.I.Ln("marshaling")
-		um, e = json.Marshal(env)
+		um, err = json.Marshal(env)
 		unmarshaled := string(um)
 		log.D.Ln("unmarshaled", unmarshaled)
 		if marshaled != unmarshaled {

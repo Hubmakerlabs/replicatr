@@ -14,7 +14,7 @@ import (
 )
 
 func (rl *Relay) handleFilter(c context.T, id string,
-	eose *sync.WaitGroup, ws *WebSocket, f *filter.T) (e error) {
+	eose *sync.WaitGroup, ws *WebSocket, f *filter.T) (err error) {
 
 	defer eose.Done()
 	// overwrite the filter (for example, to eliminate some kinds or that we
@@ -23,8 +23,8 @@ func (rl *Relay) handleFilter(c context.T, id string,
 		ovw(c, f)
 	}
 	if f.Limit < 0 {
-		e = errors.New("blocked: filter invalidated")
-		rl.E.Chk(e)
+		err = errors.New("blocked: filter invalidated")
+		rl.E.Chk(err)
 		return
 	}
 	// then check if we'll reject this filter (we apply this after overwriting
@@ -42,8 +42,8 @@ func (rl *Relay) handleFilter(c context.T, id string,
 	eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
 		var ch chan *event.T
-		if ch, e = query(c, f); rl.E.Chk(e) {
-			rl.E.Chk(ws.WriteJSON(&noticeenvelope.T{Text: e.Error()}))
+		if ch, err = query(c, f); rl.E.Chk(err) {
+			rl.E.Chk(ws.WriteJSON(&noticeenvelope.T{Text: err.Error()}))
 			eose.Done()
 			continue
 		}
