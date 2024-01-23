@@ -22,7 +22,7 @@ type System struct {
 	RelaysCache      cache32.I[[]Relay]
 	FollowsCache     cache32.I[[]Follow]
 	MetadataCache    cache32.I[*ProfileMetadata]
-	Pool             *pool.SimplePool
+	Pool             *pool.Simple
 	RelayListRelays  []string
 	FollowListRelays []string
 	MetadataRelays   []string
@@ -110,7 +110,7 @@ func (s *System) fetchProfileMetadata(c context.T,
 func (s *System) FetchUserEvents(c context.T,
 	f *filter.T) (r map[string][]*event.T, e error) {
 
-	var ff map[*relay.Relay]*filter.T
+	var ff map[*relay.T]*filter.T
 	if ff, e = s.ExpandQueriesByAuthorAndRelays(c,
 		f); log.Fail(e) {
 
@@ -120,7 +120,7 @@ func (s *System) FetchUserEvents(c context.T,
 	wg := sync.WaitGroup{}
 	wg.Add(len(ff))
 	for rl, f := range ff {
-		go func(rl *relay.Relay, f *filter.T) {
+		go func(rl *relay.T, f *filter.T) {
 			defer wg.Done()
 			f.Limit = f.Limit *
 				len(f.Authors) // hack

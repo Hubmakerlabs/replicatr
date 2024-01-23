@@ -169,12 +169,12 @@ func (sub *T) Fire() error {
 	if sub.CountResult == nil {
 		reqb, _ = (&reqenvelope.T{
 			SubscriptionID: subscriptionid.T(id),
-			T:              sub.Filters,
+			Filters:        sub.Filters,
 		}).MarshalJSON()
 	} else {
 		reqb, _ = (&countenvelope.Request{
-			ID: subscriptionid.T(id),
-			T:  sub.Filters,
+			ID:      subscriptionid.T(id),
+			Filters: sub.Filters,
 		}).MarshalJSON()
 	}
 	log.D.F("{%s} sending %v", sub.Relay.URL(), string(reqb))

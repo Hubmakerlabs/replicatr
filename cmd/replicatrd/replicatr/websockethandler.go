@@ -5,13 +5,13 @@ import (
 	"crypto/sha256"
 	"errors"
 	"net/http"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
@@ -68,27 +68,25 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
-	log.T.F("processing message '%s", string(msg))
+	rl.T.F("processing message '%s", string(msg))
 	en, _, e := envelopes.ProcessEnvelope(msg)
 	if log.Fail(e) {
 		return
 	}
-	log.T.F("did not fail %v", en)
 	if en == nil {
-		log.T.Ln("silently ignoring message")
+		rl.T.Ln("'silently' ignoring message")
 		return
 	}
-	log.T.Ln("did not get silently ignored", reflect.TypeOf(en))
 	switch env := en.(type) {
 	case *eventenvelope.T:
-		log.T.Ln("event envelope")
+		rl.T.Ln("event envelope")
 		// check id
 		evs := env.Event.ToCanonical().Bytes()
-		log.T.F("serialized %s", evs)
+		rl.T.F("serialized %s", evs)
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
-			log.T.F("id mismatch got %s, expected %s",
+			rl.T.F("id mismatch got %s, expected %s",
 				id, env.Event.ID.String())
 			rl.E.Chk(ws.WriteJSON(okenvelope.T{
 				ID:     env.Event.ID,
@@ -97,7 +95,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			}))
 			return
 		}
-		log.T.Ln("ID was valid")
+		rl.T.Ln("ID was valid")
 		// check signature
 		var ok bool
 		if ok, e = env.Event.CheckSignature(); rl.E.Chk(e) {
@@ -115,12 +113,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			))
 			return
 		}
-		log.T.Ln("signature was valid")
+		rl.T.Ln("signature was valid")
 		var writeErr error
-		if env.Event.Kind == 5 {
+		if env.Event.Kind == kind.Deletion {
 			// this always returns "blocked: " whenever it returns an error
 			writeErr = rl.handleDeleteRequest(c, env.Event)
 		} else {
+			rl.D.Ln("adding event")
 			// this will also always return a prefixed reason
 			writeErr = rl.AddEvent(c, env.Event)
 		}
@@ -133,11 +132,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		} else {
 			ok = true
 		}
+		rl.D.Ln("sending back ok envelope")
 		rl.E.Chk(ws.WriteJSON(okenvelope.T{
 			ID:     env.Event.ID,
 			OK:     ok,
 			Reason: reason,
 		}))
+		rl.D.Ln("sent back ok envelope")
 	case *countenvelope.Request:
 		if rl.CountEvents == nil {
 			rl.E.Chk(ws.WriteJSON(closedenvelope.T{
@@ -147,7 +148,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			return
 		}
 		var total int64
-		for _, f := range env.T {
+		for _, f := range env.Filters {
 			total += rl.handleCountRequest(c, ws, f)
 		}
 		rl.E.Chk(ws.WriteJSON(countenvelope.Response{
@@ -156,13 +157,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		}))
 	case *reqenvelope.T:
 		wg := sync.WaitGroup{}
-		wg.Add(len(env.T))
+		wg.Add(len(env.Filters))
 		// a context just for the "stored events" request handler
 		reqCtx, cancelReqCtx := context.CancelCause(c)
 		// expose subscription id in the context
 		reqCtx = context.Value(reqCtx, subscriptionIdKey, env.SubscriptionID)
 		// handle each filter separately -- dispatching events as they're loaded from databases
-		for _, f := range env.T {
+		for _, f := range env.Filters {
 			e = rl.handleFilter(reqCtx, env.SubscriptionID.String(), &wg, ws, f)
 			if rl.E.Chk(e) {
 				// fail everything if any filter is rejected
@@ -185,7 +186,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			cancelReqCtx(nil)
 			rl.E.Chk(ws.WriteJSON(eoseenvelope.T{T: env.SubscriptionID}))
 		}()
-		SetListener(env.SubscriptionID.String(), ws, env.T, cancelReqCtx)
+		SetListener(env.SubscriptionID.String(), ws, env.Filters, cancelReqCtx)
 	case *closeenvelope.T:
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:

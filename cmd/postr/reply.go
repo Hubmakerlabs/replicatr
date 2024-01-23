@@ -85,7 +85,7 @@ func Reply(cCtx *cli.Context) (e error) {
 		ev.Tags = ev.Tags.AppendUnique(hashtag)
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		if !quote {
 			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, rl.URL(), "reply"})
 		} else {

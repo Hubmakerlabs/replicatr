@@ -53,7 +53,7 @@ func Like(cCtx *cli.Context) (e error) {
 	var first atomic.Bool
 	first.Store(true)
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		if first.Load() {
 			evs, e := rl.QuerySync(c, &f)
 			if log.Fail(e) {

@@ -74,7 +74,6 @@ func (ev *T) Serialize() []byte { return ev.ToObject().Bytes() }
 // ToCanonical returns a structure that provides a byte stringer that generates
 // the canonical form used to generate the ID hash that can be signed.
 func (ev *T) ToCanonical() (o array.T) {
-	// log.D.S(ev)
 	return array.T{0, ev.PubKey, ev.CreatedAt, ev.Kind, ev.Tags, ev.Content}
 }
 

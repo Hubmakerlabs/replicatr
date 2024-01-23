@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -26,7 +27,7 @@ var _ eventstore.Store = (*BadgerBackend)(nil)
 type BadgerBackend struct {
 	Path     string
 	MaxLimit int
-
+	*slog.Log
 	*badger.DB
 	seq *badger.Sequence
 }

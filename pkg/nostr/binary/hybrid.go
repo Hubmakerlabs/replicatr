@@ -3,12 +3,13 @@ package binary
 import (
 	"bytes"
 	"encoding/gob"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = slog.GetStd()
+var log = slog.New(os.Stderr, "nostr/binary")
 
 func Unmarshal(data []byte) (evt *event.T, e error) {
 

@@ -51,7 +51,7 @@ type (
 	Relays    map[string]*RelayPerms
 	Emojis    map[string]string
 	Checklist map[string]struct{}
-	RelayIter func(context.T, *relay.Relay) bool
+	RelayIter func(context.T, *relay.T) bool
 )
 
 // C is the configuration for the client
@@ -80,7 +80,7 @@ func (cfg *C) LastUpdated(t time.Duration) bool {
 func (cfg *C) Touch() { cfg.Updated = time.Now() }
 
 // FindRelay is
-func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.Relay {
+func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.T {
 	for k, v := range cfg.Relays {
 		if r.Write && !v.Write {
 			continue
@@ -167,7 +167,7 @@ func (cfg *C) Decode(ev *event.T) (e error) {
 }
 
 func (cfg *C) GetEvents(ids []string) (evs []*event.T) {
-	cfg.Do(readPerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
 		events, e := rl.QuerySync(c, &filter.T{
 			IDs:   ids,
 			Kinds: kinds.T{kind.TextNote},
@@ -188,7 +188,7 @@ func (cfg *C) Events(f filter.T) []*event.T {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
-	cfg.Do(readPerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
 		mu.Lock()
 		if found {
 			mu.Unlock()

@@ -5,6 +5,9 @@ package kind
 // idiom, the Go standard library, and much, conformant, existing code.
 type T uint16
 
+func (ki T) ToInt() int       { return int(ki) }
+func (ki T) ToUint16() uint16 { return uint16(ki) }
+
 // The event kinds are put in a separate package so they will be referred to as
 // `kind.EventType` rather than `nostr.KindEventType` as this is correct Go
 // idiom and the version in https://github.com/Hubmakerlabs/replicatr/pkg/nostr is unclear and
@@ -97,16 +100,16 @@ const (
 	ParameterizedReplaceableEnd T = 40000
 )
 
-func (evt T) IsReplaceable() bool {
-	return evt == ProfileMetadata || evt == FollowList ||
-		(evt >= ReplaceableStart && evt < ReplaceableEnd)
+func (ki T) IsReplaceable() bool {
+	return ki == ProfileMetadata || ki == FollowList ||
+		(ki >= ReplaceableStart && ki < ReplaceableEnd)
 }
 
-func (evt T) IsEphemeral() bool {
-	return evt >= EphemeralStart && evt < EphemeralEnd
+func (ki T) IsEphemeral() bool {
+	return ki >= EphemeralStart && ki < EphemeralEnd
 }
 
-func (evt T) IsParameterizedReplaceable() bool {
-	return evt >= ParameterizedReplaceableStart &&
-		evt < ParameterizedReplaceableEnd
+func (ki T) IsParameterizedReplaceable() bool {
+	return ki >= ParameterizedReplaceableStart &&
+		ki < ParameterizedReplaceableEnd
 }

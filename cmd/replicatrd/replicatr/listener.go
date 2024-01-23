@@ -18,7 +18,7 @@ type Listener struct {
 type ListenerMap = *xsync.MapOf[string, *Listener]
 
 var listeners = xsync.NewTypedMapOf[*WebSocket,
-	ListenerMap](pointerHasher[WebSocket])
+	ListenerMap](PointerHasher[WebSocket])
 
 func GetListeningFilters() (respFilters filters.T) {
 	respFilters = make(filters.T, 0, listeners.Size()*2)

@@ -3,6 +3,7 @@ package reqenvelope
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -14,12 +15,12 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
-var log = slog.GetStd()
+var log = slog.New(os.Stderr, "nostr/envelopes/reqenvelope")
 
 // T is the wrapper for a query to a relay.
 type T struct {
 	SubscriptionID subscriptionid.T
-	filters.T
+	Filters        filters.T
 }
 
 var _ enveloper.I = &T{}
@@ -35,7 +36,7 @@ func (E *T) Label() (l string) { return labels.REQ }
 
 func (E *T) ToArray() (arr array.T) {
 	arr = array.T{labels.REQ, E.SubscriptionID}
-	for _, f := range E.T {
+	for _, f := range E.Filters {
 		arr = append(arr, f.ToObject())
 	}
 	return
@@ -98,7 +99,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (e error) {
 		if e = json.Unmarshal(filterArray, f); log.Fail(e) {
 			return
 		}
-		E.T = append(E.T, f)
+		E.Filters = append(E.Filters, f)
 		// log.D.F("remaining: '%s'", buf.Buf[buf.Pos:])
 		which = 0
 		if which, e = buf.ScanForOneOf(true, ',', ']'); log.Fail(e) {
