@@ -5,7 +5,7 @@
 package btcec
 
 import (
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 )
 
 // These constants define the lengths of serialized public keys.
@@ -32,12 +32,12 @@ func IsCompressedPubKey(pubKey []byte) bool {
 // ecdsa.Publickey, verifying that it is valid. It supports compressed,
 // uncompressed and hybrid signature formats.
 func ParsePubKey(pubKeyStr []byte) (*PublicKey, error) {
-	return secp.ParsePubKey(pubKeyStr)
+	return secp256k1.ParsePubKey(pubKeyStr)
 }
 
 // PublicKey is an ecdsa.PublicKey with additional functions to
 // serialize in uncompressed, compressed, and hybrid formats.
-type PublicKey = secp.PublicKey
+type PublicKey = secp256k1.PublicKey
 
 // NewPublicKey instantiates a new public key with the given x and y
 // coordinates.
@@ -47,5 +47,5 @@ type PublicKey = secp.PublicKey
 // points on the secp256k1 curve.  The IsOnCurve method of the returned instance
 // can be used to determine validity.
 func NewPublicKey(x, y *FieldVal) *PublicKey {
-	return secp.NewPublicKey(x, y)
+	return secp256k1.NewPublicKey(x, y)
 }

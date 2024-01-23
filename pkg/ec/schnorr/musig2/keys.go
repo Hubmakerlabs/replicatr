@@ -7,11 +7,10 @@ import (
 	"fmt"
 	"sort"
 
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/chainhash"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 )
 
 var (
@@ -262,7 +261,7 @@ func hasEvenY(pJ btcec.JacobianPoint) bool {
 	pJ.ToAffine()
 	p := btcec.NewPublicKey(&pJ.X, &pJ.Y)
 	keyBytes := p.SerializeCompressed()
-	return keyBytes[0] == secp.PubKeyFormatCompressedEven
+	return keyBytes[0] == secp256k1.PubKeyFormatCompressedEven
 }
 
 // tweakKey applies a tweaks to the passed public key using the specified

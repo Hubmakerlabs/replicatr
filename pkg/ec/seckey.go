@@ -5,19 +5,19 @@
 package btcec
 
 import (
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 )
 
 // SecretKey wraps an ecdsa.SecretKey as a convenience mainly for signing
 // things with the secret key without having to directly import the ecdsa
 // package.
-type SecretKey = secp.SecretKey
+type SecretKey = secp256k1.SecretKey
 type PrivateKey = SecretKey
 
 // SecKeyFromBytes returns a secret and public key for `curve' based on the
 // secret key passed as an argument as a byte slice.
 func SecKeyFromBytes(pk []byte) (*SecretKey, *PublicKey) {
-	privKey := secp.SecKeyFromBytes(pk)
+	privKey := secp256k1.SecKeyFromBytes(pk)
 
 	return privKey, privKey.PubKey()
 }
@@ -27,7 +27,7 @@ var PrivKeyFromBytes = SecKeyFromBytes
 // NewSecretKey is a wrapper for ecdsa.GenerateKey that returns a SecretKey
 // instead of the normal ecdsa.PrivateKey.
 func NewSecretKey() (*SecretKey, error) {
-	return secp.GenerateSecretKey()
+	return secp256k1.GenerateSecretKey()
 }
 
 var NewPrivateKey = NewSecretKey

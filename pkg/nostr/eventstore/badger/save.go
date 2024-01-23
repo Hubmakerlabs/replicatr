@@ -5,8 +5,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -28,7 +28,7 @@ func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (err error) {
 		b.D.Ln("encoding to binary")
 		// encode to binary
 		var bin []byte
-		if bin, err = nostr_binary.Marshal(evt); b.Fail(err) {
+		if bin, err = nostrbinary.Marshal(evt); b.Fail(err) {
 			return err
 		}
 		b.D.F("binary encoded %x", bin)

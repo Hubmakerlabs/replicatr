@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
-	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"

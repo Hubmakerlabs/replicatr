@@ -19,7 +19,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const CATEGORY_FILTER_ATTRIBUTES = "FILTER ATTRIBUTES"
+const CategoryFilterAttributes = "FILTER ATTRIBUTES"
 
 var req = &cli.Command{
 	Name:  "req",
@@ -39,63 +39,63 @@ example:
 			Name:     "author",
 			Aliases:  []string{"a"},
 			Usage:    "only accept events from these authors (pubkey as hex)",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.StringSliceFlag{
 			Name:     "id",
 			Aliases:  []string{"i"},
 			Usage:    "only accept events with these ids (hex)",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.IntSliceFlag{
 			Name:     "kind",
 			Aliases:  []string{"k"},
 			Usage:    "only accept events with these kind numbers",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.StringSliceFlag{
 			Name:     "tag",
 			Aliases:  []string{"t"},
 			Usage:    "takes a tag like -t e=<id>, only accept events with these tags",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.StringSliceFlag{
 			Name:     "e",
 			Usage:    "shortcut for --tag e=<value>",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.StringSliceFlag{
 			Name:     "p",
 			Usage:    "shortcut for --tag p=<value>",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.StringSliceFlag{
 			Name:     "d",
 			Usage:    "shortcut for --tag d=<value>",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.StringFlag{
 			Name:     "since",
 			Aliases:  []string{"s"},
 			Usage:    "only accept events newer than this (unix timestamp)",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.StringFlag{
 			Name:     "until",
 			Aliases:  []string{"u"},
 			Usage:    "only accept events older than this (unix timestamp)",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.IntFlag{
 			Name:     "limit",
 			Aliases:  []string{"l"},
 			Usage:    "only accept up to this number of events",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.StringFlag{
 			Name:     "search",
 			Usage:    "a NIP-50 search query, use it only with relays that explicitly support it",
-			Category: CATEGORY_FILTER_ATTRIBUTES,
+			Category: CategoryFilterAttributes,
 		},
 		&cli.BoolFlag{
 			Name:        "stream",

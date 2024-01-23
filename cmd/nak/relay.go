@@ -10,15 +10,15 @@ import (
 )
 
 var getRelayInfo = &cli.Command{
-	Name:  "getRelayInfo",
+	Name:  "getinfo",
 	Usage: "gets the getRelayInfo information document for the given getRelayInfo, as JSON",
 	Description: `example:
 		nak getRelayInfo nostr.wine`,
-	ArgsUsage: "<getRelayInfo-url>",
+	ArgsUsage: "<relay-url>",
 	Action: func(c *cli.Context) error {
 		url := c.Args().First()
 		if url == "" {
-			return fmt.Errorf("specify the <getRelayInfo-url>")
+			return fmt.Errorf("specify the <relay-url>")
 		}
 
 		if !strings.HasPrefix(url, "wss://") && !strings.HasPrefix(url, "ws://") {

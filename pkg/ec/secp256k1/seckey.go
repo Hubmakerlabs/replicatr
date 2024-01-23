@@ -6,7 +6,7 @@
 package secp256k1
 
 import (
-	cryptorand "crypto/rand"
+	"crypto/rand"
 	"io"
 )
 
@@ -79,7 +79,7 @@ func generateSecretKey(rand io.Reader) (*SecretKey, error) {
 // GenerateSecretKey generates and returns a new cryptographically secure
 // secret key that is suitable for use with secp256k1.
 func GenerateSecretKey() (*SecretKey, error) {
-	return generateSecretKey(cryptorand.Reader)
+	return generateSecretKey(rand.Reader)
 }
 
 var GeneratePrivateKey = GenerateSecretKey

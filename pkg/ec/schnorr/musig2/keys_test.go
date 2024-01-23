@@ -13,7 +13,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ec"
 	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/stretchr/testify/require"
 )
 
@@ -201,18 +201,18 @@ func TestMuSig2KeyAggTestVectors(t *testing.T) {
 				case "Invalid public key":
 					require.ErrorIs(
 						t, err,
-						secp.ErrPubKeyNotOnCurve,
+						secp256k1.ErrPubKeyNotOnCurve,
 					)
 
 				case "Public key exceeds field size":
 					require.ErrorIs(
-						t, err, secp.ErrPubKeyXTooBig,
+						t, err, secp256k1.ErrPubKeyXTooBig,
 					)
 
 				case "First byte of public key is not 2 or 3":
 					require.ErrorIs(
 						t, err,
-						secp.ErrPubKeyInvalidFormat,
+						secp256k1.ErrPubKeyInvalidFormat,
 					)
 
 				default:

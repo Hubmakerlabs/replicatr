@@ -2,7 +2,6 @@ package replicatr
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
 	"errors"
 	"net/http"
 	"strings"
@@ -10,9 +9,6 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
@@ -20,10 +16,13 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/countenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eoseenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip42"
 	"github.com/fasthttp/websocket"
+	"github.com/minio/sha256-simd"
 )
 
 func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {

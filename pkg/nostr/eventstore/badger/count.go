@@ -6,9 +6,9 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 
-	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/dgraph-io/badger/v4"
 )
 

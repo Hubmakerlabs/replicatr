@@ -7,7 +7,7 @@ package secp256k1
 
 import (
 	"bytes"
-	cryptorand "crypto/rand"
+	"crypto/rand"
 	"errors"
 	"math/big"
 	"testing"
@@ -29,7 +29,7 @@ func TestGenerateSecretKey(t *testing.T) {
 // TestGenerateSecretKeyFromRand ensures generating a secret key from a random
 // entropy source works as expected.
 func TestGenerateSecretKeyFromRand(t *testing.T) {
-	sec, err := GenerateSecretKeyFromRand(cryptorand.Reader)
+	sec, err := GenerateSecretKeyFromRand(rand.Reader)
 	if err != nil {
 		t.Errorf("failed to generate secret key: %s", err)
 		return

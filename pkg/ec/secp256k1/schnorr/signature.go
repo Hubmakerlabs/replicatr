@@ -8,7 +8,7 @@ package schnorr
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/dchest/blake256"
 	"github.com/minio/sha256-simd"
 )

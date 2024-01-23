@@ -1,6 +1,6 @@
 package btcec
 
-import secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+import "github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 
 // FieldVal implements optimized fixed-precision arithmetic over the secp256k1
 // finite field. This means all arithmetic is performed modulo
@@ -40,4 +40,4 @@ import secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 // cause the magnitude of the result to exceed the max allowed value.
 //
 // IMPORTANT: The max allowed magnitude of a field value is 64.
-type FieldVal = secp.FieldVal
+type FieldVal = secp256k1.FieldVal

@@ -8,7 +8,7 @@ import (
 	"math/big"
 	"testing"
 
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 )
 
@@ -92,7 +92,7 @@ func BenchmarkAddJacobian(b *testing.B) {
 	b.ResetTimer()
 	var result JacobianPoint
 	for i := 0; i < b.N; i++ {
-		secp.AddNonConst(&p1, &p2, &result)
+		secp256k1.AddNonConst(&p1, &p2, &result)
 	}
 }
 

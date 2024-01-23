@@ -8,12 +8,12 @@ package secp256k1_test
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	"github.com/minio/sha256-simd"
 )
 
 // This example demonstrates use of GenerateSharedSecret to encrypt a message
@@ -36,7 +36,7 @@ func Example_encryptDecryptMessage() {
 		fmt.Println(err)
 		return
 	}
-	pubKey, err := secp.ParsePubKey(pubKeyBytes)
+	pubKey, err := secp256k1.ParsePubKey(pubKeyBytes)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -44,7 +44,7 @@ func Example_encryptDecryptMessage() {
 
 	// Derive an ephemeral public/secret keypair for performing ECDHE with
 	// the recipient.
-	ephemeralSecKey, err := secp.GenerateSecretKey()
+	ephemeralSecKey, err := secp256k1.GenerateSecretKey()
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -52,7 +52,7 @@ func Example_encryptDecryptMessage() {
 	ephemeralPubKey := ephemeralSecKey.PubKey().SerializeCompressed()
 
 	// Using ECDHE, derive a shared symmetric key for encryption of the plaintext.
-	cipherKey := sha256.Sum256(secp.GenerateSharedSecret(ephemeralSecKey,
+	cipherKey := sha256.Sum256(secp256k1.GenerateSharedSecret(ephemeralSecKey,
 		pubKey))
 
 	// Seal the message using an AEAD.  Here we use AES-256-GCM.
@@ -91,14 +91,14 @@ func Example_encryptDecryptMessage() {
 		fmt.Println(err)
 		return
 	}
-	secKey := secp.SecKeyFromBytes(pkBytes)
+	secKey := secp256k1.SecKeyFromBytes(pkBytes)
 
 	// Read the sender's ephemeral public key from the start of the message.
 	// Error handling for inappropriate pubkey lengths is elided here for
 	// brevity.
 	pubKeyLen := binary.LittleEndian.Uint32(ciphertext[:4])
 	senderPubKeyBytes := ciphertext[4 : 4+pubKeyLen]
-	senderPubKey, err := secp.ParsePubKey(senderPubKeyBytes)
+	senderPubKey, err := secp256k1.ParsePubKey(senderPubKeyBytes)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -106,7 +106,7 @@ func Example_encryptDecryptMessage() {
 
 	// Derive the key used to seal the message, this time from the
 	// recipient's secret key and the sender's public key.
-	recoveredCipherKey := sha256.Sum256(secp.GenerateSharedSecret(secKey,
+	recoveredCipherKey := sha256.Sum256(secp256k1.GenerateSharedSecret(secKey,
 		senderPubKey))
 
 	// Open the sealed message.

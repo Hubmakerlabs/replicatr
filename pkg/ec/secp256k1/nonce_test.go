@@ -7,10 +7,10 @@ package secp256k1
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	"github.com/minio/sha256-simd"
 )
 
 // hexToBytes converts the passed hex string into bytes and will panic if there

@@ -7,7 +7,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
-	pool2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/pool"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pool"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
 	"github.com/urfave/cli/v2"
@@ -28,7 +28,7 @@ var fetch = &cli.Command{
 	},
 	ArgsUsage: "[nip19code]",
 	Action: func(c *cli.Context) error {
-		pool := pool2.NewSimplePool(c.Context)
+		pool := pool.NewSimplePool(c.Context)
 
 		defer func() {
 			pool.Relays.Range(func(_ string, relay *relay.T) bool {

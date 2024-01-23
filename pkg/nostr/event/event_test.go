@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"testing"
 
-	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event/eventest"

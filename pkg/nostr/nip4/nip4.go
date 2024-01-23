@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"strings"
 
-	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
@@ -32,8 +32,8 @@ func ComputeSharedSecret(pub string, sec string) (secret []byte, err error) {
 			"'%s' is only %d chars", bech32encoding.MinKeyStringLen, pub, len(pub))
 		return
 	}
-	var s *secp.SecretKey
-	var p *secp.PublicKey
+	var s *secp256k1.SecretKey
+	var p *secp256k1.PublicKey
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
 	if pub[:bech32encoding.Bech32HRPLen] == bech32encoding.PubHRP {
 		if p, err = bech32encoding.NpubToPublicKey(pub); log.Fail(err) {
@@ -54,11 +54,11 @@ func ComputeSharedSecret(pub string, sec string) (secret []byte, err error) {
 			return
 		}
 	}
-	return secp.GenerateSharedSecret(s, p), err
+	return secp256k1.GenerateSharedSecret(s, p), err
 }
 
-func GenerateSharedSecret(s *secp.SecretKey, p *secp.PublicKey) []byte {
-	return secp.GenerateSharedSecret(s, p)
+func GenerateSharedSecret(s *secp256k1.SecretKey, p *secp256k1.PublicKey) []byte {
+	return secp256k1.GenerateSharedSecret(s, p)
 }
 
 // Encrypt encrypts message with key using aes-256-cbc. key should be the shared
