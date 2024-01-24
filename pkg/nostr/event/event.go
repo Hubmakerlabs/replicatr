@@ -10,10 +10,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/minio/sha256-simd"
 	"mleku.online/git/ec/schnorr"
 	"mleku.online/git/ec/secp256k1"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()

@@ -9,9 +9,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
+	"mleku.online/git/slog"
 )
 
 const (

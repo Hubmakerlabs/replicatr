@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	ristretto "github.com/fiatjaf/generic-ristretto"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()

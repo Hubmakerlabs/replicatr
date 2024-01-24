@@ -16,7 +16,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/subscriptionoption"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()

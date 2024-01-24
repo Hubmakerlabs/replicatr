@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/urfave/cli/v2"
+	"mleku.online/git/slog"
 )
 
 var app = &cli.App{

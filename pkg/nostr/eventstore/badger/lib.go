@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/dgraph-io/badger/v4"
+	"mleku.online/git/slog"
 )
 
 const (
