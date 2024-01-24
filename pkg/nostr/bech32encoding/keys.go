@@ -3,12 +3,12 @@ package bech32encoding
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
-	"github.com/Hubmakerlabs/replicatr/pkg/ec"
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/bech32"
+	"mleku.online/git/ec"
+	"mleku.online/git/ec/schnorr"
+	"mleku.online/git/ec/secp256k1"
 )
 
 var log = slog.GetStd()
@@ -102,9 +102,9 @@ func NpubToPublicKey(encoded string) (pk *secp256k1.PublicKey, err error) {
 }
 
 // HexToPublicKey decodes a string that should be a 64 character long hex
-// encoded public key into a btcec.PublicKey that can be used to verify a
+// encoded public key into a ec.PublicKey that can be used to verify a
 // signature or encode to Bech32.
-func HexToPublicKey(pk string) (p *btcec.PublicKey, err error) {
+func HexToPublicKey(pk string) (p *ec.PublicKey, err error) {
 	if len(pk) != HexKeyLen {
 		err = fmt.Errorf("seckey is %d bytes, must be %d", len(pk), HexKeyLen)
 		return
@@ -120,9 +120,9 @@ func HexToPublicKey(pk string) (p *btcec.PublicKey, err error) {
 }
 
 // HexToSecretKey decodes a string that should be a 64 character long hex
-// encoded public key into a btcec.PublicKey that can be used to verify a
+// encoded public key into a ec.PublicKey that can be used to verify a
 // signature or encode to Bech32.
-func HexToSecretKey(sk string) (s *btcec.SecretKey, err error) {
+func HexToSecretKey(sk string) (s *ec.SecretKey, err error) {
 	if len(sk) != HexKeyLen {
 		err = fmt.Errorf("seckey is %d bytes, must be %d", len(sk), HexKeyLen)
 		return
@@ -144,6 +144,6 @@ func GetPublicKey(sk string) (s string, err error) {
 		return "", err
 	}
 
-	_, pk := btcec.PrivKeyFromBytes(b)
+	_, pk := ec.PrivKeyFromBytes(b)
 	return hex.Enc(schnorr.SerializePubKey(pk)), nil
 }

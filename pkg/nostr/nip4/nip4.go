@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/ec/secp256k1"
 )
 
 var log = slog.GetStd()
