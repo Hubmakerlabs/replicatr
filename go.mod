@@ -10,7 +10,7 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/fiatjaf/generic-ristretto v0.0.1
 	github.com/gobwas/httphead v0.1.0
-	github.com/gobwas/ws v1.3.1
+	github.com/gobwas/ws v1.3.2
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/minio/sha256-simd v1.0.1
@@ -18,7 +18,7 @@ require (
 	github.com/rs/cors v1.10.1
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/urfave/cli/v2 v2.27.1
-	golang.org/x/exp v0.0.0-20240103183307-be819d1f06fc
+	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a
 	golang.org/x/net v0.20.0
 	lukechampine.com/frand v1.4.2
 	mleku.online/git/bech32 v1.0.3
