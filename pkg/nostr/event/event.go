@@ -3,8 +3,6 @@ package event
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
@@ -14,6 +12,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/minio/sha256-simd"
+	"mleku.online/git/ec/schnorr"
+	"mleku.online/git/ec/secp256k1"
 )
 
 var log = slog.GetStd()

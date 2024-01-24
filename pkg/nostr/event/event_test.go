@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"testing"
 
-	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event/eventest"
@@ -16,6 +15,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	secp256k1 "mleku.online/git/ec/secp256k1"
 )
 
 var log = slog.GetStd()
