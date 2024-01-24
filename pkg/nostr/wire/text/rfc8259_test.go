@@ -3,9 +3,9 @@ package text
 import (
 	"testing"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/minio/sha256-simd"
 	"lukechampine.com/frand"
+	"mleku.online/git/slog"
 )
 
 func GenRandString(l int, src *frand.RNG) (str string) {

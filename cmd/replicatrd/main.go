@@ -6,7 +6,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/cmd/replicatrd/replicatr"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
 const appName = "replicatr"

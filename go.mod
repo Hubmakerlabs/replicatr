@@ -4,7 +4,6 @@ go 1.20
 
 require (
 	github.com/bgentry/speakeasy v0.1.0
-	github.com/davecgh/go-spew v1.1.1
 	github.com/dgraph-io/badger/v4 v4.2.0
 	github.com/fasthttp/websocket v1.5.7
 	github.com/fatih/color v1.16.0
@@ -23,6 +22,7 @@ require (
 	lukechampine.com/frand v1.4.2
 	mleku.online/git/bech32 v1.0.3
 	mleku.online/git/ec v1.0.6
+	mleku.online/git/slog v1.0.0
 )
 
 require (
@@ -31,6 +31,7 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect

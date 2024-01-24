@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"mleku.online/git/ec/secp256k1"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()

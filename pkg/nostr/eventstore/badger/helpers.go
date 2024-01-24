@@ -6,8 +6,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"golang.org/x/exp/slices"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()

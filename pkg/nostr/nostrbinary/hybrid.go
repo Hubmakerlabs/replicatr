@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
 var log = slog.New(os.Stderr, "nostrbinary")

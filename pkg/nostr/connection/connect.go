@@ -10,11 +10,11 @@ import (
 	"net/http"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/gobwas/httphead"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsflate"
 	"github.com/gobwas/ws/wsutil"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()

@@ -5,7 +5,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()

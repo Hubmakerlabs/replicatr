@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"mleku.online/git/bech32"
 	"mleku.online/git/ec"
 	"mleku.online/git/ec/schnorr"
 	"mleku.online/git/ec/secp256k1"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()

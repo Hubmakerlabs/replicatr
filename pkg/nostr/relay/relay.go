@@ -29,10 +29,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/puzpuzpuz/xsync/v2"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()

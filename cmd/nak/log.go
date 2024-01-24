@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
 var log = slog.New(os.Stderr, "")

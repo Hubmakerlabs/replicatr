@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/urfave/cli/v2"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()

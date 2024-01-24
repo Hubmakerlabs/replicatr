@@ -226,5 +226,7 @@ mleku.online/git/bech32 v1.0.3 h1:RwtkFB19yRxsYqXyqVqPAIsYWXYPMJQGXcwVz37DHAs=
 mleku.online/git/bech32 v1.0.3/go.mod h1:GU8Ll1fKaPJ4QrpAZzvCJk5hbXj9zJm4Y9IBSPkT6Bw=
 mleku.online/git/ec v1.0.6 h1:QUVWjlH9Z0i4sUUSkPLxgki/soHs/9FJQWlG70HOTCM=
 mleku.online/git/ec v1.0.6/go.mod h1:iM5I67eKLjPj6jg5+Il3Lxpi534vRh4tFF6wyqtJZM8=
+mleku.online/git/slog v1.0.0 h1:UH4Qw7YayMcDYE8Vav+VU7GEbfJqaB2eV8eEbOLF3N4=
+mleku.online/git/slog v1.0.0/go.mod h1:TKTSYxfcWioRStow7JlDfqFw7Fu63uPxZuzADOeSC58=
 rsc.io/qr v0.2.0 h1:6vBLea5/NRMVTz8V66gipeLycZMl/+UlFmk8DvqQ6WY=
 rsc.io/qr v0.2.0/go.mod h1:IF+uZjkb9fqyeF/4tlBoynqmQxUoPfWEKh921coOuXs=
