@@ -2,7 +2,6 @@ package replicatr
 
 import (
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
@@ -13,6 +12,9 @@ import (
 	"github.com/puzpuzpuz/xsync/v2"
 	"mleku.online/git/slog"
 )
+
+var Version = "v0.0.1"
+var Software = "https://github.com/Hubmakerlabs/replicatr/cmd/replicatrd"
 
 const (
 	WriteWait             = 10 * time.Second
@@ -73,14 +75,10 @@ type Relay struct {
 	MaxMessageSize int64         // Maximum message size allowed from peer.
 }
 
-func NewRelay(appName string) (r *Relay) {
+func NewRelay(logger *slog.Log) (r *Relay) {
 	r = &Relay{
-		Log: slog.New(os.Stderr, appName),
-		Info: &nip11.Info{
-			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/replicatrd",
-			Version:       "n/a",
-			SupportedNIPs: make([]int, 0),
-		},
+		Log:  logger,
+		Info: nip11.NewInfo(),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  ReadBufferSize,
 			WriteBufferSize: WriteBufferSize,
@@ -93,5 +91,7 @@ func NewRelay(appName string) (r *Relay) {
 		PingPeriod:     PingPeriod,
 		MaxMessageSize: MaxMessageSize,
 	}
+	r.Info.Software = Software
+	r.Info.Version = Version
 	return
 }
