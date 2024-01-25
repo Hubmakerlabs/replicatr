@@ -76,7 +76,7 @@ type writeRequest struct {
 
 // NewRelay returns a new relay. The relay connection will be closed when the
 // context is canceled.
-func NewRelay(c context.T, url string, opts ...RelayOption) *T {
+func NewRelay(c context.T, url string, opts ...Option) *T {
 	ctx, cancel := context.Cancel(c)
 	r := &T{
 		url:                           normalize.URL(url),
@@ -106,7 +106,7 @@ func NewRelay(c context.T, url string, opts ...RelayOption) *T {
 // Connect returns a relay object connected to url. Once successfully
 // connected, cancelling ctx has no effect. To close the connection, call
 // r.Close().
-func Connect(c context.T, url string, opts ...RelayOption) (*T, error) {
+func Connect(c context.T, url string, opts ...Option) (*T, error) {
 	r := NewRelay(context.Bg(), url, opts...)
 	err := r.Connect(c)
 	return r, err
@@ -114,8 +114,8 @@ func Connect(c context.T, url string, opts ...RelayOption) (*T, error) {
 
 // When instantiating relay connections, some options may be passed.
 
-// RelayOption is the type of the argument passed for that.
-type RelayOption interface {
+// Option is the type of the argument passed for that.
+type Option interface {
 	IsRelayOption()
 }
 
@@ -125,7 +125,7 @@ type WithNoticeHandler func(notice string)
 
 func (_ WithNoticeHandler) IsRelayOption() {}
 
-var _ RelayOption = (WithNoticeHandler)(nil)
+var _ Option = (WithNoticeHandler)(nil)
 
 // String just returns the relay URL.
 func (r *T) String() string {
