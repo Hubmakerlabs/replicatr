@@ -1,8 +1,9 @@
 package nip11
 
 import (
+	"sync"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"golang.org/x/exp/slices"
 )
 
 type Limits struct {
@@ -39,12 +40,15 @@ type Fees struct {
 	Publication  []Pub     `json:"publication,omitempty"`
 }
 
+type NIPs map[int]struct{}
+
 type Info struct {
-	Name           string   `json:"name"`
-	Description    string   `json:"description"`
-	PubKey         string   `json:"pubkey"`
-	Contact        string   `json:"contact"`
-	SupportedNIPs  []int    `json:"supported_nips"`
+	Name           string `json:"name"`
+	Description    string `json:"description"`
+	PubKey         string `json:"pubkey"`
+	Contact        string `json:"contact"`
+	nips           NIPs   `json:"supported_nips"`
+	mx             sync.Mutex
 	Software       string   `json:"software"`
 	Version        string   `json:"version"`
 	Limitation     *Limits  `json:"limitation,omitempty"`
@@ -57,13 +61,23 @@ type Info struct {
 	Icon           string   `json:"icon"`
 }
 
-func (info *Info) AddSupportedNIP(number int) {
-	idx, exists := slices.BinarySearch(info.SupportedNIPs, number)
-	if exists {
-		return
+func NewInfo() *Info {
+	return &Info{
+		nips: make(map[int]struct{}),
 	}
+}
 
-	info.SupportedNIPs = append(info.SupportedNIPs, -1)
-	copy(info.SupportedNIPs[idx+1:], info.SupportedNIPs[idx:])
-	info.SupportedNIPs[idx] = number
+func (inf *Info) AddNIPs(n ...int) {
+	inf.mx.Lock()
+	for _, number := range n {
+		inf.nips[number] = struct{}{}
+	}
+	inf.mx.Unlock()
+}
+
+func (inf *Info) HasNIP(n int) (ok bool) {
+	inf.mx.Lock()
+	_, ok = inf.nips[n]
+	inf.mx.Unlock()
+	return
 }

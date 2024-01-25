@@ -2,7 +2,6 @@ package replicatr
 
 import (
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
@@ -13,6 +12,9 @@ import (
 	"github.com/puzpuzpuz/xsync/v2"
 	"mleku.online/git/slog"
 )
+
+var Version = "v0.0.1"
+var Software = "https://github.com/Hubmakerlabs/replicatr/cmd/replicatrd"
 
 const (
 	WriteWait             = 10 * time.Second
@@ -25,15 +27,15 @@ const (
 
 // function types used in the relay state
 type (
-	RejectEvent               func(c context.T, event *event.T) (reject bool, msg string)
+	RejectEvent               func(c context.T, ev *event.T) (rej bool, msg string)
 	RejectFilter              func(c context.T, f *filter.T) (reject bool, msg string)
 	OverwriteFilter           func(c context.T, f *filter.T)
-	OverwriteDeletionOutcome  func(c context.T, target, del *event.T) (accept bool, msg string)
+	OverwriteDeletionOutcome  func(c context.T, tgt, del *event.T) (ok bool, msg string)
 	OverwriteResponseEvent    func(c context.T, ev *event.T)
 	Events                    func(c context.T, ev *event.T) error
 	Hook                      func(c context.T)
 	OverwriteRelayInformation func(c context.T, r *http.Request, info *nip11.Info) *nip11.Info
-	QueryEvents               func(c context.T, f *filter.T) (eventC chan *event.T, err error)
+	QueryEvents               func(c context.T, f *filter.T) (C chan *event.T, err error)
 	CountEvents               func(c context.T, f *filter.T) (cnt int64, err error)
 	OnEventSaved              func(c context.T, ev *event.T)
 )
@@ -73,14 +75,10 @@ type Relay struct {
 	MaxMessageSize int64         // Maximum message size allowed from peer.
 }
 
-func NewRelay(appName string) (r *Relay) {
+func NewRelay(logger *slog.Log) (r *Relay) {
 	r = &Relay{
-		Log: slog.New(os.Stderr, appName),
-		Info: &nip11.Info{
-			Software:      "https://github.com/Hubmakerlabs/replicatr/cmd/replicatrd",
-			Version:       "n/a",
-			SupportedNIPs: make([]int, 0),
-		},
+		Log:  logger,
+		Info: nip11.NewInfo(),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  ReadBufferSize,
 			WriteBufferSize: WriteBufferSize,
@@ -93,5 +91,7 @@ func NewRelay(appName string) (r *Relay) {
 		PingPeriod:     PingPeriod,
 		MaxMessageSize: MaxMessageSize,
 	}
+	r.Info.Software = Software
+	r.Info.Version = Version
 	return
 }

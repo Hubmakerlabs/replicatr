@@ -62,7 +62,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 			RemoveListener(ws)
 		}
 	}
-	go rl.websocketReadMessages(c, kill, ws, conn, r)
+	go rl.websocketReadMessages(readParams{c, kill, ws, conn, r})
 	go rl.websocketWatcher(c, kill, ticker, ws)
 }
 
@@ -163,7 +163,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		reqCtx = context.Value(reqCtx, subscriptionIdKey, env.SubscriptionID)
 		// handle each filter separately -- dispatching events as they're loaded from databases
 		for _, f := range env.Filters {
-			err = rl.handleFilter(reqCtx, env.SubscriptionID.String(), &wg, ws, f)
+			err = rl.handleFilter(handleFilterParams{
+				reqCtx,
+				env.SubscriptionID.String(),
+				&wg,
+				ws,
+				f,
+			})
 			if rl.E.Chk(err) {
 				// fail everything if any filter is rejected
 				reason := err.Error()
@@ -212,25 +218,31 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 	}
 }
 
-func (rl *Relay) websocketReadMessages(c context.T, kill func(),
-	ws *WebSocket, conn *websocket.Conn, r *http.Request) {
+type readParams struct {
+	c    context.T
+	kill func()
+	ws   *WebSocket
+	conn *websocket.Conn
+	r    *http.Request
+}
 
-	defer kill()
-	conn.SetReadLimit(rl.MaxMessageSize)
-	rl.E.Chk(conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
-	conn.SetPongHandler(func(string) (err error) {
-		err = conn.SetReadDeadline(time.Now().Add(rl.PongWait))
+func (rl *Relay) websocketReadMessages(p readParams) {
+	defer p.kill()
+	p.conn.SetReadLimit(rl.MaxMessageSize)
+	rl.E.Chk(p.conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
+	p.conn.SetPongHandler(func(string) (err error) {
+		err = p.conn.SetReadDeadline(time.Now().Add(rl.PongWait))
 		rl.E.Chk(err)
 		return
 	})
 	for _, onConnect := range rl.OnConnect {
-		onConnect(c)
+		onConnect(p.c)
 	}
 	for {
 		var err error
 		var typ int
 		var message []byte
-		typ, message, err = conn.ReadMessage()
+		typ, message, err = p.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(
 				err,
@@ -240,19 +252,21 @@ func (rl *Relay) websocketReadMessages(c context.T, kill func(),
 				websocket.CloseAbnormalClosure,  // 1006
 			) {
 				rl.E.F("unexpected close error from %s: %v",
-					r.Header.Get("X-Forwarded-For"), err)
+					p.r.Header.Get("X-Forwarded-For"), err)
 			}
 			return
 		}
 		if typ == websocket.PingMessage {
-			rl.E.Chk(ws.WriteMessage(websocket.PongMessage, nil))
+			rl.E.Chk(p.ws.WriteMessage(websocket.PongMessage, nil))
 			continue
 		}
-		go rl.wsProcessMessages(message, c, ws)
+		go rl.wsProcessMessages(message, p.c, p.ws)
 	}
 }
 
-func (rl *Relay) websocketWatcher(c context.T, kill func(), t *time.Ticker, ws *WebSocket) {
+func (rl *Relay) websocketWatcher(c context.T, kill func(), t *time.Ticker,
+	ws *WebSocket) {
+
 	var err error
 	defer kill()
 	for {
