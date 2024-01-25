@@ -13,16 +13,23 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
-func (rl *Relay) handleFilter(c context.T, id string,
-	eose *sync.WaitGroup, ws *WebSocket, f *filter.T) (err error) {
+type handleFilterParams struct {
+	c    context.T
+	id   string
+	eose *sync.WaitGroup
+	ws   *WebSocket
+	f    *filter.T
+}
 
-	defer eose.Done()
+func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
+
+	defer h.eose.Done()
 	// overwrite the filter (for example, to eliminate some kinds or that we
 	// know we don't support)
 	for _, ovw := range rl.OverwriteFilter {
-		ovw(c, f)
+		ovw(h.c, h.f)
 	}
-	if f.Limit < 0 {
+	if h.f.Limit < 0 {
 		err = errors.New("blocked: filter invalidated")
 		rl.E.Chk(err)
 		return
@@ -32,32 +39,32 @@ func (rl *Relay) handleFilter(c context.T, id string,
 	// that we know we don't support, and then if the end result is an empty
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
-		if rej, msg := reject(c, f); rej {
-			rl.E.Chk(ws.WriteJSON(&noticeenvelope.T{Text: msg}))
+		if rej, msg := reject(h.c, h.f); rej {
+			rl.E.Chk(h.ws.WriteJSON(&noticeenvelope.T{Text: msg}))
 			return errors.New(normalize.OKMessage(msg, "blocked"))
 		}
 	}
 	// run the functions to query events (generally just one,
 	// but we might be fetching stuff from multiple places)
-	eose.Add(len(rl.QueryEvents))
+	h.eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
 		var ch chan *event.T
-		if ch, err = query(c, f); rl.E.Chk(err) {
-			rl.E.Chk(ws.WriteJSON(&noticeenvelope.T{Text: err.Error()}))
-			eose.Done()
+		if ch, err = query(h.c, h.f); rl.E.Chk(err) {
+			rl.E.Chk(h.ws.WriteJSON(&noticeenvelope.T{Text: err.Error()}))
+			h.eose.Done()
 			continue
 		}
 		go func(ch chan *event.T) {
 			for ev := range ch {
 				for _, ovw := range rl.OverwriteResponseEvent {
-					ovw(c, ev)
+					ovw(h.c, ev)
 				}
-				rl.E.Chk(ws.WriteJSON(eventenvelope.T{
-					SubscriptionID: subscriptionid.T(id),
+				rl.E.Chk(h.ws.WriteJSON(eventenvelope.T{
+					SubscriptionID: subscriptionid.T(h.id),
 					Event:          ev,
 				}))
 			}
-			eose.Done()
+			h.eose.Done()
 		}(ch)
 	}
 	return nil

@@ -27,15 +27,15 @@ const (
 
 // function types used in the relay state
 type (
-	RejectEvent               func(c context.T, event *event.T) (reject bool, msg string)
+	RejectEvent               func(c context.T, ev *event.T) (rej bool, msg string)
 	RejectFilter              func(c context.T, f *filter.T) (reject bool, msg string)
 	OverwriteFilter           func(c context.T, f *filter.T)
-	OverwriteDeletionOutcome  func(c context.T, target, del *event.T) (accept bool, msg string)
+	OverwriteDeletionOutcome  func(c context.T, tgt, del *event.T) (ok bool, msg string)
 	OverwriteResponseEvent    func(c context.T, ev *event.T)
 	Events                    func(c context.T, ev *event.T) error
 	Hook                      func(c context.T)
 	OverwriteRelayInformation func(c context.T, r *http.Request, info *nip11.Info) *nip11.Info
-	QueryEvents               func(c context.T, f *filter.T) (eventC chan *event.T, err error)
+	QueryEvents               func(c context.T, f *filter.T) (C chan *event.T, err error)
 	CountEvents               func(c context.T, f *filter.T) (cnt int64, err error)
 	OnEventSaved              func(c context.T, ev *event.T)
 )
