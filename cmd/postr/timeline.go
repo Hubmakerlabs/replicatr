@@ -26,6 +26,7 @@ func (cfg *C) publish(ev *event.T, s *atomic.Int64) RelayIter {
 
 func Timeline(cCtx *cli.Context) (err error) {
 	n := cCtx.Int("n")
+	log.D.Ln("timeline request count", n)
 	j := cCtx.Bool("json")
 	extra := cCtx.Bool("extra")
 	cfg := cCtx.App.Metadata["config"].(*C)

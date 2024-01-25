@@ -9,7 +9,7 @@ import (
 )
 
 // NoComplexFilters disallows filters with more than 2 tags.
-func NoComplexFilters(c context.T, f *filter.T) (reject bool, msg string) {
+func NoComplexFilters(c context.T, f *filter.T) (rej bool, msg string) {
 	items := len(f.Tags) + len(f.Kinds)
 	if items > 4 && len(f.Tags) > 2 {
 		return true, "too many things to filter for"
@@ -32,9 +32,11 @@ func NoEmptyFilters(c context.T, f *filter.T) (reject bool, msg string) {
 
 // AntiSyncBots tries to prevent people from syncing kind:1s from this relay to
 // else by always requiring an author parameter at least.
-func AntiSyncBots(c context.T, f *filter.T) (reject bool, msg string) {
-	return (len(f.Kinds) == 0 || slices.Contains(f.Kinds, 1)) &&
-		len(f.Authors) == 0, "an author must be specified to get their kind:1 notes"
+func AntiSyncBots(c context.T, f *filter.T) (rej bool, msg string) {
+	return (len(f.Kinds) == 0 ||
+			slices.Contains(f.Kinds, 1)) &&
+			len(f.Authors) == 0,
+		"an author must be specified to get their kind:1 notes"
 }
 
 func NoSearchQueries(c context.T, f *filter.T) (reject bool, msg string) {
@@ -48,7 +50,7 @@ func RemoveSearchQueries(c context.T, f *filter.T) {
 	f.Search = ""
 }
 
-func RemoveAllButKinds(k ...kind.T) func(context.T, *filter.T) {
+func RemoveAllButKinds(k ...kind.T) OverwriteFilter {
 	return func(c context.T, f *filter.T) {
 		if n := len(f.Kinds); n > 0 {
 			newKinds := make(kinds.T, 0, n)
@@ -62,7 +64,7 @@ func RemoveAllButKinds(k ...kind.T) func(context.T, *filter.T) {
 	}
 }
 
-func RemoveAllButTags(tagNames ...string) func(context.T, *filter.T) {
+func RemoveAllButTags(tagNames ...string) OverwriteFilter {
 	return func(c context.T, f *filter.T) {
 		for tagName := range f.Tags {
 			if !slices.Contains(tagNames, tagName) {

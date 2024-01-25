@@ -185,6 +185,7 @@ func (cfg *C) GetEvents(ids []string) (evs []*event.T) {
 // Events queries for a set of events based on a filter and returns a slice of
 // events that were returned by the relay.
 func (cfg *C) Events(f filter.T) []*event.T {
+	log.D.Ln("getting events")
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
@@ -232,6 +233,7 @@ func (cfg *C) Events(f filter.T) []*event.T {
 	sort.Slice(evs, func(i, j int) bool {
 		return evs[i].CreatedAt < evs[j].CreatedAt
 	})
+	log.D.Ln("got events?", len(evs))
 	return evs
 }
 
