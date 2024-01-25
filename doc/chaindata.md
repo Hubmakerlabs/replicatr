@@ -95,13 +95,13 @@ Note that for most events, signature, content and tags should not be stored, pri
 
 ```json
 {   
-	"id": <32-bytes lowercase hex-encoded sha256 of the serialized event data>,
-	"pubkey": <32-bytes lowercase hex-encoded public key of the event creator>,
+    "id": <32-bytes lowercase hex-encoded sha256 of the serialized event data>,
+    "pubkey": <32-bytes lowercase hex-encoded public key of the event creator>,
     "created_at": <unix timestamp in seconds>,
     "kind": <integer between 0 and 65535>,
     "tags": [ [  <arbitrary string>, <another string> ... ], ... ],
-	"content": <arbitrary string, control characters and non printables escaped using \uXXXX and \n\t\r etc>,
-	"sig": <64-bytes lowercase hex of the signature of the sha256 hash of the serialized event data, which is the "id" field>
+    "content": <arbitrary string, control characters and non printables escaped using \uXXXX and \n\t\r etc>,
+    "sig": <64-bytes lowercase hex of the signature of the sha256 hash of the serialized event data, which is the "id" field>
 }
 ```
 
