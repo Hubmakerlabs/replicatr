@@ -31,6 +31,10 @@ func (cfg *C) save(profile string) (err error) {
 	if log.Fail(err) {
 		return err
 	}
+	if len(cfg.Follows) == 0 {
+		log.D.Ln("failed to get follow events")
+		return
+	}
 	log.D.F("saving to file '%s'\n%s", fp, string(b))
 	// return nil
 	return os.WriteFile(fp, b, 0644)

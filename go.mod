@@ -27,6 +27,8 @@ require (
 
 require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
+	github.com/alexflint/go-arg v1.4.3 // indirect
+	github.com/alexflint/go-scalar v1.1.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
