@@ -12,8 +12,8 @@ import (
 )
 
 var args struct {
-	Listen  string `default:"0.0.0.0:3334"`
-	Profile string `default:"replicatr"`
+	Listen  string `arg:"-l,--listen" default:"0.0.0.0:3334"`
+	Profile string `arg:"-p,--profile" default:"replicatr"`
 }
 
 func main() {

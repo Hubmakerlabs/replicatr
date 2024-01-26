@@ -40,7 +40,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(h.c, h.f); rej {
-			rl.E.Chk(h.ws.WriteJSON(&noticeenvelope.T{Text: msg}))
+			rl.E.Chk(h.ws.WriteEnvelope(&noticeenvelope.T{Text: msg}))
 			return errors.New(normalize.OKMessage(msg, "blocked"))
 		}
 	}
@@ -50,7 +50,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	for _, query := range rl.QueryEvents {
 		var ch chan *event.T
 		if ch, err = query(h.c, h.f); rl.E.Chk(err) {
-			rl.E.Chk(h.ws.WriteJSON(&noticeenvelope.T{Text: err.Error()}))
+			rl.E.Chk(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
 			h.eose.Done()
 			continue
 		}
@@ -59,7 +59,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(h.c, ev)
 				}
-				rl.E.Chk(h.ws.WriteJSON(eventenvelope.T{
+				rl.E.Chk(h.ws.WriteEnvelope(&eventenvelope.T{
 					SubscriptionID: subscriptionid.T(h.id),
 					Event:          ev,
 				}))
