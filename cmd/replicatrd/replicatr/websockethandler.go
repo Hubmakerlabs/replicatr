@@ -87,7 +87,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		if id != env.Event.ID.String() {
 			rl.T.F("id mismatch got %s, expected %s",
 				id, env.Event.ID.String())
-			rl.E.Chk(ws.WriteJSON(okenvelope.T{
+			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
 				Reason: "invalid: id is computed incorrectly",
@@ -98,18 +98,17 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		// check signature
 		var ok bool
 		if ok, err = env.Event.CheckSignature(); rl.E.Chk(err) {
-			rl.E.Chk(ws.WriteJSON(okenvelope.T{
+			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
-				Reason: "error: failed to verify signature: " + err.Error()},
-			))
+				Reason: "error: failed to verify signature: " + err.Error(),
+			}))
 			return
 		} else if !ok {
-			rl.E.Chk(ws.WriteJSON(okenvelope.T{
+			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
-				Reason: "invalid: signature is invalid"},
-			))
+				Reason: "invalid: signature is invalid"}))
 			return
 		}
 		rl.T.Ln("signature was valid")
@@ -132,7 +131,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			ok = true
 		}
 		rl.D.Ln("sending back ok envelope")
-		rl.E.Chk(ws.WriteJSON(okenvelope.T{
+		rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,
 			OK:     ok,
 			Reason: reason,
@@ -140,7 +139,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		rl.D.Ln("sent back ok envelope")
 	case *countenvelope.Request:
 		if rl.CountEvents == nil {
-			rl.E.Chk(ws.WriteJSON(closedenvelope.T{
+			rl.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
 				ID:     env.ID,
 				Reason: "unsupported: this relay does not support NIP-45",
 			}))
@@ -150,7 +149,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		for _, f := range env.Filters {
 			total += rl.handleCountRequest(c, ws, f)
 		}
-		rl.E.Chk(ws.WriteJSON(countenvelope.Response{
+		rl.E.Chk(ws.WriteEnvelope(&countenvelope.Response{
 			ID:    env.ID,
 			Count: total,
 		}))
@@ -176,10 +175,10 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 				if strings.HasPrefix(reason, "auth-required:") {
 					RequestAuth(c)
 				}
-				rl.E.Chk(ws.WriteJSON(closedenvelope.T{
+				rl.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
 					ID:     env.SubscriptionID,
-					Reason: reason},
-				))
+					Reason: reason,
+				}))
 				cancelReqCtx(errors.New("filter rejected"))
 				return
 			}
@@ -189,7 +188,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			// we can cancel the context and fire the EOSE message
 			wg.Wait()
 			cancelReqCtx(nil)
-			rl.E.Chk(ws.WriteJSON(eoseenvelope.T{T: env.SubscriptionID}))
+			rl.E.Chk(ws.WriteEnvelope(&eoseenvelope.T{T: env.SubscriptionID}))
 		}()
 		SetListener(env.SubscriptionID.String(), ws, env.Filters, cancelReqCtx)
 	case *closeenvelope.T:
@@ -204,15 +203,17 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 				ws.Authed = nil
 			}
 			ws.authLock.Unlock()
-			rl.E.Chk(ws.WriteJSON(okenvelope.T{
+			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: true,
 			}))
 		} else {
-			rl.E.Chk(ws.WriteJSON(okenvelope.T{
-				ID:     env.Event.ID,
-				OK:     false,
-				Reason: "error: failed to authenticate"},
+			rl.E.Chk(ws.WriteMessage(
+				websocket.TextMessage, (&okenvelope.T{
+					ID:     env.Event.ID,
+					OK:     false,
+					Reason: "error: failed to authenticate"}).
+					Bytes(),
 			))
 		}
 	}

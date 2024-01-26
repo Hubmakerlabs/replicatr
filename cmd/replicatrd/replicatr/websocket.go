@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/fasthttp/websocket"
 )
 
@@ -19,16 +20,23 @@ type WebSocket struct {
 	authLock        sync.Mutex
 }
 
-// WriteJSON writes an object as JSON to the websocket
-func (ws *WebSocket) WriteJSON(any any) (err error) {
-	ws.mutex.Lock()
-	defer ws.mutex.Unlock()
-	return ws.conn.WriteJSON(any)
-}
+// // WriteJSON writes an object as JSON to the websocket
+// func (ws *WebSocket) WriteJSON(any any) (err error) {
+// 	ws.mutex.Lock()
+// 	defer ws.mutex.Unlock()
+// 	return ws.conn.WriteJSON(any)
+// }
 
 // WriteMessage writes a message with a given websocket type specifier
 func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
 	return ws.conn.WriteMessage(t, b)
+}
+
+// WriteEnvelope writes a message with a given websocket type specifier
+func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
+	ws.mutex.Lock()
+	defer ws.mutex.Unlock()
+	return ws.conn.WriteMessage(websocket.TextMessage, env.Bytes())
 }

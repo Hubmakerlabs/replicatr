@@ -91,7 +91,7 @@ func main() {
 		Usage:       "A cli application for nostr",
 		Description: "A cli application for nostr",
 		Flags: []cli.Flag{
-			&cli.StringFlag{Name: "a", Usage: "profile appName"},
+			&cli.StringFlag{Name: "a", Usage: "profile name"},
 			&cli.StringFlag{Name: "relays", Usage: "relays"},
 			&cli.BoolFlag{Name: "v", Usage: "verbose"},
 			&cli.BoolFlag{Name: "t", Usage: "trace"},

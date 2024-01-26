@@ -18,15 +18,15 @@ func Identify(b []byte) (match string, buf *text.Buffer, err error) {
 	// whitespace... So we will use some tools.
 	buf = text.NewBuffer(b)
 	// First there must be an opening bracket.
-	if err = buf.ScanThrough('['); err != nil {
+	if err = buf.ScanThrough('['); log.Fail(err) {
 		return
 	}
 	// Then a quote.
-	if err = buf.ScanThrough('"'); err != nil {
+	if err = buf.ScanThrough('"'); log.Fail(err) {
 		return
 	}
 	var candidate []byte
-	if candidate, err = buf.ReadUntil('"'); err != nil {
+	if candidate, err = buf.ReadUntil('"'); log.Fail(err) {
 		return
 	}
 	// log.D.F("label: '%s' %v", string(candidate), List)
@@ -55,6 +55,6 @@ matched:
 			string(candidate))
 		return
 	}
-
+	log.D.F("received %s envelope", match)
 	return
 }
