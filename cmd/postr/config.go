@@ -11,6 +11,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
@@ -47,26 +48,29 @@ type Metadata struct {
 }
 
 type (
-	Follows   map[string]*Metadata
-	Relays    map[string]*RelayPerms
-	Emojis    map[string]string
-	Checklist map[string]struct{}
-	RelayIter func(context.T, *relay.T) bool
+	Follows       map[string]*Metadata
+	FollowsRelays map[string][]string
+	Relays        map[string]*RelayPerms
+	Emojis        map[string]string
+	Checklist     map[string]struct{}
+	RelayIter     func(context.T, *relay.T) bool
 )
 
 // C is the configuration for the client
 type C struct {
-	Relays    Relays    `json:"relays"`
-	Follows   Follows   `json:"follows"`
-	SecretKey string    `json:"secretkey"`
-	Updated   time.Time `json:"updated"`
-	Emojis    `json:"emojis"`
-	NwcURI    string `json:"nwc-uri"`
-	NwcPub    string `json:"nwc-pub"`
-	verbose   bool
-	trace     bool
-	tempRelay bool
-	sk        string
+	Relays         Relays        `json:"relays"`
+	Follows        Follows       `json:"follows"`
+	FollowsRelays  FollowsRelays `json:"follows_relays"`
+	SecretKey      string        `json:"secretkey"`
+	Updated        time.Time     `json:"updated"`
+	Emojis         `json:"emojis"`
+	NwcURI         string `json:"nwc-uri"`
+	NwcPub         string `json:"nwc-pub"`
+	EventURLPrefix string `json:"nevent-url"`
+	verbose        bool
+	trace          bool
+	tempRelay      bool
+	sk             string
 	sync.Mutex
 }
 
@@ -220,11 +224,11 @@ func (cfg *C) Events(f filter.T) []*event.T {
 		}
 		return true
 	})
-	// m.Range(func(key any, value any) bool {
-	// 	log.D.Ln("event ID", key.(eventid.EventID).String())
-	// 	log.D.Ln(value.(*event.T).ToObject().String())
-	// 	return true
-	// })
+	m.Range(func(key any, value any) bool {
+		log.D.Ln("event ID", key.(eventid.T).String())
+		log.D.Ln(value.(*event.T).ToObject().String())
+		return true
+	})
 	var evs []*event.T
 	m.Range(func(k, v any) bool {
 		evs = append(evs, v.(*event.T))

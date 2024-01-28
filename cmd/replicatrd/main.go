@@ -7,6 +7,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/cmd/replicatrd/replicatr"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/alexflint/go-arg"
 	"mleku.online/git/slog"
 )
@@ -15,6 +16,11 @@ var args struct {
 	Listen  string `arg:"-l,--listen" default:"0.0.0.0:3334"`
 	Profile string `arg:"-p,--profile" default:"replicatr"`
 }
+
+var (
+	AppName = "replicatr"
+	Version = "v0.0.1"
+)
 
 func main() {
 	arg.MustParse(&args)
@@ -26,8 +32,25 @@ func main() {
 	}
 	dataDir := filepath.Join(dataDirBase, args.Profile)
 	log.D.F("using profile directory: '%s", args.Profile)
-	rl := replicatr.NewRelay(log)
-	rl.Info.AddNIPs(1, 23, 9, 15, 42, 45)
+	rl := replicatr.NewRelay(log, &nip11.Info{
+		Name:        "",
+		Description: "",
+		PubKey:      "",
+		Contact:     "",
+		Software:    AppName,
+		Version:     Version,
+		Limitation: &nip11.Limits{
+			MaxMessageLength: replicatr.MaxMessageSize,
+		},
+		RelayCountries: nil,
+		LanguageTags:   nil,
+		Tags:           nil,
+		PostingPolicy:  "",
+		PaymentsURL:    "",
+		Fees:           &nip11.Fees{},
+		Icon:           "",
+	})
+	rl.Info.AddNIPs(1, 23, 9, 11, 15, 42, 45)
 	db := &badger.BadgerBackend{Path: dataDir, Log: log}
 	if err = db.Init(); rl.E.Chk(err) {
 		rl.E.F("unable to start database: '%s'", err)

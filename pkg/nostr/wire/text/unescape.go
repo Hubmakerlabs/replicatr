@@ -126,7 +126,7 @@ func UnescapeByteString(bs []byte) (o []byte) {
 	if len(bs) == 0 {
 		return
 	}
-	log.D.F("unescaping '%s'", bs)
+	log.T.F("unescaping '%s'", bs)
 	in := NewBuffer(bs)  // read side
 	out := NewBuffer(bs) // write side
 	var err error

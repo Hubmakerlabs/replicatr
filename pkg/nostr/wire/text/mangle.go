@@ -248,7 +248,7 @@ func (b *Buffer) WriteBytes(bb []byte) (err error) {
 	if len(bb) == 0 {
 		return
 	}
-	log.D.F("buf len: %d, pos: %d writing %d '%s'", len(b.Buf), b.Pos, len(bb),
+	log.T.F("buf len: %d, pos: %d writing %d '%s'", len(b.Buf), b.Pos, len(bb),
 		string(bb))
 	until := b.Pos + len(bb)
 	if until <= len(b.Buf) {

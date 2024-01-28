@@ -18,7 +18,7 @@ func (cfg *C) PopulateFollows(f *[]string, start, end *int) RelayIter {
 			Authors: (*f)[*start:*end], // Use the updated end index
 			Limit:   *end - *start,
 		})
-		log.D.S(evs)
+		log.T.S(rl.URL(), evs)
 		if log.Fail(err) {
 			return true
 		}
@@ -28,6 +28,8 @@ func (cfg *C) PopulateFollows(f *[]string, start, end *int) RelayIter {
 			if err == nil {
 				cfg.Lock()
 				cfg.Follows[ev.PubKey] = p
+				cfg.FollowsRelays[ev.PubKey] = append(cfg.FollowsRelays[ev.PubKey],
+					rl.URL())
 				cfg.Unlock()
 			}
 		}

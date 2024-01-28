@@ -3,6 +3,7 @@ module github.com/Hubmakerlabs/replicatr
 go 1.20
 
 require (
+	github.com/alexflint/go-arg v1.4.3
 	github.com/bgentry/speakeasy v0.1.0
 	github.com/dgraph-io/badger/v4 v4.2.0
 	github.com/fasthttp/websocket v1.5.7
@@ -27,7 +28,6 @@ require (
 
 require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
-	github.com/alexflint/go-arg v1.4.3 // indirect
 	github.com/alexflint/go-scalar v1.1.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
