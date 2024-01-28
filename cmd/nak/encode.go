@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/urfave/cli/v2"
@@ -134,7 +135,7 @@ var encode = &cli.Command{
 						return err
 					}
 
-					if npub, err := bech32encoding.EncodeEvent(target, relays, author); err == nil {
+					if npub, err := bech32encoding.EncodeEvent(eventid.T(target), relays, author); err == nil {
 						fmt.Println(npub)
 					} else {
 						return err

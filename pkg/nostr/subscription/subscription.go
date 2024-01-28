@@ -89,7 +89,7 @@ func (sub *T) Start() {
 }
 
 func (sub *T) DispatchEvent(evt *event.T) {
-	log.D.Ln("dispatching event to channel")
+	log.T.Ln("dispatching event to channel")
 	added := false
 	if !sub.eosed.Load() {
 		sub.storedwg.Add(1)
@@ -177,7 +177,7 @@ func (sub *T) Fire() error {
 			Filters: sub.Filters,
 		}).MarshalJSON()
 	}
-	log.D.F("{%s} sending %v", sub.Relay.URL(), string(reqb))
+	log.T.F("{%s} sending %v", sub.Relay.URL(), string(reqb))
 
 	sub.live.Store(true)
 	if err := <-sub.Relay.Write(reqb); err != nil {

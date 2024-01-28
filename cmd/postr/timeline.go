@@ -32,14 +32,14 @@ func Timeline(cCtx *cli.Context) (err error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 	// get followers
 	var followsMap Follows
-	if followsMap, err = cfg.GetFollows(cCtx.String("a")); log.Fail(err) {
+	if followsMap, err = cfg.GetFollows(cCtx.String("a"), cCtx.Bool("update")); log.Fail(err) {
 		return
 	}
 	var follows []string
 	for k := range followsMap {
 		follows = append(follows, k)
 	}
-	log.D.Ln("follows", cfg.Follows)
+	log.T.Ln("follows", cfg.Follows)
 	// get timeline
 	f := filter.T{
 		Kinds:   kinds.T{kind.TextNote},

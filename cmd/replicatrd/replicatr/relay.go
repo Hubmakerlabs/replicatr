@@ -17,12 +17,12 @@ var Version = "v0.0.1"
 var Software = "https://github.com/Hubmakerlabs/replicatr/cmd/replicatrd"
 
 const (
-	WriteWait             = 10 * time.Second
-	PongWait              = 60 * time.Second
-	PingPeriod            = 30 * time.Second
-	ReadBufferSize        = 4096
-	WriteBufferSize       = 4096
-	MaxMessageSize  int64 = 512000 // ???
+	WriteWait           = 10 * time.Second
+	PongWait            = 60 * time.Second
+	PingPeriod          = 30 * time.Second
+	ReadBufferSize      = 4096
+	WriteBufferSize     = 4096
+	MaxMessageSize  int = 512000 // ???
 )
 
 // function types used in the relay state
@@ -75,10 +75,14 @@ type Relay struct {
 	MaxMessageSize int64         // Maximum message size allowed from peer.
 }
 
-func NewRelay(logger *slog.Log) (r *Relay) {
+func NewRelay(logger *slog.Log, inf *nip11.Info) (r *Relay) {
+	var maxMessageLength = MaxMessageSize
+	if inf.Limitation != nil {
+		maxMessageLength = inf.Limitation.MaxMessageLength
+	}
 	r = &Relay{
 		Log:  logger,
-		Info: nip11.NewInfo(),
+		Info: nip11.NewInfo(inf),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  ReadBufferSize,
 			WriteBufferSize: WriteBufferSize,
@@ -89,7 +93,7 @@ func NewRelay(logger *slog.Log) (r *Relay) {
 		WriteWait:      WriteWait,
 		PongWait:       PongWait,
 		PingPeriod:     PingPeriod,
-		MaxMessageSize: MaxMessageSize,
+		MaxMessageSize: int64(maxMessageLength),
 	}
 	r.Info.Software = Software
 	r.Info.Version = Version

@@ -10,6 +10,8 @@ import (
 	"github.com/fatih/color"
 )
 
+const NostrProtocol = "nostr:"
+
 // PrintEvents is
 func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 	if asJson {
@@ -41,16 +43,22 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 	fgNormal := color.New(color.Reset)
 	fgHiBlue := color.Set(color.FgHiBlue)
 	for _, ev := range evs {
-		profile, ok := f[ev.PubKey]
-		if ok {
+		if profile, ok := f[ev.PubKey]; ok {
 			color.Set(color.FgHiRed)
 			fgHiRed.Fprintln(buffer, profile.Name)
 			fgNormal.Fprintln(buffer, ev.Content)
-			note, err := bech32encoding.EncodeNote(ev.ID.String())
-			if err != nil {
-				note = ev.ID.String()
+			var rls []string
+			if rls, ok = cfg.FollowsRelays[ev.PubKey]; ok {
+				if nevent, err := bech32encoding.EncodeEvent(ev.ID, rls, ev.PubKey); !log.Fail(err) {
+					fgHiBlue.Fprint(buffer, cfg.EventURLPrefix, nevent)
+				}
+			} else {
+				note, err := bech32encoding.EncodeNote(ev.ID.String())
+				if err != nil {
+					note = ev.ID.String()
+				}
+				fgHiBlue.Fprint(buffer, note)
 			}
-			fgHiBlue.Fprint(buffer, note)
 			fgHiBlue.Fprintln(buffer, " ", ev.CreatedAt.Time())
 		} else {
 			fgRed.Fprint(buffer, "pubkey ")
@@ -60,7 +68,7 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 			if err != nil {
 				note = ev.ID.String()
 			}
-			fgHiBlue.Fprint(buffer, " ", note)
+			fgHiBlue.Fprint(buffer, " ", NostrProtocol, note)
 			fgHiBlue.Fprint(buffer, " ", ev.CreatedAt.Time())
 			fgHiBlue.Fprintln(buffer)
 			fgNormal.Fprintln(buffer, ev.Content)

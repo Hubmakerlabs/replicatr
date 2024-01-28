@@ -230,7 +230,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 		}
 
 		message := buf.Bytes()
-		log.D.F("{%s} received %v", r.URL(), string(message))
+		log.T.F("{%s} received %v", r.URL(), string(message))
 		var envelope enveloper.I
 		envelope, _, err = envelopes.ProcessEnvelope(message)
 		if envelope == nil {

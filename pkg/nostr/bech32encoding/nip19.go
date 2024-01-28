@@ -210,12 +210,12 @@ func EncodeProfile(publicKeyHex string, relays []string) (s string, err error) {
 	return bech32.Encode(NprofileHRP, bits5)
 }
 
-func EncodeEvent(eventIDHex string, relays []string,
+func EncodeEvent(eventIDHex eventid.T, relays []string,
 	author string) (s string, err error) {
 
 	buf := &bytes.Buffer{}
 	var id []byte
-	id, err = hex.Dec(eventIDHex)
+	id, err = hex.Dec(eventIDHex.String())
 	if err != nil || len(id) != 32 {
 		return "", fmt.Errorf("invalid id '%s': %w", eventIDHex, err)
 	}

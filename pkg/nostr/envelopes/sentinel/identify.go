@@ -55,6 +55,6 @@ matched:
 			string(candidate))
 		return
 	}
-	log.D.F("received %s envelope", match)
+	log.T.F("received %s envelope", match)
 	return
 }

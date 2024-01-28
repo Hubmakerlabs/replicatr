@@ -67,7 +67,7 @@ func doDMList(cCtx *cli.Context) (err error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 	// get followers
 	var followsMap Follows
-	followsMap, err = cfg.GetFollows(cCtx.String("a"))
+	followsMap, err = cfg.GetFollows(cCtx.String("a"), false)
 	if log.Fail(err) {
 		return err
 	}
@@ -144,7 +144,7 @@ func doDMTimeline(cCtx *cli.Context) (err error) {
 	}
 	// get followers
 	var followsMap Follows
-	if followsMap, err = cfg.GetFollows(cCtx.String("a")); log.Fail(err) {
+	if followsMap, err = cfg.GetFollows(cCtx.String("a"), false); log.Fail(err) {
 		return err
 	}
 	// get timeline
@@ -394,7 +394,7 @@ func doStream(cCtx *cli.Context) (err error) {
 	var follows []string
 	if f {
 		followsMap := make(Follows)
-		if followsMap, err = cfg.GetFollows(cCtx.String("a")); log.Fail(err) {
+		if followsMap, err = cfg.GetFollows(cCtx.String("a"), false); log.Fail(err) {
 			return
 		}
 		for k := range followsMap {

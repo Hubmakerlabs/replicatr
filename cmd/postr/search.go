@@ -19,7 +19,7 @@ func Search(cCtx *cli.Context) (err error) {
 	if j && !extra {
 		followsMap = make(Follows)
 	} else {
-		followsMap, err = cfg.GetFollows(cCtx.String("a"))
+		followsMap, err = cfg.GetFollows(cCtx.String("a"), false)
 		if log.Fail(err) {
 			return err
 		}
