@@ -55,7 +55,22 @@ func main() {
 		Fees:           &nip11.Fees{},
 		Icon:           args.Icon,
 	})
-	rl.Info.AddNIPs(1, 2, 4, 23, 9, 11, 15, 42, 45)
+	rl.Info.AddNIPs(
+		nip11.BasicProtocol.Number,            // events, envelopes and filters
+		nip11.FollowList.Number,               // follow lists
+		nip11.EncryptedDirectMessage.Number,   // encrypted DM
+		nip11.MappingNostrKeysToDNS.Number,    // DNS
+		nip11.EventDeletion.Number,            // event delete
+		nip11.RelayInformationDocument.Number, // relay information document
+		nip11.NostrMarketplace.Number,         // marketplace
+		nip11.Reposts.Number,                  // reposts
+		nip11.Bech32EncodedEntities.Number,    // bech32 encodings
+		nip11.LongFormContent.Number,          // long form
+		nip11.PublicChat.Number,               // public chat
+		nip11.UserStatuses.Number,             // user statuses
+		nip11.Authentication.Number,           // auth
+		nip11.CountingResults.Number,          // count requests
+	)
 	db := &badger.BadgerBackend{Path: dataDir, Log: log}
 	if err = db.Init(); rl.E.Chk(err) {
 		rl.E.F("unable to start database: '%s'", err)
