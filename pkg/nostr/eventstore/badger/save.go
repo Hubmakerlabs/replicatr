@@ -31,7 +31,7 @@ func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (err error) {
 		if bin, err = nostrbinary.Marshal(evt); b.Fail(err) {
 			return err
 		}
-		b.D.F("binary encoded %x", bin)
+		b.T.F("binary encoded %x", bin)
 		idx := b.Serial()
 		// raw event store
 		b.D.F("setting event")

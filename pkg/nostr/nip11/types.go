@@ -40,14 +40,14 @@ type Fees struct {
 	Publication  []Pub     `json:"publication,omitempty"`
 }
 
-type NIPs map[int]struct{}
+type NIPs []int
 
 type Info struct {
 	Name           string   `json:"name"`
 	Description    string   `json:"description"`
 	PubKey         string   `json:"pubkey"`
 	Contact        string   `json:"contact"`
-	nips           NIPs     `json:"supported_nips"`
+	Nips           NIPs     `json:"supported_nips"`
 	Software       string   `json:"software"`
 	Version        string   `json:"version"`
 	Limitation     *Limits  `json:"limitation,omitempty"`
@@ -66,31 +66,31 @@ type Info struct {
 func NewInfo(inf *Info) *Info {
 	if inf != nil {
 		inf.Lock()
-		if inf.nips == nil {
-			inf.nips = make(map[int]struct{})
-		}
 		if inf.Limitation == nil {
 			inf.Limitation = &Limits{}
 		}
 		inf.Unlock()
 		return inf
 	}
-	return &Info{
-		nips: make(map[int]struct{}),
-	}
+	return &Info{}
 }
 
 func (inf *Info) AddNIPs(n ...int) {
 	inf.Lock()
 	for _, number := range n {
-		inf.nips[number] = struct{}{}
+		inf.Nips = append(inf.Nips, number)
 	}
 	inf.Unlock()
 }
 
 func (inf *Info) HasNIP(n int) (ok bool) {
 	inf.Lock()
-	_, ok = inf.nips[n]
+	for i := range inf.Nips {
+		if inf.Nips[i] == n {
+			ok = true
+			break
+		}
+	}
 	inf.Unlock()
 	return
 }

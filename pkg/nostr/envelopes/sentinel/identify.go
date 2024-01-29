@@ -55,6 +55,8 @@ matched:
 			string(candidate))
 		return
 	}
-	log.T.F("received %s envelope", match)
+	trunc := make([]byte, 1024)
+	copy(trunc, buf.Buf)
+	log.T.F("received %s envelope '%s'", match, trunc)
 	return
 }

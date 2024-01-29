@@ -88,7 +88,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 					return nil
 				default:
 					err = fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))
-					rl.D.Ln(err)
+					rl.D.Ln(ev.ID, err)
 					return
 				}
 			}
