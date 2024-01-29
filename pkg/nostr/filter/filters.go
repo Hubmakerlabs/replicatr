@@ -103,7 +103,7 @@ func (f *T) UnmarshalJSON(b []byte) (err error) {
 	if f == nil {
 		return fmt.Errorf("cannot unmarshal into nil T")
 	}
-	log.D.F("unmarshaling filter `%s`", b)
+	// log.T.F("unmarshaling filter `%s`", b)
 	var uf UnmarshalingFilter
 	if err = json.Unmarshal(b, &uf); log.Fail(err) {
 		return

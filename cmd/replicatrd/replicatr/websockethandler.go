@@ -67,7 +67,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
-	rl.T.F("processing message '%s", string(msg))
+	// rl.T.F("processing message '%s', local: %s remote %s", string(msg),
+	// 	ws.conn.NetConn().LocalAddr(), ws.conn.NetConn().RemoteAddr())
 	en, _, err := envelopes.ProcessEnvelope(msg)
 	if log.Fail(err) {
 		return
@@ -81,7 +82,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		rl.T.Ln("event envelope")
 		// check id
 		evs := env.Event.ToCanonical().Bytes()
-		rl.T.F("serialized %s", evs)
+		rl.D.F("serialized %s", evs)
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {

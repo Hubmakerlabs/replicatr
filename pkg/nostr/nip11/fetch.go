@@ -5,11 +5,15 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"mleku.online/git/slog"
 )
+
+var log = slog.New(os.Stderr, "nostr/nip11")
 
 // Fetch fetches the NIP-11 Info.
 func Fetch(c context.T, u string) (info *Info, err error) {
@@ -48,7 +52,7 @@ func Fetch(c context.T, u string) (info *Info, err error) {
 	defer resp.Body.Close()
 
 	info = &Info{}
-	if err := json.NewDecoder(resp.Body).Decode(info); err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(info); err != nil {
 		return nil, fmt.Errorf("invalid json: %w", err)
 	}
 

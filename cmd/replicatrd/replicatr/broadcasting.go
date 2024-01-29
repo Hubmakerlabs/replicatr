@@ -11,8 +11,8 @@ import (
 func (rl *Relay) BroadcastEvent(evt *event.T) {
 	listeners.Range(func(ws *WebSocket, subs ListenerMap) bool {
 
-		rl.D.Ln("broadcasting event")
 		subs.Range(func(id string, listener *Listener) bool {
+			log.D.F("sending event to subscriber %d '%s'", id, evt.ToObject().String())
 			if !listener.filters.Match(evt) {
 				return true
 			}

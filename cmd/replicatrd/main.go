@@ -13,8 +13,13 @@ import (
 )
 
 var args struct {
-	Listen  string `arg:"-l,--listen" default:"0.0.0.0:3334"`
-	Profile string `arg:"-p,--profile" default:"replicatr"`
+	Listen      string `arg:"-l,--listen" default:"0.0.0.0:3334"`
+	Profile     string `arg:"-p,--profile" default:"replicatr"`
+	Name        string `arg:"-n,--name" default:"replicatr relay"`
+	Description string `arg:"--description"`
+	Pubkey      string `arg:"-k,--pubkey"`
+	Contact     string `arg:"-c,--contact"`
+	Icon        string `arg:"-i,--icon" default:"https://i.nostr.build/n8vM.png"`
 }
 
 var (
@@ -33,10 +38,10 @@ func main() {
 	dataDir := filepath.Join(dataDirBase, args.Profile)
 	log.D.F("using profile directory: '%s", args.Profile)
 	rl := replicatr.NewRelay(log, &nip11.Info{
-		Name:        "",
-		Description: "",
-		PubKey:      "",
-		Contact:     "",
+		Name:        args.Name,
+		Description: args.Description,
+		PubKey:      args.Pubkey,
+		Contact:     args.Contact,
 		Software:    AppName,
 		Version:     Version,
 		Limitation: &nip11.Limits{
@@ -48,9 +53,9 @@ func main() {
 		PostingPolicy:  "",
 		PaymentsURL:    "",
 		Fees:           &nip11.Fees{},
-		Icon:           "",
+		Icon:           args.Icon,
 	})
-	rl.Info.AddNIPs(1, 23, 9, 11, 15, 42, 45)
+	rl.Info.AddNIPs(1, 2, 4, 23, 9, 11, 15, 42, 45)
 	db := &badger.BadgerBackend{Path: dataDir, Log: log}
 	if err = db.Init(); rl.E.Chk(err) {
 		rl.E.F("unable to start database: '%s'", err)
