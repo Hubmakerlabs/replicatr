@@ -9,7 +9,7 @@ func TestAddSupportedNIP(t *testing.T) {
 	for i, v := range []int{0, 1, 2, 12, 13, 17, 18, 19, 44} {
 		if !info.HasNIP(v) {
 			t.Errorf("expected info.nips[%d] to equal %v, got %v",
-				i, v, info.nips)
+				i, v, info.Nips)
 			return
 		}
 	}
