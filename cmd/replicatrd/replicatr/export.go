@@ -21,7 +21,7 @@ func (rl *Relay) Export(db *badger.Backend, filename string) {
 	var fh *os.File
 	var err error
 	if filename != "" {
-		fh, err = os.Open(filename)
+		fh, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0755)
 		if err != nil {
 			rl.F.Ln(err)
 			os.Exit(1)

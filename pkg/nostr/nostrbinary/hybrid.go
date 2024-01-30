@@ -61,7 +61,6 @@ func Unmarshal(data []byte) (evt *event.T, err error) {
 }
 
 func Marshal(evt *event.T) (b []byte, err error) {
-
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
 	if err = enc.Encode(evt); log.Fail(err) {
