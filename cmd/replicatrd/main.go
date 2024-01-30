@@ -12,20 +12,32 @@ import (
 	"mleku.online/git/slog"
 )
 
-var args struct {
-	Listen      string `arg:"-l,--listen" default:"0.0.0.0:3334"`
-	Profile     string `arg:"-p,--profile" default:"replicatr"`
-	Name        string `arg:"-n,--name" default:"replicatr relay"`
-	Description string `arg:"--description"`
-	Pubkey      string `arg:"-k,--pubkey"`
-	Contact     string `arg:"-c,--contact"`
-	Icon        string `arg:"-i,--icon" default:"https://i.nostr.build/n8vM.png"`
-}
-
 var (
 	AppName = "replicatr"
 	Version = "v0.0.1"
 )
+
+type ExportCmd struct {
+	ToFile string `arg:"-f,--tofile" help:"write to file instead of stdout"`
+}
+
+type ImportCmd struct {
+	FromFile []string `arg:"-f,--fromfile,separate" help:"read from files instead of stdin (can use flag repeatedly for multiple files)"`
+}
+
+type Args struct {
+	ExportCmd   *ExportCmd `json:"-" arg:"subcommand:export" help:"export database as line structured JSON"`
+	ImportCmd   *ImportCmd `json:"-" arg:"subcommand:import" help:"import data from line structured JSON"`
+	Listen      string     `json:"listen" arg:"-l,--listen" default:"0.0.0.0:3334" help:"network address to listen on"`
+	Profile     string     `json:"-" arg:"-p,--profile" default:"replicatr" help:"profile name to use for storage"`
+	Name        string     `json:"name" arg:"-n,--name" default:"replicatr relay" help:"name of relay for NIP-11"`
+	Description string     `json:"description" arg:"--description" help:"description of relay for NIP-11"`
+	Pubkey      string     `json:"pubkey" arg:"-k,--pubkey" help:"public key of relay operator"`
+	Contact     string     `json:"contact" arg:"-c,--contact" help:"non-nostr relay operator contact details"`
+	Icon        string     `json:"icon" arg:"-i,--icon" default:"https://i.nostr.build/n8vM.png" help:"icon to show on relay information pages"`
+}
+
+var args Args
 
 func main() {
 	arg.MustParse(&args)
@@ -71,15 +83,22 @@ func main() {
 		nip11.Authentication.Number,           // auth
 		nip11.CountingResults.Number,          // count requests
 	)
-	db := &badger.BadgerBackend{Path: dataDir, Log: log}
+	db := &badger.Backend{Path: dataDir, Log: nil}
 	if err = db.Init(); rl.E.Chk(err) {
 		rl.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
-	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
-	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
-	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
-	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
-	rl.I.Ln("listening on", args.Listen)
-	rl.E.Chk(http.ListenAndServe(args.Listen, rl))
+	switch {
+	case args.ImportCmd != nil:
+		rl.Import(db, args.ImportCmd.FromFile)
+	case args.ExportCmd != nil:
+		rl.Export(db, args.ExportCmd.ToFile)
+	default:
+		rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
+		rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
+		rl.CountEvents = append(rl.CountEvents, db.CountEvents)
+		rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
+		rl.I.Ln("listening on", args.Listen)
+		rl.E.Chk(http.ListenAndServe(args.Listen, rl))
+	}
 }

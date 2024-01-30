@@ -10,7 +10,7 @@ import (
 
 var serialDelete uint32 = 0
 
-func (b *BadgerBackend) DeleteEvent(c context.T, evt *event.T) (err error) {
+func (b *Backend) DeleteEvent(c context.T, evt *event.T) (err error) {
 	deletionHappened := false
 
 	err = b.Update(func(txn *badger.Txn) (err error) {
