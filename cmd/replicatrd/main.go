@@ -83,21 +83,21 @@ func main() {
 		nip11.Authentication.Number,           // auth
 		nip11.CountingResults.Number,          // count requests
 	)
-	db := &badger.Backend{Path: dataDir, Log: nil}
+	db := &badger.Backend{Path: dataDir, Log: slog.New(os.Stderr, "replicatr-badger")}
 	if err = db.Init(); rl.E.Chk(err) {
 		rl.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
+	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
+	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
+	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
+	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
 	switch {
 	case args.ImportCmd != nil:
 		rl.Import(db, args.ImportCmd.FromFile)
 	case args.ExportCmd != nil:
 		rl.Export(db, args.ExportCmd.ToFile)
 	default:
-		rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
-		rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
-		rl.CountEvents = append(rl.CountEvents, db.CountEvents)
-		rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
 		rl.I.Ln("listening on", args.Listen)
 		rl.E.Chk(http.ListenAndServe(args.Listen, rl))
 	}

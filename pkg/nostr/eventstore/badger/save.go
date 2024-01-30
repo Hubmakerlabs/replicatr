@@ -12,7 +12,7 @@ import (
 
 func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
 	return b.Update(func(txn *badger.Txn) (err error) {
-		// b.D.Ln("saving event")
+		b.D.S(evt)
 		// query event by id to ensure we don't save duplicates
 		id, _ := hex.Dec(evt.ID.String())
 		prefix := make([]byte, 1+8)
