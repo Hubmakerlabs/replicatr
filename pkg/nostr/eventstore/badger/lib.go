@@ -22,9 +22,9 @@ const (
 	indexTagAddrPrefix    byte = 8
 )
 
-var _ eventstore.Store = (*BadgerBackend)(nil)
+var _ eventstore.Store = (*Backend)(nil)
 
-type BadgerBackend struct {
+type Backend struct {
 	Path     string
 	MaxLimit int
 	*slog.Log
@@ -32,7 +32,7 @@ type BadgerBackend struct {
 	seq *badger.Sequence
 }
 
-func (b *BadgerBackend) Init() (err error) {
+func (b *Backend) Init() (err error) {
 	db, err := badger.Open(badger.DefaultOptions(b.Path))
 	if err != nil {
 		return err
@@ -54,12 +54,12 @@ func (b *BadgerBackend) Init() (err error) {
 	return nil
 }
 
-func (b *BadgerBackend) Close() {
+func (b *Backend) Close() {
 	log.E.Chk(b.DB.Close())
 	log.E.Chk(b.seq.Release())
 }
 
-func (b *BadgerBackend) Serial() []byte {
+func (b *Backend) Serial() []byte {
 	v, _ := b.seq.Next()
 	vb := make([]byte, 5)
 	vb[0] = rawEventStorePrefix

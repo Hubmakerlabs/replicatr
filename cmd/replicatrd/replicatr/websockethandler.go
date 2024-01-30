@@ -77,9 +77,10 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		rl.T.Ln("'silently' ignoring message")
 		return
 	}
+	// rl.D.Ln("received envelope from", ws.conn.LocalAddr(), ws.conn.RemoteAddr())
 	switch env := en.(type) {
 	case *eventenvelope.T:
-		rl.T.Ln("event envelope")
+		rl.D.Ln("event envelope")
 		// check id
 		evs := env.Event.ToCanonical().Bytes()
 		rl.D.F("serialized %s", evs)

@@ -72,7 +72,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 		if sid, err = buf.ReadUntil('"'); log.Fail(err) {
 			return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 		}
-		log.D.F("Subscription ID: '%s'", sid)
+		log.T.F("Subscription ID: '%s'", sid)
 		E.SubscriptionID = subscriptionid.T(sid)
 	}
 	// Next, find the comma (there must be one and at least one object brace

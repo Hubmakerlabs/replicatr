@@ -5,19 +5,21 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/dgraph-io/badger/v4"
 )
 
 type query struct {
 	i             int
 	prefix        []byte
-	startingPoint []byte
+	startingPoint []byte // todo: rework this to use 64 bit numbers
 	results       chan *event.T
 	skipTimestamp bool
 }
@@ -27,7 +29,7 @@ type queryEvent struct {
 	query int
 }
 
-func (b *BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
+func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
 	queries, extraFilter, since, err := prepareQueries(f)
@@ -45,14 +47,20 @@ func (b *BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, er
 			// actually iterate
 			iteratorClosers := make([]func(), len(queries))
 			for i, q := range queries {
+				// log.D.S(q)
 				go func(i int, q query) {
 					it := txn.NewIterator(opts)
 					iteratorClosers[i] = it.Close
 
 					defer close(q.results)
-
+					// log.D.S(q.startingPoint)
+					if q.startingPoint == nil {
+						b.D.S("nil query starting point")
+						return
+					}
 					for it.Seek(q.startingPoint); it.ValidForPrefix(q.prefix); it.Next() {
 						item := it.Item()
+						// log.D.Ln(item.ValueCopy(nil))
 						key := item.Key()
 
 						idxOffset := len(key) - 4 // this is where the idx actually starts
@@ -79,20 +87,25 @@ func (b *BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, er
 								idx, q.prefix, key, err)
 							return
 						}
-						b.Fail(item.Value(func(val []byte) (err error) {
-							var evt *event.T
-							if evt, err = nostr_binary.Unmarshal(val); err != nil {
-								b.D.F("badger: value read error (id %x): %s", val[0:32], err)
-								return err
-							}
-
-							// check if this matches the other filters that were not part of the index
-							if extraFilter == nil || extraFilter.Matches(evt) {
-								q.results <- evt
-							}
-
-							return nil
-						}))
+						if item == nil {
+							b.D.Ln("nil item")
+							break
+						}
+						var val []byte
+						val, err = item.ValueCopy(val)
+						evt := &event.T{}
+						if evt, err = nostrbinary.Unmarshal(val); err != nil {
+							b.D.F("badger: value read error (id %x): %s", spew.Sdump(val), err)
+							break
+						}
+						if evt == nil {
+							b.D.F("got nil event from %s", spew.Sdump(val))
+						}
+						// b.D.F("unmarshaled %s", evt.ToObject().String())
+						// check if this matches the other filters that were not part of the index
+						if extraFilter == nil || extraFilter.Matches(evt) {
+							q.results <- evt
+						}
 					}
 				}(i, q)
 			}
@@ -291,7 +304,7 @@ func prepareQueries(f *filter.T) (
 		extraFilter = nil
 	}
 
-	var until uint32 = 4294967295
+	var until uint32 = math.MaxUint32
 	if f.Until != nil {
 		if fu := uint32(*f.Until); fu < until {
 			until = fu + 1

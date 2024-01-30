@@ -10,9 +10,9 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (err error) {
+func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
 	return b.Update(func(txn *badger.Txn) (err error) {
-		b.D.Ln("saving event")
+		// b.D.Ln("saving event")
 		// query event by id to ensure we don't save duplicates
 		id, _ := hex.Dec(evt.ID.String())
 		prefix := make([]byte, 1+8)
@@ -25,7 +25,7 @@ func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (err error) {
 			// event exists
 			return eventstore.ErrDupEvent
 		}
-		b.D.Ln("encoding to binary")
+		// b.D.Ln("encoding to binary")/
 		// encode to binary
 		var bin []byte
 		if bin, err = nostrbinary.Marshal(evt); b.Fail(err) {
