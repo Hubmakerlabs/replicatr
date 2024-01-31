@@ -36,7 +36,7 @@ func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 	}
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
-	if slog.GetLogLevel() <= slog.Trace && len(b) == 0 {
+	if slog.GetLogLevel() >= slog.Trace && len(b) == 0 {
 		var file string
 		var line int
 		_, file, line, _ = runtime.Caller(1)
