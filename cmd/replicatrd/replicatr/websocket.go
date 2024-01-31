@@ -7,6 +7,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/fasthttp/websocket"
+	"mleku.online/git/slog"
 )
 
 // WebSocket is a wrapper around a fasthttp/websocket with mutex locking and
@@ -35,11 +36,11 @@ func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 	}
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
-	if len(b) == 0 {
+	if slog.GetLogLevel() <= slog.Trace && len(b) == 0 {
 		var file string
 		var line int
 		_, file, line, _ = runtime.Caller(1)
-		log.D.F("sending ping/pong to %s %s:%d", ws.RealRemote, file, line)
+		log.T.F("sending ping/pong to %s %s:%d", ws.RealRemote, file, line)
 	} else {
 		log.D.F("sending message to %s\n%s", ws.RealRemote, string(b))
 	}

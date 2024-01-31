@@ -274,6 +274,18 @@ type readParams struct {
 
 func (rl *Relay) websocketReadMessages(p readParams) {
 	defer p.kill()
+	deny := true
+	if len(rl.Whitelist) != 0 {
+		for i := range rl.Whitelist {
+			if rl.Whitelist[i] == p.ws.RealRemote {
+				deny = false
+			}
+		}
+	}
+	if deny {
+		rl.T.F("denying access to '%s': dropping message", p.ws.RealRemote)
+		return
+	}
 	p.conn.SetReadLimit(rl.MaxMessageSize)
 	rl.E.Chk(p.conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
 	p.conn.SetPongHandler(func(string) (err error) {
