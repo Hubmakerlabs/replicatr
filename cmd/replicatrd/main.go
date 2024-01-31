@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/Hubmakerlabs/replicatr/cmd/replicatrd/replicatr"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/alexflint/go-arg"
@@ -83,7 +84,12 @@ func main() {
 		nip11.Authentication.Number,           // auth
 		nip11.CountingResults.Number,          // count requests
 	)
-	db := &badger.Backend{Path: dataDir, Log: slog.New(os.Stderr, "replicatr-badger")}
+	db := &IC.Backend{
+		Badger: &badger.Backend{
+			Path: dataDir,
+			Log:  slog.New(os.Stderr, "replicatr-badger"),
+		},
+	}
 	if err = db.Init(); rl.E.Chk(err) {
 		rl.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
@@ -94,9 +100,9 @@ func main() {
 	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
 	switch {
 	case args.ImportCmd != nil:
-		rl.Import(db, args.ImportCmd.FromFile)
+		rl.Import(db.Badger, args.ImportCmd.FromFile)
 	case args.ExportCmd != nil:
-		rl.Export(db, args.ExportCmd.ToFile)
+		rl.Export(db.Badger, args.ExportCmd.ToFile)
 	default:
 		rl.I.Ln("listening on", args.Listen)
 		rl.E.Chk(http.ListenAndServe(args.Listen, rl))
