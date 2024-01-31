@@ -81,7 +81,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 	switch env := en.(type) {
 	case *eventenvelope.T:
 		// reject old dated events (eg running branle) todo: allow for authed
-		if env.Event.CreatedAt.Time().Before(time.Now().Add(-1 * time.Hour)) {
+		if env.Event.CreatedAt <= 1640305962 {
 			rl.T.F("rejecting event with date: %s", env.Event.CreatedAt.Time().String())
 			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
