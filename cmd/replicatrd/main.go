@@ -36,6 +36,7 @@ type Args struct {
 	Pubkey      string     `json:"pubkey" arg:"-k,--pubkey" help:"public key of relay operator"`
 	Contact     string     `json:"contact" arg:"-c,--contact" help:"non-nostr relay operator contact details"`
 	Icon        string     `json:"icon" arg:"-i,--icon" default:"https://i.nostr.build/n8vM.png" help:"icon to show on relay information pages"`
+	Whitelist   []string   `arg:"-w,--whitelist,separate" help:"IP addresses that are allowed to access"`
 }
 
 var args Args
@@ -67,7 +68,7 @@ func main() {
 		PaymentsURL:    "",
 		Fees:           &nip11.Fees{},
 		Icon:           args.Icon,
-	})
+	}, args.Whitelist)
 	rl.Info.AddNIPs(
 		nip11.BasicProtocol.Number,            // events, envelopes and filters
 		nip11.FollowList.Number,               // follow lists

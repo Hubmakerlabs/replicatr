@@ -73,9 +73,10 @@ type Relay struct {
 	PongWait       time.Duration // Time allowed to read the next pong message from the peer.
 	PingPeriod     time.Duration // Send pings to peer with this period. Must be less than pongWait.
 	MaxMessageSize int64         // Maximum message size allowed from peer.
+	Whitelist      []string      // whitelist of allowed IPs for access
 }
 
-func NewRelay(logger *slog.Log, inf *nip11.Info) (r *Relay) {
+func NewRelay(logger *slog.Log, inf *nip11.Info, whitelist []string) (r *Relay) {
 	var maxMessageLength = MaxMessageSize
 	if inf.Limitation != nil {
 		maxMessageLength = inf.Limitation.MaxMessageLength
@@ -94,6 +95,7 @@ func NewRelay(logger *slog.Log, inf *nip11.Info) (r *Relay) {
 		PongWait:       PongWait,
 		PingPeriod:     PingPeriod,
 		MaxMessageSize: int64(maxMessageLength),
+		Whitelist:      whitelist,
 	}
 	r.Info.Software = Software
 	r.Info.Version = Version

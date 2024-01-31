@@ -58,6 +58,10 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 						b.D.S("nil query starting point")
 						return
 					}
+					if q.prefix == nil {
+						b.D.S("nil query prefix")
+						return
+					}
 					for it.Seek(q.startingPoint); it.ValidForPrefix(q.prefix); it.Next() {
 						item := it.Item()
 						// log.D.Ln(item.ValueCopy(nil))

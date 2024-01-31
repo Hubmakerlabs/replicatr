@@ -83,6 +83,18 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
+	deny := true
+	if len(rl.Whitelist) != 0 {
+		for i := range rl.Whitelist {
+			if rl.Whitelist[i] == ws.RealRemote {
+				deny = false
+			}
+		}
+	}
+	if deny {
+		rl.T.F("denying access to '%s': dropping message", ws.RealRemote)
+		return
+	}
 	en, _, err := envelopes.ProcessEnvelope(msg)
 	if log.Fail(err) {
 		return
@@ -184,8 +196,14 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		reqCtx, cancelReqCtx := context.CancelCause(c)
 		// expose subscription id in the context
 		reqCtx = context.Value(reqCtx, subscriptionIdKey, env.SubscriptionID)
-		// handle each filter separately -- dispatching events as they're loaded from databases
+		// handle each filter separately -- dispatching events as they're loaded
+		// from databases
 		for _, f := range env.Filters {
+			// if we are not given a limit we will be stingy and only return 5
+			// results
+			if f.Limit == 0 {
+				f.Limit = 5
+			}
 			err = rl.handleFilter(handleFilterParams{
 				reqCtx,
 				env.SubscriptionID.String(),
@@ -294,7 +312,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		if len(message) > 512 {
 			ellipsis = "..."
 		}
-		log.D.F("receiving message from %s\n%s%s",
+		log.D.F("receiving message from '%s'\n%s%s",
 			p.ws.RealRemote, string(trunc), ellipsis)
 		go rl.wsProcessMessages(message, p.c, p.ws)
 	}
