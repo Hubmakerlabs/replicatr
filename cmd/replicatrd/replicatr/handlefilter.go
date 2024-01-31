@@ -44,8 +44,8 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 			return errors.New(normalize.OKMessage(msg, "blocked"))
 		}
 	}
-	// run the functions to query events (generally just one,
-	// but we might be fetching stuff from multiple places)
+	// run the functions to query events (generally just one, but we might be
+	// fetching stuff from multiple places)
 	h.eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
 		var ch chan *event.T

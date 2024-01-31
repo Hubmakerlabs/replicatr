@@ -12,7 +12,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 	var remotes []string
 	listeners.Range(func(ws *WebSocket, subs ListenerMap) bool {
 
-		remotes = append(remotes, ws.conn.RemoteAddr().String())
+		remotes = append(remotes, ws.RealRemote)
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {
 				return true
