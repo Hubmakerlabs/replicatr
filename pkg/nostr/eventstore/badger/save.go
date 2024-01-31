@@ -12,7 +12,7 @@ import (
 
 func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
 	return b.Update(func(txn *badger.Txn) (err error) {
-		b.D.S(evt)
+		b.T.S(evt)
 		// query event by id to ensure we don't save duplicates
 		id, _ := hex.Dec(evt.ID.String())
 		prefix := make([]byte, 1+8)
@@ -25,7 +25,7 @@ func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
 			// event exists
 			return eventstore.ErrDupEvent
 		}
-		// b.D.Ln("encoding to binary")/
+		b.T.Ln("encoding to binary")
 		// encode to binary
 		var bin []byte
 		if bin, err = nostrbinary.Marshal(evt); b.Fail(err) {
@@ -34,18 +34,18 @@ func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
 		b.T.F("binary encoded %x", bin)
 		idx := b.Serial()
 		// raw event store
-		b.D.F("setting event")
+		b.T.F("setting event")
 		if err = txn.Set(idx, bin); b.Fail(err) {
 			return err
 		}
-		b.D.F("get index keys for event")
+		b.T.F("get index keys for event")
 		for _, k := range getIndexKeysForEvent(evt, idx[1:]) {
-			b.D.F("index key %x", k)
+			b.T.F("index key %x", k)
 			if err = txn.Set(k, nil); b.Fail(err) {
 				return err
 			}
 		}
-		b.D.F("event saved")
+		b.T.F("event saved")
 		return nil
 	})
 }

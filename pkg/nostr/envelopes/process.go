@@ -21,7 +21,11 @@ func ProcessEnvelope(b []byte) (env enveloper.I, buf *text.Buffer, err error) {
 
 	trunc := make([]byte, 1024)
 	copy(trunc, b)
-	log.T.F("processing envelope:\n%s", string(trunc))
+	var ellipsis string
+	if len(b) > 1024 {
+		ellipsis = "..."
+	}
+	log.T.F("processing envelope:\n%s%s", string(trunc), ellipsis)
 	var match string
 	if match, buf, err = sentinel.Identify(b); log.Fail(err) {
 		return
