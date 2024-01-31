@@ -294,7 +294,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		if len(message) > 512 {
 			ellipsis = "..."
 		}
-		log.D.F("websocket receiving message from %s\n%s%s",
+		log.D.F("receiving message from %s\n%s%s",
 			p.ws.RealRemote, string(trunc), ellipsis)
 		go rl.wsProcessMessages(message, p.c, p.ws)
 	}

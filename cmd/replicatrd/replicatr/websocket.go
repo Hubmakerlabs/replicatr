@@ -32,6 +32,7 @@ type WebSocket struct {
 func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
+	log.D.F("sending message to %s\n%s", ws.RealRemote, string(b))
 	return ws.conn.WriteMessage(t, b)
 }
 
@@ -39,5 +40,6 @@ func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
+	log.D.F("sending message to %s\n%s", ws.RealRemote, env.ToArray().String())
 	return ws.conn.WriteMessage(websocket.TextMessage, env.Bytes())
 }
