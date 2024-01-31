@@ -80,15 +80,15 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		}
 		// store
 		for i, store := range rl.StoreEvent {
-			rl.D.Ln("running event store function", i)
+			rl.T.Ln("running event store function", i)
 			if saveErr := store(c, ev); rl.E.Chk(saveErr) {
 				switch {
 				case errors.Is(saveErr, eventstore.ErrDupEvent):
-					rl.D.Ln(saveErr)
+					rl.T.Ln(saveErr)
 					return nil
 				default:
 					err = fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))
-					rl.D.Ln(ev.ID, err)
+					rl.T.Ln(ev.ID, err)
 					return
 				}
 			}

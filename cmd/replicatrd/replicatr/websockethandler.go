@@ -80,10 +80,10 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 	// rl.D.Ln("received envelope from", ws.conn.LocalAddr(), ws.conn.RemoteAddr())
 	switch env := en.(type) {
 	case *eventenvelope.T:
-		rl.D.Ln("event envelope")
+		rl.T.Ln("event envelope")
 		// check id
 		evs := env.Event.ToCanonical().Bytes()
-		rl.D.F("serialized %s", evs)
+		rl.T.F("serialized %s", evs)
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
@@ -132,7 +132,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		} else {
 			ok = true
 		}
-		rl.D.Ln("sending back ok envelope")
+		rl.T.Ln("sending back ok envelope")
 		rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,
 			OK:     ok,

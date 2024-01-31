@@ -57,6 +57,6 @@ matched:
 	}
 	trunc := make([]byte, 1024)
 	copy(trunc, buf.Buf)
-	log.T.F("received %s envelope '%s'", match, trunc)
+	// log.T.F("received %s envelope '%s'", match, trunc)
 	return
 }
