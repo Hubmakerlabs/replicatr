@@ -12,6 +12,7 @@ import (
 // NIP-42 Auth support
 type WebSocket struct {
 	conn            *websocket.Conn
+	RealRemote      string
 	mutex           sync.Mutex
 	Request         *http.Request // original request
 	Challenge       string        // nip42
