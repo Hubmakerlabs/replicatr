@@ -19,10 +19,10 @@ var log = slog.New(os.Stderr, "nostr/envelopes")
 // for some other envelope outside of nip-01 to decode.
 func ProcessEnvelope(b []byte) (env enveloper.I, buf *text.Buffer, err error) {
 
-	trunc := make([]byte, 1024)
+	trunc := make([]byte, 512)
 	copy(trunc, b)
 	var ellipsis string
-	if len(b) > 1024 {
+	if len(b) > 512 {
 		ellipsis = "..."
 	}
 	log.T.F("processing envelope:\n%s%s", string(trunc), ellipsis)

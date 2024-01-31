@@ -80,6 +80,15 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 	// rl.D.Ln("received envelope from", ws.conn.LocalAddr(), ws.conn.RemoteAddr())
 	switch env := en.(type) {
 	case *eventenvelope.T:
+		// reject old dated events (eg running branle) todo: allow for authed
+		if env.Event.CreatedAt.Time().Before(time.Now().Add(-1 * time.Hour)) {
+			rl.T.F("rejecting event with date: %s", env.Event.CreatedAt.Time().String())
+			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+				ID:     env.Event.ID,
+				OK:     false,
+				Reason: "invalid: date is too far in the past"}))
+			return
+		}
 		rl.T.Ln("event envelope")
 		// check id
 		evs := env.Event.ToCanonical().Bytes()
