@@ -1,7 +1,9 @@
 package nip42
 
 import (
+	"fmt"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -9,7 +11,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"mleku.online/git/slog"
 )
+
+var log = slog.New(os.Stderr, "nostr/nip42")
 
 // CreateUnsignedAuthEvent creates an event which should be sent via an "AUTH" command.
 // If the authentication succeeds, the user will be authenticated as pubkey.
@@ -35,35 +40,57 @@ func parseURL(input string) (*url.URL, error) {
 // ValidateAuthEvent checks whether event is a valid NIP-42 event for given challenge and relayURL.
 // The result of the validation is encoded in the ok bool.
 func ValidateAuthEvent(evt *event.T, challenge string,
-	relayURL string) (pubkey string, ok bool) {
+	relayURL string) (pubkey string, ok bool, err error) {
 
 	if evt.Kind != kind.ClientAuthentication {
-		return "", false
+		err = fmt.Errorf("event incorrect kind for auth: %d %s",
+			evt.Kind, kind.Map[evt.Kind])
+		return
 	}
 	if evt.Tags.GetFirst([]string{"challenge", challenge}) == nil {
-		return "", false
+		err = fmt.Errorf("challenge tag missing from auth response")
+		return
 	}
-	expected, err := parseURL(relayURL)
-	if err != nil {
-		return "", false
+	var expected, found *url.URL
+	if expected, err = parseURL(relayURL); log.Fail(err) {
+		return
 	}
-	found, err := parseURL(evt.Tags.GetFirst([]string{"relay", ""}).Value())
-	if err != nil {
-		return "", false
+	r := evt.Tags.
+		GetFirst([]string{"relay", ""}).Value()
+	if r == "" {
+		err = fmt.Errorf("relay tag missing from auth response")
+		return
 	}
-	if expected.Scheme != found.Scheme ||
-		expected.Host != found.Host ||
-		expected.Path != found.Path {
-		return "", false
+	if found, err = parseURL(r); log.Fail(err) {
+		err = fmt.Errorf("error parsing relay url")
+		return
 	}
+	if expected.Scheme != found.Scheme {
+		err = fmt.Errorf("HTTP Scheme incorrect: expected '%s' got '%s",
+			expected.Scheme, found.Scheme)
+		return
+	}
+	if expected.Host != found.Host {
+		err = fmt.Errorf("HTTP Host incorrect: expected '%s' got '%s",
+			expected.Host, found.Host)
+		return
+	}
+	if expected.Path != found.Path {
+		err = fmt.Errorf("HTTP Path incorrect: expected '%s' got '%s",
+			expected.Path, found.Path)
+		return
+	}
+
 	now := time.Now()
 	if evt.CreatedAt.Time().After(now.Add(10*time.Minute)) || evt.CreatedAt.Time().Before(now.Add(-10*time.Minute)) {
-		return "", false
+		err = fmt.Errorf("auth event more than 10 minutes before or after current time")
+		return
 	}
 	// save for last, as it is most expensive operation
-	// no need to check returned error, since ok == true implies err == nil.
-	if ok, _ := evt.CheckSignature(); !ok {
-		return "", false
+	if ok, err = evt.CheckSignature(); !ok {
+		return
 	}
-	return evt.PubKey, true
+	pubkey = evt.PubKey
+	ok = true
+	return
 }

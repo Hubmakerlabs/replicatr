@@ -39,10 +39,20 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	challenge := make([]byte, 8)
 	_, err = rand.Read(challenge)
 	rl.E.Chk(err)
+	rem := r.Header.Get("X-Forwarded-For")
+	splitted := strings.Split(rem, " ")
+	var rr string
+	if len(splitted) == 1 {
+		rr = splitted[0]
+	}
+	if len(splitted) == 2 {
+		rr = splitted[1]
+	}
 	ws := &WebSocket{
-		conn:      conn,
-		Request:   r,
-		Challenge: hex.Enc(challenge),
+		conn:       conn,
+		RealRemote: rr,
+		Request:    r,
+		Challenge:  hex.Enc(challenge),
 	}
 	c, cancel := context.Cancel(
 		context.Value(
@@ -67,8 +77,6 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
-	// rl.T.F("processing message '%s', local: %s remote %s", string(msg),
-	// 	ws.conn.NetConn().LocalAddr(), ws.conn.NetConn().RemoteAddr())
 	en, _, err := envelopes.ProcessEnvelope(msg)
 	if log.Fail(err) {
 		return
@@ -123,18 +131,17 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			return
 		}
 		rl.T.Ln("signature was valid")
-		var writeErr error
 		if env.Event.Kind == kind.Deletion {
 			// this always returns "blocked: " whenever it returns an error
-			writeErr = rl.handleDeleteRequest(c, env.Event)
+			err = rl.handleDeleteRequest(c, env.Event)
 		} else {
 			rl.D.Ln("adding event")
 			// this will also always return a prefixed reason
-			writeErr = rl.AddEvent(c, env.Event)
+			err = rl.AddEvent(c, env.Event)
 		}
 		var reason string
-		if ok = !rl.E.Chk(writeErr); !ok {
-			reason = writeErr.Error()
+		if ok = !rl.E.Chk(err); !ok {
+			reason = err.Error()
 			if strings.HasPrefix(reason, "auth-required:") {
 				RequestAuth(c)
 			}
@@ -206,7 +213,9 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
 		wsBaseUrl := strings.Replace(rl.ServiceURL, "http", "ws", 1)
-		if pubkey, ok := nip42.ValidateAuthEvent(env.Event, ws.Challenge, wsBaseUrl); ok {
+		var ok bool
+		var pubkey string
+		if pubkey, ok, err = nip42.ValidateAuthEvent(env.Event, ws.Challenge, wsBaseUrl); ok {
 			ws.AuthedPublicKey = pubkey
 			ws.authLock.Lock()
 			if ws.Authed != nil {
@@ -228,6 +237,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			))
 		}
 	}
+	log.Fail(err)
 }
 
 type readParams struct {
@@ -272,6 +282,14 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 			rl.E.Chk(p.ws.WriteMessage(websocket.PongMessage, nil))
 			continue
 		}
+		trunc := make([]byte, 512)
+		copy(trunc, message)
+		var ellipsis string
+		if len(message) > 512 {
+			ellipsis = "..."
+		}
+		log.D.F("websocket receiving message from %s\n%s%s",
+			p.ws.RealRemote, string(trunc), ellipsis)
 		go rl.wsProcessMessages(message, p.c, p.ws)
 	}
 }
