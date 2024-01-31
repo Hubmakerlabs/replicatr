@@ -328,6 +328,18 @@ func (rl *Relay) websocketWatcher(c context.T, kill func(), t *time.Ticker,
 		case <-c.Done():
 			return
 		case <-t.C:
+			deny := true
+			if len(rl.Whitelist) != 0 {
+				for i := range rl.Whitelist {
+					if rl.Whitelist[i] == ws.RealRemote {
+						deny = false
+					}
+				}
+			}
+			if deny {
+				rl.T.F("denying access to '%s': dropping message", ws.RealRemote)
+				return
+			}
 			if err = ws.WriteMessage(websocket.PingMessage, nil); rl.E.Chk(err) {
 				if !strings.HasSuffix(err.Error(), "use of closed network connection") {
 					rl.E.F("error writing ping: %v; closing websocket", err)
