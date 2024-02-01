@@ -41,6 +41,10 @@ const (
 	Reaction T = 7
 	// BadgeAward is an event type
 	BadgeAward T = 8
+	// ReadReceipt is a type of event that marks a list of tagged events (e
+	// tags) as being seen by the client, its distinctive feature is the
+	// "expiration" tag which indicates a time after which the marking expires
+	ReadReceipt T = 15
 	// GenericRepost is an event type that...
 	GenericRepost T = 16
 	// ChannelCreation is an event type that...
