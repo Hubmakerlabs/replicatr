@@ -1,7 +1,8 @@
-package replicatr
+package relayws
 
 import (
 	"net/http"
+	"os"
 	"runtime"
 	"sync"
 
@@ -10,10 +11,12 @@ import (
 	"mleku.online/git/slog"
 )
 
+var log = slog.New(os.Stderr, "nostr/relayws")
+
 // WebSocket is a wrapper around a fasthttp/websocket with mutex locking and
 // NIP-42 Auth support
 type WebSocket struct {
-	conn       *websocket.Conn
+	Conn       *websocket.Conn
 	RealRemote string
 	mutex      sync.Mutex
 	Request    *http.Request // original request
@@ -34,7 +37,7 @@ func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 	} else if len(b) != 0 {
 		log.D.F("sending message to %s\n%s", ws.RealRemote, string(b))
 	}
-	return ws.conn.WriteMessage(t, b)
+	return ws.Conn.WriteMessage(t, b)
 }
 
 // WriteEnvelope writes a message with a given websocket type specifier
@@ -46,5 +49,5 @@ func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 	_, file, line, _ = runtime.Caller(1)
 	log.D.F("sending message to %s\n%s\n%s:%d\n",
 		ws.RealRemote, env.ToArray().String(), file, line)
-	return ws.conn.WriteMessage(websocket.TextMessage, env.Bytes())
+	return ws.Conn.WriteMessage(websocket.TextMessage, env.Bytes())
 }

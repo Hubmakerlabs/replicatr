@@ -21,6 +21,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip42"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/fasthttp/websocket"
 	"github.com/minio/sha256-simd"
 )
@@ -54,8 +55,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	if rr == "" {
 		rr = r.RemoteAddr
 	}
-	ws := &WebSocket{
-		conn:       conn,
+	ws := &relayws.WebSocket{
+		Conn:       conn,
 		RealRemote: rr,
 		Request:    r,
 		Challenge:  hex.Enc(challenge),
@@ -83,7 +84,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	go rl.websocketWatcher(c, kill, ticker, ws)
 }
 
-func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
+func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *relayws.WebSocket) {
 	deny := true
 	if len(rl.Whitelist) > 0 {
 		for i := range rl.Whitelist {
@@ -265,7 +266,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 type readParams struct {
 	c    context.T
 	kill func()
-	ws   *WebSocket
+	ws   *relayws.WebSocket
 	conn *websocket.Conn
 	r    *http.Request
 }
@@ -331,7 +332,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 }
 
 func (rl *Relay) websocketWatcher(c context.T, kill func(), t *time.Ticker,
-	ws *WebSocket) {
+	ws *relayws.WebSocket) {
 
 	var err error
 	defer kill()

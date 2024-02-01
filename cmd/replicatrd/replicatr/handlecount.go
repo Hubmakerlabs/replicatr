@@ -4,9 +4,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 )
 
-func (rl *Relay) handleCountRequest(c context.T, ws *WebSocket,
+func (rl *Relay) handleCountRequest(c context.T, ws *relayws.WebSocket,
 	f *filter.T) (subtotal int64) {
 
 	// overwrite the filter (for example, to eliminate some kinds or tags that
