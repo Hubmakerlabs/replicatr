@@ -68,7 +68,11 @@ func main() {
 		PaymentsURL:    "",
 		Fees:           &nip11.Fees{},
 		Icon:           args.Icon,
-	}, args.Whitelist)
+	}, args.Whitelist, &replicatr.AccessControl{})
+	// load access control list
+	if err = rl.LoadACL(filepath.Join(dataDir, replicatr.ACLfilename)); rl.W.Chk(err) {
+		rl.W.Ln("no access control configured for relay")
+	}
 	rl.Info.AddNIPs(
 		nip11.BasicProtocol.Number,            // events, envelopes and filters
 		nip11.FollowList.Number,               // follow lists
@@ -99,6 +103,7 @@ func main() {
 	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
 	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
 	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
+	rl.RejectFilter = append(rl.RejectFilter, rl.FilterAccessControl)
 	switch {
 	case args.ImportCmd != nil:
 		rl.Import(db.Badger, args.ImportCmd.FromFile)

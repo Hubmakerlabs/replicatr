@@ -59,6 +59,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		RealRemote: rr,
 		Request:    r,
 		Challenge:  hex.Enc(challenge),
+		Authed:     make(chan struct{}),
 	}
 	c, cancel := context.Cancel(
 		context.Value(
@@ -84,12 +85,14 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 	deny := true
-	if len(rl.Whitelist) != 0 {
+	if len(rl.Whitelist) > 0 {
 		for i := range rl.Whitelist {
 			if rl.Whitelist[i] == ws.RealRemote {
 				deny = false
 			}
 		}
+	} else {
+		deny = false
 	}
 	if deny {
 		rl.T.F("denying access to '%s': dropping message", ws.RealRemote)
@@ -160,7 +163,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		var reason string
 		if ok = !rl.E.Chk(err); !ok {
 			reason = err.Error()
-			if strings.HasPrefix(reason, "auth-required:") {
+			if strings.HasPrefix(reason, nip42.AuthRequired) {
 				RequestAuth(c)
 			}
 		} else {
@@ -206,7 +209,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			}
 			err = rl.handleFilter(handleFilterParams{
 				reqCtx,
-				env.SubscriptionID.String(),
+				env.SubscriptionID,
 				&wg,
 				ws,
 				f,
@@ -214,7 +217,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 			if rl.E.Chk(err) {
 				// fail everything if any filter is rejected
 				reason := err.Error()
-				if strings.HasPrefix(reason, "auth-required:") {
+				if strings.HasPrefix(reason, nip42.AuthRequired) {
 					RequestAuth(c)
 				}
 				rl.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
@@ -240,13 +243,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *WebSocket) {
 		var ok bool
 		var pubkey string
 		if pubkey, ok, err = nip42.ValidateAuthEvent(env.Event, ws.Challenge, wsBaseUrl); ok {
-			ws.AuthedPublicKey = pubkey
-			ws.authLock.Lock()
-			if ws.Authed != nil {
-				close(ws.Authed)
-				ws.Authed = nil
-			}
-			ws.authLock.Unlock()
+			ws.AuthPubKey = pubkey
+			ws.Authed <- struct{}{}
 			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: true,
@@ -275,12 +273,14 @@ type readParams struct {
 func (rl *Relay) websocketReadMessages(p readParams) {
 	defer p.kill()
 	deny := true
-	if len(rl.Whitelist) != 0 {
+	if len(rl.Whitelist) > 0 {
 		for i := range rl.Whitelist {
 			if rl.Whitelist[i] == p.ws.RealRemote {
 				deny = false
 			}
 		}
+	} else {
+		deny = false
 	}
 	if deny {
 		rl.T.F("denying access to '%s': dropping message", p.ws.RealRemote)
@@ -341,12 +341,14 @@ func (rl *Relay) websocketWatcher(c context.T, kill func(), t *time.Ticker,
 			return
 		case <-t.C:
 			deny := true
-			if len(rl.Whitelist) != 0 {
+			if len(rl.Whitelist) > 0 {
 				for i := range rl.Whitelist {
 					if rl.Whitelist[i] == ws.RealRemote {
 						deny = false
 					}
 				}
+			} else {
+				deny = false
 			}
 			if deny {
 				rl.T.F("denying access to '%s': dropping message", ws.RealRemote)

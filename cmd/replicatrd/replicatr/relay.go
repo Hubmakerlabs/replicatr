@@ -57,6 +57,9 @@ type Relay struct {
 	OnConnect                []Hook
 	OnDisconnect             []Hook
 	OnEventSaved             []OnEventSaved
+
+	// AccessControl is the access control rule set in force on the relay.
+	ac *AccessControl
 	// editing info will affect
 	Info *nip11.Info
 	*slog.Log
@@ -69,17 +72,26 @@ type Relay struct {
 	serveMux   *http.ServeMux
 	httpServer *http.Server
 	// websocket options
-	WriteWait      time.Duration // Time allowed to write a message to the peer.
-	PongWait       time.Duration // Time allowed to read the next pong message from the peer.
-	PingPeriod     time.Duration // Send pings to peer with this period. Must be less than pongWait.
-	MaxMessageSize int64         // Maximum message size allowed from peer.
-	Whitelist      []string      // whitelist of allowed IPs for access
+	// WriteWait is the time allowed to write a message to the peer.
+	WriteWait time.Duration
+	// PongWait is the time allowed to read the next pong message from the peer.
+	PongWait time.Duration
+	// PingPeriod is the tend pings to peer with this period. Must be less than
+	// pongWait.
+	PingPeriod     time.Duration
+	MaxMessageSize int64    // Maximum message size allowed from peer.
+	Whitelist      []string // whitelist of allowed IPs for access
 }
 
-func NewRelay(logger *slog.Log, inf *nip11.Info, whitelist []string) (r *Relay) {
+func NewRelay(logger *slog.Log, inf *nip11.Info, whitelist []string,
+	ac *AccessControl) (r *Relay) {
+
 	var maxMessageLength = MaxMessageSize
 	if inf.Limitation != nil {
 		maxMessageLength = inf.Limitation.MaxMessageLength
+	}
+	if ac == nil {
+		*ac = AccessControl{}
 	}
 	r = &Relay{
 		Log:  logger,
@@ -96,6 +108,7 @@ func NewRelay(logger *slog.Log, inf *nip11.Info, whitelist []string) (r *Relay) 
 		PingPeriod:     PingPeriod,
 		MaxMessageSize: int64(maxMessageLength),
 		Whitelist:      whitelist,
+		ac:             ac,
 	}
 	r.Info.Software = Software
 	r.Info.Version = Version

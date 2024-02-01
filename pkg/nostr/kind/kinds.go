@@ -62,11 +62,15 @@ const (
 	// BidConfirmation is an event type that...
 	BidConfirmation T = 1022
 	// OpenTimestamps is an event type that...
-	OpenTimestamps T = 1040
+	OpenTimestamps    T = 1040
+	GiftWrap          T = 1059
+	GiftWrapWithKind4 T = 1060
 	// FileMetadata is an event type that...
 	FileMetadata T = 1063
 	// LiveChatMessage is an event type that...
 	LiveChatMessage T = 1311
+	// LiveStream from zap.stream
+	LiveStream T = 1808
 	// ProblemTracker is an event type used by Nostrocket
 	ProblemTracker T = 1971
 	// MemoryHole is an event type contains a report about an event (usually
@@ -87,7 +91,7 @@ const (
 	ZapRequest T = 9734
 	// Zap is an event type that...
 	Zap        T = 9735
-	Highlights T = 9082
+	Highlights T = 9882
 	// ReplaceableStart is an event type that...
 	ReplaceableStart T = 10000
 	// MuteList is an event type that...
@@ -152,22 +156,25 @@ const (
 	LongFormContent      T = 30023
 	DraftLongFormContent T = 30024
 	EmojiSets            T = 30030
-	// ApplicationSpecificData is an event type that...
+	// ApplicationSpecificData is an event type stores data about application
+	// configuration, this, like DMs and giftwraps must be protected by user
+	// auth.
 	ApplicationSpecificData T = 30078
-
+	LiveEvent               T = 30311
+	UserStatuses            T = 30315
+	ClassifiedListing       T = 30402
+	DraftClassifiedListing  T = 30403
+	DateBasedCalendarEvent  T = 31922
+	TimeBasedCalendarEvent  T = 31923
+	Calendar                T = 31924
+	CalendarEventRSVP       T = 31925
+	HandlerRecommendation   T = 31989
+	HandlerInformation      T = 31990
+	// WaveLakeTrack which has no spec and uses malformed tags
+	WaveLakeTrack       T = 32123
+	CommunityDefinition T = 34550
 	// ParameterizedReplaceableEnd is an event type that...
 	ParameterizedReplaceableEnd T = 40000
-	LiveEvent                   T = 30311
-	UserStatuses                T = 30315
-	ClassifiedListing           T = 30402
-	DraftClassifiedListing      T = 30403
-	DateBasedCalendarEvent      T = 31922
-	TimeBasedCalendarEvent      T = 31923
-	Calendar                    T = 31924
-	CalendarEventRSVP           T = 31925
-	HandlerRecommendation       T = 31989
-	HandlerInformation          T = 31990
-	CommunityDefinition         T = 34550
 )
 
 var Map = map[T]string{

@@ -13,27 +13,17 @@ import (
 // WebSocket is a wrapper around a fasthttp/websocket with mutex locking and
 // NIP-42 Auth support
 type WebSocket struct {
-	conn            *websocket.Conn
-	RealRemote      string
-	mutex           sync.Mutex
-	Request         *http.Request // original request
-	Challenge       string        // nip42
-	AuthedPublicKey string
-	Authed          chan struct{}
-	authLock        sync.Mutex
+	conn       *websocket.Conn
+	RealRemote string
+	mutex      sync.Mutex
+	Request    *http.Request // original request
+	Challenge  string        // nip42
+	AuthPubKey string
+	Authed     chan struct{}
 }
-
-// // WriteJSON writes an object as JSON to the websocket
-// func (ws *WebSocket) WriteJSON(any any) (err error) {
-// 	ws.mutex.Lock()
-// 	defer ws.mutex.Unlock()
-// 	return ws.conn.WriteJSON(any)
-// }
 
 // WriteMessage writes a message with a given websocket type specifier
 func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
-	if len(b) == 0 {
-	}
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
 	if slog.GetLogLevel() >= slog.Trace && len(b) == 0 {

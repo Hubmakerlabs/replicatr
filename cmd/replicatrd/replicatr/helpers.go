@@ -24,17 +24,17 @@ var log = slog.GetStd()
 
 func RequestAuth(c context.T) {
 	ws := GetConnection(c)
-	ws.authLock.Lock()
-	if ws.Authed == nil {
-		ws.Authed = make(chan struct{})
-	}
-	ws.authLock.Unlock()
+	// ws.authLock.Lock()
+	// if ws.Authed == nil {
+	// 	ws.Authed = make(chan struct{})
+	// }
+	// ws.authLock.Unlock()
 	log.E.Chk(ws.WriteEnvelope(&authenvelope.Challenge{Challenge: ws.Challenge}))
 }
 
 func GetConnection(c context.T) *WebSocket { return c.Value(wsKey).(*WebSocket) }
 
-func GetAuthed(c context.T) string { return GetConnection(c).AuthedPublicKey }
+func GetAuthed(c context.T) string { return GetConnection(c).AuthPubKey }
 
 func GetIP(c context.T) string { return xff.GetRemoteAddr(GetConnection(c).Request) }
 
