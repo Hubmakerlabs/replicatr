@@ -15,7 +15,7 @@ import (
 
 type handleFilterParams struct {
 	c    context.T
-	id   string
+	id   subscriptionid.T
 	eose *sync.WaitGroup
 	ws   *WebSocket
 	f    *filter.T
@@ -40,7 +40,10 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(h.c, h.f); rej {
-			rl.E.Chk(h.ws.WriteEnvelope(&noticeenvelope.T{Text: msg}))
+			// todo: this reply should be part of the reject processing as this
+			//  does not cover the gamut of actual reasons or ways to respond -
+			//  eg, what about authentication?
+			// rl.E.Chk(h.ws.WriteEnvelope(&noticeenvelope.T{Text: msg}))
 			return errors.New(normalize.OKMessage(msg, "blocked"))
 		}
 	}

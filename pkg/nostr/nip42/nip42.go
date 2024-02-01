@@ -16,6 +16,8 @@ import (
 
 var log = slog.New(os.Stderr, "nostr/nip42")
 
+const AuthRequired = "auth-required"
+
 // CreateUnsignedAuthEvent creates an event which should be sent via an "AUTH" command.
 // If the authentication succeeds, the user will be authenticated as pubkey.
 func CreateUnsignedAuthEvent(challenge, pubkey, relayURL string) event.T {
@@ -82,8 +84,10 @@ func ValidateAuthEvent(evt *event.T, challenge string,
 	}
 
 	now := time.Now()
-	if evt.CreatedAt.Time().After(now.Add(10*time.Minute)) || evt.CreatedAt.Time().Before(now.Add(-10*time.Minute)) {
-		err = fmt.Errorf("auth event more than 10 minutes before or after current time")
+	if evt.CreatedAt.Time().After(now.Add(10*time.Minute)) ||
+		evt.CreatedAt.Time().Before(now.Add(-10*time.Minute)) {
+		err = fmt.Errorf(
+			"auth event more than 10 minutes before or after current time")
 		return
 	}
 	// save for last, as it is most expensive operation

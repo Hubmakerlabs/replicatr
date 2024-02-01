@@ -18,15 +18,15 @@ func RejectKind4Snoopers(c context.T, f *filter.T) (bool, string) {
 	s := f.Authors
 	r, _ := f.Tags["p"]
 	switch {
-	case ws.AuthedPublicKey == "":
+	case ws.AuthPubKey == "":
 		// not authenticated
 		return true, "restricted: this relay does not serve kind-4 to " +
 			"unauthenticated users, does your client implement NIP-42?"
-	case len(s) == 1 && len(r) < 2 && (s[0] == ws.AuthedPublicKey):
+	case len(s) == 1 && len(r) < 2 && (s[0] == ws.AuthPubKey):
 		// allowed filter: ws.authed is sole sender (filter specifies one or all
 		// r)
 		return false, ""
-	case len(r) == 1 && len(s) < 2 && (r[0] == ws.AuthedPublicKey):
+	case len(r) == 1 && len(s) < 2 && (r[0] == ws.AuthPubKey):
 		// allowed filter: ws.authed is sole receiver (filter specifies one or
 		// all senders)
 		return false, ""
