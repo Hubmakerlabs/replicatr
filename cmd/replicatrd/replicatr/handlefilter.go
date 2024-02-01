@@ -9,15 +9,18 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
 
 type handleFilterParams struct {
 	c    context.T
 	id   subscriptionid.T
 	eose *sync.WaitGroup
-	ws   *WebSocket
+	ws   *relayws.WebSocket
 	f    *filter.T
 }
 
@@ -40,10 +43,6 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(h.c, h.f); rej {
-			// todo: this reply should be part of the reject processing as this
-			//  does not cover the gamut of actual reasons or ways to respond -
-			//  eg, what about authentication?
-			// rl.E.Chk(h.ws.WriteEnvelope(&noticeenvelope.T{Text: msg}))
 			return errors.New(normalize.OKMessage(msg, "blocked"))
 		}
 	}
@@ -62,8 +61,24 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(h.c, ev)
 				}
+				if kinds.IsPrivileged(ev.Kind) {
+					if h.ws.AuthPubKey == "" {
+						continue
+					}
+					receivers, ok := h.f.Tags["#p"]
+					var parties tag.T
+					if ok {
+						parties = append(h.f.Authors, receivers...)
+					}
+					log.D.Ln("parties", parties)
+					if !parties.Contains(h.ws.AuthPubKey) {
+						log.D.Ln("not sending privileged event to user " +
+							"without matching auth")
+						continue
+					}
+				}
 				rl.E.Chk(h.ws.WriteEnvelope(&eventenvelope.T{
-					SubscriptionID: subscriptionid.T(h.id),
+					SubscriptionID: h.id,
 					Event:          ev,
 				}))
 			}

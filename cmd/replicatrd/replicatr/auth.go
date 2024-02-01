@@ -8,7 +8,6 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"mleku.online/git/ec/secp256k1"
@@ -17,23 +16,6 @@ import (
 const (
 	ACLfilename = "acl.json"
 )
-
-var PrivilegedKinds = kinds.T{
-	kind.Deletion,
-	kind.EncryptedDirectMessage,
-	kind.GiftWrap,
-	kind.GiftWrapWithKind4,
-	kind.ApplicationSpecificData,
-}
-
-func IsPrivileged(k kind.T) (is bool) {
-	for i := range PrivilegedKinds {
-		if k == PrivilegedKinds[i] {
-			return true
-		}
-	}
-	return
-}
 
 type Role string
 
@@ -156,7 +138,7 @@ func (rl *Relay) FilterAccessControl(c context.T, f *filter.T) (reject bool, msg
 	// check if the request filter kinds are privileged
 	var privileged bool
 	for i := range f.Kinds {
-		privileged = IsPrivileged(f.Kinds[i])
+		privileged = kinds.IsPrivileged(f.Kinds[i])
 		if privileged {
 			break
 		}

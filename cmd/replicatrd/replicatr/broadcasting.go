@@ -3,6 +3,7 @@ package replicatr
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
@@ -10,7 +11,7 @@ import (
 // it also doesn't attempt to store the event or trigger any reactions or callbacks
 func (rl *Relay) BroadcastEvent(evt *event.T) {
 	var remotes []string
-	listeners.Range(func(ws *WebSocket, subs ListenerMap) bool {
+	listeners.Range(func(ws *relayws.WebSocket, subs ListenerMap) bool {
 
 		remotes = append(remotes, ws.RealRemote)
 		subs.Range(func(id string, listener *Listener) bool {

@@ -11,6 +11,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/sebest/xff"
 	"mleku.online/git/slog"
 )
@@ -32,7 +33,7 @@ func RequestAuth(c context.T) {
 	log.E.Chk(ws.WriteEnvelope(&authenvelope.Challenge{Challenge: ws.Challenge}))
 }
 
-func GetConnection(c context.T) *WebSocket { return c.Value(wsKey).(*WebSocket) }
+func GetConnection(c context.T) *relayws.WebSocket { return c.Value(wsKey).(*relayws.WebSocket) }
 
 func GetAuthed(c context.T) string { return GetConnection(c).AuthPubKey }
 
