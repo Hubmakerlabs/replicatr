@@ -253,13 +253,13 @@ type Info struct {
 	Nips           NIPs    `json:"supported_nips"`
 	Software       string  `json:"software"`
 	Version        string  `json:"version"`
-	Limitation     *Limits `json:"limitation,omitempty"`
-	Retention      array.T `json:"retention,omitempty"`
-	RelayCountries tag.T   `json:"relay_countries,omitempty"`
-	LanguageTags   tag.T   `json:"language_tags,omitempty"`
+	Limitation     *Limits `json:"limitation"`
+	Retention      array.T `json:"retention"`
+	RelayCountries tag.T   `json:"relay_countries"`
+	LanguageTags   tag.T   `json:"language_tags"`
 	Tags           tag.T   `json:"tags,omitempty"`
-	PostingPolicy  string  `json:"posting_policy,omitempty"`
-	PaymentsURL    string  `json:"payments_url,omitempty"`
+	PostingPolicy  string  `json:"posting_policy"`
+	PaymentsURL    string  `json:"payments_url"`
 	Fees           *Fees   `json:"fees,omitempty"`
 	Icon           string  `json:"icon"`
 	sync.Mutex
