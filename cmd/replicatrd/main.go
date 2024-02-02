@@ -60,6 +60,7 @@ func main() {
 		Version:     Version,
 		Limitation: &nip11.Limits{
 			MaxMessageLength: replicatr.MaxMessageSize,
+			Oldest:           1640305963,
 		},
 		RelayCountries: nil,
 		LanguageTags:   nil,
