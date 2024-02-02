@@ -8,6 +8,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/cmd/replicatrd/replicatr"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/alexflint/go-arg"
 	"mleku.online/git/slog"
@@ -26,9 +27,20 @@ type ImportCmd struct {
 	FromFile []string `arg:"-f,--fromfile,separate" help:"read from files instead of stdin (can use flag repeatedly for multiple files)"`
 }
 
-type Args struct {
+type InitACL struct {
+	Owner  string `arg:"positional,required" help:"initialize ACL configuration with an owner public key"`
+	Public bool   `arg:"-p,--public" default:"true" help:"allow public read access"`
+	Auth   bool   `arg:"-a,--auth" default:"false" help:"require auth for public access (recommended)"`
+}
+
+type InitCfg struct {
+}
+
+type Config struct {
 	ExportCmd   *ExportCmd `json:"-" arg:"subcommand:export" help:"export database as line structured JSON"`
 	ImportCmd   *ImportCmd `json:"-" arg:"subcommand:import" help:"import data from line structured JSON"`
+	InitACLCmd  *InitACL   `json:"-" arg:"subcommand:initacl" help:"initialize access control configuration"`
+	InitCfgCmd  *InitCfg   `json:"-" arg:"subcommand:initcfg" help:"initialize relay configuration files"`
 	Listen      string     `json:"listen" arg:"-l,--listen" default:"0.0.0.0:3334" help:"network address to listen on"`
 	Profile     string     `json:"-" arg:"-p,--profile" default:"replicatr" help:"profile name to use for storage"`
 	Name        string     `json:"name" arg:"-n,--name" default:"replicatr relay" help:"name of relay for NIP-11"`
@@ -39,7 +51,7 @@ type Args struct {
 	Whitelist   []string   `arg:"-w,--whitelist,separate" help:"IP addresses that are allowed to access"`
 }
 
-var args Args
+var args Config
 
 func main() {
 	arg.MustParse(&args)
@@ -51,6 +63,11 @@ func main() {
 	}
 	dataDir := filepath.Join(dataDirBase, args.Profile)
 	log.D.F("using profile directory: '%s", args.Profile)
+	var ac *replicatr.AccessControl
+	if args.InitCfgCmd != nil {
+		// initialize configuration with whatever has been read from the CLI.
+		// include adding nip-11 configuration documents to this...
+	}
 	rl := replicatr.NewRelay(log, &nip11.Info{
 		Name:        args.Name,
 		Description: args.Description,
@@ -69,10 +86,38 @@ func main() {
 		PaymentsURL:    "",
 		Fees:           &nip11.Fees{},
 		Icon:           args.Icon,
-	}, args.Whitelist, &replicatr.AccessControl{})
+	}, args.Whitelist, ac)
+	aclPath := filepath.Join(dataDir, replicatr.ACLfilename)
 	// load access control list
-	if err = rl.LoadACL(filepath.Join(dataDir, replicatr.ACLfilename)); rl.W.Chk(err) {
+	if err = rl.LoadACL(aclPath); rl.W.Chk(err) {
 		rl.W.Ln("no access control configured for relay")
+	}
+	// initialise ACL if command is called. Note this will overwrite an existing
+	// configuration.
+	if args.InitACLCmd != nil {
+		if !keys.IsValid32ByteHex(args.InitACLCmd.Owner) {
+			log.E.Ln("invalid owner public key")
+			os.Exit(1)
+		}
+		ac = &replicatr.AccessControl{
+			Users: []*replicatr.UserID{
+				{
+					Role:      replicatr.RoleOwner,
+					PubKeyHex: args.InitACLCmd.Owner,
+				},
+			},
+			Public:     args.InitACLCmd.Public,
+			PublicAuth: args.InitACLCmd.Auth,
+		}
+		// if the public flag is set, add an empty reader to signal public reader
+		if args.InitACLCmd.Public {
+			ac.Users = append(ac.Users,
+				&replicatr.UserID{Role: replicatr.RoleReader})
+		}
+		if err = rl.SaveACL(aclPath); rl.E.Chk(err) {
+			// this is probably a fatal error really
+		}
+		log.I.Ln("access control base configuration saved and ready to use")
 	}
 	rl.Info.AddNIPs(
 		nip11.BasicProtocol.Number,            // events, envelopes and filters

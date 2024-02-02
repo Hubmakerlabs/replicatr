@@ -91,7 +91,7 @@ func NewRelay(logger *slog.Log, inf *nip11.Info, whitelist []string,
 		maxMessageLength = inf.Limitation.MaxMessageLength
 	}
 	if ac == nil {
-		*ac = AccessControl{}
+		ac = &AccessControl{}
 	}
 	r = &Relay{
 		Log:  logger,
