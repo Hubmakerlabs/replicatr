@@ -82,10 +82,10 @@ func (rl *Relay) LoadACL(filename string) (err error) {
 	rl.ac.mx.Lock()
 	defer rl.ac.mx.Unlock()
 	var b []byte
-	if b, err = os.ReadFile(filename); log.Fail(err) {
+	if b, err = os.ReadFile(filename); rl.Fail(err) {
 		return
 	}
-	if err = json.Unmarshal(b, &rl.ac); log.Fail(err) {
+	if err = json.Unmarshal(b, &rl.ac); rl.Fail(err) {
 		return
 	}
 	rl.Log.T.F("read ACL config from file '%s'\n%s", filename, string(b))
@@ -108,11 +108,11 @@ func (rl *Relay) SaveACL(filename string) (err error) {
 	rl.ac.mx.Lock()
 	defer rl.ac.mx.Unlock()
 	var b []byte
-	if b, err = json.Marshal(&rl.ac); log.Fail(err) {
+	if b, err = json.Marshal(&rl.ac); rl.Fail(err) {
 		return
 	}
-	rl.Log.T.F("writing ACL config to file '%s'\n%s", filename, string(b))
-	if err = os.WriteFile(filename, b, 0700); log.Fail(err) {
+	rl.T.F("writing ACL config to file '%s'\n%s", filename, string(b))
+	if err = os.WriteFile(filename, b, 0700); rl.Fail(err) {
 		return
 	}
 	return
@@ -150,7 +150,7 @@ func (rl *Relay) FilterAccessControl(c context.T, f *filter.T) (reject bool, msg
 		RequestAuth(c)
 		select {
 		case <-ws.Authed:
-			rl.D.Ln("user authed")
+			rl.D.Ln("user authed", GetAuthed(c))
 		case <-c.Done():
 			rl.D.Ln("context canceled while waiting for auth")
 		case <-time.After(5 * time.Second):
@@ -182,13 +182,11 @@ func (rl *Relay) FilterAccessControl(c context.T, f *filter.T) (reject bool, msg
 		// no ACL in force and not a privileged message type, accept
 		return
 	}
-	log.D.Ln(ws.AuthPubKey, ws.RealRemote, f.ToObject().String())
-	receivers, ok := f.Tags["#p"]
-	var parties tag.T
-	if ok {
-		parties = append(f.Authors, receivers...)
-	}
-	log.D.Ln("parties", parties)
+	receivers, _ := f.Tags["#p"]
+	parties := make(tag.T, len(receivers)+len(f.Authors))
+	copy(parties[:len(f.Authors)], f.Authors)
+	copy(parties[len(f.Authors):], receivers)
+	rl.D.Ln(ws.RealRemote, "parties", parties)
 	switch {
 	case ws.AuthPubKey == "":
 		// not authenticated

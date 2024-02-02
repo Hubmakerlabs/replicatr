@@ -1,5 +1,7 @@
 package kind
 
+import "sync"
+
 // T - which will be externally referenced as kind.T is the event type in the
 // nostr protocol, the use of the capital T signifying type, consistent with Go
 // idiom, the Go standard library, and much, conformant, existing code.
@@ -177,6 +179,7 @@ const (
 	ParameterizedReplaceableEnd T = 40000
 )
 
+var MapMx sync.Mutex
 var Map = map[T]string{
 	ProfileMetadata:             "ProfileMetadata",
 	TextNote:                    "TextNote",

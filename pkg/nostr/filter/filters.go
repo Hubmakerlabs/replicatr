@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
@@ -132,37 +133,34 @@ func (f *T) String() string {
 	return string(j)
 }
 
-func (f *T) Matches(event *event.T) bool {
-	if event == nil {
+func (f *T) Matches(ev *event.T) bool {
+	if ev == nil {
 		return false
 	}
-
-	if f.IDs != nil && !f.IDs.Contains(event.ID.String()) {
+	if f.IDs != nil && !f.IDs.Contains(ev.ID.String()) {
 		return false
 	}
-
-	if f.Kinds != nil && !f.Kinds.Contains(event.Kind) {
+	if f.Kinds != nil && !f.Kinds.Contains(ev.Kind) {
 		return false
 	}
-
-	if f.Authors != nil && !f.Authors.Contains(event.PubKey) {
+	if f.Authors != nil && !f.Authors.Contains(ev.PubKey) {
 		return false
 	}
+	for ff, v := range f.Tags {
+		if strings.HasPrefix(ff, "#") {
 
-	for f, v := range f.Tags {
-		if v != nil && !event.Tags.ContainsAny(f, v) {
+			ff = ff[1:]
+		}
+		if v != nil && !ev.Tags.ContainsAny(ff, v) {
 			return false
 		}
 	}
-
-	if f.Since != nil && event.CreatedAt < timestamp.T(*f.Since) {
+	if f.Since != nil && ev.CreatedAt < timestamp.T(*f.Since) {
 		return false
 	}
-
-	if f.Until != nil && event.CreatedAt > timestamp.T(*f.Until) {
+	if f.Until != nil && ev.CreatedAt > timestamp.T(*f.Until) {
 		return false
 	}
-
 	return true
 }
 

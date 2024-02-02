@@ -3,6 +3,7 @@ package authenvelope
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -14,7 +15,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log = slog.New(os.Stderr, "nostr/authenvelope")
 
 type Response struct {
 	Event *event.T
@@ -52,7 +53,7 @@ func (a *Response) Bytes() []byte { return a.ToArray().Bytes() }
 func (a *Response) MarshalJSON() ([]byte, error) { return a.Bytes(), nil }
 
 func (a *Response) Unmarshal(buf *text.Buffer) (err error) {
-	log.D.F("AUTH '%s'", buf.Tail())
+	// log.T.F("AUTH '%s'", buf.Tail())
 	if a == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}

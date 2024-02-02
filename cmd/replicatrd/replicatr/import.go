@@ -21,7 +21,7 @@ func (rl *Relay) Import(db *badger.Backend, files []string) {
 	var fh *os.File
 	buf := make([]byte, rl.MaxMessageSize)
 	for i := range files {
-		if fh, err = os.OpenFile(files[i], os.O_RDONLY, 0755); log.Fail(err) {
+		if fh, err = os.OpenFile(files[i], os.O_RDONLY, 0755); rl.Fail(err) {
 			continue
 		}
 		scanner := bufio.NewScanner(fh)
@@ -29,8 +29,8 @@ func (rl *Relay) Import(db *badger.Backend, files []string) {
 		for scanner.Scan() {
 			b := scanner.Bytes()
 			ev := &event.T{}
-			if err = json.Unmarshal(b, ev); log.Fail(err) {
-				log.D.S(string(b))
+			if err = json.Unmarshal(b, ev); rl.Fail(err) {
+				rl.D.S(string(b))
 				continue
 			}
 			evb := ev.ToCanonical().Bytes()
@@ -61,6 +61,6 @@ func (rl *Relay) Import(db *badger.Backend, files []string) {
 			}
 			rl.E.Chk(err)
 		}
-		log.Fail(fh.Close())
+		rl.Fail(fh.Close())
 	}
 }

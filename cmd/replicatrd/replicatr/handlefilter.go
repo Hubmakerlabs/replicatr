@@ -63,19 +63,32 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 				}
 				if kinds.IsPrivileged(ev.Kind) {
 					if h.ws.AuthPubKey == "" {
+						rl.T.Ln("not broadcasting privileged event to",
+							h.ws.RealRemote, "not authenticated")
 						continue
 					}
-					receivers, ok := h.f.Tags["#p"]
-					var parties tag.T
-					if ok {
-						parties = append(h.f.Authors, receivers...)
-					}
-					log.D.Ln("parties", parties)
+					// check the filter first
+					receivers, _ := h.f.Tags["#p"]
+					parties := make(tag.T, len(receivers)+len(h.f.Authors))
+					copy(parties[:len(h.f.Authors)], h.f.Authors)
+					copy(parties[len(h.f.Authors):], receivers)
+					rl.D.Ln(h.ws.RealRemote, "parties", parties)
 					if !parties.Contains(h.ws.AuthPubKey) {
-						log.D.Ln("not sending privileged event to user " +
+						rl.D.Ln("not sending privileged event to user " +
 							"without matching auth")
 						continue
 					}
+					// then check the event
+					parties = tag.T{ev.PubKey}
+					pTags := ev.Tags.GetAll("p")
+					for i := range pTags {
+						parties = append(parties, pTags[i][1])
+					}
+					if !parties.Contains(h.ws.AuthPubKey) {
+						rl.T.Ln("not broadcasting privileged event to",
+							h.ws.RealRemote, "not party to event")
+					}
+
 				}
 				rl.E.Chk(h.ws.WriteEnvelope(&eventenvelope.T{
 					SubscriptionID: h.id,

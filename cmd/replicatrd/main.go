@@ -104,6 +104,7 @@ func main() {
 	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
 	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterAccessControl)
+	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterAccessControl)
 	switch {
 	case args.ImportCmd != nil:
 		rl.Import(db.Badger, args.ImportCmd.FromFile)

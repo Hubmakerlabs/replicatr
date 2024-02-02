@@ -13,6 +13,7 @@ import (
 type Listener struct {
 	filters filters.T
 	cancel  context.C
+	ws      *relayws.WebSocket
 }
 
 type ListenerMap = *xsync.MapOf[string, *Listener]
@@ -50,7 +51,7 @@ func SetListener(id string, ws *relayws.WebSocket, f filters.T, c context.C) {
 	subs, _ := listeners.LoadOrCompute(ws, func() ListenerMap {
 		return xsync.NewMapOf[*Listener]()
 	})
-	subs.Store(id, &Listener{filters: f, cancel: c})
+	subs.Store(id, &Listener{filters: f, cancel: c, ws: ws})
 }
 
 // RemoveListenerId removes a specific subscription id from listeners for a

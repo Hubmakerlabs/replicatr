@@ -35,11 +35,11 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		}
 	}
 	if ev.Kind.IsEphemeral() {
-		rl.D.Ln("ephemeral event")
+		rl.T.Ln("ephemeral event")
 		// do not store ephemeral events
 	} else {
 		if ev.Kind.IsReplaceable() {
-			rl.D.Ln("replaceable event")
+			rl.T.Ln("replaceable event")
 			// replaceable event, delete before storing
 			for _, query := range rl.QueryEvents {
 				var ch chan *event.T
@@ -57,7 +57,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 				}
 			}
 		} else if ev.Kind.IsParameterizedReplaceable() {
-			rl.D.Ln("parameterized replaceable event")
+			rl.T.Ln("parameterized replaceable event")
 			// parameterized replaceable event, delete before storing
 			d := ev.Tags.GetFirst([]string{"d", ""})
 			if d != nil {
