@@ -100,7 +100,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *relayws.WebSocke
 		return
 	}
 	en, _, err := envelopes.ProcessEnvelope(msg)
-	if log.Fail(err) {
+	if rl.Fail(err) {
 		return
 	}
 	if en == nil {
@@ -122,7 +122,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *relayws.WebSocke
 		rl.T.Ln("event envelope")
 		// check id
 		evs := env.Event.ToCanonical().Bytes()
-		rl.T.F("serialized %s", evs)
+		// rl.T.F("serialized %s", evs)
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
@@ -157,7 +157,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *relayws.WebSocke
 			// this always returns "blocked: " whenever it returns an error
 			err = rl.handleDeleteRequest(c, env.Event)
 		} else {
-			rl.D.Ln("adding event")
+			rl.T.Ln("adding event")
 			// this will also always return a prefixed reason
 			err = rl.AddEvent(c, env.Event)
 		}
@@ -176,7 +176,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *relayws.WebSocke
 			OK:     ok,
 			Reason: reason,
 		}))
-		rl.D.Ln("sent back ok envelope")
+		rl.T.Ln("sent back ok envelope")
 	case *countenvelope.Request:
 		if rl.CountEvents == nil {
 			rl.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
@@ -260,7 +260,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T, ws *relayws.WebSocke
 			))
 		}
 	}
-	log.Fail(err)
+	rl.Fail(err)
 }
 
 type readParams struct {
@@ -284,7 +284,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		deny = false
 	}
 	if deny {
-		rl.T.F("denying access to '%s': dropping message", p.ws.RealRemote)
+		// rl.T.F("denying access to '%s': dropping message", p.ws.RealRemote)
 		return
 	}
 	p.conn.SetReadLimit(rl.MaxMessageSize)
@@ -325,7 +325,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		if len(message) > 512 {
 			ellipsis = "..."
 		}
-		log.D.F("receiving message from '%s'\n%s%s",
+		rl.T.F("receiving message from '%s'\n%s%s",
 			p.ws.RealRemote, string(trunc), ellipsis)
 		go rl.wsProcessMessages(message, p.c, p.ws)
 	}

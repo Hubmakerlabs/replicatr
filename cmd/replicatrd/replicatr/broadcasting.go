@@ -3,8 +3,10 @@ package replicatr
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
 
 // BroadcastEvent emits an event to all listeners whose filters' match, skipping all filters and actions
@@ -13,19 +15,55 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 	var remotes []string
 	listeners.Range(func(ws *relayws.WebSocket, subs ListenerMap) bool {
 
-		remotes = append(remotes, ws.RealRemote)
+		rl.D.Ln("broadcasting", ws.RealRemote, subs.Size())
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {
+				rl.T.Ln("filter doesn't match subscription",
+					listener.ws.RealRemote,
+					listener.filters, evt)
 				return true
 			}
-			rl.E.Chk(ws.WriteEnvelope(
-				&eventenvelope.T{
-					SubscriptionID: subscriptionid.T(id),
-					Event:          evt},
+			if kinds.IsPrivileged(evt.Kind) {
+				if ws.AuthPubKey == "" {
+					rl.D.Ln("not broadcasting privileged event to",
+						ws.RealRemote, "not authenticated")
+					return true
+				}
+				parties := tag.T{evt.PubKey}
+				pTags := evt.Tags.GetAll("p")
+				for i := range pTags {
+					parties = append(parties, pTags[i][1])
+				}
+				if !parties.Contains(ws.AuthPubKey) {
+					rl.D.Ln("not broadcasting privileged event to",
+						ws.RealRemote, "not party to event")
+					return true
+				}
+			}
+			// c, _ := context.Cancel(
+			// 	context.Value(
+			// 		context.Bg(),
+			// 		wsKey, ws,
+			// 	),
+			// )
+			// for _, f := range listener.filters {
+			// 	rej, msg := rl.FilterAccessControl(c, f)
+			// 	if rej {
+			// 		log.T.Ln(msg)
+			// 		return true
+			// 	}
+			// }
+			remotes = append(remotes, ws.RealRemote)
+			rl.E.Chk(ws.WriteEnvelope(&eventenvelope.T{
+				SubscriptionID: subscriptionid.T(id),
+				Event:          evt},
 			))
 			return true
 		})
 		return true
 	})
-	log.D.F("sending event to subscribers %v '%s'", remotes, evt.ToObject().String())
+	if len(remotes) > 0 {
+		rl.T.F("sending event to subscribers %v '%s'",
+			remotes, evt.ToObject().String())
+	}
 }

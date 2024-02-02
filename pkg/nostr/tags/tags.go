@@ -39,7 +39,7 @@ func (t T) GetLast(tagPrefix []string) *tag.T {
 }
 
 // GetAll gets all the tags that match the prefix, see [T.StartsWith]
-func (t T) GetAll(tagPrefix []string) T {
+func (t T) GetAll(tagPrefix ...string) T {
 	result := make(T, 0, len(t))
 	for _, v := range t {
 		if v.StartsWith(tagPrefix) {

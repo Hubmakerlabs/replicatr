@@ -1,12 +1,17 @@
 package relayws
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"runtime"
 	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/fasthttp/websocket"
 	"mleku.online/git/slog"
 )
@@ -47,7 +52,24 @@ func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 	var file string
 	var line int
 	_, file, line, _ = runtime.Caller(1)
-	log.D.F("sending message to %s\n%s\n%s:%d\n",
-		ws.RealRemote, env.ToArray().String(), file, line)
+	var evkind string
+	var ek kind.T
+	if env.Label() == labels.EVENT {
+		kind.MapMx.Lock()
+		ek = env.(*eventenvelope.T).Event.Kind
+		v, ok := kind.Map[ek]
+		if ok {
+			evkind = fmt.Sprintf(" (%s)", v)
+		}
+		kind.MapMx.Unlock()
+	}
+	// log privileged kinds more visibly for debugging
+	if kinds.IsPrivileged(ek) {
+		log.D.F("sending message to %s%s\n%s\n%s:%d\n", ws.RealRemote,
+			evkind, env.ToArray().String(), file, line)
+	} else {
+		log.T.F("sending message to %s%s\n%s\n%s:%d\n", ws.RealRemote,
+			evkind, env.ToArray().String(), file, line)
+	}
 	return ws.Conn.WriteMessage(websocket.TextMessage, env.Bytes())
 }
