@@ -4,6 +4,8 @@ import (
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 )
 
@@ -216,9 +218,9 @@ type Limits struct {
 	// to it -- like belonging to a special pubkey-based whitelist or writing
 	// only events of a specific niche kind or content. Normal anti-spam
 	// heuristics, for example, do not qualify.q
-	RestrictedWrites bool `json:"restricted_writes"`
-	Oldest           int  `json:"created_at_lower_limit"`
-	Newest           int  `json:"created_at_upper_limit"`
+	RestrictedWrites bool        `json:"restricted_writes"`
+	Oldest           timestamp.T `json:"created_at_lower_limit"`
+	Newest           timestamp.T `json:"created_at_upper_limit"`
 }
 type Payment struct {
 	Amount int    `json:"amount"`
@@ -244,22 +246,22 @@ type Fees struct {
 type NIPs []int
 
 type Info struct {
-	Name           string   `json:"name"`
-	Description    string   `json:"description"`
-	PubKey         string   `json:"pubkey"`
-	Contact        string   `json:"contact"`
-	Nips           NIPs     `json:"supported_nips"`
-	Software       string   `json:"software"`
-	Version        string   `json:"version"`
-	Limitation     *Limits  `json:"limitation,omitempty"`
-	Retention      array.T  `json:"retention,omitempty"`
-	RelayCountries []string `json:"relay_countries,omitempty"`
-	LanguageTags   []string `json:"language_tags,omitempty"`
-	Tags           []string `json:"tags,omitempty"`
-	PostingPolicy  string   `json:"posting_policy,omitempty"`
-	PaymentsURL    string   `json:"payments_url,omitempty"`
-	Fees           *Fees    `json:"fees,omitempty"`
-	Icon           string   `json:"icon"`
+	Name           string  `json:"name"`
+	Description    string  `json:"description"`
+	PubKey         string  `json:"pubkey"`
+	Contact        string  `json:"contact"`
+	Nips           NIPs    `json:"supported_nips"`
+	Software       string  `json:"software"`
+	Version        string  `json:"version"`
+	Limitation     *Limits `json:"limitation,omitempty"`
+	Retention      array.T `json:"retention,omitempty"`
+	RelayCountries tag.T   `json:"relay_countries,omitempty"`
+	LanguageTags   tag.T   `json:"language_tags,omitempty"`
+	Tags           tag.T   `json:"tags,omitempty"`
+	PostingPolicy  string  `json:"posting_policy,omitempty"`
+	PaymentsURL    string  `json:"payments_url,omitempty"`
+	Fees           *Fees   `json:"fees,omitempty"`
+	Icon           string  `json:"icon"`
 	sync.Mutex
 }
 
