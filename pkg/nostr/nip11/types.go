@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 )
 
 type NIP struct {
@@ -166,17 +167,58 @@ var NIPMap = map[int]NIP{
 }
 
 type Limits struct {
-	MaxMessageLength int  `json:"max_message_length,omitempty"`
-	MaxSubscriptions int  `json:"max_subscriptions,omitempty"`
-	MaxFilters       int  `json:"max_filters,omitempty"`
-	MaxLimit         int  `json:"max_limit,omitempty"`
-	MaxSubidLength   int  `json:"max_subid_length,omitempty"`
-	MaxEventTags     int  `json:"max_event_tags,omitempty"`
-	MaxContentLength int  `json:"max_content_length,omitempty"`
-	MinPowDifficulty int  `json:"min_pow_difficulty,omitempty"`
-	AuthRequired     bool `json:"auth_required"`
-	PaymentRequired  bool `json:"payment_required"`
+	// MaxMessageLength is the maximum number of bytes for incoming JSON
+	// that the relay will attempt to decode and act upon. When you send large
+	// subscriptions, you will be limited by this value. It also effectively
+	// limits the maximum size of any event. Value is calculated from [ to ] and
+	// is after UTF-8 serialization (so some unicode characters will cost 2-3
+	// bytes). It is equal to the maximum size of the WebSocket message frame.
+	MaxMessageLength int `json:"max_message_length,omitempty"`
+	// MaxSubscriptions is total number of subscriptions that may be active on a
+	// single websocket connection to this relay. It's possible that
+	// authenticated clients with a (paid) relationship to the relay may have
+	// higher limits.
+	MaxSubscriptions int `json:"max_subscriptions,omitempty"`
+	// MaxFilter is maximum number of filter values in each subscription. Must
+	// be one or higher.
+	MaxFilters int `json:"max_filters,omitempty"`
+	// MaxLimit is the relay server will clamp each filter's limit value to this
+	// number. This means the client won't be able to get more than this number
+	// of events from a single subscription filter. This clamping is typically
+	// done silently by the relay, but with this number, you can know that there
+	// are additional results if you narrowed your filter's time range or other
+	// parameters.
+	MaxLimit int `json:"max_limit,omitempty"`
+	// MaxSubidLength is the maximum length of subscription id as a string.
+	MaxSubidLength int `json:"max_subid_length,omitempty"`
+	// MaxEventTags in any event, this is the maximum number of elements in the
+	// tags list.
+	MaxEventTags int `json:"max_event_tags,omitempty"`
+	// MaxContentLength maximum number of characters in the content field of any
+	// event. This is a count of unicode characters. After serializing into JSON
+	// it may be larger (in bytes), and is still subject to the
+	// max_message_length, if defined.
+	MaxContentLength int `json:"max_content_length,omitempty"`
+	// MinPowDifficulty new events will require at least this difficulty of PoW,
+	// based on NIP-13, or they will be rejected by this server.
+	MinPowDifficulty int `json:"min_pow_difficulty,omitempty"`
+	// AuthRequired means the relay requires NIP-42 authentication to happen
+	// before a new connection may perform any other action. Even if set to
+	// False, authentication may be required for specific actions.
+	AuthRequired bool `json:"auth_required"`
+	// PaymentRequired this relay requires payment before a new connection may
+	// perform any action.
+	PaymentRequired bool `json:"payment_required"`
+	// RestrictedWrites this relay requires some kind of condition to be
+	// fulfilled in order to accept events (not necessarily, but including
+	// payment_required and min_pow_difficulty). This should only be set to true
+	// when users are expected to know the relay policy before trying to write
+	// to it -- like belonging to a special pubkey-based whitelist or writing
+	// only events of a specific niche kind or content. Normal anti-spam
+	// heuristics, for example, do not qualify.q
 	RestrictedWrites bool `json:"restricted_writes"`
+	Oldest           int  `json:"created_at_lower_limit"`
+	Newest           int  `json:"created_at_upper_limit"`
 }
 type Payment struct {
 	Amount int    `json:"amount"`
@@ -210,6 +252,7 @@ type Info struct {
 	Software       string   `json:"software"`
 	Version        string   `json:"version"`
 	Limitation     *Limits  `json:"limitation,omitempty"`
+	Retention      array.T  `json:"retention,omitempty"`
 	RelayCountries []string `json:"relay_countries,omitempty"`
 	LanguageTags   []string `json:"language_tags,omitempty"`
 	Tags           []string `json:"tags,omitempty"`
