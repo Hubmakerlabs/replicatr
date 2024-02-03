@@ -81,7 +81,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		// store
 		for i, store := range rl.StoreEvent {
 			rl.T.Ln("running event store function", i)
-			if saveErr := store(c, ev); rl.E.Chk(saveErr) {
+			if saveErr := store(c, ev); rl.T.Chk(saveErr) {
 				switch {
 				case errors.Is(saveErr, eventstore.ErrDupEvent):
 					rl.T.Ln(saveErr)

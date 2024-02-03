@@ -38,9 +38,9 @@ func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 		var file string
 		var line int
 		_, file, line, _ = runtime.Caller(1)
-		log.T.F("sending ping/pong to %s %s:%d", ws.RealRemote, file, line)
+		log.T.F("sending ping/pong to %s %s %s:%d", ws.RealRemote, ws.AuthPubKey, file, line)
 	} else if len(b) != 0 {
-		log.D.F("sending message to %s\n%s", ws.RealRemote, string(b))
+		log.D.F("sending message to %s %s\n%s", ws.RealRemote, ws.AuthPubKey, string(b))
 	}
 	return ws.Conn.WriteMessage(t, b)
 }
@@ -65,10 +65,10 @@ func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 	}
 	// log privileged kinds more visibly for debugging
 	if kinds.IsPrivileged(ek) {
-		log.D.F("sending message to %s%s\n%s\n%s:%d\n", ws.RealRemote,
+		log.D.F("sending message to %s %s %s\n%s\n%s:%d\n", ws.RealRemote, ws.AuthPubKey,
 			evkind, env.ToArray().String(), file, line)
 	} else {
-		log.T.F("sending message to %s%s\n%s\n%s:%d\n", ws.RealRemote,
+		log.T.F("sending message to %s %s %s\n%s\n%s:%d\n", ws.RealRemote, ws.AuthPubKey,
 			evkind, env.ToArray().String(), file, line)
 	}
 	return ws.Conn.WriteMessage(websocket.TextMessage, env.Bytes())

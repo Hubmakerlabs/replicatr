@@ -20,11 +20,11 @@ import (
 // events who also match one of the parties in the conversation.
 func (rl *Relay) FilterAccessControl(c context.T, f *filter.T) (reject bool, msg string) {
 
-	var aclPresent bool
-	if rl.ac != nil {
+	var authRequired bool
+	if rl.AccessControl != nil {
 		// if there is no access control roles enabled we don't have to
 		// check unless it's a privileged message kind.
-		aclPresent = rl.ac.Enabled()
+		authRequired = rl.AccessControl.PublicAuth
 	}
 	// check if the request filter kinds are privileged
 	var privileged bool
@@ -36,14 +36,14 @@ func (rl *Relay) FilterAccessControl(c context.T, f *filter.T) (reject bool, msg
 	}
 	ws := GetConnection(c)
 	// if access requires auth, check that auth is present.
-	if (privileged || aclPresent) && ws.AuthPubKey == "" {
+	if (privileged || authRequired) && ws.AuthPubKey == "" {
 		// send out authorization request
 		RequestAuth(c)
 		select {
 		case <-ws.Authed:
 			rl.D.Ln("user authed", GetAuthed(c))
 		case <-c.Done():
-			rl.D.Ln("context canceled while waiting for auth")
+			rl.T.Ln("context canceled while waiting for auth")
 		case <-time.After(5 * time.Second):
 			if ws.AuthPubKey == "" {
 				return true, "Authorization timeout"
@@ -51,23 +51,21 @@ func (rl *Relay) FilterAccessControl(c context.T, f *filter.T) (reject bool, msg
 		}
 	}
 	// if the user has now authed we can check if they have privileges
-	if aclPresent {
-		if ws.AuthPubKey == "" {
-			// acl enabled but no pubkey, unauthorized
-			return true, "Unauthorized"
-		}
-		r := rl.ac.GetPrivilege(ws.AuthPubKey)
-		if r == "" {
-			// ACL enabled but user not found in ACL
-			return true, "Unauthorized"
-		}
-		if r == RoleOwner {
-			// owners have access to the system, there is no sense in
-			// blocking their access. all other roles are delegated and
-			// usually meaning not having access to the system the relay
-			// runs on.
-			return
-		}
+	if authRequired && ws.AuthPubKey == "" {
+		// acl enabled but no pubkey, unauthorized
+		return true, "Unauthorized"
+	}
+	r := rl.AccessControl.GetPrivilege(ws.AuthPubKey)
+	if r == "" && !rl.AccessControl.Public {
+		// ACL enabled but user not found in ACL
+		return true, "Unauthorized"
+	}
+	if r == RoleOwner {
+		// owners have access to the system, there is no sense in
+		// blocking their access. all other roles are delegated and
+		// usually meaning not having access to the system the relay
+		// runs on.
+		return
 	}
 	if !privileged {
 		// no ACL in force and not a privileged message type, accept
@@ -77,7 +75,7 @@ func (rl *Relay) FilterAccessControl(c context.T, f *filter.T) (reject bool, msg
 	parties := make(tag.T, len(receivers)+len(f.Authors))
 	copy(parties[:len(f.Authors)], f.Authors)
 	copy(parties[len(f.Authors):], receivers)
-	rl.D.Ln(ws.RealRemote, "parties", parties)
+	rl.T.Ln(ws.RealRemote, "parties", parties)
 	switch {
 	case ws.AuthPubKey == "":
 		// not authenticated
