@@ -78,15 +78,15 @@ func validateRelayURLs(wsurls []string) error {
 	for _, wsurl := range wsurls {
 		u, err := url.Parse(wsurl)
 		if err != nil {
-			return fmt.Errorf("invalid getRelayInfo url '%s': %s", wsurl, err)
+			return fmt.Errorf("invalid relay url '%s': %s", wsurl, err)
 		}
 
 		if u.Scheme != "ws" && u.Scheme != "wss" {
-			return fmt.Errorf("getRelayInfo url must use wss:// or ws:// schemes, got '%s'", wsurl)
+			return fmt.Errorf("relay url must use wss:// or ws:// schemes, got '%s'", wsurl)
 		}
 
 		if u.Host == "" {
-			return fmt.Errorf("getRelayInfo url '%s' is missing the hostname", wsurl)
+			return fmt.Errorf("relay url '%s' is missing the hostname", wsurl)
 		}
 	}
 

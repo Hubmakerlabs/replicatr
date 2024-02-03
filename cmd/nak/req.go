@@ -24,7 +24,7 @@ const CategoryFilterAttributes = "FILTER ATTRIBUTES"
 var req = &cli.Command{
 	Name:  "req",
 	Usage: "generates encoded REQ messages and optionally use them to talk to relays",
-	Description: `outputs a NIP-01 Nostr filter. when a getRelayInfo is not given, will print the filter, otherwise will connect to the given getRelayInfo and send the filter.
+	Description: `outputs a NIP-01 Nostr filter. when a relay is not given, will print the filter, otherwise will connect to the given relay and send the filter.
 
 example:
 		nak req -k 1 -l 15 wss://nostr.wine wss://nostr-pub.wellorder.net
@@ -121,7 +121,7 @@ example:
 			Usage: "prompt the user to paste a hex or nsec with which to sign the AUTH challenge",
 		},
 	},
-	ArgsUsage: "[getRelayInfo...]",
+	ArgsUsage: "[relay...]",
 	Action: func(c *cli.Context) error {
 		var p *pool.Simple
 		relayUrls := c.Args().Slice()
