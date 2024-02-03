@@ -66,7 +66,7 @@ var count = &cli.Command{
 			Category: CategoryFilterAttributes,
 		},
 	},
-	ArgsUsage: "[getRelayInfo...]",
+	ArgsUsage: "[relay...]",
 	Action: func(c *cli.Context) error {
 		f := filter.T{}
 

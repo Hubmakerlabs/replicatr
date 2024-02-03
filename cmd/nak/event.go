@@ -50,7 +50,7 @@ example:
 		},
 		&cli.BoolFlag{
 			Name:  "envelope",
-			Usage: "print the event enveloped in a [\"EVENT\", ...] message ready to be sent to a getRelayInfo",
+			Usage: "print the event enveloped in a [\"EVENT\", ...] message ready to be sent to a relay",
 		},
 		&cli.BoolFlag{
 			Name:  "auth",
@@ -106,7 +106,7 @@ example:
 			Category:    CATEGORY_EVENT_FIELDS,
 		},
 	},
-	ArgsUsage: "[getRelayInfo...]",
+	ArgsUsage: "[relay...]",
 	Action: func(c *cli.Context) error {
 		// try to connect to the relays here
 		var relays []*relay.T
@@ -244,12 +244,12 @@ example:
 					if err == nil {
 						// published fine
 						log.I.Ln("success.")
-						continue // continue to next getRelayInfo
+						continue // continue to next relay
 					}
 
 					// error publishing
 					if strings.HasPrefix(err.Error(), "msg: auth-required:") && sec != "" && doAuth {
-						// if the getRelayInfo is requesting auth and we can auth, let's do it
+						// if the relay is requesting auth and we can auth, let's do it
 						pk, _ := keys.GetPublicKey(sec)
 						log.I.F("performing auth as %s... ", pk)
 						if err := relay.Auth(c.Context, func(evt *event.T) error { return evt.Sign(sec) }); err == nil {

@@ -16,9 +16,9 @@ var encode = &cli.Command{
 	Description: `example usage:
 		nak encode npub <pubkey-hex>
 		nak encode nprofile <pubkey-hex>
-		nak encode nprofile --getRelayInfo <getRelayInfo-url> <pubkey-hex>
+		nak encode nprofile --relay <relay-url> <pubkey-hex>
 		nak encode nevent <event-id>
-		nak encode nevent --author <pubkey-hex> --getRelayInfo <getRelayInfo-url> --getRelayInfo <other-getRelayInfo> <event-id>
+		nak encode nevent --author <pubkey-hex> --relay <relay-url> --relay <other-relay> <event-id>
 		nak encode nsec <privkey-hex>`,
 	Before: func(c *cli.Context) error {
 		if c.Args().Len() < 1 {
@@ -71,12 +71,12 @@ var encode = &cli.Command{
 		},
 		{
 			Name:  "nprofile",
-			Usage: "generate profile codes with attached getRelayInfo information",
+			Usage: "generate profile codes with attached relay information",
 			Flags: []cli.Flag{
 				&cli.StringSliceFlag{
-					Name:    "getRelayInfo",
+					Name:    "relay",
 					Aliases: []string{"r"},
-					Usage:   "attach getRelayInfo hints to nprofile code",
+					Usage:   "attach relay hints to nprofile code",
 				},
 			},
 			Action: func(c *cli.Context) error {
@@ -86,7 +86,7 @@ var encode = &cli.Command{
 						continue
 					}
 
-					relays := c.StringSlice("getRelayInfo")
+					relays := c.StringSlice("relay")
 					if err := validateRelayURLs(relays); err != nil {
 						return err
 					}
@@ -104,12 +104,12 @@ var encode = &cli.Command{
 		},
 		{
 			Name:  "nevent",
-			Usage: "generate event codes with optionally attached getRelayInfo information",
+			Usage: "generate event codes with optionally attached relay information",
 			Flags: []cli.Flag{
 				&cli.StringSliceFlag{
-					Name:    "getRelayInfo",
+					Name:    "relay",
 					Aliases: []string{"r"},
-					Usage:   "attach getRelayInfo hints to nevent code",
+					Usage:   "attach relay hints to nevent code",
 				},
 				&cli.StringFlag{
 					Name:  "author",
@@ -130,7 +130,7 @@ var encode = &cli.Command{
 						}
 					}
 
-					relays := c.StringSlice("getRelayInfo")
+					relays := c.StringSlice("relay")
 					if err := validateRelayURLs(relays); err != nil {
 						return err
 					}
@@ -169,9 +169,9 @@ var encode = &cli.Command{
 					Required: true,
 				},
 				&cli.StringSliceFlag{
-					Name:    "getRelayInfo",
+					Name:    "relay",
 					Aliases: []string{"r"},
-					Usage:   "attach getRelayInfo hints to naddr code",
+					Usage:   "attach relay hints to naddr code",
 				},
 			},
 			Action: func(c *cli.Context) error {
@@ -194,7 +194,7 @@ var encode = &cli.Command{
 						}
 					}
 
-					relays := c.StringSlice("getRelayInfo")
+					relays := c.StringSlice("relay")
 					if err := validateRelayURLs(relays); err != nil {
 						return err
 					}

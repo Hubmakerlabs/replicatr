@@ -11,9 +11,9 @@ import (
 
 var getRelayInfo = &cli.Command{
 	Name:  "getinfo",
-	Usage: "gets the getRelayInfo information document for the given getRelayInfo, as JSON",
+	Usage: "gets the relay information document for the given getRelayInfo, as JSON",
 	Description: `example:
-		nak getRelayInfo nostr.wine`,
+		nak relay nostr.wine`,
 	ArgsUsage: "<relay-url>",
 	Action: func(c *cli.Context) error {
 		url := c.Args().First()
