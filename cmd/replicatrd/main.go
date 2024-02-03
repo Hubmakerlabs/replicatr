@@ -29,7 +29,7 @@ type ImportCmd struct {
 
 type InitACL struct {
 	Owner  string `arg:"positional,required" help:"initialize ACL configuration with an owner public key"`
-	Public bool   `arg:"-p,--public" default:"true" help:"allow public read access"`
+	Public bool   `arg:"-p,--public" default:"false" help:"allow public read access"`
 	Auth   bool   `arg:"-a,--auth" default:"false" help:"require auth for public access (recommended)"`
 }
 
@@ -88,10 +88,6 @@ func main() {
 		Icon:           args.Icon,
 	}, args.Whitelist, ac)
 	aclPath := filepath.Join(dataDir, replicatr.ACLfilename)
-	// load access control list
-	if err = rl.LoadACL(aclPath); rl.W.Chk(err) {
-		rl.W.Ln("no access control configured for relay")
-	}
 	// initialise ACL if command is called. Note this will overwrite an existing
 	// configuration.
 	if args.InitACLCmd != nil {
@@ -99,7 +95,7 @@ func main() {
 			log.E.Ln("invalid owner public key")
 			os.Exit(1)
 		}
-		ac = &replicatr.AccessControl{
+		rl.AccessControl = &replicatr.AccessControl{
 			Users: []*replicatr.UserID{
 				{
 					Role:      replicatr.RoleOwner,
@@ -109,15 +105,17 @@ func main() {
 			Public:     args.InitACLCmd.Public,
 			PublicAuth: args.InitACLCmd.Auth,
 		}
+		rl.Info.Limitation.AuthRequired = args.InitACLCmd.Auth
 		// if the public flag is set, add an empty reader to signal public reader
-		if args.InitACLCmd.Public {
-			ac.Users = append(ac.Users,
-				&replicatr.UserID{Role: replicatr.RoleReader})
-		}
 		if err = rl.SaveACL(aclPath); rl.E.Chk(err) {
+			panic(err)
 			// this is probably a fatal error really
 		}
 		log.I.Ln("access control base configuration saved and ready to use")
+	}
+	// load access control list
+	if err = rl.LoadACL(aclPath); rl.W.Chk(err) {
+		rl.W.Ln("no access control configured for relay")
 	}
 	rl.Info.AddNIPs(
 		nip11.BasicProtocol.Number,            // events, envelopes and filters

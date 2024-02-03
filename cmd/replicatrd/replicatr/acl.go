@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"sync"
+	"time"
 )
 
 const (
@@ -21,8 +22,16 @@ const (
 
 // UserID is the required data for an entry in AccessControl
 type UserID struct {
-	Role      `json:"role"`
+	// Role is the type of permissions granted to the user
+	Role `json:"role"`
+	// PubKeyHex is the hex encoded form of the public key related to this role,
+	// as a string because events contain a string and this can be quickly
+	// checked.
 	PubKeyHex string `json:"pubkey"`
+	// Expires defines a time when the role must be revised or it ceases to be
+	// in force. If a user's expiry is in the past they have no permission
+	// anymore.
+	Expires time.Time
 }
 
 type AccessControl struct {
@@ -32,16 +41,20 @@ type AccessControl struct {
 	// due to "physical" access. All other permissions relate to remote access.
 	// The owners cannot be remotely changed via the ACL messages, it must be
 	// manually specified in the configuration file.
-	Users  []*UserID `json:"users,omitempty"`
-	Public bool      `json:"public,omitempty"`
+	Users []*UserID `json:"users,omitempty"`
+	// Public means that the relay allows read access to any user without
+	// authentication.
+	Public bool `json:"public,omitempty"`
 	// PublicAuth indicates whether all access should require authentication
-	// using NIP-42 - this
+	// using NIP-42
 	PublicAuth bool `json:"public_auth_required,omitempty"`
 	// Access to this data must be mutual exclusive locked
 	// so concurrent threads can access and change this data without races.
 	mx sync.Mutex
 }
 
+// ACLClosure is a function type that can be used to inspect the user list. This
+// is so that concurrent safety can be enforced.
 type ACLClosure func(list []*UserID)
 
 func (ac *AccessControl) Get(r Role, fn ACLClosure) {
@@ -56,10 +69,11 @@ func (ac *AccessControl) Get(r Role, fn ACLClosure) {
 	fn(privList)
 }
 
+// Enabled returns whether authentication is always required
 func (ac *AccessControl) Enabled() bool {
 	ac.mx.Lock()
 	defer ac.mx.Unlock()
-	return len(ac.Users) > 0
+	return ac.PublicAuth
 }
 
 func (ac *AccessControl) GetPrivilege(key string) (r Role) {
@@ -75,18 +89,18 @@ func (ac *AccessControl) GetPrivilege(key string) (r Role) {
 }
 
 func (rl *Relay) LoadACL(filename string) (err error) {
-	rl.ac.mx.Lock()
-	defer rl.ac.mx.Unlock()
+	rl.AccessControl.mx.Lock()
 	var b []byte
 	if b, err = os.ReadFile(filename); rl.Fail(err) {
 		return
 	}
-	if err = json.Unmarshal(b, &rl.ac); rl.Fail(err) {
+	if err = json.Unmarshal(b, &rl.AccessControl); rl.Fail(err) {
 		return
 	}
 	rl.Log.T.F("read ACL config from file '%s'\n%s", filename, string(b))
+	rl.AccessControl.mx.Unlock()
 	var owners int
-	rl.ac.Get(RoleOwner, func(list []*UserID) {
+	rl.AccessControl.Get(RoleOwner, func(list []*UserID) {
 		for _, u := range list {
 			if u.Role == RoleOwner {
 				owners++
@@ -101,10 +115,10 @@ func (rl *Relay) LoadACL(filename string) (err error) {
 }
 
 func (rl *Relay) SaveACL(filename string) (err error) {
-	rl.ac.mx.Lock()
-	defer rl.ac.mx.Unlock()
+	rl.AccessControl.mx.Lock()
+	defer rl.AccessControl.mx.Unlock()
 	var b []byte
-	if b, err = json.Marshal(&rl.ac); rl.Fail(err) {
+	if b, err = json.MarshalIndent(rl.AccessControl, "", "\t"); rl.Fail(err) {
 		return
 	}
 	rl.T.F("writing ACL config to file '%s'\n%s", filename, string(b))

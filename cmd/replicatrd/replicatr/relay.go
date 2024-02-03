@@ -57,9 +57,8 @@ type Relay struct {
 	OnConnect                []Hook
 	OnDisconnect             []Hook
 	OnEventSaved             []OnEventSaved
-
 	// AccessControl is the access control rule set in force on the relay.
-	ac *AccessControl
+	AccessControl *AccessControl
 	// editing info will affect
 	Info *nip11.Info
 	*slog.Log
@@ -108,7 +107,7 @@ func NewRelay(logger *slog.Log, inf *nip11.Info, whitelist []string,
 		PingPeriod:     PingPeriod,
 		MaxMessageSize: int64(maxMessageLength),
 		Whitelist:      whitelist,
-		ac:             ac,
+		AccessControl:  ac,
 	}
 	r.Info.Software = Software
 	r.Info.Version = Version

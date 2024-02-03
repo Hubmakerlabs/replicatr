@@ -18,9 +18,9 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 		rl.D.Ln("broadcasting", ws.RealRemote, subs.Size())
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {
-				rl.T.Ln("filter doesn't match subscription",
-					listener.ws.RealRemote,
-					listener.filters, evt)
+				// rl.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
+				// 	listener.ws.RealRemote, listener.ws.AuthPubKey,
+				// 	listener.filters, evt.ToObject().String())
 				return true
 			}
 			if kinds.IsPrivileged(evt.Kind) {
@@ -40,19 +40,6 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 					return true
 				}
 			}
-			// c, _ := context.Cancel(
-			// 	context.Value(
-			// 		context.Bg(),
-			// 		wsKey, ws,
-			// 	),
-			// )
-			// for _, f := range listener.filters {
-			// 	rej, msg := rl.FilterAccessControl(c, f)
-			// 	if rej {
-			// 		log.T.Ln(msg)
-			// 		return true
-			// 	}
-			// }
 			remotes = append(remotes, ws.RealRemote)
 			rl.E.Chk(ws.WriteEnvelope(&eventenvelope.T{
 				SubscriptionID: subscriptionid.T(id),

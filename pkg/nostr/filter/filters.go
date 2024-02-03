@@ -104,7 +104,7 @@ func (f *T) UnmarshalJSON(b []byte) (err error) {
 	if f == nil {
 		return fmt.Errorf("cannot unmarshal into nil T")
 	}
-	// log.T.F("unmarshaling filter `%s`", b)
+	// // log.T.F("unmarshaling filter `%s`", b)
 	var uf UnmarshalingFilter
 	if err = json.Unmarshal(b, &uf); log.Fail(err) {
 		return
@@ -135,30 +135,37 @@ func (f *T) String() string {
 
 func (f *T) Matches(ev *event.T) bool {
 	if ev == nil {
+		// log.T.F("nil event")
 		return false
 	}
-	if f.IDs != nil && !f.IDs.Contains(ev.ID.String()) {
+	if len(f.IDs) > 0 && !f.IDs.Contains(ev.ID.String()) {
+		// log.T.F("no ids in filter match event\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 		return false
 	}
-	if f.Kinds != nil && !f.Kinds.Contains(ev.Kind) {
+	if len(f.Kinds) > 0 && !f.Kinds.Contains(ev.Kind) {
+		// log.T.F("no matching kinds in filter\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 		return false
 	}
-	if f.Authors != nil && !f.Authors.Contains(ev.PubKey) {
+	if len(f.Authors) > 0 && !f.Authors.Contains(ev.PubKey) {
+		// log.T.F("no matching authors in filter\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 		return false
 	}
 	for ff, v := range f.Tags {
 		if strings.HasPrefix(ff, "#") {
-
 			ff = ff[1:]
 		}
-		if v != nil && !ev.Tags.ContainsAny(ff, v) {
+		if len(v) > 0 && !ev.Tags.ContainsAny(ff, v) {
+			// log.T.F("no matching tags in filter\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 			return false
 		}
+		// special case for p tags
 	}
 	if f.Since != nil && ev.CreatedAt < timestamp.T(*f.Since) {
+		// log.T.F("event is older than since\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 		return false
 	}
 	if f.Until != nil && ev.CreatedAt > timestamp.T(*f.Until) {
+		// log.T.F("event is newer than until\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 		return false
 	}
 	return true
