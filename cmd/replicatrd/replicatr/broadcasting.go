@@ -15,7 +15,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 	var remotes []string
 	listeners.Range(func(ws *relayws.WebSocket, subs ListenerMap) bool {
 
-		rl.D.Ln("broadcasting", ws.RealRemote, subs.Size())
+		rl.D.Ln("broadcasting", ws.RealRemote, subs.Size(), ws.AuthPubKey)
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {
 				// rl.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",

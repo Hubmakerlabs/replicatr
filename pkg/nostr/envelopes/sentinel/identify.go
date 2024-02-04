@@ -2,13 +2,14 @@ package sentinel
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log = slog.New(os.Stderr, "nostr/sentinel")
 
 // Identify takes a byte slice and scans it as a nostr Envelope array, and
 // returns the label type and a text.Buffer that is ready for the Read function
@@ -18,15 +19,15 @@ func Identify(b []byte) (match string, buf *text.Buffer, err error) {
 	// whitespace... So we will use some tools.
 	buf = text.NewBuffer(b)
 	// First there must be an opening bracket.
-	if err = buf.ScanThrough('['); log.Fail(err) {
+	if err = buf.ScanThrough('['); log.T.Chk(err) {
 		return
 	}
 	// Then a quote.
-	if err = buf.ScanThrough('"'); log.Fail(err) {
+	if err = buf.ScanThrough('"'); log.T.Chk(err) {
 		return
 	}
 	var candidate []byte
-	if candidate, err = buf.ReadUntil('"'); log.Fail(err) {
+	if candidate, err = buf.ReadUntil('"'); log.T.Chk(err) {
 		return
 	}
 	// log.D.F("label: '%s' %v", string(candidate), List)
