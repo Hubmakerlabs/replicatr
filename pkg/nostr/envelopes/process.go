@@ -27,7 +27,7 @@ func ProcessEnvelope(b []byte) (env enveloper.I, buf *text.Buffer, err error) {
 	}
 	log.T.F("processing envelope:\n%s%s", string(trunc), ellipsis)
 	var match string
-	if match, buf, err = sentinel.Identify(b); log.Fail(err) {
+	if match, buf, err = sentinel.Identify(b); log.T.Chk(err) {
 		return
 	}
 	// log.D.Ln("envelope type", match)

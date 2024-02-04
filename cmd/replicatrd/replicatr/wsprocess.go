@@ -53,7 +53,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		return
 	}
 	en, _, err := envelopes.ProcessEnvelope(msg)
-	if rl.Fail(err) {
+	if rl.T.Chk(err) {
 		return
 	}
 	if en == nil {
