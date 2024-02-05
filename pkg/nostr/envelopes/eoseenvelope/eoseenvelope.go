@@ -19,7 +19,7 @@ var log = slog.GetStd()
 // delivered and thereafter events will be new and delivered in pubsub subscribe
 // fashion while the socket remains open.
 type T struct {
-	subscriptionid.T
+	Sub subscriptionid.T
 }
 
 var _ enveloper.I = (*T)(nil)
@@ -31,7 +31,7 @@ func (E *T) UnmarshalJSON(bytes []byte) error {
 
 func (E *T) Label() string { return labels.EOSE }
 
-func (E *T) ToArray() array.T { return array.T{labels.EOSE, E.T} }
+func (E *T) ToArray() array.T { return array.T{labels.EOSE, E.Sub} }
 
 func (E *T) String() (s string) { return E.ToArray().String() }
 
@@ -59,6 +59,6 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	if sid, err = buf.ReadUntil('"'); log.Fail(err) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
-	E.T = subscriptionid.T(sid[:])
+	E.Sub = subscriptionid.T(sid[:])
 	return
 }

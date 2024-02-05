@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -35,7 +36,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log = slog.New(os.Stderr, "nostr/relay")
 
 type Status int
 
@@ -54,7 +55,8 @@ type T struct {
 	connectionContext       context.T // will be canceled when the connection closes
 	connectionContextCancel context.F
 
-	challenge                     string      // NIP-42 challenge, we only keep the last
+	challenge                     string // NIP-42 challenge, we only keep the last
+	AuthRequired                  chan struct{}
 	notices                       chan string // NIP-01 NOTICEs
 	okCallbacks                   *xsync.MapOf[string, func(bool, string)]
 	writeQueue                    chan writeRequest
@@ -86,6 +88,7 @@ func NewRelay(c context.T, url string, opts ...Option) *T {
 		okCallbacks:                   xsync.NewMapOf[func(bool, string)](),
 		writeQueue:                    make(chan writeRequest),
 		subscriptionChannelCloseQueue: make(chan *subscription.T),
+		AuthRequired:                  make(chan struct{}),
 	}
 
 	for _, opt := range opts {
@@ -250,6 +253,8 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 			// 	continue
 			// }
 			r.challenge = env.Challenge
+			log.D.Ln("challenge", r.challenge)
+			close(r.AuthRequired)
 		case *eventenvelope.T:
 			if env.SubscriptionID == "" {
 				continue
@@ -261,7 +266,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 			} else {
 				// check if the event matches the desired filter, ignore otherwise
 				if !s.Filters.Match(env.Event) {
-					log.D.F("{%s} filter does not match: %v ~ %v",
+					log.T.F("{%s} filter does not match: %v ~ %v",
 						r.URL(), s.Filters, env.Event)
 					continue
 				}
@@ -282,7 +287,9 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 				s.DispatchEvent(env.Event)
 			}
 		case *eoseenvelope.T:
-			if s, ok := r.Subscriptions.Load(env.String()); ok {
+			log.D.Ln("eose", r.Subscriptions.Size())
+			if s, ok := r.Subscriptions.Load(env.Sub.String()); ok {
+				log.T.Ln("dispatching eose", env.Sub.String())
 				s.DispatchEose()
 			}
 		case *closedenvelope.T:
@@ -335,7 +342,7 @@ func (r *T) Auth(c context.T, sign func(ev *event.T) error) error {
 		},
 		Content: "",
 	}
-	if err := sign(authEvent); err != nil {
+	if err := sign(authEvent); log.Fail(err) {
 		return fmt.Errorf("error signing auth event: %w", err)
 	}
 
@@ -455,6 +462,7 @@ func (r *T) PrepareSubscription(c context.T, f filters.T,
 
 func (r *T) QuerySync(c context.T, f *filter.T,
 	opts ...subscriptionoption.I) ([]*event.T, error) {
+	log.D.Ln(f.ToObject().String())
 	sub, err := r.Subscribe(c, filters.T{f}, opts...)
 	if err != nil {
 		return nil, err

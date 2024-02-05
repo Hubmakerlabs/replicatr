@@ -111,6 +111,7 @@ func (rl *Relay) LoadACL(filename string) (err error) {
 		rl.Log.W.Ln("no owners set in access control file:", filename,
 			"remote access to change administrators/readers/writers disabled")
 	}
+	rl.Info.Limitation.AuthRequired = rl.AccessControl.PublicAuth || rl.Info.Limitation.AuthRequired
 	return
 }
 

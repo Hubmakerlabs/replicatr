@@ -30,7 +30,7 @@ func TestEnveloper(t *testing.T) {
 			Reason: okenvelope.Message(okenvelope.PoW, "25>24 \\ ")},
 		&reqenvelope.T{SubscriptionID: sub, Filters: filtertest.D},
 		&noticeenvelope.T{Text: "this notice has been noticed } \\ \\\" ] "},
-		&eoseenvelope.T{T: sub},
+		&eoseenvelope.T{Sub: sub},
 		&closeenvelope.T{T: sub},
 	}
 	var err error
