@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 	"fmt"
 	"os"
+	"sort"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	bdb "github.com/dgraph-io/badger/v4"
@@ -16,8 +17,7 @@ import (
 func (rl *Relay) Export(db *badger.Backend, filename string) {
 	rl.D.Ln("running export subcommand")
 	b := make([]byte, MaxMessageSize)
-	ev := &event.T{}
-	gob.Register(ev)
+	gob.Register(&event.T{})
 	var fh *os.File
 	var err error
 	if filename != "" {
@@ -29,6 +29,7 @@ func (rl *Relay) Export(db *badger.Backend, filename string) {
 	} else {
 		fh = os.Stdout
 	}
+	var evs event.Array
 	rl.E.Chk(db.View(func(txn *bdb.Txn) (err error) {
 		it := txn.NewIterator(bdb.IteratorOptions{})
 		for it.Rewind(); it.Valid(); it.Next() {
@@ -41,13 +42,18 @@ func (rl *Relay) Export(db *badger.Backend, filename string) {
 			// log.D.S(b)
 			buf := bytes.NewBuffer(b)
 			dec := gob.NewDecoder(buf)
+			ev := &event.T{}
 			if err = dec.Decode(ev); err != nil {
 				continue
 			}
 			buf.Reset()
-			fmt.Fprintln(fh, ev.ToObject().String())
+			evs = append(evs, ev)
 		}
 		it.Close()
 		return nil
 	}))
+	sort.Sort(evs)
+	for i := range evs {
+		fmt.Fprintln(fh, evs[i].ToObject().String())
+	}
 }

@@ -54,6 +54,12 @@ type T struct {
 	Sig string `json:"sig"`
 }
 
+type Array []*T
+
+func (ev Array) Len() int           { return len(ev) }
+func (ev Array) Less(i, j int) bool { return ev[i].CreatedAt < ev[j].CreatedAt }
+func (ev Array) Swap(i, j int)      { ev[i], ev[j] = ev[j], ev[i] }
+
 func (ev *T) ToObject() (o object.T) {
 	return object.T{
 		{"id", ev.ID},
