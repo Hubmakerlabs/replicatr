@@ -13,7 +13,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, "nostr/nip11")
+var log = slog.New(os.Stderr)
 
 // Fetch fetches the NIP-11 Info.
 func Fetch(c context.T, u string) (info *Info, err error) {

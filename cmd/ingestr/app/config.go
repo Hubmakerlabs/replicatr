@@ -10,7 +10,7 @@ import (
 
 const Name = "ingestr"
 
-var log = slog.New(os.Stderr, "app/"+Name)
+var log = slog.New(os.Stderr)
 
 type Config struct {
 	Nsec          string  `arg:"-n,--nsec" json:"nsec" help:"use the nsec (bech32 encoded) for auth and if given, writes it to configuration and will be loaded afterwards until a new one is given"`

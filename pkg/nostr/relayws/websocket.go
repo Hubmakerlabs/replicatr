@@ -16,7 +16,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, "nostr/relayws")
+var log = slog.New(os.Stderr)
 
 // WebSocket is a wrapper around a fasthttp/websocket with mutex locking and
 // NIP-42 Auth support

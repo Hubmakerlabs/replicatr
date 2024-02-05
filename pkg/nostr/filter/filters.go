@@ -15,7 +15,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, "nostr/filter")
+var log = slog.New(os.Stderr)
 
 // T is a query where one or all elements can be filled in.
 //

@@ -36,7 +36,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, "nostr/relay")
+var log = slog.New(os.Stderr)
 
 type Status int
 

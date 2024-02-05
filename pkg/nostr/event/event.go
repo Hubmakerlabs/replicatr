@@ -17,7 +17,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, "nostr/event")
+var log = slog.New(os.Stderr)
 
 func Hash(in []byte) (out []byte) {
 	h := sha256.Sum256(in)
