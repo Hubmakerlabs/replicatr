@@ -131,7 +131,8 @@ next:
 	if isOK, err = buf.ReadUntil(','); log.Fail(err) {
 		return fmt.Errorf("did not find OK value in ok envelope")
 	}
-	isOK = isOK[:]
+	isOK = []byte(strings.TrimSpace(string(isOK)))
+	// trim any whitespace
 	// determine the value encoded
 	l := len(isOK)
 	var isBool bool

@@ -121,6 +121,9 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			if strings.HasPrefix(reason, nip42.AuthRequired) {
 				RequestAuth(c)
 			}
+			if strings.HasPrefix(reason, "duplicate") {
+				ok = true
+			}
 		} else {
 			ok = true
 		}
@@ -191,12 +194,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			// we can cancel the context and fire the EOSE message
 			wg.Wait()
 			cancelReqCtx(nil)
-			rl.E.Chk(ws.WriteEnvelope(&eoseenvelope.T{T: env.SubscriptionID}))
+			rl.E.Chk(ws.WriteEnvelope(&eoseenvelope.T{Sub: env.SubscriptionID}))
 		}()
 		SetListener(env.SubscriptionID.String(), ws, env.Filters, cancelReqCtx)
 	case *closeenvelope.T:
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
+		log.D.Ln("received auth response")
 		wsBaseUrl := strings.Replace(rl.ServiceURL, "http", "ws", 1)
 		var ok bool
 		var pubkey string

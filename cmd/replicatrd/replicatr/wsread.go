@@ -30,7 +30,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		deny = false
 	}
 	if deny {
-		rl.T.F("denying access to '%s': dropping message", p.ws.RealRemote)
+		// rl.T.F("denying access to '%s': dropping message", p.ws.RealRemote)
 		p.kill()
 		return
 	}

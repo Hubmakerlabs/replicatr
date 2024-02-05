@@ -2,6 +2,7 @@ package subscription
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -19,7 +20,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log = slog.New(os.Stderr, "nostr/subscription")
 
 type T struct {
 	Label   string
@@ -111,6 +112,7 @@ func (sub *T) DispatchEvent(evt *event.T) {
 }
 
 func (sub *T) DispatchEose() {
+	log.D.Ln("dispatch EOSE")
 	if sub.eosed.CompareAndSwap(false, true) {
 		go func() {
 			sub.storedwg.Wait()
@@ -156,8 +158,8 @@ func (sub *T) Close() {
 
 // Sub sets sub.T and then calls sub.Fire(ctx).
 // The subscription will be closed if the context expires.
-func (sub *T) Sub(_ context.T, filters filters.T) {
-	sub.Filters = filters
+func (sub *T) Sub(_ context.T, f filters.T) {
+	sub.Filters = f
 	log.Fail(sub.Fire())
 }
 

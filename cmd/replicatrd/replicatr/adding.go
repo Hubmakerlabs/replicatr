@@ -85,7 +85,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 				switch {
 				case errors.Is(saveErr, eventstore.ErrDupEvent):
 					rl.T.Ln(saveErr)
-					return nil
+					return saveErr
 				default:
 					err = fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))
 					rl.T.Ln(ev.ID, err)

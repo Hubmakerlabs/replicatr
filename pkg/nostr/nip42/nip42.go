@@ -47,39 +47,47 @@ func ValidateAuthEvent(evt *event.T, challenge string,
 	if evt.Kind != kind.ClientAuthentication {
 		err = fmt.Errorf("event incorrect kind for auth: %d %s",
 			evt.Kind, kind.Map[evt.Kind])
+		log.D.Ln(err)
 		return
 	}
 	if evt.Tags.GetFirst([]string{"challenge", challenge}) == nil {
 		err = fmt.Errorf("challenge tag missing from auth response")
+		log.D.Ln(err)
 		return
 	}
 	var expected, found *url.URL
 	if expected, err = parseURL(relayURL); log.Fail(err) {
+		log.D.Ln(err)
 		return
 	}
 	r := evt.Tags.
 		GetFirst([]string{"relay", ""}).Value()
 	if r == "" {
 		err = fmt.Errorf("relay tag missing from auth response")
+		log.D.Ln(err)
 		return
 	}
 	if found, err = parseURL(r); log.Fail(err) {
 		err = fmt.Errorf("error parsing relay url")
+		log.D.Ln(err)
 		return
 	}
 	if expected.Scheme != found.Scheme {
 		err = fmt.Errorf("HTTP Scheme incorrect: expected '%s' got '%s",
 			expected.Scheme, found.Scheme)
+		log.D.Ln(err)
 		return
 	}
 	if expected.Host != found.Host {
 		err = fmt.Errorf("HTTP Host incorrect: expected '%s' got '%s",
 			expected.Host, found.Host)
+		log.D.Ln(err)
 		return
 	}
 	if expected.Path != found.Path {
 		err = fmt.Errorf("HTTP Path incorrect: expected '%s' got '%s",
 			expected.Path, found.Path)
+		log.D.Ln(err)
 		return
 	}
 
@@ -88,10 +96,12 @@ func ValidateAuthEvent(evt *event.T, challenge string,
 		evt.CreatedAt.Time().Before(now.Add(-10*time.Minute)) {
 		err = fmt.Errorf(
 			"auth event more than 10 minutes before or after current time")
+		log.D.Ln(err)
 		return
 	}
 	// save for last, as it is most expensive operation
 	if ok, err = evt.CheckSignature(); !ok {
+		log.D.Ln(err)
 		return
 	}
 	pubkey = evt.PubKey
