@@ -15,7 +15,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, "nostr/envelopes/reqenvelope")
+var log = slog.New(os.Stderr)
 
 // T is the wrapper for a query to a relay.
 type T struct {

@@ -9,7 +9,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, "nostrbinary")
+var log = slog.New(os.Stderr)
 
 func Unmarshal(data []byte) (evt *event.T, err error) {
 

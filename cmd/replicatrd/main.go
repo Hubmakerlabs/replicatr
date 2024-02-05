@@ -25,7 +25,7 @@ func main() {
 	arg.MustParse(&args)
 	var dataDirBase string
 	var err error
-	var log = slog.New(os.Stderr, args.Profile)
+	var log = slog.New(os.Stderr)
 	if dataDirBase, err = os.UserHomeDir(); log.E.Chk(err) {
 		os.Exit(1)
 	}
@@ -105,7 +105,7 @@ func main() {
 	db := &IC.Backend{
 		Badger: &badger.Backend{
 			Path: dataDir,
-			Log:  slog.New(os.Stderr, "replicatr-badger"),
+			Log:  slog.New(os.Stderr),
 		},
 	}
 	if err = db.Init(); rl.E.Chk(err) {

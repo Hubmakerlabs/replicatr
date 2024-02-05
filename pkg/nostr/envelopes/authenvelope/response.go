@@ -15,7 +15,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, "nostr/authenvelope")
+var log = slog.New(os.Stderr)
 
 type Response struct {
 	Event *event.T

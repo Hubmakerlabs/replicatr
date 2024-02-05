@@ -14,7 +14,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, "nostr/nip42")
+var log = slog.New(os.Stderr)
 
 const AuthRequired = "auth-required"
 

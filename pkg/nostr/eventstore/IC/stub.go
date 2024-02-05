@@ -20,7 +20,7 @@ type Backend struct {
 
 func (b *Backend) Init() (err error) {
 	if b.Badger.Log == nil {
-		b.Badger.Log = slog.New(os.Stderr, "replicatr-badger")
+		b.Badger.Log = slog.New(os.Stderr)
 	}
 	if err = b.Badger.Init(); b.Badger.Log.Fail(err) {
 		return

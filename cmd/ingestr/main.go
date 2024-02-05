@@ -16,7 +16,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, app.Name)
+var log = slog.New(os.Stderr)
 
 var args app.Config
 

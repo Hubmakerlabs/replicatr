@@ -20,7 +20,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr, "nostr/subscription")
+var log = slog.New(os.Stderr)
 
 type T struct {
 	Label   string
