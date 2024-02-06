@@ -12,6 +12,7 @@ require (
 	github.com/fiatjaf/generic-ristretto v0.0.1
 	github.com/gobwas/httphead v0.1.0
 	github.com/gobwas/ws v1.3.2
+	github.com/gookit/color v1.5.4
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/minio/sha256-simd v1.0.1
@@ -24,7 +25,7 @@ require (
 	lukechampine.com/frand v1.4.2
 	mleku.online/git/bech32 v1.0.4
 	mleku.online/git/ec v1.0.6
-	mleku.online/git/slog v1.0.5
+	mleku.online/git/slog v1.0.6
 )
 
 require (
@@ -43,7 +44,6 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
-	github.com/gookit/color v1.5.4 // indirect
 	github.com/klauspost/compress v1.17.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

@@ -1,4 +1,4 @@
-package replicatr
+package app
 
 type ExportCmd struct {
 	ToFile string `arg:"-f,--tofile" help:"write to file instead of stdout"`
