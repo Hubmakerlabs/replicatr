@@ -131,8 +131,8 @@ func (c *C) ReadMessage(cx context.T, buf io.Writer) (err error) {
 			return errors.New("context canceled")
 		default:
 		}
-
-		h, err := c.reader.NextFrame()
+		var h ws.Header
+		h, err = c.reader.NextFrame()
 		if log.Fail(err) {
 			c.Conn.Close()
 			return fmt.Errorf("failed to advance frame: %w", err)
