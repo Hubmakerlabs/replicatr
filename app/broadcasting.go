@@ -1,4 +1,4 @@
-package replicatr
+package app
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"

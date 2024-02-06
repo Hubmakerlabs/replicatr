@@ -1,4 +1,4 @@
-package replicatr
+package app
 
 import (
 	"net/http"

@@ -26,10 +26,10 @@ var _ RelayInterface = (*RelayWrapper)(nil)
 
 func (w RelayWrapper) Publish(c context.T, evt *event.T) (err error) {
 	var ch chan *event.T
-	if 20000 <= evt.Kind && evt.Kind < 30000 {
+	if evt.Kind.IsEphemeral() {
 		// do not store ephemeral events
 		return nil
-	} else if evt.Kind == 0 || evt.Kind == 3 || (10000 <= evt.Kind && evt.Kind < 20000) {
+	} else if evt.Kind.IsReplaceable() {
 		// replaceable event, delete before storing
 		ch, err = w.Store.QueryEvents(c, &filter.T{
 			Authors: []string{evt.PubKey},
@@ -43,7 +43,7 @@ func (w RelayWrapper) Publish(c context.T, evt *event.T) (err error) {
 				return fmt.Errorf("failed to delete event for replacing: %w", err)
 			}
 		}
-	} else if 30000 <= evt.Kind && evt.Kind < 40000 {
+	} else if evt.Kind.IsParameterizedReplaceable() {
 		// parameterized replaceable event, delete before storing
 		d := evt.Tags.GetFirst([]string{"d", ""})
 		if d != nil {

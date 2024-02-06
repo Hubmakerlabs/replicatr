@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Hubmakerlabs/replicatr/cmd/replicatrd/replicatr"
+	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
@@ -19,7 +19,7 @@ var (
 	Version = "v0.0.1"
 )
 
-var args replicatr.Config
+var args app.Config
 
 func main() {
 	arg.MustParse(&args)
@@ -30,13 +30,13 @@ func main() {
 		os.Exit(1)
 	}
 	dataDir := filepath.Join(dataDirBase, args.Profile)
-	log.D.F("using profile directory: '%s", args.Profile)
-	var ac *replicatr.AccessControl
+	log.D.F("using profile directory: %s", args.Profile)
+	var ac *app.AccessControl
 	if args.InitCfgCmd != nil {
 		// initialize configuration with whatever has been read from the CLI.
 		// include adding nip-11 configuration documents to this...
 	}
-	rl := replicatr.NewRelay(log, &nip11.Info{
+	rl := app.NewRelay(log, &nip11.Info{
 		Name:        args.Name,
 		Description: args.Description,
 		PubKey:      args.Pubkey,
@@ -44,7 +44,7 @@ func main() {
 		Software:    AppName,
 		Version:     Version,
 		Limitation: &nip11.Limits{
-			MaxMessageLength: replicatr.MaxMessageSize,
+			MaxMessageLength: app.MaxMessageSize,
 			Oldest:           1640305963,
 		},
 		RelayCountries: nil,
@@ -55,7 +55,7 @@ func main() {
 		Fees:           &nip11.Fees{},
 		Icon:           args.Icon,
 	}, args.Whitelist, ac)
-	aclPath := filepath.Join(dataDir, replicatr.ACLfilename)
+	aclPath := filepath.Join(dataDir, app.ACLfilename)
 	// initialise ACL if command is called. Note this will overwrite an existing
 	// configuration.
 	if args.InitACLCmd != nil {
@@ -63,10 +63,10 @@ func main() {
 			log.E.Ln("invalid owner public key")
 			os.Exit(1)
 		}
-		rl.AccessControl = &replicatr.AccessControl{
-			Users: []*replicatr.UserID{
+		rl.AccessControl = &app.AccessControl{
+			Users: []*app.UserID{
 				{
-					Role:      replicatr.RoleOwner,
+					Role:      app.RoleOwner,
 					PubKeyHex: args.InitACLCmd.Owner,
 				},
 			},

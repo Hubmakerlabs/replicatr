@@ -3,11 +3,12 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/fatih/color"
+	"github.com/gookit/color"
 )
 
 const NostrProtocol = "nostr:"
@@ -38,42 +39,39 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 
 	buf := make([]byte, 4096)
 	buffer := bytes.NewBuffer(buf)
-	fgHiRed := color.New(color.FgHiRed, color.Bold)
 	fgRed := color.New(color.FgRed)
-	fgNormal := color.New(color.Reset)
-	fgHiBlue := color.Set(color.FgHiBlue)
+	fgBlue := color.New(color.Blue)
 	for _, ev := range evs {
 		if profile, ok := f[ev.PubKey]; ok {
-			color.Set(color.FgHiRed)
-			fgHiRed.Fprintln(buffer, profile.Name)
-			fgNormal.Fprintln(buffer, ev.Content)
+			fmt.Fprintln(buffer, fgRed.Sprint(profile.Name))
+			fmt.Fprintln(buffer, ev.Content)
 			var rls []string
 			if rls, ok = cfg.FollowsRelays[ev.PubKey]; ok {
 				if nevent, err := bech32encoding.EncodeEvent(ev.ID, rls, ev.PubKey); !log.Fail(err) {
-					fgHiBlue.Fprint(buffer, cfg.EventURLPrefix, nevent)
+					fmt.Fprint(buffer, fgBlue.Sprint(cfg.EventURLPrefix, nevent))
 				}
 			} else {
 				note, err := bech32encoding.EncodeNote(ev.ID.String())
 				if err != nil {
 					note = ev.ID.String()
 				}
-				fgHiBlue.Fprint(buffer, note)
+				fmt.Fprint(buffer, fgBlue.Sprint(note))
 			}
-			fgHiBlue.Fprintln(buffer, " ", ev.CreatedAt.Time())
+			fmt.Fprintln(buffer, " ", fgBlue.Sprint(ev.CreatedAt.Time()))
 		} else {
-			fgRed.Fprint(buffer, "pubkey ")
-			fgRed.Fprint(buffer, ev.PubKey)
+			fmt.Fprint(buffer, fgRed.Sprint("pubkey "))
+			fmt.Fprint(buffer, fgRed.Sprint(ev.PubKey))
 			// fgHiBlue.Fprint(buffer, " note ID: ")
 			note, err := bech32encoding.EncodeNote(ev.ID.String())
 			if err != nil {
 				note = ev.ID.String()
 			}
-			fgHiBlue.Fprint(buffer, " ", NostrProtocol, note)
-			fgHiBlue.Fprint(buffer, " ", ev.CreatedAt.Time())
-			fgHiBlue.Fprintln(buffer)
-			fgNormal.Fprintln(buffer, ev.Content)
+			fmt.Fprint(buffer, " ", fgBlue.Sprint(cfg.EventURLPrefix, note))
+			fmt.Fprint(buffer, " ", fgBlue.Sprint(ev.CreatedAt.Time()))
+			fmt.Fprintln(buffer)
+			fmt.Fprintln(buffer, ev.Content)
 		}
-		fgNormal.Fprintln(buffer)
+		fmt.Fprintln(buffer)
 	}
-	fgNormal.Print(buffer.String())
+	fmt.Print(buffer.String())
 }

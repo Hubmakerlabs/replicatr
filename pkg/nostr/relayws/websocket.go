@@ -39,7 +39,7 @@ func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 		var line int
 		_, file, line, _ = runtime.Caller(1)
 		loc := fmt.Sprintf("%s:%d", file, line)
-		log.T.F("sending ping/pong to %s %s", ws.RealRemote, ws.AuthPubKey, loc)
+		log.T.F("sending ping/pong to %s %s %s", ws.RealRemote, ws.AuthPubKey, loc)
 	} else if len(b) != 0 {
 		log.D.F("sending message to %s %s\n%s", ws.RealRemote, ws.AuthPubKey, string(b))
 	}
