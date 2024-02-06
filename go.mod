@@ -25,7 +25,7 @@ require (
 	lukechampine.com/frand v1.4.2
 	mleku.online/git/bech32 v1.0.4
 	mleku.online/git/ec v1.0.6
-	mleku.online/git/slog v1.0.6
+	mleku.online/git/slog v1.0.7
 )
 
 require (
