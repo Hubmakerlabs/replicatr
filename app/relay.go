@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/nostr/accesscontrol"
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -58,7 +59,7 @@ type Relay struct {
 	OnDisconnect             []Hook
 	OnEventSaved             []OnEventSaved
 	// AccessControl is the access control rule set in force on the relay.
-	AccessControl *AccessControl
+	AccessControl *accesscontrol.T
 	// editing info will affect
 	Info *nip11.Info
 	*slog.Log
@@ -83,14 +84,14 @@ type Relay struct {
 }
 
 func NewRelay(logger *slog.Log, inf *nip11.Info, whitelist []string,
-	ac *AccessControl) (r *Relay) {
+	ac *accesscontrol.T) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
 	if inf.Limitation != nil {
 		maxMessageLength = inf.Limitation.MaxMessageLength
 	}
 	if ac == nil {
-		ac = &AccessControl{}
+		ac = &accesscontrol.T{}
 	}
 	r = &Relay{
 		Log:  logger,

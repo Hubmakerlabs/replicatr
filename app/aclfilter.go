@@ -1,13 +1,57 @@
 package app
 
 import (
+	"encoding/json"
+	"os"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/nostr/accesscontrol"
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
+
+func (rl *Relay) LoadACL(filename string) (err error) {
+	rl.AccessControl.Lock()
+	var b []byte
+	if b, err = os.ReadFile(filename); rl.Fail(err) {
+		return
+	}
+	if err = json.Unmarshal(b, &rl.AccessControl); rl.Fail(err) {
+		return
+	}
+	rl.Log.T.F("read ACL config from file '%s'\n%s", filename, string(b))
+	rl.AccessControl.Unlock()
+	var owners int
+	rl.AccessControl.Get(accesscontrol.RoleOwner, func(list []*accesscontrol.UserID) {
+		for _, u := range list {
+			if u.Role == accesscontrol.RoleOwner {
+				owners++
+			}
+		}
+	})
+	if owners < 1 {
+		rl.Log.W.Ln("no owners set in access control file:", filename,
+			"remote access to change administrators/readers/writers disabled")
+	}
+	rl.Info.Limitation.AuthRequired = rl.AccessControl.PublicAuth || rl.Info.Limitation.AuthRequired
+	return
+}
+
+func (rl *Relay) SaveACL(filename string) (err error) {
+	rl.AccessControl.Lock()
+	defer rl.AccessControl.Unlock()
+	var b []byte
+	if b, err = json.MarshalIndent(rl.AccessControl, "", "\t"); rl.Fail(err) {
+		return
+	}
+	rl.T.F("writing ACL config to file '%s'\n%s", filename, string(b))
+	if err = os.WriteFile(filename, b, 0700); rl.Fail(err) {
+		return
+	}
+	return
+}
 
 // FilterAccessControl interacts between filters and the privileges of the
 // users according to the access control settings of the relay, checking whether
@@ -41,7 +85,7 @@ func (rl *Relay) FilterAccessControl(c context.T, f *filter.T) (reject bool, msg
 		RequestAuth(c)
 		select {
 		case <-ws.Authed:
-			rl.D.Ln("user authed", GetAuthed(c))
+			// rl.D.Ln("user authed", GetAuthed(c))
 		case <-c.Done():
 			rl.T.Ln("context canceled while waiting for auth")
 		case <-time.After(5 * time.Second):
@@ -60,7 +104,7 @@ func (rl *Relay) FilterAccessControl(c context.T, f *filter.T) (reject bool, msg
 		// ACL enabled but user not found in ACL
 		return true, "Unauthorized"
 	}
-	if r == RoleOwner {
+	if r == accesscontrol.RoleOwner {
 		// owners have access to the system, there is no sense in
 		// blocking their access. all other roles are delegated and
 		// usually meaning not having access to the system the relay

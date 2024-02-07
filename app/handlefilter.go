@@ -50,7 +50,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// fetching stuff from multiple places)
 	h.eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
-		var ch chan *event.T
+		ch := make(chan *event.T)
 		if ch, err = query(h.c, h.f); rl.E.Chk(err) {
 			rl.E.Chk(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
 			h.eose.Done()
@@ -58,6 +58,11 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 		}
 		go func(ch chan *event.T) {
 			for ev := range ch {
+				// if the event is nil the rest of this loop will panic
+				// accessing the nonexistent event's fields
+				if ev == nil {
+					continue
+				}
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(h.c, ev)
 				}
@@ -72,7 +77,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					parties := make(tag.T, len(receivers)+len(h.f.Authors))
 					copy(parties[:len(h.f.Authors)], h.f.Authors)
 					copy(parties[len(h.f.Authors):], receivers)
-					rl.D.Ln(h.ws.RealRemote, "parties", parties)
+					// rl.T.Ln(h.ws.RealRemote, "parties", parties)
 					if !parties.Contains(h.ws.AuthPubKey) {
 						rl.D.Ln("not sending privileged event to user " +
 							"without matching auth")

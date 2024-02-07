@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
@@ -32,86 +33,88 @@ type queryEvent struct {
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
+	log.T.Ln("preparing queries")
 	queries, extraFilter, since, err := prepareQueries(f)
 	if err != nil {
 		return nil, err
 	}
-
+	log.T.Ln("scanning database")
 	go func() {
-		err := b.View(func(txn *badger.Txn) (err error) {
+		err = b.View(func(txn *badger.Txn) (err error) {
 			// iterate only through keys and in reverse order
 			opts := badger.IteratorOptions{
 				Reverse: true,
 			}
-
+			var txMx sync.Mutex
 			// actually iterate
 			iteratorClosers := make([]func(), len(queries))
 			for i, q := range queries {
-				// log.D.S(q)
-				// go func(i int, q query) {
-				it := txn.NewIterator(opts)
-				iteratorClosers[i] = it.Close
+				go func(i int, q query) {
+					txMx.Lock()
+					defer txMx.Unlock()
+					it := txn.NewIterator(opts)
+					iteratorClosers[i] = it.Close
 
-				defer close(q.results)
-				// log.D.S(q.startingPoint)
-				if q.startingPoint == nil {
-					b.D.S("nil query starting point")
-					return
-				}
-				if q.prefix == nil {
-					b.D.S("nil query prefix")
-					return
-				}
-				for it.Seek(q.startingPoint); it.ValidForPrefix(q.prefix); it.Next() {
-					item := it.Item()
-					// log.D.Ln(item.ValueCopy(nil))
-					key := item.Key()
-
-					idxOffset := len(key) - 4 // this is where the idx actually starts
-
-					// "id" indexes don't contain a timestamp
-					if !q.skipTimestamp {
-						createdAt := binary.BigEndian.Uint32(key[idxOffset-4 : idxOffset])
-						if createdAt < since {
-							break
-						}
-					}
-
-					idx := make([]byte, 5)
-					idx[0] = rawEventStorePrefix
-					copy(idx[1:], key[idxOffset:])
-
-					// fetch actual event
-					item, err = txn.Get(idx)
-					if err != nil {
-						if errors.Is(err, badger.ErrDiscardedTxn) {
-							return
-						}
-						b.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
-							idx, q.prefix, key, err)
+					if q.startingPoint == nil {
+						b.D.S("nil query starting point")
 						return
 					}
-					if item == nil {
-						b.D.Ln("nil item")
-						break
+					if q.prefix == nil {
+						b.D.S("nil query prefix")
+						return
 					}
-					var val []byte
-					val, err = item.ValueCopy(val)
-					evt := &event.T{}
-					if evt, err = nostrbinary.Unmarshal(val); err != nil {
-						b.D.F("badger: value read error (id %x): %s", spew.Sdump(val), err)
-						break
+					for it.Seek(q.startingPoint); it.ValidForPrefix(q.prefix); it.Next() {
+						item := it.Item()
+						// log.D.Ln(item.ValueCopy(nil))
+						key := item.Key()
+
+						idxOffset := len(key) - 4 // this is where the idx actually starts
+
+						// "id" indexes don't contain a timestamp
+						if !q.skipTimestamp {
+							createdAt := binary.BigEndian.Uint32(key[idxOffset-4 : idxOffset])
+							if createdAt < since {
+								break
+							}
+						}
+
+						idx := make([]byte, 5)
+						idx[0] = rawEventStorePrefix
+						copy(idx[1:], key[idxOffset:])
+
+						// fetch actual event
+						item, err = txn.Get(idx)
+						if err != nil {
+							if errors.Is(err, badger.ErrDiscardedTxn) {
+								return
+							}
+							b.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
+								idx, q.prefix, key, err)
+							return
+						}
+						if item == nil {
+							b.D.Ln("nil item")
+							break
+						}
+						var val []byte
+						val, err = item.ValueCopy(val)
+						evt := &event.T{}
+						if evt, err = nostrbinary.Unmarshal(val); err != nil {
+							b.D.F("badger: value read error (id %x): %s", spew.Sdump(val), err)
+							break
+						}
+						if evt == nil {
+							b.D.F("got nil event from %s", spew.Sdump(val))
+						}
+						b.D.F("unmarshaled %s", evt.ToObject().String())
+						// check if this matches the other filters that were not part of the index
+						if extraFilter == nil || extraFilter.Matches(evt) {
+							log.T.Ln("dispatching event to results queue", evt == nil)
+							q.results <- evt
+							log.T.Ln("results queue was consumed")
+						}
 					}
-					if evt == nil {
-						b.D.F("got nil event from %s", spew.Sdump(val))
-					}
-					// b.D.F("unmarshaled %s", evt.ToObject().String())
-					// check if this matches the other filters that were not part of the index
-					if extraFilter == nil || extraFilter.Matches(evt) {
-						q.results <- evt
-					}
-				}
-				// }(i, q)
+				}(i, q)
 			}
 
 			// max number of events we'll return
@@ -119,68 +122,84 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			if f.Limit > 0 && f.Limit < limit {
 				limit = f.Limit
 			}
+			log.T.Ln("clamping results: filter", f.Limit, "max", b.MaxLimit)
 
 			// receive results and ensure we only return the most recent ones always
 			emittedEvents := 0
 
-			// first pass
-			emitQueue := make(priorityQueue, 0, len(queries)+limit)
-			for _, q := range queries {
-				evt, ok := <-q.results
-				if ok {
-					emitQueue = append(emitQueue, &queryEvent{T: evt, query: q.i})
-				}
-			}
-
 			// now it's a good time to schedule this
 			defer func() {
-				close(ch)
+				txMx.Lock()
+				defer txMx.Unlock()
 				for _, itclose := range iteratorClosers {
 					itclose()
 				}
+				for _, q := range queries {
+					close(q.results)
+				}
+				close(ch)
 			}()
+
+			// first pass
+			emitQueue := make(priorityQueue, 0, len(queries)+limit)
+			for i, q := range queries {
+				log.T.Ln("receiving query", i)
+				select {
+				case evt := <-q.results:
+					log.T.Ln("received query", i)
+					emitQueue = append(emitQueue, &queryEvent{T: evt, query: q.i})
+				}
+			}
+			log.T.Ln("scheduling closing iterators")
 
 			// queue may be empty here if we have literally nothing
 			if len(emitQueue) == 0 {
+				log.T.Ln("emit queue is empty")
 				return nil
 			}
 
+			log.T.Ln("initialising emit queue")
 			heap.Init(&emitQueue)
 
 			// iterate until we've emitted all events required
 			for {
 				// emit latest event in queue
+				log.T.Ln("emitting latest event in queue")
 				latest := emitQueue[0]
 				ch <- latest.T
-
+				log.T.Ln("emitted event")
 				// stop when reaching limit
 				emittedEvents++
 				if emittedEvents == limit {
+					log.T.Ln("emitted the limit amount of events", limit)
 					break
 				}
 
 				// fetch a new one from query results and replace the previous one with it
 				if evt, ok := <-queries[latest.query].results; ok {
+					log.T.Ln("adding event to queue")
 					emitQueue[0].T = evt
 					heap.Fix(&emitQueue, 0)
 				} else {
+					log.T.Ln("removing event from queue")
 					// if this query has no more events we just remove this and proceed normally
 					heap.Remove(&emitQueue, 0)
 
 					// check if the list is empty and end
 					if len(emitQueue) == 0 {
+						log.T.Ln("emit queue empty")
 						break
 					}
 				}
 			}
-
 			return nil
 		})
+
 		if err != nil {
 			b.D.F("badger: query txn error: %s", err)
 		}
 	}()
-
+	log.T.Ln("completed query")
 	return ch, nil
 }
 

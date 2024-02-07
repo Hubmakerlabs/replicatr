@@ -19,19 +19,19 @@ var log = slog.New(os.Stderr)
 // for some other envelope outside of nip-01 to decode.
 func ProcessEnvelope(b []byte) (env enveloper.I, buf *text.Buffer, err error) {
 
-	trunc := make([]byte, 512)
-	copy(trunc, b)
-	var ellipsis string
-	if len(b) > 512 {
-		ellipsis = "..."
-	}
-	log.T.F("processing envelope:\n%s%s", string(trunc), ellipsis)
+	// trunc := make([]byte, 512)
+	// copy(trunc, b)
+	// var ellipsis string
+	// if len(b) > 512 {
+	// 	ellipsis = "..."
+	// }
+	// log.T.F("processing envelope:\n%s%s", string(trunc), ellipsis)
 	var match string
 	if match, buf, err = sentinel.Identify(b); log.T.Chk(err) {
 		return
 	}
 	// log.D.Ln("envelope type", match)
-	if env, err = sentinel.Read(buf, match); log.Fail(err) {
+	if env, err = sentinel.Read(buf, match); log.T.Chk(err) {
 		return
 	}
 	return

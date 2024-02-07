@@ -71,6 +71,8 @@ const (
 	FileMetadata T = 1063
 	// LiveChatMessage is an event type that...
 	LiveChatMessage T = 1311
+	// BitcoinBlock is an event type created for the Nostrocket
+	BitcoinBlock T = 1517
 	// LiveStream from zap.stream
 	LiveStream T = 1808
 	// ProblemTracker is an event type used by Nostrocket
@@ -79,8 +81,11 @@ const (
 	// text note or other human readable)
 	MemoryHole T = 1984
 	Reporting  T = 1984
-	// Label is an event type that...
+	// Label is an event type has L and l tags, namespace and type - NIP-32
 	Label T = 1985
+	// RelayAccessControl is an event that adds or modifies the permissions of a
+	// user for accessing a relay, DRAFT number for replicatr
+	RelayAccessControl T = 3473
 	// CommunityPostApproval is an event type that...
 	CommunityPostApproval T = 4550
 	JobRequestStart       T = 5000

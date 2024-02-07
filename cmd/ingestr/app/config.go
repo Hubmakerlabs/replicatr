@@ -20,7 +20,9 @@ type Config struct {
 	PubkeyHex     string  `arg:"-" json:"-"`
 	SeckeyHex     string  `arg:"-" json:"-"`
 	Kinds         kinds.T `arg:"-k,--kinds" help:"comma separated list of kind numbers to ingest"`
-	Limit         int     `arg:"-l,--limit" help:"maximum of number of events to return for each hour long interval" default:"1000"`
+	Limit         int     `arg:"-l,--limit" help:"maximum of number of events to return for each interval" default:"1000"`
+	Interval      int64   `arg:"-i,--interval" help:"number of hours per interval of requests"`
+	Pause         int     `arg:"-p,--pause" help:"time in seconds to wait between requests"`
 }
 
 var defaultKinds = kinds.T{kind.TextNote}

@@ -8,7 +8,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/subscriptionoption"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 )
 
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a common API.
@@ -26,41 +25,42 @@ var _ RelayInterface = (*RelayWrapper)(nil)
 
 func (w RelayWrapper) Publish(c context.T, evt *event.T) (err error) {
 	var ch chan *event.T
+	defer close(ch)
 	if evt.Kind.IsEphemeral() {
 		// do not store ephemeral events
 		return nil
 	} else if evt.Kind.IsReplaceable() {
 		// replaceable event, delete before storing
-		ch, err = w.Store.QueryEvents(c, &filter.T{
-			Authors: []string{evt.PubKey},
-			Kinds:   kinds.T{evt.Kind},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to query before replacing: %w", err)
-		}
+		// ch, err = w.Store.QueryEvents(c, &filter.T{
+		// 	Authors: []string{evt.PubKey},
+		// 	Kinds:   kinds.T{evt.Kind},
+		// })
+		// if err != nil {
+		// 	return fmt.Errorf("failed to query before replacing: %w", err)
+		// }
 		if previous := <-ch; previous != nil && isOlder(previous, evt) {
-			if err := w.Store.DeleteEvent(c, previous); err != nil {
+			if err = w.Store.DeleteEvent(c, previous); err != nil {
 				return fmt.Errorf("failed to delete event for replacing: %w", err)
 			}
 		}
 	} else if evt.Kind.IsParameterizedReplaceable() {
 		// parameterized replaceable event, delete before storing
-		d := evt.Tags.GetFirst([]string{"d", ""})
-		if d != nil {
-			ch, err = w.Store.QueryEvents(c, &filter.T{
-				Authors: []string{evt.PubKey},
-				Kinds:   kinds.T{evt.Kind},
-				Tags:    filter.TagMap{"d": []string{d.Value()}},
-			})
-			if err != nil {
-				return fmt.Errorf("failed to query before parameterized replacing: %w", err)
-			}
-			if previous := <-ch; previous != nil && isOlder(previous, evt) {
-				if err = w.Store.DeleteEvent(c, previous); log.Fail(err) {
-					return fmt.Errorf("failed to delete event for parameterized replacing: %w", err)
-				}
+		// d := evt.Tags.GetFirst([]string{"d", ""})
+		// if d != nil {
+		// ch, err = w.Store.QueryEvents(c, &filter.T{
+		// 	Authors: []string{evt.PubKey},
+		// 	Kinds:   kinds.T{evt.Kind},
+		// 	Tags:    filter.TagMap{"d": []string{d.Value()}},
+		// })
+		// if err != nil {
+		// 	return fmt.Errorf("failed to query before parameterized replacing: %w", err)
+		// }
+		if previous := <-ch; previous != nil && isOlder(previous, evt) {
+			if err = w.Store.DeleteEvent(c, previous); log.Fail(err) {
+				return fmt.Errorf("failed to delete event for parameterized replacing: %w", err)
 			}
 		}
+		// }
 	}
 	if err = w.SaveEvent(c, evt); err != nil && !errors.Is(err, ErrDupEvent) {
 		return fmt.Errorf("failed to save: %w", err)

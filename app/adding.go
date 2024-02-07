@@ -41,7 +41,8 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		if ev.Kind.IsReplaceable() {
 			rl.T.Ln("replaceable event")
 			// replaceable event, delete before storing
-			for _, query := range rl.QueryEvents {
+			for i, query := range rl.QueryEvents {
+				rl.T.Ln("running query", i)
 				var ch chan *event.T
 				ch, err = query(c, &filter.T{
 					Authors: tag.T{ev.PubKey},
@@ -56,6 +57,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 					}
 				}
 			}
+			rl.T.Ln("finished replaceable event")
 		} else if ev.Kind.IsParameterizedReplaceable() {
 			rl.T.Ln("parameterized replaceable event")
 			// parameterized replaceable event, delete before storing
@@ -78,6 +80,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 				}
 			}
 		}
+		log.T.Ln("storing event")
 		// store
 		for i, store := range rl.StoreEvent {
 			rl.T.Ln("running event store function", i)

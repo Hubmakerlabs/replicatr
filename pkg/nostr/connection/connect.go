@@ -78,7 +78,8 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 	var flateWriter *wsflate.Writer
 	if enableCompression {
 		flateWriter = wsflate.NewWriter(nil, func(w io.Writer) wsflate.Compressor {
-			fw, err := flate.NewWriter(w, 4)
+			var fw *flate.Writer
+			fw, err = flate.NewWriter(w, 4)
 			if log.Fail(err) {
 				log.E.F("Failed to create flate writer: %v", err)
 			}
@@ -104,20 +105,20 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 func (c *C) WriteMessage(data []byte) (err error) {
 	if c.msgState.IsCompressed() && c.enableCompression {
 		c.flateWriter.Reset(c.writer)
-		if _, err := io.Copy(c.flateWriter, bytes.NewReader(data)); log.Fail(err) {
+		if _, err = io.Copy(c.flateWriter, bytes.NewReader(data)); log.Fail(err) {
 			return fmt.Errorf("failed to write message: %w", err)
 		}
 
-		if err := c.flateWriter.Close(); log.Fail(err) {
+		if err = c.flateWriter.Close(); log.Fail(err) {
 			return fmt.Errorf("failed to close flate writer: %w", err)
 		}
 	} else {
-		if _, err := io.Copy(c.writer, bytes.NewReader(data)); log.Fail(err) {
+		if _, err = io.Copy(c.writer, bytes.NewReader(data)); log.Fail(err) {
 			return fmt.Errorf("failed to write message: %w", err)
 		}
 	}
 
-	if err := c.writer.Flush(); log.Fail(err) {
+	if err = c.writer.Flush(); log.Fail(err) {
 		return fmt.Errorf("failed to flush writer: %w", err)
 	}
 
@@ -134,7 +135,7 @@ func (c *C) ReadMessage(cx context.T, buf io.Writer) (err error) {
 		var h ws.Header
 		h, err = c.reader.NextFrame()
 		if log.Fail(err) {
-			c.Conn.Close()
+			log.Fail(c.Conn.Close())
 			return fmt.Errorf("failed to advance frame: %w", err)
 		}
 
@@ -147,18 +148,18 @@ func (c *C) ReadMessage(cx context.T, buf io.Writer) (err error) {
 			break
 		}
 
-		if err := c.reader.Discard(); err != nil {
+		if err = c.reader.Discard(); err != nil {
 			return fmt.Errorf("failed to discard: %w", err)
 		}
 	}
 
 	if c.msgState.IsCompressed() && c.enableCompression {
 		c.flateReader.Reset(c.reader)
-		if _, err := io.Copy(buf, c.flateReader); log.Fail(err) {
+		if _, err = io.Copy(buf, c.flateReader); log.Fail(err) {
 			return fmt.Errorf("failed to read message: %w", err)
 		}
 	} else {
-		if _, err := io.Copy(buf, c.reader); err != nil {
+		if _, err = io.Copy(buf, c.reader); err != nil {
 			return fmt.Errorf("failed to read message: %w", err)
 		}
 	}

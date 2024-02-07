@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
@@ -44,7 +45,7 @@ func Ingest(args *Config) int {
 	oldest := args.Since
 	now := time.Now().Unix()
 	var downAuthed, upAuthed bool
-	var increment int64 = 60 * 60
+	var increment int64 = 60 * 60 * args.Interval
 	for i := oldest; i < now; i += increment {
 		// create the subscription to the download relay
 		var sub *subscription.T
@@ -106,6 +107,12 @@ func Ingest(args *Config) int {
 				}
 				count++
 				if err = upRelay.Publish(uc, ev); log.Fail(err) {
+					log.D.Ln(upAuthed)
+					if strings.Contains(err.Error(), "connection closed") {
+						if upRelay, err = relay.Connect(c, args.UploadRelay); log.E.Chk(err) {
+							return 1
+						}
+					}
 					if !upAuthed {
 						// this can fail once
 						select {
@@ -117,23 +124,23 @@ func Ingest(args *Config) int {
 								return 1
 							}
 							upAuthed = true
-							if err = upRelay.Publish(uc, ev); log.Fail(err) {
-								return 1
-							}
-						case <-time.After(2 * time.Second):
+							// if err = upRelay.Publish(uc, ev); log.Fail(err) {
+							// 	return 1
+							// }
+						case <-time.After(5 * time.Second):
 							log.E.Ln("timed out waiting to auth")
 							return 1
 						}
 						log.I.Ln("authed")
 						return 0
-					} else {
-						if err = upRelay.Publish(uc, ev); log.Fail(err) {
-							return 1
-						}
+					}
+					if err = upRelay.Publish(uc, ev); log.Fail(err) {
+						return 1
 					}
 				}
 			}
 		}
+		time.Sleep(time.Duration(args.Pause) * time.Second)
 	}
 	log.I.Ln("ingested", count, "events from", args.DownloadRelay, "and sent to", args.UploadRelay)
 	return 0

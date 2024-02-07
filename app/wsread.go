@@ -49,7 +49,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		var typ int
 		var message []byte
 		typ, message, err = p.conn.ReadMessage()
-		if err != nil {
+		if log.Fail(err) {
 			if websocket.IsUnexpectedCloseError(
 				err,
 				websocket.CloseNormalClosure,    // 1000
