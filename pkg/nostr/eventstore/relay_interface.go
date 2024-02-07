@@ -24,12 +24,12 @@ type RelayWrapper struct {
 var _ RelayInterface = (*RelayWrapper)(nil)
 
 func (w RelayWrapper) Publish(c context.T, evt *event.T) (err error) {
-	var ch chan *event.T
-	defer close(ch)
+	// var ch chan *event.T
+	// defer close(ch)
 	if evt.Kind.IsEphemeral() {
 		// do not store ephemeral events
 		return nil
-	} else if evt.Kind.IsReplaceable() {
+		// } else if evt.Kind.IsReplaceable() {
 		// replaceable event, delete before storing
 		// ch, err = w.Store.QueryEvents(c, &filter.T{
 		// 	Authors: []string{evt.PubKey},
@@ -38,12 +38,12 @@ func (w RelayWrapper) Publish(c context.T, evt *event.T) (err error) {
 		// if err != nil {
 		// 	return fmt.Errorf("failed to query before replacing: %w", err)
 		// }
-		if previous := <-ch; previous != nil && isOlder(previous, evt) {
-			if err = w.Store.DeleteEvent(c, previous); err != nil {
-				return fmt.Errorf("failed to delete event for replacing: %w", err)
-			}
-		}
-	} else if evt.Kind.IsParameterizedReplaceable() {
+		// if previous := <-ch; previous != nil && isOlder(previous, evt) {
+		// 	if err = w.Store.DeleteEvent(c, previous); err != nil {
+		// 		return fmt.Errorf("failed to delete event for replacing: %w", err)
+		// 	}
+		// }
+		// } else if evt.Kind.IsParameterizedReplaceable() {
 		// parameterized replaceable event, delete before storing
 		// d := evt.Tags.GetFirst([]string{"d", ""})
 		// if d != nil {
@@ -55,11 +55,11 @@ func (w RelayWrapper) Publish(c context.T, evt *event.T) (err error) {
 		// if err != nil {
 		// 	return fmt.Errorf("failed to query before parameterized replacing: %w", err)
 		// }
-		if previous := <-ch; previous != nil && isOlder(previous, evt) {
-			if err = w.Store.DeleteEvent(c, previous); log.Fail(err) {
-				return fmt.Errorf("failed to delete event for parameterized replacing: %w", err)
-			}
-		}
+		// if previous := <-ch; previous != nil && isOlder(previous, evt) {
+		// 	if err = w.Store.DeleteEvent(c, previous); log.Fail(err) {
+		// 		return fmt.Errorf("failed to delete event for parameterized replacing: %w", err)
+		// 	}
+		// }
 		// }
 	}
 	if err = w.SaveEvent(c, evt); err != nil && !errors.Is(err, ErrDupEvent) {

@@ -134,10 +134,10 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 				for _, itclose := range iteratorClosers {
 					itclose()
 				}
+				close(ch)
 				for _, q := range queries {
 					close(q.results)
 				}
-				close(ch)
 			}()
 
 			// first pass
