@@ -13,6 +13,7 @@ var serialDelete uint32 = 0
 func (b *Backend) DeleteEvent(c context.T, evt *event.T) (err error) {
 	deletionHappened := false
 
+	log.T.Ln("deleting event", evt.ToObject().String())
 	err = b.Update(func(txn *badger.Txn) (err error) {
 		idx := make([]byte, 1, 5)
 		idx[0] = rawEventStorePrefix
@@ -25,13 +26,14 @@ func (b *Backend) DeleteEvent(c context.T, evt *event.T) (err error) {
 		opts := badger.IteratorOptions{
 			PrefetchValues: false,
 		}
+		log.T.Ln("preparing new iterator")
 		it := txn.NewIterator(opts)
 		it.Seek(prefix)
 		if it.ValidForPrefix(prefix) {
 			idx = append(idx, it.Item().Key()[1+8:]...)
+			log.T.Ln("added found item")
 		}
 		it.Close()
-
 		// if no idx was found, end here, this event doesn't exist
 		if len(idx) == 1 {
 			return nil
@@ -42,7 +44,7 @@ func (b *Backend) DeleteEvent(c context.T, evt *event.T) (err error) {
 
 		// calculate all index keys we have for this event and delete them
 		for _, k := range getIndexKeysForEvent(evt, idx[1:]) {
-			if err := txn.Delete(k); err != nil {
+			if err = txn.Delete(k); err != nil {
 				return err
 			}
 		}

@@ -1,8 +1,6 @@
-package app
+package accesscontrol
 
 import (
-	"encoding/json"
-	"os"
 	"sync"
 	"time"
 )
@@ -20,7 +18,7 @@ const (
 	RoleReader        Role = "reader"
 )
 
-// UserID is the required data for an entry in AccessControl
+// UserID is the required data for an entry in T
 type UserID struct {
 	// Role is the type of permissions granted to the user
 	Role `json:"role"`
@@ -34,7 +32,7 @@ type UserID struct {
 	Expires time.Time
 }
 
-type AccessControl struct {
+type T struct {
 	// Owners can change the Administrators list and can request any event that
 	// would otherwise require auth (eg DMs between users) - the reason being
 	// that they ultimately can bypass anything built into this software anyway
@@ -50,16 +48,16 @@ type AccessControl struct {
 	PublicAuth bool `json:"public_auth_required,omitempty"`
 	// Access to this data must be mutual exclusive locked
 	// so concurrent threads can access and change this data without races.
-	mx sync.Mutex
+	sync.Mutex
 }
 
-// ACLClosure is a function type that can be used to inspect the user list. This
+// Closure is a function type that can be used to inspect the user list. This
 // is so that concurrent safety can be enforced.
-type ACLClosure func(list []*UserID)
+type Closure func(list []*UserID)
 
-func (ac *AccessControl) Get(r Role, fn ACLClosure) {
-	ac.mx.Lock()
-	defer ac.mx.Unlock()
+func (ac *T) Get(r Role, fn Closure) {
+	ac.Mutex.Lock()
+	defer ac.Mutex.Unlock()
 	var privList []*UserID
 	for _, u := range ac.Users {
 		if u.Role == r {
@@ -69,62 +67,21 @@ func (ac *AccessControl) Get(r Role, fn ACLClosure) {
 	fn(privList)
 }
 
-// Enabled returns whether authentication is always required
-func (ac *AccessControl) Enabled() bool {
-	ac.mx.Lock()
-	defer ac.mx.Unlock()
+// AuthRequired returns whether authentication is always required
+func (ac *T) AuthRequired() bool {
+	ac.Mutex.Lock()
+	defer ac.Mutex.Unlock()
 	return ac.PublicAuth
 }
 
-func (ac *AccessControl) GetPrivilege(key string) (r Role) {
-	ac.mx.Lock()
-	defer ac.mx.Unlock()
+func (ac *T) GetPrivilege(key string) (r Role) {
+	ac.Mutex.Lock()
+	defer ac.Mutex.Unlock()
 	for _, u := range ac.Users {
 		if u.PubKeyHex == key {
 			r = u.Role
 			break
 		}
-	}
-	return
-}
-
-func (rl *Relay) LoadACL(filename string) (err error) {
-	rl.AccessControl.mx.Lock()
-	var b []byte
-	if b, err = os.ReadFile(filename); rl.Fail(err) {
-		return
-	}
-	if err = json.Unmarshal(b, &rl.AccessControl); rl.Fail(err) {
-		return
-	}
-	rl.Log.T.F("read ACL config from file '%s'\n%s", filename, string(b))
-	rl.AccessControl.mx.Unlock()
-	var owners int
-	rl.AccessControl.Get(RoleOwner, func(list []*UserID) {
-		for _, u := range list {
-			if u.Role == RoleOwner {
-				owners++
-			}
-		}
-	})
-	if owners < 1 {
-		rl.Log.W.Ln("no owners set in access control file:", filename,
-			"remote access to change administrators/readers/writers disabled")
-	}
-	rl.Info.Limitation.AuthRequired = rl.AccessControl.PublicAuth || rl.Info.Limitation.AuthRequired
-	return
-}
-
-func (rl *Relay) SaveACL(filename string) (err error) {
-	rl.AccessControl.mx.Lock()
-	defer rl.AccessControl.mx.Unlock()
-	var b []byte
-	if b, err = json.MarshalIndent(rl.AccessControl, "", "\t"); rl.Fail(err) {
-		return
-	}
-	rl.T.F("writing ACL config to file '%s'\n%s", filename, string(b))
-	if err = os.WriteFile(filename, b, 0700); rl.Fail(err) {
-		return
 	}
 	return
 }

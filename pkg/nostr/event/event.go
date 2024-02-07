@@ -88,7 +88,7 @@ func (ev *T) ToCanonical() (o array.T) {
 func (ev *T) GetIDBytes() []byte {
 	canonical := ev.ToCanonical().Bytes()
 	h := Hash(canonical)
-	log.D.Ln(hex.Enc(h), string(canonical))
+	// log.T.Ln(string(canonical))
 	return h
 }
 

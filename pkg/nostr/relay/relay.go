@@ -110,7 +110,7 @@ func NewRelay(c context.T, url string, opts ...Option) *T {
 // connected, cancelling ctx has no effect. To close the connection, call
 // r.Close().
 func Connect(c context.T, url string, opts ...Option) (*T, error) {
-	r := NewRelay(context.Bg(), url, opts...)
+	r := NewRelay(c, url, opts...)
 	err := r.Connect(c)
 	return r, err
 }
@@ -287,7 +287,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 				s.DispatchEvent(env.Event)
 			}
 		case *eoseenvelope.T:
-			log.D.Ln("eose", r.Subscriptions.Size())
+			log.T.Ln("eose", r.Subscriptions.Size())
 			if s, ok := r.Subscriptions.Load(env.Sub.String()); ok {
 				log.T.Ln("dispatching eose", env.Sub.String())
 				s.DispatchEose()
@@ -378,9 +378,10 @@ func (r *T) publish(c context.T, id string, env enveloper.I) error {
 	defer r.okCallbacks.Delete(id)
 
 	// publish event
-	envb, _ := env.MarshalJSON()
-	log.D.F("{%s} sending %v", r.URL(), string(envb))
-	if err := <-r.Write(envb); err != nil {
+	var enb []byte
+	enb, err = env.MarshalJSON()
+	log.D.F("{%s} sending %v", r.URL(), string(enb))
+	if err = <-r.Write(enb); err != nil {
 		return err
 	}
 

@@ -111,7 +111,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			// this always returns "blocked: " whenever it returns an error
 			err = rl.handleDeleteRequest(c, env.Event)
 		} else {
-			rl.T.Ln("adding event")
+			rl.T.Ln("adding event", env.Event.ToObject().String())
 			// this will also always return a prefixed reason
 			err = rl.AddEvent(c, env.Event)
 		}
@@ -200,7 +200,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	case *closeenvelope.T:
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
-		log.D.Ln("received auth response")
+		// log.T.Ln("received auth response")
 		wsBaseUrl := strings.Replace(rl.ServiceURL, "http", "ws", 1)
 		var ok bool
 		var pubkey string
@@ -221,5 +221,5 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			))
 		}
 	}
-	rl.Fail(err)
+	rl.T.Chk(err)
 }

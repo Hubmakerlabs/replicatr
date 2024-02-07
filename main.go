@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/Hubmakerlabs/replicatr/app"
+	"github.com/Hubmakerlabs/replicatr/nostr/accesscontrol"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
@@ -31,7 +32,7 @@ func main() {
 	}
 	dataDir := filepath.Join(dataDirBase, args.Profile)
 	log.D.F("using profile directory: %s", args.Profile)
-	var ac *app.AccessControl
+	var ac *accesscontrol.T
 	if args.InitCfgCmd != nil {
 		// initialize configuration with whatever has been read from the CLI.
 		// include adding nip-11 configuration documents to this...
@@ -55,7 +56,7 @@ func main() {
 		Fees:           &nip11.Fees{},
 		Icon:           args.Icon,
 	}, args.Whitelist, ac)
-	aclPath := filepath.Join(dataDir, app.ACLfilename)
+	aclPath := filepath.Join(dataDir, accesscontrol.ACLfilename)
 	// initialise ACL if command is called. Note this will overwrite an existing
 	// configuration.
 	if args.InitACLCmd != nil {
@@ -63,10 +64,10 @@ func main() {
 			log.E.Ln("invalid owner public key")
 			os.Exit(1)
 		}
-		rl.AccessControl = &app.AccessControl{
-			Users: []*app.UserID{
+		rl.AccessControl = &accesscontrol.T{
+			Users: []*accesscontrol.UserID{
 				{
-					Role:      app.RoleOwner,
+					Role:      accesscontrol.RoleOwner,
 					PubKeyHex: args.InitACLCmd.Owner,
 				},
 			},
