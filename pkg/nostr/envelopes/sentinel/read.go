@@ -30,7 +30,7 @@ var approximateString = []byte("approximate")
 // This function exists because of the count and auth envelopes that have one
 // label but two distinct structures - they are different by the role of the
 // sender but need extra scanning to distinguish between them.
-func Read(buf *text.Buffer, match string) (env enveloper.I, e error) {
+func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 	// save the position before the comma for the Unmarshal processing.
 	pos := buf.Pos
 	// For most labels there is only one expected type, so we just return an
@@ -61,35 +61,35 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, e error) {
 		// ParseEnvelope, which are not used there.
 		//
 		// Next, find the comma after the label.
-		if e = buf.ScanThrough(','); e != nil {
+		if err = buf.ScanThrough(','); err != nil {
 			return
 		}
 		// Next character we find will be open quotes for the subscription ID.
-		if e = buf.ScanThrough('"'); e != nil {
+		if err = buf.ScanThrough('"'); err != nil {
 			return
 		}
 		var sid []byte
 		// read the string
-		if sid, e = buf.ReadUntil('"'); log.Fail(e) {
-			e = fmt.Errorf("unterminated quotes in JSON, probably truncated read")
-			log.D.Ln(e)
+		if sid, err = buf.ReadUntil('"'); log.Fail(err) {
+			err = fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+			log.D.Ln(err)
 			return
 		}
 		s := subscriptionid.T(sid)
 		// next we need to determine whether this is a request or response
-		if e = buf.ScanUntil('{'); e != nil {
-			e = fmt.Errorf("event not found in event envelope")
-			log.D.Ln(e)
+		if err = buf.ScanUntil('{'); err != nil {
+			err = fmt.Errorf("event not found in event envelope")
+			log.D.Ln(err)
 			return
 		}
 		// as it is the simplest thing to look for, we search for a match on the
 		// count response, which has only two fields, "count" and "approximate".
-		if e = buf.ScanThrough('"'); e != nil {
+		if err = buf.ScanThrough('"'); err != nil {
 			return
 		}
 		var bb []byte
-		if bb, e = buf.ReadUntil('"'); log.Fail(e) {
-			e = fmt.Errorf("unknown object in count envelope '%s'",
+		if bb, err = buf.ReadUntil('"'); log.Fail(err) {
+			err = fmt.Errorf("unknown object in count envelope '%s'",
 				buf.String())
 			return
 		}
@@ -124,11 +124,11 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, e error) {
 		// this has two subtypes, a request and a response, but backwards, the
 		// challenge is from a relay, and the response is from a client
 		// Next, find the comma after the label
-		if e = buf.ScanThrough(','); e != nil {
+		if err = buf.ScanThrough(','); err != nil {
 			return
 		}
 		var which byte
-		if which, e = buf.ScanForOneOf(false, '{', '"'); log.Fail(e) {
+		if which, err = buf.ScanForOneOf(false, '{', '"'); log.Fail(err) {
 			return
 		}
 		switch which {
@@ -137,16 +137,16 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, e error) {
 		case '{':
 			env = &authenvelope.Response{}
 		default:
-			e = fmt.Errorf("auth envelope malformed: '%s'", buf.String())
-			log.D.Ln(e)
+			err = fmt.Errorf("auth envelope malformed: '%s'", buf.String())
+			log.D.Ln(err)
 			return
 		}
 	default:
 		// this should not happen so it is an error
-		e = fmt.Errorf("unable to match envelope '%s': '%s'", match, buf)
+		err = fmt.Errorf("unable to match envelope '%s': '%s'", match, buf)
 		return
 	}
 	buf.Pos = pos
-	e = env.Unmarshal(buf)
+	err = env.Unmarshal(buf)
 	return
 }

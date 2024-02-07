@@ -15,36 +15,37 @@ func Validate(evt *event.T, challenge string,
 	relayURL string) (pubkey string, ok bool) {
 
 	if evt.Kind != kind.ClientAuthentication {
-		return "", false
+		return
 	}
 	if evt.Tags.GetFirst([]string{"challenge", challenge}) == nil {
-		return "", false
+		return
 	}
 	var expected, found *url.URL
-	var e error
-	expected, e = parseURL(relayURL)
-	if e != nil {
-		return "", false
+	var err error
+	expected, err = parseURL(relayURL)
+	if err != nil {
+		return
 	}
-	found, e = parseURL(evt.Tags.GetFirst([]string{"relay", ""}).Value())
-	if e != nil {
-		return "", false
+	found, err = parseURL(evt.Tags.GetFirst([]string{"relay", ""}).Value())
+	if err != nil {
+		return
 	}
 	if expected.Scheme != found.Scheme ||
 		expected.Host != found.Host ||
 		expected.Path != found.Path {
-		return "", false
+		return
 	}
 	now := time.Now()
 	if evt.CreatedAt.Time().After(now.Add(10*time.Minute)) ||
 		evt.CreatedAt.Time().Before(now.Add(-10*time.Minute)) {
 
-		return "", false
+		return
 	}
-	if ok, e = evt.CheckSignature(); !ok || log.Fail(e) {
-		return "", false
+	if ok, err = evt.CheckSignature(); !ok || log.Fail(err) {
+		return
 	}
-	return evt.PubKey, true
+	pubkey = evt.PubKey
+	return
 }
 
 // helper function for Validate.

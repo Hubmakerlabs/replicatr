@@ -70,7 +70,7 @@ type UnmarshalingFilter struct {
 	Search  string        `json:"search,omitempty"`
 }
 
-func CopyUnmarshalFilterToFilter(uf *UnmarshalingFilter, f *T) (e error) {
+func CopyUnmarshalFilterToFilter(uf *UnmarshalingFilter, f *T) (err error) {
 	if uf == nil {
 		return fmt.Errorf("cannot copy from nil UnmarshalingFilter")
 	}

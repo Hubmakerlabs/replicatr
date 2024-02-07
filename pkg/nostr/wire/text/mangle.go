@@ -22,25 +22,25 @@ func NewBuffer(b []byte) (buf *Buffer) {
 }
 
 // Read the next byte out of the buffer or return io.EOF if there is no more.
-func (b *Buffer) Read() (bb byte, e error) {
+func (b *Buffer) Read() (bb byte, err error) {
 	if b.Pos < len(b.Buf) {
 		bb = b.Buf[b.Pos]
 		b.Pos++
 	} else {
-		e = io.EOF
+		err = io.EOF
 	}
 	return
 }
 
 // Write a byte into the next index of the buffer or return io.EOF if there is
 // no space left.
-func (b *Buffer) Write(bb byte) (e error) {
+func (b *Buffer) Write(bb byte) (err error) {
 	// log.D.F("writing >%s<", string(bb))
 	if b.Pos < len(b.Buf) {
 		b.Buf[b.Pos] = bb
 		b.Pos++
 	} else {
-		e = io.EOF
+		err = io.EOF
 	}
 	return
 }
@@ -64,32 +64,32 @@ func (b *Buffer) Write(bb byte) (e error) {
 //
 // If the character is `"` then any `"` with a `\` before it is ignored (and
 // included in the returned slice).
-func (b *Buffer) ReadUntil(c byte) (bb []byte, e error) {
+func (b *Buffer) ReadUntil(c byte) (bb []byte, err error) {
 	return b.Scan(c, false, true)
 }
 
 // ReadThrough is the same as ReadUntil except it returns a slice *including*
 // the character being sought.
-func (b *Buffer) ReadThrough(c byte) (bb []byte, e error) {
+func (b *Buffer) ReadThrough(c byte) (bb []byte, err error) {
 	return b.Scan(c, true, true)
 }
 
 // ScanUntil does the same as ReadUntil except it doesn't slice what it passed
 // over.
-func (b *Buffer) ScanUntil(c byte) (e error) {
-	_, e = b.Scan(c, false, false)
+func (b *Buffer) ScanUntil(c byte) (err error) {
+	_, err = b.Scan(c, false, false)
 	return
 }
 
 // ScanThrough does the same as ScanUntil except it returns the next index
 // *after* the found item.
-func (b *Buffer) ScanThrough(c byte) (e error) {
-	_, e = b.Scan(c, true, false)
+func (b *Buffer) ScanThrough(c byte) (err error) {
+	_, err = b.Scan(c, true, false)
 	return
 }
 
 // Scan is the utility back end that does all the scan/read functionality
-func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
+func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, err error) {
 	bLen := len(b.Buf)
 	// log.D.F("Scan for '%s': %d '%s'", string(c), bLen, string(b.Buf[b.Pos:]))
 	var inQuotes bool
@@ -148,7 +148,7 @@ func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
 	}
 	// If we got to the end without a match, set the Pos to the end.
 	b.Pos = bLen
-	e = io.EOF
+	err = io.EOF
 	return
 }
 
@@ -159,12 +159,12 @@ func (b *Buffer) Scan(c byte, through, slice bool) (subSlice []byte, e error) {
 // Ignores anything within quotes.
 //
 // Useful for quickly finding a potentially valid array or object in JSON.
-func (b *Buffer) ReadEnclosed() (bb []byte, e error) {
+func (b *Buffer) ReadEnclosed() (bb []byte, err error) {
 	c := b.Buf[b.Pos]
 	bracketed := c == byte('[')
 	braced := c == '{'
 	if !bracketed && !braced {
-		e = fmt.Errorf("cursor of buffer not on open brace or bracket. found: '%s'",
+		err = fmt.Errorf("cursor of buffer not on open brace or bracket. found: '%s'",
 			string(c))
 		return
 	}
@@ -201,7 +201,7 @@ func (b *Buffer) ReadEnclosed() (bb []byte, e error) {
 			return
 		}
 	}
-	e = io.EOF
+	err = io.EOF
 	return
 }
 
@@ -211,9 +211,9 @@ func (b *Buffer) ReadEnclosed() (bb []byte, e error) {
 // quotes or braces but just to make it clear this is very bare.
 //
 // if through is set to true, the cursor is advanced to the next after the match
-func (b *Buffer) ScanForOneOf(through bool, c ...byte) (which byte, e error) {
+func (b *Buffer) ScanForOneOf(through bool, c ...byte) (which byte, err error) {
 	if len(c) < 2 {
-		e = fmt.Errorf("at least two bytes required for ScanUntilOneOf, " +
+		err = fmt.Errorf("at least two bytes required for ScanUntilOneOf, " +
 			"otherwise just use ScanUntil")
 		return
 	}
@@ -230,7 +230,7 @@ func (b *Buffer) ScanForOneOf(through bool, c ...byte) (which byte, e error) {
 			}
 		}
 	}
-	e = io.EOF
+	err = io.EOF
 	return
 }
 
@@ -244,38 +244,38 @@ func (b *Buffer) Head() []byte { return b.Buf[:b.Pos] }
 //
 // Returns io.EOF if the write would exceed the end of the buffer, and does not
 // perform the operation, nor move the cursor.
-func (b *Buffer) WriteBytes(bb []byte) (e error) {
+func (b *Buffer) WriteBytes(bb []byte) (err error) {
 	if len(bb) == 0 {
 		return
 	}
-	log.D.F("buf len: %d, pos: %d writing %d '%s'", len(b.Buf), b.Pos, len(bb),
-		string(bb))
+	// log.T.F("buf len: %d, pos: %d writing %d '%s'", len(b.Buf), b.Pos, len(bb),
+	// 	string(bb))
 	until := b.Pos + len(bb)
 	if until <= len(b.Buf) {
 		copy(b.Buf[b.Pos:until], bb)
 		b.Pos = until
 	} else {
-		e = io.EOF
+		err = io.EOF
 	}
 	return
 }
 
 // ReadBytes returns the specified number of byte, and advances the cursor, or
 // io.EOF if there isn't this much remaining after the cursor.
-func (b *Buffer) ReadBytes(count int) (bb []byte, e error) {
+func (b *Buffer) ReadBytes(count int) (bb []byte, err error) {
 	until := b.Pos + count
 	if until < len(b.Buf) {
 		bb = b.Buf[b.Pos:until]
 		b.Pos = until
 	} else {
-		e = io.EOF
+		err = io.EOF
 	}
 	return
 }
 
 // Copy a given length of bytes starting at src position to dest position, and
 // move the cursor to the end of the written segment.
-func (b *Buffer) Copy(length, src, dest int) (e error) {
+func (b *Buffer) Copy(length, src, dest int) (err error) {
 	// Zero length is a no-op.
 	if length == 0 {
 		return

@@ -12,7 +12,7 @@ type T string
 
 func (si T) String() string { return string(si) }
 
-func (si T) MarshalJSON() (b []byte, e error) {
+func (si T) MarshalJSON() (b []byte, err error) {
 	return text.EscapeJSONStringAndWrap(string(si)), nil
 }
 

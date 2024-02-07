@@ -2,6 +2,7 @@ package subscription
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -16,10 +17,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/subscriptionoption"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log = slog.New(os.Stderr)
 
 type T struct {
 	Label   string
@@ -89,7 +90,7 @@ func (sub *T) Start() {
 }
 
 func (sub *T) DispatchEvent(evt *event.T) {
-	log.D.Ln("dispatching event to channel")
+	log.T.Ln("dispatching event to channel")
 	added := false
 	if !sub.eosed.Load() {
 		sub.storedwg.Add(1)
@@ -111,6 +112,7 @@ func (sub *T) DispatchEvent(evt *event.T) {
 }
 
 func (sub *T) DispatchEose() {
+	log.D.Ln("dispatch EOSE")
 	if sub.eosed.CompareAndSwap(false, true) {
 		go func() {
 			sub.storedwg.Wait()
@@ -156,8 +158,8 @@ func (sub *T) Close() {
 
 // Sub sets sub.T and then calls sub.Fire(ctx).
 // The subscription will be closed if the context expires.
-func (sub *T) Sub(_ context.T, filters filters.T) {
-	sub.Filters = filters
+func (sub *T) Sub(_ context.T, f filters.T) {
+	sub.Filters = f
 	log.Fail(sub.Fire())
 }
 
@@ -169,20 +171,20 @@ func (sub *T) Fire() error {
 	if sub.CountResult == nil {
 		reqb, _ = (&reqenvelope.T{
 			SubscriptionID: subscriptionid.T(id),
-			T:              sub.Filters,
+			Filters:        sub.Filters,
 		}).MarshalJSON()
 	} else {
 		reqb, _ = (&countenvelope.Request{
-			ID: subscriptionid.T(id),
-			T:  sub.Filters,
+			ID:      subscriptionid.T(id),
+			Filters: sub.Filters,
 		}).MarshalJSON()
 	}
-	log.D.F("{%s} sending %v", sub.Relay.URL(), string(reqb))
+	log.T.F("{%s} sending %v", sub.Relay.URL(), string(reqb))
 
 	sub.live.Store(true)
-	if e := <-sub.Relay.Write(reqb); e != nil {
+	if err := <-sub.Relay.Write(reqb); err != nil {
 		sub.Cancel()
-		return fmt.Errorf("failed to write: %w", e)
+		return fmt.Errorf("failed to write: %w", err)
 	}
 
 	return nil

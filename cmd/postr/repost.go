@@ -17,12 +17,12 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Repost(cCtx *cli.Context) (e error) {
+func Repost(cCtx *cli.Context) (err error) {
 	id := cCtx.String("id")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	ev := &event.T{}
 	var sk, pub string
-	if pub, sk, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	ev.PubKey = pub
@@ -42,22 +42,22 @@ func Repost(cCtx *cli.Context) (e error) {
 	var first atomic.Bool
 	first.Store(true)
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		if first.Load() {
-			evs, e := rl.QuerySync(c, &f)
-			if log.Fail(e) {
+			evs, err := rl.QuerySync(c, &f)
+			if log.Fail(err) {
 				return true
 			}
 			for _, tmp := range evs {
 				ev.Tags = ev.Tags.AppendUnique(tag.T{"p", tmp.ID.String()})
 			}
 			first.Store(false)
-			if e = ev.Sign(sk); log.Fail(e) {
+			if err = ev.Sign(sk); log.Fail(err) {
 				return true
 			}
 		}
-		if e = rl.Publish(c, ev); log.Fail(e) {
-			log.D.Ln(rl.URL(), e)
+		if err = rl.Publish(c, ev); log.Fail(err) {
+			log.D.Ln(rl.URL(), err)
 		} else {
 			success.Add(1)
 		}

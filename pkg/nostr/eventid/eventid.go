@@ -5,7 +5,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()
@@ -19,22 +19,22 @@ func (ei T) String() string {
 }
 
 func (ei T) Bytes() (b []byte) {
-	var e error
-	if b, e = hex.Dec(string(ei)); log.E.Chk(e) {
+	var err error
+	if b, err = hex.Dec(string(ei)); log.E.Chk(err) {
 		return
 	}
 	return
 }
 
-func (ei T) MarshalJSON() (b []byte, e error) {
+func (ei T) MarshalJSON() (b []byte, err error) {
 	return text.EscapeJSONStringAndWrap(string(ei)), nil
 }
 
 // New inspects a string and ensures it is a valid, 64 character long
 // hexadecimal string, returns the string coerced to the type.
-func New(s string) (ei T, e error) {
+func New(s string) (ei T, err error) {
 	ei = T(s)
-	if e = ei.Validate(); log.Fail(e) {
+	if err = ei.Validate(); log.Fail(err) {
 
 		// clear the result since it failed.
 		ei = ei[:0]
@@ -44,10 +44,10 @@ func New(s string) (ei T, e error) {
 }
 
 // Validate checks the T string is valid hex and 64 characters long.
-func (ei T) Validate() (e error) {
+func (ei T) Validate() (err error) {
 
 	// Check the string decodes as valid hexadecimal.
-	if _, e = hex.Dec(string(ei)); e != nil {
+	if _, err = hex.Dec(string(ei)); err != nil {
 		return
 	}
 

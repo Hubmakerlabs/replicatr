@@ -10,7 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()
@@ -36,13 +36,13 @@ func (env *T) UnmarshalJSON(bytes []byte) error {
 // NewEventEnvelope builds an T from a provided T
 // string and pointer to an T, and returns either the T or an
 // error if the Subscription ID is invalid or the T is nil.
-func NewEventEnvelope(si string, ev *event.T) (ee *T, e error) {
+func NewEventEnvelope(si string, ev *event.T) (ee *T, err error) {
 	var sid subscriptionid.T
-	if sid, e = subscriptionid.New(si); log.Fail(e) {
+	if sid, err = subscriptionid.New(si); log.Fail(err) {
 		return
 	}
 	if ev == nil {
-		e = fmt.Errorf("cannot make event envelope with nil event")
+		err = fmt.Errorf("cannot make event envelope with nil event")
 		return
 	}
 	return &T{SubscriptionID: sid, Event: ev}, nil
@@ -67,20 +67,20 @@ func (env *T) Bytes() (s []byte) { return env.ToArray().Bytes() }
 func (env *T) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
 
 // Unmarshal the envelope.
-func (env *T) Unmarshal(buf *text.Buffer) (e error) {
+func (env *T) Unmarshal(buf *text.Buffer) (err error) {
 	if env == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label (note we aren't checking that only
 	// whitespace intervenes because laziness, usually this is the very next
 	// character).
-	if e = buf.ScanUntil(','); log.D.Chk(e) {
+	if err = buf.ScanUntil(','); log.D.Chk(err) {
 		return
 	}
 	// Next character we find will be open quotes for the subscription ID, or
 	// the open brace of the embedded event.
 	var matched byte
-	if matched, e = buf.ScanForOneOf(false, '"', '{'); log.D.Chk(e) {
+	if matched, err = buf.ScanForOneOf(false, '"', '{'); log.D.Chk(err) {
 		return
 	}
 	if matched == '"' {
@@ -88,38 +88,38 @@ func (env *T) Unmarshal(buf *text.Buffer) (e error) {
 		buf.Pos++
 		var sid []byte
 		// Read the string.
-		if sid, e = buf.ReadUntil('"'); log.D.Chk(e) {
+		if sid, err = buf.ReadUntil('"'); log.D.Chk(err) {
 			return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 		}
 		env.SubscriptionID = subscriptionid.T(sid[:])
 		// Next, find the comma after the subscription ID (note we aren't checking
 		// that only whitespace intervenes because laziness, usually this is the
 		// very next character).
-		if e = buf.ScanUntil(','); log.D.Chk(e) {
+		if err = buf.ScanUntil(','); log.D.Chk(err) {
 			return fmt.Errorf("event not found in event envelope")
 		}
 	}
 	// find the opening brace of the event object, usually this is the very next
 	// character, we aren't checking for valid whitespace because laziness.
-	if e = buf.ScanUntil('{'); log.D.Chk(e) {
+	if err = buf.ScanUntil('{'); log.D.Chk(err) {
 		return fmt.Errorf("event not found in event envelope")
 	}
 	// now we should have an event object next. It has no embedded object so it
 	// should end with a close brace. This slice will be wrapped in braces and
 	// contain paired brackets, braces and quotes.
 	var eventObj []byte
-	if eventObj, e = buf.ReadEnclosed(); log.Fail(e) {
+	if eventObj, err = buf.ReadEnclosed(); log.Fail(err) {
 		return
 	}
 	// allocate an event to unmarshal into
 	env.Event = &event.T{}
-	if e = json.Unmarshal(eventObj, env.Event); log.Fail(e) {
+	if err = json.Unmarshal(eventObj, env.Event); log.Fail(err) {
 		log.D.S(string(eventObj))
 		return
 	}
 	// technically we maybe should read ahead further to make sure the JSON
 	// closes correctly. Not going to abort because of this.
-	if e = buf.ScanUntil(']'); log.D.Chk(e) {
+	if err = buf.ScanUntil(']'); log.D.Chk(err) {
 		return fmt.Errorf("malformed JSON, no closing bracket on array")
 	}
 	// whatever remains doesn't matter as the envelope has fully unmarshaled.

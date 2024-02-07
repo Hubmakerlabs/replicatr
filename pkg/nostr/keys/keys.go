@@ -7,17 +7,17 @@ import (
 	"math/big"
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/ec"
-	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
+	"mleku.online/git/ec"
+	"mleku.online/git/ec/schnorr"
 )
 
 func GeneratePrivateKey() string {
-	params := btcec.S256().Params()
+	params := ec.S256().Params()
 	one := new(big.Int).SetInt64(1)
 
 	b := make([]byte, params.BitSize/8+8)
-	if _, e := io.ReadFull(rand.Reader, b); e != nil {
+	if _, err := io.ReadFull(rand.Reader, b); err != nil {
 		return ""
 	}
 
@@ -30,16 +30,16 @@ func GeneratePrivateKey() string {
 }
 
 func GetPublicKey(sk string) (string, error) {
-	b, e := hex.Dec(sk)
-	if e != nil {
-		return "", e
+	b, err := hex.Dec(sk)
+	if err != nil {
+		return "", err
 	}
 
-	_, pk := btcec.PrivKeyFromBytes(b)
+	_, pk := ec.PrivKeyFromBytes(b)
 	return hex.Enc(schnorr.SerializePubKey(pk)), nil
 }
 
-func IsValidPublicKeyHex(pk string) bool {
+func IsValid32ByteHex(pk string) bool {
 	if strings.ToLower(pk) != pk {
 		return false
 	}

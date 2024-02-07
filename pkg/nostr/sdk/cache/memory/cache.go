@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	ristretto "github.com/fiatjaf/generic-ristretto"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()
@@ -44,8 +44,8 @@ func shortUint64(idOrPubkey string) uint64 {
 		return 0
 	}
 	var b []byte
-	var e error
-	if b, e = hex.Dec(idOrPubkey[length-8:]); log.E.Chk(e) {
+	var err error
+	if b, err = hex.Dec(idOrPubkey[length-8:]); log.E.Chk(err) {
 		return 0
 	}
 	return uint64(binary.BigEndian.Uint32(b))
