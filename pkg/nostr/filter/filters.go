@@ -3,17 +3,19 @@ package filter
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"sort"
+	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log = slog.New(os.Stderr)
 
 // T is a query where one or all elements can be filled in.
 //
@@ -92,22 +94,22 @@ func (f *T) ToObject() (o object.T) {
 	return
 }
 
-func (f *T) MarshalJSON() (b []byte, e error) {
+func (f *T) MarshalJSON() (b []byte, err error) {
 	return f.ToObject().Bytes(), nil
 }
 
 // UnmarshalJSON correctly unpacks a JSON encoded T rolling up the Tags as
 // they should be.
-func (f *T) UnmarshalJSON(b []byte) (e error) {
+func (f *T) UnmarshalJSON(b []byte) (err error) {
 	if f == nil {
 		return fmt.Errorf("cannot unmarshal into nil T")
 	}
-	log.D.F("unmarshaling filter `%s`", b)
+	// // log.T.F("unmarshaling filter `%s`", b)
 	var uf UnmarshalingFilter
-	if e = json.Unmarshal(b, &uf); log.Fail(e) {
+	if err = json.Unmarshal(b, &uf); log.Fail(err) {
 		return
 	}
-	if e = CopyUnmarshalFilterToFilter(&uf, f); log.Fail(e) {
+	if err = CopyUnmarshalFilterToFilter(&uf, f); log.Fail(err) {
 		return
 	}
 	return
@@ -131,37 +133,41 @@ func (f *T) String() string {
 	return string(j)
 }
 
-func (f *T) Matches(event *event.T) bool {
-	if event == nil {
+func (f *T) Matches(ev *event.T) bool {
+	if ev == nil {
+		// log.T.F("nil event")
 		return false
 	}
-
-	if f.IDs != nil && !f.IDs.Contains(event.ID.String()) {
+	if len(f.IDs) > 0 && !f.IDs.Contains(ev.ID.String()) {
+		// log.T.F("no ids in filter match event\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 		return false
 	}
-
-	if f.Kinds != nil && !f.Kinds.Contains(event.Kind) {
+	if len(f.Kinds) > 0 && !f.Kinds.Contains(ev.Kind) {
+		// log.T.F("no matching kinds in filter\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 		return false
 	}
-
-	if f.Authors != nil && !f.Authors.Contains(event.PubKey) {
+	if len(f.Authors) > 0 && !f.Authors.Contains(ev.PubKey) {
+		// log.T.F("no matching authors in filter\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 		return false
 	}
-
-	for f, v := range f.Tags {
-		if v != nil && !event.Tags.ContainsAny(f, v) {
+	for ff, v := range f.Tags {
+		if strings.HasPrefix(ff, "#") {
+			ff = ff[1:]
+		}
+		if len(v) > 0 && !ev.Tags.ContainsAny(ff, v) {
+			// log.T.F("no matching tags in filter\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 			return false
 		}
+		// special case for p tags
 	}
-
-	if f.Since != nil && event.CreatedAt < timestamp.T(*f.Since) {
+	if f.Since != nil && ev.CreatedAt < timestamp.T(*f.Since) {
+		// log.T.F("event is older than since\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 		return false
 	}
-
-	if f.Until != nil && event.CreatedAt > timestamp.T(*f.Until) {
+	if f.Until != nil && ev.CreatedAt > timestamp.T(*f.Until) {
+		// log.T.F("event is newer than until\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 		return false
 	}
-
 	return true
 }
 

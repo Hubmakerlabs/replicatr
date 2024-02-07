@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()
@@ -44,9 +44,9 @@ func URL(u string) string {
 			return ""
 		}
 
-		port, e := strconv.ParseInt(split[1], 10, 64)
-		if e != nil {
-			log.D.F("Error normalizing URL '%s': %s", u, e)
+		port, err := strconv.ParseInt(split[1], 10, 64)
+		if err != nil {
+			log.D.F("Error normalizing URL '%s': %s", u, err)
 			// again, without an error we must return nil
 			return ""
 		}
@@ -71,10 +71,10 @@ func URL(u string) string {
 		strings.HasPrefix(u, "wss://")) {
 		u = "wss://" + u
 	}
-	var e error
+	var err error
 	var p *url.URL
-	p, e = url.Parse(u)
-	if e != nil {
+	p, err = url.Parse(u)
+	if err != nil {
 		return ""
 	}
 	// convert http/s to ws/s

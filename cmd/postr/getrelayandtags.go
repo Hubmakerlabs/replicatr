@@ -1,8 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
@@ -11,30 +9,17 @@ import (
 )
 
 func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
-	return func(c context.T, rl *relay.Relay) bool {
-		evs, e := rl.QuerySync(c, &filter.T{
+	return func(c context.T, rl *relay.T) bool {
+		evs, err := rl.QuerySync(c, &filter.T{
 			Kinds:   kinds.T{kind.FollowList},
 			Authors: []string{pub},
 			Limit:   1,
 		})
-		if log.Fail(e) {
+		if log.Fail(err) {
 			return true
 		}
-		log.D.Ln("evs", len(evs[0].Tags))
+		// log.D.S(evs)
 		for _, ev := range evs {
-			var rm Relays
-			if cfg.tempRelay == false {
-				if e = json.Unmarshal([]byte(ev.Content), &rm); log.Fail(e) {
-					// continue
-				} else {
-					for k, v1 := range cfg.Relays {
-						if v2, ok := rm[k]; ok {
-							v2.Search = v1.Search
-						}
-					}
-					cfg.Relays = rm
-				}
-			}
 			log.T.S(ev.Tags)
 			for _, tag := range ev.Tags {
 				if len(tag) >= 2 && tag[0] == "p" {
@@ -44,6 +29,23 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
 					cfg.Unlock()
 				}
 			}
+			// todo: this breaks the relay list so don't do it, must be some other
+			//  reason for it (getting relay lists?)
+			//
+			// if cfg.tempRelay == false {
+			// 	log.D.Ln(ev.Content)
+			// 	var rm Relays
+			// 	if err = json.Unmarshal([]byte(ev.Content), &rm); log.Fail(err) {
+			// 		// continue
+			// 	} else {
+			// 		for k, v1 := range cfg.Relays {
+			// 			if v2, ok := rm[k]; ok {
+			// 				v2.Search = v1.Search
+			// 			}
+			// 		}
+			// 		// cfg.Relays[rm]
+			// 	}
+			// }
 			// cfg.Lock()
 			// log.D.S(*m)
 			// cfg.Unlock()

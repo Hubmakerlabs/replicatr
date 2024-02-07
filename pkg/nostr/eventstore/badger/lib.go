@@ -6,6 +6,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/dgraph-io/badger/v4"
+	"mleku.online/git/slog"
 )
 
 const (
@@ -21,29 +22,29 @@ const (
 	indexTagAddrPrefix    byte = 8
 )
 
-var _ eventstore.Store = (*BadgerBackend)(nil)
+var _ eventstore.Store = (*Backend)(nil)
 
-type BadgerBackend struct {
+type Backend struct {
 	Path     string
 	MaxLimit int
-
+	*slog.Log
 	*badger.DB
 	seq *badger.Sequence
 }
 
-func (b *BadgerBackend) Init() (e error) {
-	db, e := badger.Open(badger.DefaultOptions(b.Path))
-	if e != nil {
-		return e
+func (b *Backend) Init() (err error) {
+	db, err := badger.Open(badger.DefaultOptions(b.Path))
+	if err != nil {
+		return err
 	}
 	b.DB = db
-	b.seq, e = db.GetSequence([]byte("events"), 1000)
-	if e != nil {
-		return e
+	b.seq, err = db.GetSequence([]byte("events"), 1000)
+	if err != nil {
+		return err
 	}
 
-	if e := b.runMigrations(); e != nil {
-		return fmt.Errorf("error running migrations: %w", e)
+	if err := b.runMigrations(); err != nil {
+		return fmt.Errorf("error running migrations: %w", err)
 	}
 
 	if b.MaxLimit == 0 {
@@ -53,12 +54,12 @@ func (b *BadgerBackend) Init() (e error) {
 	return nil
 }
 
-func (b *BadgerBackend) Close() {
+func (b *Backend) Close() {
 	log.E.Chk(b.DB.Close())
 	log.E.Chk(b.seq.Release())
 }
 
-func (b *BadgerBackend) Serial() []byte {
+func (b *Backend) Serial() []byte {
 	v, _ := b.seq.Next()
 	vb := make([]byte, 5)
 	vb[0] = rawEventStorePrefix

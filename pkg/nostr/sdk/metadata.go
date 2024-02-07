@@ -30,17 +30,17 @@ type ProfileMetadata struct {
 }
 
 func (p ProfileMetadata) Npub() string {
-	v, e := bech32encoding.EncodePublicKey(p.PubKey)
-	log.D.Chk(e)
+	v, err := bech32encoding.EncodePublicKey(p.PubKey)
+	log.D.Chk(err)
 	return v
 }
 
 func (p ProfileMetadata) Nprofile(c context.T, sys *System,
 	nrelays int) string {
 
-	v, e := bech32encoding.EncodeProfile(p.PubKey,
+	v, err := bech32encoding.EncodeProfile(p.PubKey,
 		sys.FetchOutboxRelays(c, p.PubKey))
-	log.D.Chk(e)
+	log.D.Chk(err)
 	return v
 }
 
@@ -55,7 +55,7 @@ func (p ProfileMetadata) ShortName() string {
 	return npub[0:7] + "…" + npub[58:]
 }
 
-func FetchProfileMetadata(c context.T, pool *pool.SimplePool,
+func FetchProfileMetadata(c context.T, pool *pool.Simple,
 	pubkey string, relays ...string) (pm *ProfileMetadata) {
 
 	c, cancel := context.Cancel(c)
@@ -66,27 +66,27 @@ func FetchProfileMetadata(c context.T, pool *pool.SimplePool,
 			Authors: []string{pubkey},
 			Limit:   1,
 		},
-	})
-	var e error
+	}, true)
+	var err error
 	for ie := range ch {
-		if pm, e = ParseMetadata(ie.T); !log.E.Chk(e) {
+		if pm, err = ParseMetadata(ie.Event); !log.E.Chk(err) {
 			return
 		}
 	}
 	return &ProfileMetadata{PubKey: pubkey}
 }
 
-func ParseMetadata(ev *event.T) (pm *ProfileMetadata, e error) {
+func ParseMetadata(ev *event.T) (pm *ProfileMetadata, err error) {
 	if ev.Kind != 0 {
-		e = fmt.Errorf("event %s is kind %d, not 0", ev.ID, ev.Kind)
+		err = fmt.Errorf("event %s is kind %d, not 0", ev.ID, ev.Kind)
 		return
-	} else if e = json.Unmarshal([]byte(ev.Content), &pm); log.Fail(e) {
+	} else if err = json.Unmarshal([]byte(ev.Content), &pm); log.Fail(err) {
 		cont := ev.Content
 		if len(cont) > 100 {
 			cont = cont[0:99]
 		}
-		e = fmt.Errorf("failed to parse metadata (%s) from event %s: %w",
-			cont, ev.ID, e)
+		err = fmt.Errorf("failed to parse metadata (%s) from event %s: %w",
+			cont, ev.ID, err)
 		return
 	}
 	pm.PubKey = ev.PubKey

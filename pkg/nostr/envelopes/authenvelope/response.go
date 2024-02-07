@@ -3,6 +3,7 @@ package authenvelope
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -11,10 +12,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log = slog.New(os.Stderr)
 
 type Response struct {
 	Event *event.T
@@ -51,38 +52,38 @@ func (a *Response) Bytes() []byte { return a.ToArray().Bytes() }
 
 func (a *Response) MarshalJSON() ([]byte, error) { return a.Bytes(), nil }
 
-func (a *Response) Unmarshal(buf *text.Buffer) (e error) {
-	log.D.F("AUTH '%s'", buf.Tail())
+func (a *Response) Unmarshal(buf *text.Buffer) (err error) {
+	// log.T.F("AUTH '%s'", buf.Tail())
 	if a == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
 	// Next, find the comma after the label (note we aren't checking that only
 	// whitespace intervenes because laziness, usually this is the very next
 	// character).
-	if e = buf.ScanUntil(','); e != nil {
+	if err = buf.ScanUntil(','); err != nil {
 		return fmt.Errorf("event field not found in auth envelope")
 	}
 	// find the opening brace of the event object, usually this is the very next
 	// character, we aren't checking for valid whitespace because laziness.
-	if e = buf.ScanUntil('{'); e != nil {
+	if err = buf.ScanUntil('{'); err != nil {
 		return fmt.Errorf("event not found in auth envelope")
 	}
 	// now we should have an event object next. It has no embedded object so it
 	// should end with a close brace. This slice will be wrapped in braces and
 	// contain paired brackets, braces and quotes.
 	var eventObj []byte
-	if eventObj, e = buf.ReadEnclosed(); log.Fail(e) {
+	if eventObj, err = buf.ReadEnclosed(); log.Fail(err) {
 		return fmt.Errorf("event not found in auth envelope")
 	}
 	// allocate an event to unmarshal into
 	a.Event = &event.T{}
-	if e = json.Unmarshal(eventObj, a.Event); log.Fail(e) {
+	if err = json.Unmarshal(eventObj, a.Event); log.Fail(err) {
 		log.D.S(string(eventObj))
 		return
 	}
 	// technically we maybe should read ahead further to make sure the JSON
 	// closes correctly. Not going to abort because of this.
-	if e = buf.ScanUntil(']'); e != nil {
+	if err = buf.ScanUntil(']'); err != nil {
 		return fmt.Errorf("malformed JSON, no closing bracket on array")
 	}
 	// whatever remains doesn't matter as the envelope has fully unmarshaled.

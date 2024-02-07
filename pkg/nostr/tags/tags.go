@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()
@@ -39,7 +39,7 @@ func (t T) GetLast(tagPrefix []string) *tag.T {
 }
 
 // GetAll gets all the tags that match the prefix, see [T.StartsWith]
-func (t T) GetAll(tagPrefix []string) T {
+func (t T) GetAll(tagPrefix ...string) T {
 	result := make(T, 0, len(t))
 	for _, v := range t {
 		if v.StartsWith(tagPrefix) {
@@ -76,7 +76,7 @@ func (t T) AppendUnique(tag tag.T) T {
 
 // Scan parses a string or raw bytes that should be a string and embeds the
 // values into the tags variable from which this method is invoked.
-func (t T) Scan(src any) (e error) {
+func (t T) Scan(src any) (err error) {
 	var jtags []byte
 	switch v := src.(type) {
 	case []byte:
@@ -86,8 +86,8 @@ func (t T) Scan(src any) (e error) {
 	default:
 		return errors.New("couldn'tag scan tag, it's not a json string")
 	}
-	e = json.Unmarshal(jtags, &t)
-	log.E.Chk(e)
+	err = json.Unmarshal(jtags, &t)
+	log.E.Chk(err)
 	return
 }
 

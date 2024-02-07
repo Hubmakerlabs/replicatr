@@ -8,18 +8,18 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *BadgerBackend) runMigrations() (e error) {
-	return b.Update(func(txn *badger.Txn) (e error) {
+func (b *Backend) runMigrations() (err error) {
+	return b.Update(func(txn *badger.Txn) (err error) {
 		var version uint16
 
 		var item *badger.Item
-		item, e = txn.Get([]byte{dbVersionKey})
-		if errors.Is(e, badger.ErrKeyNotFound) {
+		item, err = txn.Get([]byte{dbVersionKey})
+		if errors.Is(err, badger.ErrKeyNotFound) {
 			version = 0
-		} else if e != nil {
+		} else if err != nil {
 			return
 		} else {
-			log.E.Chk(item.Value(func(val []byte) (e error) {
+			log.E.Chk(item.Value(func(val []byte) (err error) {
 				version = binary.BigEndian.Uint16(val)
 				return nil
 			}))
@@ -47,11 +47,11 @@ func (b *BadgerBackend) runMigrations() (e error) {
 			}
 
 			if hasAnyEntries {
-				return fmt.Errorf("your database is at version %d, but " +
-					"in order to migrate up to version 3 you must " +
-					"manually export all the events and then import " +
-					"again: run an old version of this software, export " +
-					"the data, then delete the database files, run the " +
+				return fmt.Errorf("your database is at version %d, but "+
+					"in order to migrate up to version 3 you must "+
+					"manually export all the events and then import "+
+					"again: run an old version of this software, export "+
+					"the data, then delete the database files, run the "+
 					"new version, import the data back in", version)
 			}
 
@@ -66,7 +66,7 @@ func (b *BadgerBackend) runMigrations() (e error) {
 	})
 }
 
-func (b *BadgerBackend) bumpVersion(txn *badger.Txn, version uint16) (e error) {
+func (b *Backend) bumpVersion(txn *badger.Txn, version uint16) (err error) {
 	buf := make([]byte, 2)
 	binary.BigEndian.PutUint16(buf, version)
 	return txn.Set([]byte{dbVersionKey}, buf)

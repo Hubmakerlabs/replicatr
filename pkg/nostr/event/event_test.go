@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"testing"
 
-	secp256k1 "github.com/Hubmakerlabs/replicatr/pkg/ec/secp"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event/eventest"
@@ -15,7 +14,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	secp256k1 "mleku.online/git/ec/secp256k1"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()
@@ -44,7 +44,7 @@ handled, as well as a line break, a dangling space and a
 )
 
 func GenTextNote(sk *secp256k1.SecretKey, replyID,
-	relayURL string) (note string, e error) {
+	relayURL string) (note string, err error) {
 
 	// pick random quote to use in content field of event
 	src := rand.Intn(len(quotes.D))
@@ -64,7 +64,7 @@ func GenTextNote(sk *secp256k1.SecretKey, replyID,
 		Tags:      t,
 		Content:   quoteText,
 	}
-	if e = ev.SignWithSecKey(sk); log.Fail(e) {
+	if err = ev.SignWithSecKey(sk); log.Fail(err) {
 		return
 	}
 	note = ev.ToObject().String()
@@ -73,13 +73,13 @@ func GenTextNote(sk *secp256k1.SecretKey, replyID,
 
 func TestGenerateEvent(t *testing.T) {
 	// log2.SetLogLevel(log2.Debug)
-	var e error
+	var err error
 	var note, noteID, relayURL string
 	sec, pub := GetTestKeyPair()
 	_ = pub
 	for i := 0; i < 10; i++ {
-		if note, e = GenTextNote(sec, noteID, relayURL); log.Fail(e) {
-			t.Error(e)
+		if note, err = GenTextNote(sec, noteID, relayURL); log.Fail(err) {
+			t.Error(err)
 			t.FailNow()
 		}
 		log.D.Ln(note)
@@ -90,14 +90,14 @@ func TestEventSerialization(t *testing.T) {
 	for _, evt := range eventest.D {
 
 		var b []byte
-		var e error
+		var err error
 
-		b, e = json.Marshal(evt)
+		b, err = json.Marshal(evt)
 		// t.Log(string(b))
 		var re event.T
-		if e = json.Unmarshal(b, &re); e != nil {
+		if err = json.Unmarshal(b, &re); err != nil {
 			t.Log(string(b))
-			t.Error("failed to re parse event just serialized", e)
+			t.Error("failed to re parse event just serialized", err)
 		}
 
 		if evt.ID != re.ID || evt.PubKey != re.PubKey || evt.Content != re.Content ||

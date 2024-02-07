@@ -41,6 +41,8 @@ func (tp *Tp) T() T {
 // FromTime returns a T from a time.Time
 func FromTime(t time.Time) T { return T(t.Unix()) }
 
+func FromUnix(t int64) T { return T(t) }
+
 func (tp *Tp) String() string {
 	return fmt.Sprint(tp.T())
 }

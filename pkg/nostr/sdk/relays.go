@@ -20,7 +20,7 @@ type Relay struct {
 	Outbox bool
 }
 
-func FetchRelaysForPubkey(c context.T, pool *pool.SimplePool, pubkey string, relays ...string) (r []Relay) {
+func FetchRelaysForPubkey(c context.T, pool *pool.Simple, pubkey string, relays ...string) (r []Relay) {
 	c, cancel := context.Cancel(c)
 	defer cancel()
 	ch := pool.SubManyEose(c, relays, filters.T{
@@ -32,15 +32,15 @@ func FetchRelaysForPubkey(c context.T, pool *pool.SimplePool, pubkey string, rel
 			Authors: []string{pubkey},
 			Limit:   2,
 		},
-	})
+	}, true)
 	r = make([]Relay, 0, 20)
 	i := 0
 	for ie := range ch {
-		switch ie.T.Kind {
+		switch ie.Event.Kind {
 		case kind.RelayListMetadata:
-			r = append(r, ParseRelaysFromKind10002(ie.T)...)
+			r = append(r, ParseRelaysFromKind10002(ie.Event)...)
 		case kind.FollowList:
-			r = append(r, ParseRelaysFromKind3(ie.T)...)
+			r = append(r, ParseRelaysFromKind3(ie.Event)...)
 		}
 		i++
 		if i >= 2 {
@@ -80,8 +80,8 @@ func ParseRelaysFromKind3(evt *event.T) (r []Relay) {
 		Write bool `json:"write"`
 	}
 	items := make(map[string]Item, 20)
-	var e error
-	if e = json.Unmarshal([]byte(evt.Content), &items); log.Fail(e) {
+	var err error
+	if err = json.Unmarshal([]byte(evt.Content), &items); log.Fail(err) {
 		// shouldn't this be fatal?
 	}
 	r = make([]Relay, len(items))
@@ -106,8 +106,8 @@ func ParseRelaysFromKind3(evt *event.T) (r []Relay) {
 }
 
 func IsValidRelayURL(u string) bool {
-	parsed, e := url.Parse(u)
-	if log.Fail(e) {
+	parsed, err := url.Parse(u)
+	if log.Fail(err) {
 		return false
 	}
 	if parsed.Scheme != "wss" && parsed.Scheme != "ws" {

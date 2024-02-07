@@ -5,14 +5,18 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"mleku.online/git/slog"
 )
 
+var log = slog.New(os.Stderr)
+
 // Fetch fetches the NIP-11 Info.
-func Fetch(c context.T, u string) (info *Info, e error) {
+func Fetch(c context.T, u string) (info *Info, err error) {
 	if _, ok := c.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		var cancel context.F
@@ -24,8 +28,8 @@ func Fetch(c context.T, u string) (info *Info, e error) {
 	if !strings.HasPrefix(u, "http") && !strings.HasPrefix(u, "ws") {
 		u = "wss://" + u
 	}
-	p, e := url.Parse(u)
-	if e != nil {
+	p, err := url.Parse(u)
+	if err != nil {
 		return nil, fmt.Errorf("cannot parse url: %s", u)
 	}
 	if p.Scheme == "ws" {
@@ -35,21 +39,21 @@ func Fetch(c context.T, u string) (info *Info, e error) {
 	}
 	p.Path = strings.TrimRight(p.Path, "/")
 
-	req, e := http.NewRequestWithContext(c, http.MethodGet, p.String(), nil)
+	req, err := http.NewRequestWithContext(c, http.MethodGet, p.String(), nil)
 
 	// add the NIP-11 header
 	req.Header.Add("Accept", "application/nostr+json")
 
 	// send the request
-	resp, e := http.DefaultClient.Do(req)
-	if e != nil {
-		return nil, fmt.Errorf("request failed: %w", e)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	info = &Info{}
-	if e := json.NewDecoder(resp.Body).Decode(info); e != nil {
-		return nil, fmt.Errorf("invalid json: %w", e)
+	if err = json.NewDecoder(resp.Body).Decode(info); err != nil {
+		return nil, fmt.Errorf("invalid json: %w", err)
 	}
 
 	return info, nil

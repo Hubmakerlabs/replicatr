@@ -5,13 +5,14 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (e error) {
-	return b.Update(func(txn *badger.Txn) (e error) {
+func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
+	return b.Update(func(txn *badger.Txn) (err error) {
+		// b.T.S(evt)
 		// query event by id to ensure we don't save duplicates
 		id, _ := hex.Dec(evt.ID.String())
 		prefix := make([]byte, 1+8)
@@ -24,25 +25,27 @@ func (b *BadgerBackend) SaveEvent(c context.T, evt *event.T) (e error) {
 			// event exists
 			return eventstore.ErrDupEvent
 		}
-
+		b.T.Ln("encoding to binary")
 		// encode to binary
 		var bin []byte
-		if bin, e = nostr_binary.Marshal(evt); log.Fail(e) {
-			return e
+		if bin, err = nostrbinary.Marshal(evt); b.Fail(err) {
+			return err
 		}
-
+		// b.T.F("binary encoded %x", bin)
 		idx := b.Serial()
 		// raw event store
-		if e = txn.Set(idx, bin); e != nil {
-			return e
+		b.T.F("setting event")
+		if err = txn.Set(idx, bin); b.Fail(err) {
+			return err
 		}
-
+		b.T.F("get index keys for event")
 		for _, k := range getIndexKeysForEvent(evt, idx[1:]) {
-			if e = txn.Set(k, nil); e != nil {
-				return e
+			b.T.F("index key %x", k)
+			if err = txn.Set(k, nil); b.Fail(err) {
+				return err
 			}
 		}
-
+		b.T.F("event saved")
 		return nil
 	})
 }

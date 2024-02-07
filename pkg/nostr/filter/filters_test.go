@@ -11,9 +11,9 @@ import (
 func TestFilterString(t *testing.T) {
 	// check that array stringer and json.Marshal produce identical outputs
 	a := filtertest.D.ToArray().Bytes()
-	b, e := json.Marshal(filtertest.D)
-	if e != nil {
-		t.Fatal(e)
+	b, err := json.Marshal(filtertest.D)
+	if err != nil {
+		t.Fatal(err)
 	}
 	if len(a) != len(b) {
 		t.Fatal("outputs not the same length")
@@ -28,16 +28,16 @@ func TestFilterString(t *testing.T) {
 	// completely equal data.
 
 	var thing filters.T
-	if e = json.Unmarshal(b, &thing); e != nil {
-		t.Fatalf("error: %s", e.Error())
+	if err = json.Unmarshal(b, &thing); err != nil {
+		t.Fatalf("error: %s", err.Error())
 	}
 	b = thing.ToArray().Bytes()
 	t.Log("original", filtertest.D)
 	t.Log("mangled", thing)
 	var c []byte
-	c, e = json.Marshal(filtertest.D)
-	if e != nil {
-		t.Fatal(e)
+	c, err = json.Marshal(filtertest.D)
+	if err != nil {
+		t.Fatal(err)
 	}
 	for i := range a {
 		if a[i] != c[i] {

@@ -59,15 +59,15 @@ func TestObject2(t *testing.T) {
 	// object.T's order respecting properties.
 
 	var b []byte
-	var e error
-	b, e = json.Marshal(literalAsMapStringInterface)
-	if e != nil {
-		t.Fatal(e)
+	var err error
+	b, err = json.Marshal(literalAsMapStringInterface)
+	if err != nil {
+		t.Fatal(err)
 	}
 	t.Log(string(b)) // how this looks using the encoding/json map[string]interface{} convention
-	b, e = json.Marshal(literal2)
-	if e != nil {
-		t.Fatal(e)
+	b, err = json.Marshal(literal2)
+	if err != nil {
+		t.Fatal(err)
 	}
 	t.Log(string(b)) // just to show the underlying structure that makes K/V pairs as mangled by encoding/json.
 

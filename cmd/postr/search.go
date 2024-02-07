@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func Search(cCtx *cli.Context) (e error) {
+func Search(cCtx *cli.Context) (err error) {
 	n := cCtx.Int("n")
 	j := cCtx.Bool("json")
 	extra := cCtx.Bool("extra")
@@ -19,9 +19,9 @@ func Search(cCtx *cli.Context) (e error) {
 	if j && !extra {
 		followsMap = make(Follows)
 	} else {
-		followsMap, e = cfg.GetFollows(cCtx.String("a"))
-		if log.Fail(e) {
-			return e
+		followsMap, err = cfg.GetFollows(cCtx.String("a"), false)
+		if log.Fail(err) {
+			return err
 		}
 	}
 	// get timeline

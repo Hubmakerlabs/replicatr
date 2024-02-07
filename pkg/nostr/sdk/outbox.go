@@ -12,13 +12,13 @@ import (
 func (s *System) ExpandQueriesByAuthorAndRelays(
 	c context.T,
 	f *filter.T,
-) (filters map[*relay.Relay]*filter.T, e error) {
+) (filters map[*relay.T]*filter.T, err error) {
 
 	n := len(f.Authors)
 	if n == 0 {
 		return nil, fmt.Errorf("no authors in filter")
 	}
-	relaysForPubkey := make(map[string][]*relay.Relay, n)
+	relaysForPubkey := make(map[string][]*relay.T, n)
 	wg := sync.WaitGroup{}
 	wg.Add(n)
 	for _, pubkey := range f.Authors {
@@ -27,8 +27,8 @@ func (s *System) ExpandQueriesByAuthorAndRelays(
 			relayURLs := s.FetchOutboxRelays(c, pubkey)
 			c := 0
 			for _, r := range relayURLs {
-				var rl *relay.Relay
-				if rl, e = s.Pool.EnsureRelay(r); log.E.Chk(e) {
+				var rl *relay.T
+				if rl, err = s.Pool.EnsureRelay(r); log.E.Chk(err) {
 					continue
 				}
 				relaysForPubkey[pubkey] = append(relaysForPubkey[pubkey], rl)
@@ -40,7 +40,7 @@ func (s *System) ExpandQueriesByAuthorAndRelays(
 		}(pubkey)
 	}
 	wg.Wait()
-	filters = make(map[*relay.Relay]*filter.T, n) // { [relay]: filter }
+	filters = make(map[*relay.T]*filter.T, n) // { [relay]: filter }
 	for pubkey, relays := range relaysForPubkey {
 		for _, rl := range relays {
 			flt, ok := filters[rl]

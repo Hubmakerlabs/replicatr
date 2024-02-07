@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
+	"mleku.online/git/bech32"
 )
 
 const (
@@ -22,30 +22,30 @@ const (
 	NentityHRP  = "naddr"
 )
 
-func DecodeToString(bech32String string) (prefix, value string, e error) {
+func DecodeToString(bech32String string) (prefix, value string, err error) {
 	var s any
-	if prefix, s, e = Decode(bech32String); log.Fail(e) {
+	if prefix, s, err = Decode(bech32String); log.Fail(err) {
 		return
 	}
 	var ok bool
 	if value, ok = s.(string); ok {
 		return
 	}
-	e = fmt.Errorf("value was not decoded to a string, found type %s",
+	err = fmt.Errorf("value was not decoded to a string, found type %s",
 		reflect.TypeOf(s))
 	return
 }
 
-func Decode(bech32string string) (prefix string, value any, e error) {
+func Decode(bech32string string) (prefix string, value any, err error) {
 	var bits5 []byte
 	// log.D.Ln("decoding bech32", bech32string)
-	if prefix, bits5, e = bech32.DecodeNoLimit(bech32string); log.Fail(e) {
+	if prefix, bits5, err = bech32.DecodeNoLimit(bech32string); log.Fail(err) {
 		return
 	}
 	var data []byte
-	if data, e = bech32.ConvertBits(bits5, 5, 8, false); log.Fail(e) {
+	if data, err = bech32.ConvertBits(bits5, 5, 8, false); log.Fail(err) {
 		return prefix, nil, fmt.Errorf("failed translating data into 8 bits: %s",
-			e.Error())
+			err.Error())
 	}
 	switch prefix {
 	case NpubHRP, NsecHRP, NoteHRP:
@@ -150,50 +150,52 @@ func Decode(bech32string string) (prefix string, value any, e error) {
 	return prefix, data, fmt.Errorf("unknown tag %s", prefix)
 }
 
-func EncodePrivateKey(privateKeyHex string) (string, error) {
-	b, e := hex.Dec(privateKeyHex)
-	if e != nil {
-		return "", fmt.Errorf("failed to decode private key hex: %w", e)
+var EncodePrivateKey = EncodeSecretKey
+
+func EncodeSecretKey(privateKeyHex string) (string, error) {
+	b, err := hex.Dec(privateKeyHex)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode private key hex: %w", err)
 	}
-	bits5, e := bech32.ConvertBits(b, 8, 5, true)
-	if e != nil {
-		return "", e
+	bits5, err := bech32.ConvertBits(b, 8, 5, true)
+	if err != nil {
+		return "", err
 	}
 	return bech32.Encode(NsecHRP, bits5)
 }
 
-func EncodePublicKey(publicKeyHex string) (s string, e error) {
+func EncodePublicKey(publicKeyHex string) (s string, err error) {
 	var b []byte
-	if b, e = hex.Dec(publicKeyHex); log.Fail(e) {
-		e = fmt.Errorf("failed to decode public key hex: %w", e)
+	if b, err = hex.Dec(publicKeyHex); log.Fail(err) {
+		err = fmt.Errorf("failed to decode public key hex: %w", err)
 		return
 	}
 	var bits5 []byte
-	bits5, e = bech32.ConvertBits(b, 8, 5, true)
-	if e != nil {
-		return "", e
+	bits5, err = bech32.ConvertBits(b, 8, 5, true)
+	if err != nil {
+		return "", err
 	}
 	return bech32.Encode(NpubHRP, bits5)
 }
 
-func EncodeNote(eventIDHex string) (s string, e error) {
+func EncodeNote(eventIDHex string) (s string, err error) {
 	var b []byte
-	if b, e = hex.Dec(eventIDHex); log.Fail(e) {
-		e = fmt.Errorf("failed to decode event id hex: %w", e)
+	if b, err = hex.Dec(eventIDHex); log.Fail(err) {
+		err = fmt.Errorf("failed to decode event id hex: %w", err)
 		return
 	}
 	var bits5 []byte
-	if bits5, e = bech32.ConvertBits(b, 8, 5, true); log.Fail(e) {
+	if bits5, err = bech32.ConvertBits(b, 8, 5, true); log.Fail(err) {
 		return
 	}
 	return bech32.Encode(NoteHRP, bits5)
 }
 
-func EncodeProfile(publicKeyHex string, relays []string) (s string, e error) {
+func EncodeProfile(publicKeyHex string, relays []string) (s string, err error) {
 	buf := &bytes.Buffer{}
 	var pb []byte
-	if pb, e = hex.Dec(publicKeyHex); log.Fail(e) {
-		e = fmt.Errorf("invalid pubkey '%s': %w", publicKeyHex, e)
+	if pb, err = hex.Dec(publicKeyHex); log.Fail(err) {
+		err = fmt.Errorf("invalid pubkey '%s': %w", publicKeyHex, err)
 		return
 	}
 	writeTLVEntry(buf, TLVDefault, pb)
@@ -201,21 +203,21 @@ func EncodeProfile(publicKeyHex string, relays []string) (s string, e error) {
 		writeTLVEntry(buf, TLVRelay, []byte(url))
 	}
 	var bits5 []byte
-	if bits5, e = bech32.ConvertBits(buf.Bytes(), 8, 5, true); log.Fail(e) {
-		e = fmt.Errorf("failed to convert bits: %w", e)
+	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); log.Fail(err) {
+		err = fmt.Errorf("failed to convert bits: %w", err)
 		return
 	}
 	return bech32.Encode(NprofileHRP, bits5)
 }
 
-func EncodeEvent(eventIDHex string, relays []string,
-	author string) (s string, e error) {
+func EncodeEvent(eventIDHex eventid.T, relays []string,
+	author string) (s string, err error) {
 
 	buf := &bytes.Buffer{}
 	var id []byte
-	id, e = hex.Dec(eventIDHex)
-	if e != nil || len(id) != 32 {
-		return "", fmt.Errorf("invalid id '%s': %w", eventIDHex, e)
+	id, err = hex.Dec(eventIDHex.String())
+	if err != nil || len(id) != 32 {
+		return "", fmt.Errorf("invalid id '%s': %w", eventIDHex, err)
 	}
 	writeTLVEntry(buf, TLVDefault, id)
 	for _, url := range relays {
@@ -225,8 +227,8 @@ func EncodeEvent(eventIDHex string, relays []string,
 		writeTLVEntry(buf, TLVAuthor, pubkey)
 	}
 	var bits5 []byte
-	if bits5, e = bech32.ConvertBits(buf.Bytes(), 8, 5, true); log.Fail(e) {
-		e = fmt.Errorf("failed to convert bits: %w", e)
+	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); log.Fail(err) {
+		err = fmt.Errorf("failed to convert bits: %w", err)
 		return
 	}
 
@@ -234,7 +236,7 @@ func EncodeEvent(eventIDHex string, relays []string,
 }
 
 func EncodeEntity(publicKey string, kind kind.T, identifier string,
-	relays []string) (s string, e error) {
+	relays []string) (s string, err error) {
 
 	buf := &bytes.Buffer{}
 	writeTLVEntry(buf, TLVDefault, []byte(identifier))
@@ -242,17 +244,17 @@ func EncodeEntity(publicKey string, kind kind.T, identifier string,
 		writeTLVEntry(buf, TLVRelay, []byte(url))
 	}
 	var pb []byte
-	pb, e = hex.Dec(publicKey)
-	if e != nil {
-		return "", fmt.Errorf("invalid pubkey '%s': %w", pb, e)
+	pb, err = hex.Dec(publicKey)
+	if err != nil {
+		return "", fmt.Errorf("invalid pubkey '%s': %w", pb, err)
 	}
 	writeTLVEntry(buf, TLVAuthor, pb)
 	kindBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(kindBytes, uint32(kind))
 	writeTLVEntry(buf, TLVKind, kindBytes)
 	var bits5 []byte
-	if bits5, e = bech32.ConvertBits(buf.Bytes(), 8, 5, true); log.Fail(e) {
-		return "", fmt.Errorf("failed to convert bits: %w", e)
+	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); log.Fail(err) {
+		return "", fmt.Errorf("failed to convert bits: %w", err)
 	}
 	return bech32.Encode(NentityHRP, bits5)
 }

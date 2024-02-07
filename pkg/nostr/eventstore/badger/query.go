@@ -5,19 +5,22 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
+	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	nostr_binary "github.com/Hubmakerlabs/replicatr/pkg/nostr/binary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/dgraph-io/badger/v4"
 )
 
 type query struct {
 	i             int
 	prefix        []byte
-	startingPoint []byte
+	startingPoint []byte // todo: rework this to use 64 bit numbers
 	results       chan *event.T
 	skipTimestamp bool
 }
@@ -27,32 +30,42 @@ type queryEvent struct {
 	query int
 }
 
-func (b BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
+func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
-	queries, extraFilter, since, e := prepareQueries(f)
-	if e != nil {
-		return nil, e
+	log.T.Ln("preparing queries")
+	queries, extraFilter, since, err := prepareQueries(f)
+	if err != nil {
+		return nil, err
 	}
-
+	log.T.Ln("scanning database")
 	go func() {
-		e := b.View(func(txn *badger.Txn) (e error) {
+		err = b.View(func(txn *badger.Txn) (err error) {
 			// iterate only through keys and in reverse order
 			opts := badger.IteratorOptions{
 				Reverse: true,
 			}
-
+			var txMx sync.Mutex
 			// actually iterate
 			iteratorClosers := make([]func(), len(queries))
 			for i, q := range queries {
 				go func(i int, q query) {
+					txMx.Lock()
+					defer txMx.Unlock()
 					it := txn.NewIterator(opts)
 					iteratorClosers[i] = it.Close
 
-					defer close(q.results)
-
+					if q.startingPoint == nil {
+						b.D.S("nil query starting point")
+						return
+					}
+					if q.prefix == nil {
+						b.D.S("nil query prefix")
+						return
+					}
 					for it.Seek(q.startingPoint); it.ValidForPrefix(q.prefix); it.Next() {
 						item := it.Item()
+						// log.D.Ln(item.ValueCopy(nil))
 						key := item.Key()
 
 						idxOffset := len(key) - 4 // this is where the idx actually starts
@@ -70,29 +83,36 @@ func (b BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, err
 						copy(idx[1:], key[idxOffset:])
 
 						// fetch actual event
-						item, e = txn.Get(idx)
-						if e != nil {
-							if errors.Is(e, badger.ErrDiscardedTxn) {
+						item, err = txn.Get(idx)
+						if err != nil {
+							if errors.Is(err, badger.ErrDiscardedTxn) {
 								return
 							}
-							log.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
-								idx, q.prefix, key, e)
+							b.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
+								idx, q.prefix, key, err)
 							return
 						}
-						log.Fail(item.Value(func(val []byte) (e error) {
-							var evt *event.T
-							if evt, e = nostr_binary.Unmarshal(val); e != nil {
-								log.D.F("badger: value read error (id %x): %s", val[0:32], e)
-								return e
-							}
-
-							// check if this matches the other filters that were not part of the index
-							if extraFilter == nil || extraFilter.Matches(evt) {
-								q.results <- evt
-							}
-
-							return nil
-						}))
+						if item == nil {
+							b.D.Ln("nil item")
+							break
+						}
+						var val []byte
+						val, err = item.ValueCopy(val)
+						evt := &event.T{}
+						if evt, err = nostrbinary.Unmarshal(val); err != nil {
+							b.D.F("badger: value read error (id %x): %s", spew.Sdump(val), err)
+							break
+						}
+						if evt == nil {
+							b.D.F("got nil event from %s", spew.Sdump(val))
+						}
+						b.D.F("unmarshaled %s", evt.ToObject().String())
+						// check if this matches the other filters that were not part of the index
+						if extraFilter == nil || extraFilter.Matches(evt) {
+							log.T.Ln("dispatching event to results queue", evt == nil)
+							q.results <- evt
+							log.T.Ln("results queue was consumed")
+						}
 					}
 				}(i, q)
 			}
@@ -102,68 +122,84 @@ func (b BadgerBackend) QueryEvents(c context.T, f *filter.T) (chan *event.T, err
 			if f.Limit > 0 && f.Limit < limit {
 				limit = f.Limit
 			}
+			log.T.Ln("clamping results: filter", f.Limit, "max", b.MaxLimit)
 
 			// receive results and ensure we only return the most recent ones always
 			emittedEvents := 0
 
-			// first pass
-			emitQueue := make(priorityQueue, 0, len(queries)+limit)
-			for _, q := range queries {
-				evt, ok := <-q.results
-				if ok {
-					emitQueue = append(emitQueue, &queryEvent{T: evt, query: q.i})
-				}
-			}
-
 			// now it's a good time to schedule this
 			defer func() {
-				close(ch)
+				txMx.Lock()
+				defer txMx.Unlock()
 				for _, itclose := range iteratorClosers {
 					itclose()
 				}
+				for _, q := range queries {
+					close(q.results)
+				}
+				close(ch)
 			}()
+
+			// first pass
+			emitQueue := make(priorityQueue, 0, len(queries)+limit)
+			for i, q := range queries {
+				log.T.Ln("receiving query", i)
+				select {
+				case evt := <-q.results:
+					log.T.Ln("received query", i)
+					emitQueue = append(emitQueue, &queryEvent{T: evt, query: q.i})
+				}
+			}
+			log.T.Ln("scheduling closing iterators")
 
 			// queue may be empty here if we have literally nothing
 			if len(emitQueue) == 0 {
+				log.T.Ln("emit queue is empty")
 				return nil
 			}
 
+			log.T.Ln("initialising emit queue")
 			heap.Init(&emitQueue)
 
 			// iterate until we've emitted all events required
 			for {
 				// emit latest event in queue
+				log.T.Ln("emitting latest event in queue")
 				latest := emitQueue[0]
 				ch <- latest.T
-
+				log.T.Ln("emitted event")
 				// stop when reaching limit
 				emittedEvents++
 				if emittedEvents == limit {
+					log.T.Ln("emitted the limit amount of events", limit)
 					break
 				}
 
 				// fetch a new one from query results and replace the previous one with it
 				if evt, ok := <-queries[latest.query].results; ok {
+					log.T.Ln("adding event to queue")
 					emitQueue[0].T = evt
 					heap.Fix(&emitQueue, 0)
 				} else {
+					log.T.Ln("removing event from queue")
 					// if this query has no more events we just remove this and proceed normally
 					heap.Remove(&emitQueue, 0)
 
 					// check if the list is empty and end
 					if len(emitQueue) == 0 {
+						log.T.Ln("emit queue empty")
 						break
 					}
 				}
 			}
-
 			return nil
 		})
-		if e != nil {
-			log.D.F("badger: query txn error: %s", e)
+
+		if err != nil {
+			b.D.F("badger: query txn error: %s", err)
 		}
 	}()
-
+	log.T.Ln("completed query")
 	return ch, nil
 }
 
@@ -197,7 +233,7 @@ func prepareQueries(f *filter.T) (
 	queries []query,
 	extraFilter *filter.T,
 	since uint32,
-	e error,
+	err error,
 ) {
 	var index byte
 
@@ -291,7 +327,7 @@ func prepareQueries(f *filter.T) (
 		extraFilter = nil
 	}
 
-	var until uint32 = 4294967295
+	var until uint32 = math.MaxUint32
 	if f.Until != nil {
 		if fu := uint32(*f.Until); fu < until {
 			until = fu + 1

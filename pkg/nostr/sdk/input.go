@@ -12,17 +12,17 @@ import (
 // InputToProfile turns any npub/nprofile/hex/nip5 input into a ProfilePointer
 // (or nil).
 func InputToProfile(c context.T, input string) (pp *pointers.Profile) {
-	var e error
+	var err error
 	// handle if it is a hex string
 	if len(input) == 64 {
-		if _, e = hex.Dec(input); !log.E.Chk(e) {
+		if _, err = hex.Dec(input); !log.E.Chk(err) {
 			return &pointers.Profile{PublicKey: input}
 		}
 	}
 	// handle nip19 codes, if that's the case
 	var prefix string
 	var data any
-	if prefix, data, e = bech32encoding.Decode(input); log.D.Chk(e) {
+	if prefix, data, err = bech32encoding.Decode(input); log.D.Chk(err) {
 	}
 	var ok bool
 	switch prefix {
@@ -37,7 +37,7 @@ func InputToProfile(c context.T, input string) (pp *pointers.Profile) {
 		return
 	}
 	// handle nip5 ids, if that's the case
-	if pp, e = nip5.QueryIdentifier(c, input); log.D.Chk(e) {
+	if pp, err = nip5.QueryIdentifier(c, input); log.D.Chk(err) {
 		return
 	}
 	if pp != nil {
@@ -49,17 +49,17 @@ func InputToProfile(c context.T, input string) (pp *pointers.Profile) {
 // InputToEventPointer turns any note/nevent/hex input into a EventPointer (or
 // nil).
 func InputToEventPointer(input string) (ep *pointers.Event) {
-	var e error
+	var err error
 	// handle if it is a hex string
 	if len(input) == 64 {
-		if _, e = hex.Dec(input); !log.E.Chk(e) {
+		if _, err = hex.Dec(input); !log.E.Chk(err) {
 			return &pointers.Event{ID: eventid.T(input)}
 		}
 	}
 	// handle nip19 codes, if that's the case
 	var prefix string
 	var data any
-	if prefix, data, e = bech32encoding.Decode(input); log.D.Chk(e) {
+	if prefix, data, err = bech32encoding.Decode(input); log.D.Chk(err) {
 		return
 	}
 	var ok bool

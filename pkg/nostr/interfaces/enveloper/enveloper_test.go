@@ -14,7 +14,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event/eventest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters/filtertest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/slog"
+	"mleku.online/git/slog"
 )
 
 var log = slog.GetStd()
@@ -28,28 +28,28 @@ func TestEnveloper(t *testing.T) {
 		&eventenvelope.T{Event: eventest.D[0]},
 		&okenvelope.T{ID: eventest.D[0].ID, OK: true,
 			Reason: okenvelope.Message(okenvelope.PoW, "25>24 \\ ")},
-		&reqenvelope.T{SubscriptionID: sub, T: filtertest.D},
+		&reqenvelope.T{SubscriptionID: sub, Filters: filtertest.D},
 		&noticeenvelope.T{Text: "this notice has been noticed } \\ \\\" ] "},
-		&eoseenvelope.T{T: sub},
+		&eoseenvelope.T{Sub: sub},
 		&closeenvelope.T{T: sub},
 	}
-	var e error
+	var err error
 	var b []byte
 	for i := range envs {
-		b, e = json.Marshal(envs[i])
-		if e != nil {
-			t.Fatal(e)
+		b, err = json.Marshal(envs[i])
+		if err != nil {
+			t.Fatal(err)
 		}
 		marshaled := string(b)
 		log.D.Ln("marshaled  ", marshaled)
 		var env enveloper.I
-		env, _, e = envelopes.ProcessEnvelope(b)
-		if e != nil {
-			t.Fatal(e)
+		env, _, err = envelopes.ProcessEnvelope(b)
+		if err != nil {
+			t.Fatal(err)
 		}
 		var um []byte
 		log.I.Ln("marshaling")
-		um, e = json.Marshal(env)
+		um, err = json.Marshal(env)
 		unmarshaled := string(um)
 		log.D.Ln("unmarshaled", unmarshaled)
 		if marshaled != unmarshaled {

@@ -29,10 +29,10 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func postMsg(cCtx *cli.Context, msg string) (e error) {
+func postMsg(cCtx *cli.Context, msg string) (err error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var pub, sk string
-	if pub, sk, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	ev := &event.T{
@@ -43,14 +43,14 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 		Content:   msg,
 		Sig:       "",
 	}
-	if e = ev.Sign(sk); log.Fail(e) {
-		return e
+	if err = ev.Sign(sk); log.Fail(err) {
+		return err
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		e := rl.Publish(c, ev)
-		if log.Fail(e) {
-			log.D.Ln(rl.URL(), e)
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+		err := rl.Publish(c, ev)
+		if log.Fail(err) {
+			log.D.Ln(rl.URL(), err)
 		} else {
 			success.Add(1)
 		}
@@ -62,17 +62,17 @@ func postMsg(cCtx *cli.Context, msg string) (e error) {
 	return
 }
 
-func doDMList(cCtx *cli.Context) (e error) {
+func doDMList(cCtx *cli.Context) (err error) {
 	j := cCtx.Bool("json")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	// get followers
 	var followsMap Follows
-	followsMap, e = cfg.GetFollows(cCtx.String("a"))
-	if log.Fail(e) {
-		return e
+	followsMap, err = cfg.GetFollows(cCtx.String("a"), false)
+	if log.Fail(err) {
+		return err
 	}
 	var pub string
-	if pub, _, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, _, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	// get timeline
@@ -124,13 +124,13 @@ func doDMList(cCtx *cli.Context) (e error) {
 	return nil
 }
 
-func doDMTimeline(cCtx *cli.Context) (e error) {
+func doDMTimeline(cCtx *cli.Context) (err error) {
 	u := cCtx.String("u")
 	j := cCtx.Bool("json")
 	extra := cCtx.Bool("extra")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var npub string
-	if npub, _, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if npub, _, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	if u == "me" {
@@ -144,8 +144,8 @@ func doDMTimeline(cCtx *cli.Context) (e error) {
 	}
 	// get followers
 	var followsMap Follows
-	if followsMap, e = cfg.GetFollows(cCtx.String("a")); log.Fail(e) {
-		return e
+	if followsMap, err = cfg.GetFollows(cCtx.String("a"), false); log.Fail(err) {
+		return err
 	}
 	// get timeline
 	f := filter.T{
@@ -159,7 +159,7 @@ func doDMTimeline(cCtx *cli.Context) (e error) {
 	return nil
 }
 
-func doDMPost(cCtx *cli.Context) (e error) {
+func doDMPost(cCtx *cli.Context) (err error) {
 	u := cCtx.String("u")
 	stdin := cCtx.Bool("stdin")
 	if !stdin && cCtx.Args().Len() == 0 {
@@ -168,18 +168,18 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	sensitive := cCtx.String("sensitive")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var pubHex, secHex string
-	if pubHex, secHex, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pubHex, secHex, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
-	if _, e = bech32encoding.EncodePublicKey(pubHex); log.Fail(e) {
-		return e
+	if _, err = bech32encoding.EncodePublicKey(pubHex); log.Fail(err) {
+		return err
 	}
 	ev := &event.T{PubKey: pubHex}
 	if stdin {
 		var b []byte
-		b, e = io.ReadAll(os.Stdin)
-		if log.Fail(e) {
-			return e
+		b, err = io.ReadAll(os.Stdin)
+		if log.Fail(err) {
+			return err
 		}
 		ev.Content = string(b)
 	} else {
@@ -204,18 +204,18 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.EncryptedDirectMessage
 	var secret []byte
-	if secret, e = nip4.ComputeSharedSecret(ev.PubKey, secHex); log.Fail(e) {
+	if secret, err = nip4.ComputeSharedSecret(ev.PubKey, secHex); log.Fail(err) {
 		return
 	}
-	if ev.Content, e = nip4.Encrypt(ev.Content, secret); log.Fail(e) {
+	if ev.Content, err = nip4.Encrypt(ev.Content, secret); log.Fail(err) {
 		return
 	}
-	if e = ev.Sign(secHex); log.Fail(e) {
+	if err = ev.Sign(secHex); log.Fail(err) {
 		return
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		if e := rl.Publish(c, ev); !log.Fail(e) {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+		if err := rl.Publish(c, ev); !log.Fail(err) {
 			success.Add(1)
 		}
 		return true
@@ -226,7 +226,7 @@ func doDMPost(cCtx *cli.Context) (e error) {
 	return nil
 }
 
-func doUnrepost(cCtx *cli.Context) (e error) {
+func doUnrepost(cCtx *cli.Context) (err error) {
 	id := cCtx.String("id")
 	if evp := sdk.InputToEventPointer(id); evp != nil {
 		id = string(evp.ID)
@@ -235,7 +235,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var sk, pub string
-	if pub, sk, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	f := filter.T{
@@ -245,9 +245,9 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	}
 	var repostID string
 	var mu sync.Mutex
-	cfg.Do(readPerms, func(c context.T, rl *relay.Relay) bool {
-		evs, e := rl.QuerySync(c, &f)
-		if log.Fail(e) {
+	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
+		evs, err := rl.QuerySync(c, &f)
+		if log.Fail(err) {
 			return true
 		}
 		mu.Lock()
@@ -261,14 +261,14 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", repostID})
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.Deletion
-	if e = ev.Sign(sk); log.Fail(e) {
-		return e
+	if err = ev.Sign(sk); log.Fail(err) {
+		return err
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		e := rl.Publish(c, ev)
-		if log.Fail(e) {
-			log.D.Ln(rl.URL(), e)
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+		err := rl.Publish(c, ev)
+		if log.Fail(err) {
+			log.D.Ln(rl.URL(), err)
 		} else {
 			success.Add(1)
 		}
@@ -280,7 +280,7 @@ func doUnrepost(cCtx *cli.Context) (e error) {
 	return nil
 }
 
-func doUnlike(cCtx *cli.Context) (e error) {
+func doUnlike(cCtx *cli.Context) (err error) {
 	id := cCtx.String("id")
 	if evp := sdk.InputToEventPointer(id); evp != nil {
 		id = string(evp.ID)
@@ -289,7 +289,7 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var sk, pub string
-	if pub, sk, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	f := filter.T{
@@ -299,9 +299,9 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	}
 	var likeID string
 	var mu sync.Mutex
-	cfg.Do(readPerms, func(c context.T, rl *relay.Relay) bool {
-		evs, e := rl.QuerySync(c, &f)
-		if log.Fail(e) {
+	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
+		evs, err := rl.QuerySync(c, &f)
+		if log.Fail(err) {
 			return true
 		}
 		mu.Lock()
@@ -315,13 +315,13 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", likeID})
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.Deletion
-	if e := ev.Sign(sk); log.Fail(e) {
-		return e
+	if err := ev.Sign(sk); log.Fail(err) {
+		return err
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		e := rl.Publish(c, ev)
-		if !log.Fail(e) {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+		err := rl.Publish(c, ev)
+		if !log.Fail(err) {
 			success.Add(1)
 		}
 		return true
@@ -332,12 +332,12 @@ func doUnlike(cCtx *cli.Context) (e error) {
 	return nil
 }
 
-func doDelete(cCtx *cli.Context) (e error) {
+func doDelete(cCtx *cli.Context) (err error) {
 	id := cCtx.String("id")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	ev := &event.T{}
 	var pub, sk string
-	if pub, sk, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	ev.PubKey = pub
@@ -349,13 +349,13 @@ func doDelete(cCtx *cli.Context) (e error) {
 	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id})
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.Deletion
-	if e = ev.Sign(sk); log.Fail(e) {
-		return e
+	if err = ev.Sign(sk); log.Fail(err) {
+		return err
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-		e := rl.Publish(c, ev)
-		if !log.Fail(e) {
+	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+		err := rl.Publish(c, ev)
+		if !log.Fail(err) {
 			success.Add(1)
 		}
 		return true
@@ -366,7 +366,7 @@ func doDelete(cCtx *cli.Context) (e error) {
 	return nil
 }
 
-func doStream(cCtx *cli.Context) (e error) {
+func doStream(cCtx *cli.Context) (err error) {
 	k := cCtx.IntSlice("kind")
 	authors := cCtx.StringSlice("author")
 	f := cCtx.Bool("follow")
@@ -374,10 +374,10 @@ func doStream(cCtx *cli.Context) (e error) {
 	reply := cCtx.String("reply")
 	var re *regexp.Regexp
 	if pattern != "" {
-		var e error
-		re, e = regexp.Compile(pattern)
-		if log.Fail(e) {
-			return e
+		var err error
+		re, err = regexp.Compile(pattern)
+		if log.Fail(err) {
+			return err
 		}
 	}
 	cfg := cCtx.App.Metadata["config"].(*C)
@@ -387,14 +387,14 @@ func doStream(cCtx *cli.Context) (e error) {
 	}
 	defer log.Fail(rl.Close())
 	var pub, sk string
-	if pub, sk, e = getPubFromSec(cfg.SecretKey); log.Fail(e) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
 		return
 	}
 	// get followers
 	var follows []string
 	if f {
 		followsMap := make(Follows)
-		if followsMap, e = cfg.GetFollows(cCtx.String("a")); log.Fail(e) {
+		if followsMap, err = cfg.GetFollows(cCtx.String("a"), false); log.Fail(err) {
 			return
 		}
 		for k := range followsMap {
@@ -410,9 +410,9 @@ func doStream(cCtx *cli.Context) (e error) {
 		Since:   since,
 	}
 	var sub *subscription.T
-	sub, e = rl.Subscribe(context.Bg(), filters.T{&ff})
-	if log.Fail(e) {
-		return e
+	sub, err = rl.Subscribe(context.Bg(), filters.T{&ff})
+	if log.Fail(err) {
+		return err
 	}
 	for ev := range sub.Events {
 		if ev.Kind == kind.TextNote {
@@ -428,11 +428,11 @@ func doStream(cCtx *cli.Context) (e error) {
 					"reply"})
 				evr.CreatedAt = timestamp.Now()
 				evr.Kind = kind.TextNote
-				if e := evr.Sign(sk); log.Fail(e) {
-					return e
+				if err := evr.Sign(sk); log.Fail(err) {
+					return err
 				}
-				cfg.Do(writePerms, func(c context.T, rl *relay.Relay) bool {
-					if e = rl.Publish(c, evr); log.Fail(e) {
+				cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+					if err = rl.Publish(c, evr); log.Fail(err) {
 					}
 					return true
 				})
