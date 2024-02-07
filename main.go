@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/Hubmakerlabs/replicatr/app"
-	"github.com/Hubmakerlabs/replicatr/nostr/accesscontrol"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/accesscontrol"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"

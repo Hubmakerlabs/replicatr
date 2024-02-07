@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/nostr/accesscontrol"
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/accesscontrol"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
