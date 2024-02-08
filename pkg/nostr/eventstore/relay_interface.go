@@ -29,6 +29,7 @@ func (w RelayWrapper) Publish(c context.T, evt *event.T) (err error) {
 	if evt.Kind.IsEphemeral() {
 		// do not store ephemeral events
 		return nil
+		// todo: this seems to be unnecessary for badger
 		// } else if evt.Kind.IsReplaceable() {
 		// replaceable event, delete before storing
 		// ch, err = w.Store.QueryEvents(c, &filter.T{

@@ -37,6 +37,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		rl.T.Ln("ephemeral event")
 		// do not store ephemeral events
 	} else {
+		// todo: this seems to be unnecessary for badger
 		// if ev.Kind.IsReplaceable() {
 		// 	rl.T.Ln("replaceable event")
 		// 	// replaceable event, delete before storing
