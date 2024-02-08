@@ -12,10 +12,23 @@ const (
 type Role string
 
 const (
-	RoleOwner         Role = "owner"
+	// RoleOwner can change the Administrators list and can request any event that
+	// would otherwise require auth (eg DMs between users) - the reason being
+	// that they ultimately can bypass anything built into this software anyway
+	// due to "physical" access. All other permissions relate to remote access.
+	// The owners cannot be remotely changed via the ACL messages, it must be
+	// manually specified in the configuration file.
+	RoleOwner Role = "owner"
+	// RoleAdministrator can change, add and remove users from any of the lower
+	// roles.
 	RoleAdministrator Role = "administrator"
-	RoleWriter        Role = "writer"
-	RoleReader        Role = "reader"
+	// RoleWriter means being able to publish to the relay.
+	RoleWriter Role = "writer"
+	// RoleReader means being able to query the relay.
+	RoleReader Role = "reader"
+	// RoleDenied means the identity may not access the relay and will be
+	// disconnected.
+	RoleDenied Role = "denied"
 )
 
 // UserID is the required data for an entry in T
@@ -33,12 +46,8 @@ type UserID struct {
 }
 
 type T struct {
-	// Owners can change the Administrators list and can request any event that
-	// would otherwise require auth (eg DMs between users) - the reason being
-	// that they ultimately can bypass anything built into this software anyway
-	// due to "physical" access. All other permissions relate to remote access.
-	// The owners cannot be remotely changed via the ACL messages, it must be
-	// manually specified in the configuration file.
+	// Users is the access control list, which is the current state built from a
+	// chronologically sorted series of events that modify the Users list.
 	Users []*UserID `json:"users,omitempty"`
 	// Public means that the relay allows read access to any user without
 	// authentication.
@@ -55,6 +64,8 @@ type T struct {
 // is so that concurrent safety can be enforced.
 type Closure func(list []*UserID)
 
+// Get returns all of the users at a given privilege level and allows a closure
+// to be executed with access to them.
 func (ac *T) Get(r Role, fn Closure) {
 	ac.Mutex.Lock()
 	defer ac.Mutex.Unlock()
@@ -74,6 +85,8 @@ func (ac *T) AuthRequired() bool {
 	return ac.PublicAuth
 }
 
+// GetPrivilege returns the privilege level, if any, of the requested public
+// key.
 func (ac *T) GetPrivilege(key string) (r Role) {
 	ac.Mutex.Lock()
 	defer ac.Mutex.Unlock()

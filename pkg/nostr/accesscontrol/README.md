@@ -8,7 +8,7 @@ In order to simplify and enable the automation of access control to a relay, for
 
 ## Access Levels
 
-There is 4 basic levels of access:
+There is 5 basic levels of access:
 
 - **owner** - who has full control, can see all events, and can alter the lower levels of permission arbitrarily - they cannot add or remove other owners, owners must be configured in a configuration file
 - **administrator** - administrators can add and modify users access permissions or disable their access
