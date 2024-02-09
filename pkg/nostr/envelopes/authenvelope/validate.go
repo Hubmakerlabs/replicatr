@@ -41,7 +41,7 @@ func Validate(evt *event.T, challenge string,
 
 		return
 	}
-	if ok, err = evt.CheckSignature(); !ok || log.Fail(err) {
+	if ok, err = evt.CheckSignature(); !ok || chk.D(err) {
 		return
 	}
 	pubkey = evt.PubKey

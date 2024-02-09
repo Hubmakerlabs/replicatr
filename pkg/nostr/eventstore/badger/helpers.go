@@ -2,6 +2,7 @@ package badger
 
 import (
 	"encoding/binary"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -10,7 +11,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 func getTagIndexPrefix(tagValue string) ([]byte, int) {
 	// the key with full length for created_at and idx at the end, but not

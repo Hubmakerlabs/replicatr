@@ -11,5 +11,5 @@ func (rl *Relay) HandleNIP11(w http.ResponseWriter, r *http.Request) {
 	for _, ovw := range rl.OverwriteRelayInfo {
 		info = ovw(r.Context(), r, info)
 	}
-	rl.E.Chk(json.NewEncoder(w).Encode(info))
+	chk.E(json.NewEncoder(w).Encode(info))
 }

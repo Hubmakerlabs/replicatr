@@ -9,6 +9,7 @@ package array
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"reflect"
 	"time"
 
@@ -17,7 +18,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 type T []interface{}
 

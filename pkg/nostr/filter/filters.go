@@ -15,7 +15,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 // T is a query where one or all elements can be filled in.
 //
@@ -106,10 +106,10 @@ func (f *T) UnmarshalJSON(b []byte) (err error) {
 	}
 	// // log.T.F("unmarshaling filter `%s`", b)
 	var uf UnmarshalingFilter
-	if err = json.Unmarshal(b, &uf); log.Fail(err) {
+	if err = json.Unmarshal(b, &uf); chk.D(err) {
 		return
 	}
-	if err = CopyUnmarshalFilterToFilter(&uf, f); log.Fail(err) {
+	if err = CopyUnmarshalFilterToFilter(&uf, f); chk.D(err) {
 		return
 	}
 	return

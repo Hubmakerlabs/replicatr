@@ -3,6 +3,7 @@ package countenvelope
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	l "github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -14,7 +15,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 type Request struct {
 	ID      subscriptionid.T
@@ -55,7 +56,7 @@ func (C *Request) Unmarshal(buf *text.Buffer) (err error) {
 	}
 	var sid []byte
 	// read the string
-	if sid, err = buf.ReadUntil('"'); log.Fail(err) {
+	if sid, err = buf.ReadUntil('"'); chk.D(err) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	C.ID = subscriptionid.T(sid)
@@ -68,11 +69,11 @@ func (C *Request) Unmarshal(buf *text.Buffer) (err error) {
 	// breaking when we don't find a comma after.
 	for {
 		var filterArray []byte
-		if filterArray, err = buf.ReadEnclosed(); log.Fail(err) {
+		if filterArray, err = buf.ReadEnclosed(); chk.D(err) {
 			return
 		}
 		f := &filter.T{}
-		if err = json.Unmarshal(filterArray, &f); log.Fail(err) {
+		if err = json.Unmarshal(filterArray, &f); chk.D(err) {
 			return
 		}
 		C.Filters = append(C.Filters, f)

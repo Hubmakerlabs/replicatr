@@ -2,6 +2,7 @@ package eoseenvelope
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
@@ -13,7 +14,7 @@ import (
 
 // const RELAY = "wss://nos.lol"
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 // T is a message that indicates that all cached events have been
 // delivered and thereafter events will be new and delivered in pubsub subscribe
@@ -56,7 +57,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	}
 	var sid []byte
 	// read the string
-	if sid, err = buf.ReadUntil('"'); log.Fail(err) {
+	if sid, err = buf.ReadUntil('"'); chk.D(err) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	E.Sub = subscriptionid.T(sid[:])

@@ -2,6 +2,7 @@ package bech32encoding
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"mleku.online/git/bech32"
@@ -11,7 +12,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 const (
 	// MinKeyStringLen is 56 because Bech32 needs 52 characters plus 4 for the HRP,
@@ -110,10 +111,10 @@ func HexToPublicKey(pk string) (p *ec.PublicKey, err error) {
 		return
 	}
 	var pb []byte
-	if pb, err = hex.Dec(pk); log.Fail(err) {
+	if pb, err = hex.Dec(pk); chk.D(err) {
 		return
 	}
-	if p, err = schnorr.ParsePubKey(pb); log.Fail(err) {
+	if p, err = schnorr.ParsePubKey(pb); chk.D(err) {
 		return
 	}
 	return
@@ -128,10 +129,10 @@ func HexToSecretKey(sk string) (s *ec.SecretKey, err error) {
 		return
 	}
 	var pb []byte
-	if pb, err = hex.Dec(sk); log.Fail(err) {
+	if pb, err = hex.Dec(sk); chk.D(err) {
 		return
 	}
-	if s = secp256k1.SecKeyFromBytes(pb); log.Fail(err) {
+	if s = secp256k1.SecKeyFromBytes(pb); chk.D(err) {
 		return
 	}
 	return

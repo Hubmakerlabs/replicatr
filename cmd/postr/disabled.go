@@ -32,7 +32,7 @@ import (
 func postMsg(cCtx *cli.Context, msg string) (err error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var pub, sk string
-	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	ev := &event.T{
@@ -43,13 +43,13 @@ func postMsg(cCtx *cli.Context, msg string) (err error) {
 		Content:   msg,
 		Sig:       "",
 	}
-	if err = ev.Sign(sk); log.Fail(err) {
+	if err = ev.Sign(sk); chk.D(err) {
 		return err
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		err := rl.Publish(c, ev)
-		if log.Fail(err) {
+		if chk.D(err) {
 			log.D.Ln(rl.URL(), err)
 		} else {
 			success.Add(1)
@@ -68,11 +68,11 @@ func doDMList(cCtx *cli.Context) (err error) {
 	// get followers
 	var followsMap Follows
 	followsMap, err = cfg.GetFollows(cCtx.String("a"), false)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	var pub string
-	if pub, _, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, _, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	// get timeline
@@ -108,7 +108,7 @@ func doDMList(cCtx *cli.Context) (err error) {
 	}
 	if j {
 		for _, user := range users {
-			log.Fail(json.NewEncoder(os.Stdout).Encode(user))
+			chk.D(json.NewEncoder(os.Stdout).Encode(user))
 		}
 		return nil
 	}
@@ -130,7 +130,7 @@ func doDMTimeline(cCtx *cli.Context) (err error) {
 	extra := cCtx.Bool("extra")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var npub string
-	if npub, _, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if npub, _, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	if u == "me" {
@@ -144,7 +144,7 @@ func doDMTimeline(cCtx *cli.Context) (err error) {
 	}
 	// get followers
 	var followsMap Follows
-	if followsMap, err = cfg.GetFollows(cCtx.String("a"), false); log.Fail(err) {
+	if followsMap, err = cfg.GetFollows(cCtx.String("a"), false); chk.D(err) {
 		return err
 	}
 	// get timeline
@@ -168,17 +168,17 @@ func doDMPost(cCtx *cli.Context) (err error) {
 	sensitive := cCtx.String("sensitive")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var pubHex, secHex string
-	if pubHex, secHex, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pubHex, secHex, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
-	if _, err = bech32encoding.EncodePublicKey(pubHex); log.Fail(err) {
+	if _, err = bech32encoding.EncodePublicKey(pubHex); chk.D(err) {
 		return err
 	}
 	ev := &event.T{PubKey: pubHex}
 	if stdin {
 		var b []byte
 		b, err = io.ReadAll(os.Stdin)
-		if log.Fail(err) {
+		if chk.D(err) {
 			return err
 		}
 		ev.Content = string(b)
@@ -204,18 +204,18 @@ func doDMPost(cCtx *cli.Context) (err error) {
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.EncryptedDirectMessage
 	var secret []byte
-	if secret, err = nip4.ComputeSharedSecret(ev.PubKey, secHex); log.Fail(err) {
+	if secret, err = nip4.ComputeSharedSecret(ev.PubKey, secHex); chk.D(err) {
 		return
 	}
-	if ev.Content, err = nip4.Encrypt(ev.Content, secret); log.Fail(err) {
+	if ev.Content, err = nip4.Encrypt(ev.Content, secret); chk.D(err) {
 		return
 	}
-	if err = ev.Sign(secHex); log.Fail(err) {
+	if err = ev.Sign(secHex); chk.D(err) {
 		return
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
-		if err := rl.Publish(c, ev); !log.Fail(err) {
+		if err := rl.Publish(c, ev); !chk.D(err) {
 			success.Add(1)
 		}
 		return true
@@ -235,7 +235,7 @@ func doUnrepost(cCtx *cli.Context) (err error) {
 	}
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var sk, pub string
-	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	f := filter.T{
@@ -247,7 +247,7 @@ func doUnrepost(cCtx *cli.Context) (err error) {
 	var mu sync.Mutex
 	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
 		evs, err := rl.QuerySync(c, &f)
-		if log.Fail(err) {
+		if chk.D(err) {
 			return true
 		}
 		mu.Lock()
@@ -261,13 +261,13 @@ func doUnrepost(cCtx *cli.Context) (err error) {
 	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", repostID})
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.Deletion
-	if err = ev.Sign(sk); log.Fail(err) {
+	if err = ev.Sign(sk); chk.D(err) {
 		return err
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		err := rl.Publish(c, ev)
-		if log.Fail(err) {
+		if chk.D(err) {
 			log.D.Ln(rl.URL(), err)
 		} else {
 			success.Add(1)
@@ -289,7 +289,7 @@ func doUnlike(cCtx *cli.Context) (err error) {
 	}
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var sk, pub string
-	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	f := filter.T{
@@ -301,7 +301,7 @@ func doUnlike(cCtx *cli.Context) (err error) {
 	var mu sync.Mutex
 	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
 		evs, err := rl.QuerySync(c, &f)
-		if log.Fail(err) {
+		if chk.D(err) {
 			return true
 		}
 		mu.Lock()
@@ -315,13 +315,13 @@ func doUnlike(cCtx *cli.Context) (err error) {
 	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", likeID})
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.Deletion
-	if err := ev.Sign(sk); log.Fail(err) {
+	if err := ev.Sign(sk); chk.D(err) {
 		return err
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		err := rl.Publish(c, ev)
-		if !log.Fail(err) {
+		if !chk.D(err) {
 			success.Add(1)
 		}
 		return true
@@ -337,7 +337,7 @@ func doDelete(cCtx *cli.Context) (err error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 	ev := &event.T{}
 	var pub, sk string
-	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	ev.PubKey = pub
@@ -349,13 +349,13 @@ func doDelete(cCtx *cli.Context) (err error) {
 	ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id})
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.Deletion
-	if err = ev.Sign(sk); log.Fail(err) {
+	if err = ev.Sign(sk); chk.D(err) {
 		return err
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		err := rl.Publish(c, ev)
-		if !log.Fail(err) {
+		if !chk.D(err) {
 			success.Add(1)
 		}
 		return true
@@ -376,7 +376,7 @@ func doStream(cCtx *cli.Context) (err error) {
 	if pattern != "" {
 		var err error
 		re, err = regexp.Compile(pattern)
-		if log.Fail(err) {
+		if chk.D(err) {
 			return err
 		}
 	}
@@ -385,16 +385,16 @@ func doStream(cCtx *cli.Context) (err error) {
 	if rl == nil {
 		return errors.New("cannot connect relays")
 	}
-	defer log.Fail(rl.Close())
+	defer chk.D(rl.Close())
 	var pub, sk string
-	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	// get followers
 	var follows []string
 	if f {
 		followsMap := make(Follows)
-		if followsMap, err = cfg.GetFollows(cCtx.String("a"), false); log.Fail(err) {
+		if followsMap, err = cfg.GetFollows(cCtx.String("a"), false); chk.D(err) {
 			return
 		}
 		for k := range followsMap {
@@ -411,7 +411,7 @@ func doStream(cCtx *cli.Context) (err error) {
 	}
 	var sub *subscription.T
 	sub, err = rl.Subscribe(context.Bg(), filters.T{&ff})
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	for ev := range sub.Events {
@@ -419,7 +419,7 @@ func doStream(cCtx *cli.Context) (err error) {
 			if re != nil && !re.MatchString(ev.Content) {
 				continue
 			}
-			log.Fail(json.NewEncoder(os.Stdout).Encode(ev))
+			chk.D(json.NewEncoder(os.Stdout).Encode(ev))
 			if reply != "" {
 				evr := &event.T{}
 				evr.PubKey = pub
@@ -428,17 +428,17 @@ func doStream(cCtx *cli.Context) (err error) {
 					"reply"})
 				evr.CreatedAt = timestamp.Now()
 				evr.Kind = kind.TextNote
-				if err := evr.Sign(sk); log.Fail(err) {
+				if err := evr.Sign(sk); chk.D(err) {
 					return err
 				}
 				cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
-					if err = rl.Publish(c, evr); log.Fail(err) {
+					if err = rl.Publish(c, evr); chk.D(err) {
 					}
 					return true
 				})
 			}
 		} else {
-			log.Fail(json.NewEncoder(os.Stdout).Encode(ev))
+			chk.D(json.NewEncoder(os.Stdout).Encode(ev))
 		}
 	}
 	return nil

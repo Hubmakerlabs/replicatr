@@ -28,8 +28,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	kill func(), ws *relayws.WebSocket) {
 
 	if len(msg) > rl.Info.Limitation.MaxMessageLength {
-		rl.T.F("rejecting event with size: %d", len(msg))
-		rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+		log.T.F("rejecting event with size: %d", len(msg))
+		log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 			OK: false,
 			Reason: fmt.Sprintf(
 				"invalid: relay limit disallows messages larger than %d bytes,"+
@@ -49,24 +49,24 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		deny = false
 	}
 	if deny {
-		rl.T.F("denying access to '%s': dropping message", ws.RealRemote)
+		log.T.F("denying access to '%s': dropping message", ws.RealRemote)
 		return
 	}
 	en, _, err := envelopes.ProcessEnvelope(msg)
-	if rl.T.Chk(err) {
+	if log.T.Chk(err) {
 		return
 	}
 	if en == nil {
-		rl.T.Ln("'silently' ignoring message")
+		log.T.Ln("'silently' ignoring message")
 		return
 	}
-	// rl.D.Ln("received envelope from", ws.conn.LocalAddr(), ws.conn.RemoteAddr())
+	// log.D.Ln("received envelope from", ws.conn.LocalAddr(), ws.conn.RemoteAddr())
 	switch env := en.(type) {
 	case *eventenvelope.T:
 		// reject old dated events according to nip11
 		if env.Event.CreatedAt <= rl.Info.Limitation.Oldest {
-			rl.T.F("rejecting event with date: %s", env.Event.CreatedAt.Time().String())
-			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+			log.T.F("rejecting event with date: %s", env.Event.CreatedAt.Time().String())
+			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: false,
 				Reason: fmt.Sprintf(
@@ -77,13 +77,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}
 		// check id
 		evs := env.Event.ToCanonical().Bytes()
-		// rl.T.F("serialized %s", evs)
+		// log.T.F("serialized %s", evs)
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
-			rl.T.F("id mismatch got %s, expected %s",
+			log.T.F("id mismatch got %s, expected %s",
 				id, env.Event.ID.String())
-			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
 				Reason: "invalid: id is computed incorrectly",
@@ -92,16 +92,16 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}
 		// check signature
 		var ok bool
-		if ok, err = env.Event.CheckSignature(); rl.E.Chk(err) {
-			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+		if ok, err = env.Event.CheckSignature(); log.E.Chk(err) {
+			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
 				Reason: "error: failed to verify signature: " + err.Error(),
 			}))
 			return
 		} else if !ok {
-			rl.E.Ln("invalid: signature is invalid")
-			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+			log.E.Ln("invalid: signature is invalid")
+			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
 				Reason: "invalid: signature is invalid"}))
@@ -111,12 +111,12 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			// this always returns "blocked: " whenever it returns an error
 			err = rl.handleDeleteRequest(c, env.Event)
 		} else {
-			rl.T.Ln("adding event", env.Event.ToObject().String())
+			log.T.Ln("adding event", env.Event.ToObject().String())
 			// this will also always return a prefixed reason
 			err = rl.AddEvent(c, env.Event)
 		}
 		var reason string
-		if ok = !rl.E.Chk(err); !ok {
+		if ok = !log.E.Chk(err); !ok {
 			reason = err.Error()
 			if strings.HasPrefix(reason, nip42.AuthRequired) {
 				RequestAuth(c)
@@ -127,15 +127,15 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		} else {
 			ok = true
 		}
-		rl.T.Ln("sending back ok envelope")
-		rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+		log.T.Ln("sending back ok envelope")
+		log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,
 			OK:     ok,
 			Reason: reason,
 		}))
 	case *countenvelope.Request:
 		if rl.CountEvents == nil {
-			rl.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
+			log.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
 				ID:     env.ID,
 				Reason: "unsupported: this relay does not support NIP-45",
 			}))
@@ -145,7 +145,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		for _, f := range env.Filters {
 			total += rl.handleCountRequest(c, ws, f)
 		}
-		rl.E.Chk(ws.WriteEnvelope(&countenvelope.Response{
+		log.E.Chk(ws.WriteEnvelope(&countenvelope.Response{
 			ID:    env.ID,
 			Count: total,
 		}))
@@ -171,7 +171,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 				ws,
 				f,
 			})
-			if rl.T.Chk(err) {
+			if log.T.Chk(err) {
 				// fail everything if any filter is rejected
 				reason := err.Error()
 				if strings.HasPrefix(reason, nip42.AuthRequired) {
@@ -181,7 +181,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 					kill()
 					return
 				}
-				rl.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
+				log.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
 					ID:     env.SubscriptionID,
 					Reason: reason,
 				}))
@@ -194,7 +194,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			// we can cancel the context and fire the EOSE message
 			wg.Wait()
 			cancelReqCtx(nil)
-			rl.E.Chk(ws.WriteEnvelope(&eoseenvelope.T{Sub: env.SubscriptionID}))
+			log.E.Chk(ws.WriteEnvelope(&eoseenvelope.T{Sub: env.SubscriptionID}))
 		}()
 		SetListener(env.SubscriptionID.String(), ws, env.Filters, cancelReqCtx)
 	case *closeenvelope.T:
@@ -207,12 +207,12 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		if pubkey, ok, err = nip42.ValidateAuthEvent(env.Event, ws.Challenge, wsBaseUrl); ok {
 			ws.AuthPubKey = pubkey
 			ws.Authed <- struct{}{}
-			rl.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: true,
 			}))
 		} else {
-			rl.E.Chk(ws.WriteMessage(
+			log.E.Chk(ws.WriteMessage(
 				websocket.TextMessage, (&okenvelope.T{
 					ID:     env.Event.ID,
 					OK:     false,
@@ -221,5 +221,5 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			))
 		}
 	}
-	rl.T.Chk(err)
+	log.T.Chk(err)
 }

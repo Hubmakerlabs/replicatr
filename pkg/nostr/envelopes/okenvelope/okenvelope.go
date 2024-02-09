@@ -2,6 +2,7 @@ package okenvelope
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -13,7 +14,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 type Reason string
 
@@ -89,7 +90,7 @@ func (env *T) Unmarshal(buf *text.Buffer) (err error) {
 		return
 	}
 	var eventID []byte
-	if eventID, err = buf.ReadUntil('"'); log.Fail(err) {
+	if eventID, err = buf.ReadUntil('"'); chk.D(err) {
 		return fmt.Errorf("did not find event ID value in ok envelope")
 	}
 	// check event is a valid length
@@ -128,7 +129,7 @@ next:
 	}
 	// next comes a boolean value
 	var isOK []byte
-	if isOK, err = buf.ReadUntil(','); log.Fail(err) {
+	if isOK, err = buf.ReadUntil(','); chk.D(err) {
 		return fmt.Errorf("did not find OK value in ok envelope")
 	}
 	isOK = []byte(strings.TrimSpace(string(isOK)))
@@ -164,7 +165,7 @@ maybeOK:
 		return
 	}
 	var reason []byte
-	if reason, err = buf.ReadUntil('"'); log.Fail(err) {
+	if reason, err = buf.ReadUntil('"'); chk.D(err) {
 		return fmt.Errorf("did not find reason value in ok envelope")
 	}
 	// Scan for the proper envelope ending.

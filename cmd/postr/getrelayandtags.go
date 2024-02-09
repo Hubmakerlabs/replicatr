@@ -15,7 +15,7 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
 			Authors: []string{pub},
 			Limit:   1,
 		})
-		if log.Fail(err) {
+		if chk.D(err) {
 			return true
 		}
 		// log.D.S(evs)
@@ -35,7 +35,7 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
 			// if cfg.tempRelay == false {
 			// 	log.D.Ln(ev.Content)
 			// 	var rm Relays
-			// 	if err = json.Unmarshal([]byte(ev.Content), &rm); log.Fail(err) {
+			// 	if err = json.Unmarshal([]byte(ev.Content), &rm); chk.D(err) {
 			// 		// continue
 			// 	} else {
 			// 		for k, v1 := range cfg.Relays {

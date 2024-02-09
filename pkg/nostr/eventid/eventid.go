@@ -2,13 +2,14 @@ package eventid
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 // T is the SHA256 hash in hexadecimal of the canonical form of an event
 // as produced by the output of T.ToCanonical().Bytes().
@@ -34,7 +35,7 @@ func (ei T) MarshalJSON() (b []byte, err error) {
 // hexadecimal string, returns the string coerced to the type.
 func New(s string) (ei T, err error) {
 	ei = T(s)
-	if err = ei.Validate(); log.Fail(err) {
+	if err = ei.Validate(); chk.D(err) {
 
 		// clear the result since it failed.
 		ei = ei[:0]

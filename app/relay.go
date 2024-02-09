@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/nostr/accesscontrol"
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -58,11 +57,7 @@ type Relay struct {
 	OnConnect                []Hook
 	OnDisconnect             []Hook
 	OnEventSaved             []OnEventSaved
-	// AccessControl is the access control rule set in force on the relay.
-	AccessControl *accesscontrol.T
-	// editing info will affect
-	Info *nip11.Info
-	*slog.Log
+	Info                     *nip11.Info
 	// for establishing websockets
 	upgrader websocket.Upgrader
 	// keep a connection reference to all connected clients for Server.Shutdown
@@ -83,18 +78,14 @@ type Relay struct {
 	Whitelist      []string // whitelist of allowed IPs for access
 }
 
-func NewRelay(logger *slog.Log, inf *nip11.Info, whitelist []string,
-	ac *accesscontrol.T) (r *Relay) {
+func NewRelay(logger *slog.Log, check *slog.Check, inf *nip11.Info,
+	whitelist []string) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
 	if inf.Limitation != nil {
 		maxMessageLength = inf.Limitation.MaxMessageLength
 	}
-	if ac == nil {
-		ac = &accesscontrol.T{}
-	}
 	r = &Relay{
-		Log:  logger,
 		Info: nip11.NewInfo(inf),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  ReadBufferSize,
@@ -108,7 +99,6 @@ func NewRelay(logger *slog.Log, inf *nip11.Info, whitelist []string,
 		PingPeriod:     PingPeriod,
 		MaxMessageSize: int64(maxMessageLength),
 		Whitelist:      whitelist,
-		AccessControl:  ac,
 	}
 	r.Info.Software = Software
 	r.Info.Version = Version

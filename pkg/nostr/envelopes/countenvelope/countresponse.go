@@ -67,7 +67,7 @@ func (env *Response) Unmarshal(buf *text.Buffer) (err error) {
 	}
 	var sid []byte
 	// read the string
-	if sid, err = buf.ReadUntil('"'); log.Fail(err) {
+	if sid, err = buf.ReadUntil('"'); chk.D(err) {
 		return fmt.Errorf("unterminated quotes in JSON, " +
 			"probably truncated read")
 	}
@@ -77,12 +77,12 @@ func (env *Response) Unmarshal(buf *text.Buffer) (err error) {
 		return
 	}
 	var countObject []byte
-	if countObject, err = buf.ReadEnclosed(); log.Fail(err) {
+	if countObject, err = buf.ReadEnclosed(); chk.D(err) {
 		return fmt.Errorf("did not find a properly formatted JSON " +
 			"object for the count")
 	}
 	var count Count
-	if err = json.Unmarshal(countObject, &count); log.Fail(err) {
+	if err = json.Unmarshal(countObject, &count); chk.D(err) {
 		return
 	}
 	env.Count = count.Count

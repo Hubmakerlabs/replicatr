@@ -22,7 +22,7 @@ func Like(cCtx *cli.Context) (err error) {
 	cfg := cCtx.App.Metadata["config"].(*C)
 	ev := &event.T{}
 	var sk, pub string
-	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	ev.PubKey = pub
@@ -56,19 +56,19 @@ func Like(cCtx *cli.Context) (err error) {
 	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		if first.Load() {
 			evs, err := rl.QuerySync(c, &f)
-			if log.Fail(err) {
+			if chk.D(err) {
 				return true
 			}
 			for _, tmp := range evs {
 				ev.Tags = ev.Tags.AppendUnique(tag.T{"p", tmp.ID.String()})
 			}
 			first.Store(false)
-			if err = ev.Sign(sk); log.Fail(err) {
+			if err = ev.Sign(sk); chk.D(err) {
 				return true
 			}
 			return true
 		}
-		if err = rl.Publish(c, ev); log.Fail(err) {
+		if err = rl.Publish(c, ev); chk.D(err) {
 			log.D.Ln(rl.URL(), err)
 		} else {
 			success.Add(1)

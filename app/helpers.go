@@ -3,6 +3,7 @@ package app
 import (
 	"hash/maphash"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -21,7 +22,7 @@ const (
 	subscriptionIdKey
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 func RequestAuth(c context.T) {
 	ws := GetConnection(c)

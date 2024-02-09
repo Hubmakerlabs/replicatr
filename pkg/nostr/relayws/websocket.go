@@ -16,7 +16,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 // WebSocket is a wrapper around a fasthttp/websocket with mutex locking and
 // NIP-42 Auth support
@@ -70,7 +70,7 @@ func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 		log.D.F("sending message to %s %s %s\n%s\n%s\n", ws.RealRemote, ws.AuthPubKey,
 			evkind, env.ToArray().String(), loc)
 	} else {
-		log.T.F("sending message to %s %s %s\n%s\n%s\n", ws.RealRemote, ws.AuthPubKey,
+		log.T.F("sending message to %s %s %s\n%s\n%s", ws.RealRemote, ws.AuthPubKey,
 			evkind, env.ToArray().String(), loc)
 	}
 	return ws.Conn.WriteMessage(websocket.TextMessage, env.Bytes())
