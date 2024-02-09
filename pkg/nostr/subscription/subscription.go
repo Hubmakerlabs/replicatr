@@ -20,7 +20,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 type T struct {
 	Label   string
@@ -160,7 +160,7 @@ func (sub *T) Close() {
 // The subscription will be closed if the context expires.
 func (sub *T) Sub(_ context.T, f filters.T) {
 	sub.Filters = f
-	log.Fail(sub.Fire())
+	chk.D(sub.Fire())
 }
 
 // Fire sends the "REQ" command to the relay.

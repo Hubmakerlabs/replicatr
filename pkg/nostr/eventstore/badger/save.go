@@ -12,7 +12,7 @@ import (
 
 func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
 	return b.Update(func(txn *badger.Txn) (err error) {
-		// b.T.S(evt)
+		// log.T.S(evt)
 		// query event by id to ensure we don't save duplicates
 		id, _ := hex.Dec(evt.ID.String())
 		prefix := make([]byte, 1+8)
@@ -25,27 +25,27 @@ func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
 			// event exists
 			return eventstore.ErrDupEvent
 		}
-		b.T.Ln("encoding to binary")
+		log.T.Ln("encoding to binary")
 		// encode to binary
 		var bin []byte
-		if bin, err = nostrbinary.Marshal(evt); b.Fail(err) {
+		if bin, err = nostrbinary.Marshal(evt); chk.D(err) {
 			return err
 		}
-		// b.T.F("binary encoded %x", bin)
+		// log.T.F("binary encoded %x", bin)
 		idx := b.Serial()
 		// raw event store
-		b.T.F("setting event")
-		if err = txn.Set(idx, bin); b.Fail(err) {
+		log.T.F("setting event")
+		if err = txn.Set(idx, bin); chk.D(err) {
 			return err
 		}
-		b.T.F("get index keys for event")
+		log.T.F("get index keys for event")
 		for _, k := range getIndexKeysForEvent(evt, idx[1:]) {
-			b.T.F("index key %x", k)
-			if err = txn.Set(k, nil); b.Fail(err) {
+			log.T.F("index key %x", k)
+			if err = txn.Set(k, nil); chk.D(err) {
 				return err
 			}
 		}
-		b.T.F("event saved")
+		log.T.F("event saved")
 		return nil
 	})
 }

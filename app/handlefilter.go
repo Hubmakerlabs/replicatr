@@ -34,7 +34,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	}
 	if h.f.Limit < 0 {
 		err = errors.New("blocked: filter invalidated")
-		rl.E.Chk(err)
+		log.E.Ln(err)
 		return
 	}
 	// then check if we'll reject this filter (we apply this after overwriting
@@ -51,8 +51,8 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	h.eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
 		ch := make(chan *event.T)
-		if ch, err = query(h.c, h.f); rl.E.Chk(err) {
-			rl.E.Chk(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
+		if ch, err = query(h.c, h.f); chk.E(err) {
+			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
 			h.eose.Done()
 			continue
 		}
@@ -68,7 +68,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 				}
 				if kinds.IsPrivileged(ev.Kind) {
 					if h.ws.AuthPubKey == "" {
-						rl.T.Ln("not broadcasting privileged event to",
+						log.T.Ln("not broadcasting privileged event to",
 							h.ws.RealRemote, "not authenticated")
 						continue
 					}
@@ -77,9 +77,9 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					parties := make(tag.T, len(receivers)+len(h.f.Authors))
 					copy(parties[:len(h.f.Authors)], h.f.Authors)
 					copy(parties[len(h.f.Authors):], receivers)
-					// rl.T.Ln(h.ws.RealRemote, "parties", parties)
+					// log.T.Ln(h.ws.RealRemote, "parties", parties)
 					if !parties.Contains(h.ws.AuthPubKey) {
-						rl.D.Ln("not sending privileged event to user " +
+						log.D.Ln("not sending privileged event to user " +
 							"without matching auth")
 						continue
 					}
@@ -90,12 +90,12 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 						parties = append(parties, pTags[i][1])
 					}
 					if !parties.Contains(h.ws.AuthPubKey) {
-						rl.T.Ln("not broadcasting privileged event to",
+						log.T.Ln("not broadcasting privileged event to",
 							h.ws.RealRemote, "not party to event")
 					}
 
 				}
-				rl.E.Chk(h.ws.WriteEnvelope(&eventenvelope.T{
+				chk.E(h.ws.WriteEnvelope(&eventenvelope.T{
 					SubscriptionID: h.id,
 					Event:          ev,
 				}))

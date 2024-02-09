@@ -25,7 +25,7 @@ func Profile(cCtx *cli.Context) (err error) {
 	defer log.E.Chk(rl.Close())
 	var pub string
 	if user == "" {
-		if pub, _, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+		if pub, _, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 			return
 		}
 	} else {
@@ -52,11 +52,11 @@ func Profile(cCtx *cli.Context) (err error) {
 	}
 	var p Metadata
 	err = json.Unmarshal([]byte(evs[0].Content), &p)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	var npub string
-	if npub, err = bech32encoding.EncodePublicKey(pub); log.Fail(err) {
+	if npub, err = bech32encoding.EncodePublicKey(pub); chk.D(err) {
 		return err
 	}
 	fmt.Printf(

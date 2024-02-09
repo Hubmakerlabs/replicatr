@@ -16,8 +16,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var conn *websocket.Conn
 	conn, err = rl.upgrader.Upgrade(w, r, nil)
-	if rl.E.Chk(err) {
-		rl.E.F("failed to upgrade websocket: %v", err)
+	if log.E.Chk(err) {
+		log.E.F("failed to upgrade websocket: %v", err)
 		return
 	}
 	rl.clients.Store(conn, struct{}{})
@@ -25,7 +25,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	// NIP-42 challenge
 	challenge := make([]byte, 8)
 	_, err = rand.Read(challenge)
-	rl.E.Chk(err)
+	log.E.Chk(err)
 	rem := r.Header.Get("X-Forwarded-For")
 	splitted := strings.Split(rem, " ")
 	var rr string

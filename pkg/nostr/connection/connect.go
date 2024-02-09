@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/gobwas/httphead"
@@ -17,7 +18,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 type C struct {
 	Conn              net.Conn
@@ -38,7 +39,7 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 		},
 	}
 	conn, _, hs, err := dialer.Dial(c, url)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return nil, fmt.Errorf("failed to dial: %w", err)
 	}
 
@@ -80,7 +81,7 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 		flateWriter = wsflate.NewWriter(nil, func(w io.Writer) wsflate.Compressor {
 			var fw *flate.Writer
 			fw, err = flate.NewWriter(w, 4)
-			if log.Fail(err) {
+			if chk.D(err) {
 				log.E.F("Failed to create flate writer: %v", err)
 			}
 			return fw
@@ -105,20 +106,20 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 func (c *C) WriteMessage(data []byte) (err error) {
 	if c.msgState.IsCompressed() && c.enableCompression {
 		c.flateWriter.Reset(c.writer)
-		if _, err = io.Copy(c.flateWriter, bytes.NewReader(data)); log.Fail(err) {
+		if _, err = io.Copy(c.flateWriter, bytes.NewReader(data)); chk.D(err) {
 			return fmt.Errorf("failed to write message: %w", err)
 		}
 
-		if err = c.flateWriter.Close(); log.Fail(err) {
+		if err = c.flateWriter.Close(); chk.D(err) {
 			return fmt.Errorf("failed to close flate writer: %w", err)
 		}
 	} else {
-		if _, err = io.Copy(c.writer, bytes.NewReader(data)); log.Fail(err) {
+		if _, err = io.Copy(c.writer, bytes.NewReader(data)); chk.D(err) {
 			return fmt.Errorf("failed to write message: %w", err)
 		}
 	}
 
-	if err = c.writer.Flush(); log.Fail(err) {
+	if err = c.writer.Flush(); chk.D(err) {
 		return fmt.Errorf("failed to flush writer: %w", err)
 	}
 
@@ -134,13 +135,13 @@ func (c *C) ReadMessage(cx context.T, buf io.Writer) (err error) {
 		}
 		var h ws.Header
 		h, err = c.reader.NextFrame()
-		if log.Fail(err) {
-			log.Fail(c.Conn.Close())
+		if chk.D(err) {
+			chk.D(c.Conn.Close())
 			return fmt.Errorf("failed to advance frame: %w", err)
 		}
 
 		if h.OpCode.IsControl() {
-			if err = c.controlHandler(h, c.reader); log.Fail(err) {
+			if err = c.controlHandler(h, c.reader); chk.D(err) {
 				return fmt.Errorf("failed to handle control frame: %w", err)
 			}
 		} else if h.OpCode == ws.OpBinary ||
@@ -155,7 +156,7 @@ func (c *C) ReadMessage(cx context.T, buf io.Writer) (err error) {
 
 	if c.msgState.IsCompressed() && c.enableCompression {
 		c.flateReader.Reset(c.reader)
-		if _, err = io.Copy(buf, c.flateReader); log.Fail(err) {
+		if _, err = io.Copy(buf, c.flateReader); chk.D(err) {
 			return fmt.Errorf("failed to read message: %w", err)
 		}
 	} else {

@@ -48,7 +48,7 @@ func (a *Challenge) Unmarshal(buf *text.Buffer) (err error) {
 		return
 	}
 	var challengeString []byte
-	if challengeString, err = buf.ReadUntil('"'); log.Fail(err) {
+	if challengeString, err = buf.ReadUntil('"'); chk.D(err) {
 		return fmt.Errorf("did not find challenge string in auth challenge envelope")
 	}
 	a.Challenge = string(text.UnescapeByteString(challengeString))

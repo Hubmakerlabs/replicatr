@@ -2,13 +2,14 @@ package normalize
 
 import (
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 // URL normalizes the URL
 //

@@ -9,7 +9,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 // ProcessEnvelope scans a message and if it finds a correctly formed
 // enveloper.I it unmarshals it and returns it.

@@ -66,36 +66,36 @@ type PayResponse struct {
 
 func pay(cfg *C, invoice string) (err error) {
 	uri, err := url.Parse(cfg.NwcURI)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	wallet := uri.Host
 	host := uri.Query().Get("relay")
 	secret := uri.Query().Get("secret")
 	pub, err := keys.GetPublicKey(secret)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 
 	rl, err := relay.Connect(context.Bg(), host)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
-	defer log.Fail(rl.Close())
+	defer chk.D(rl.Close())
 
 	ss, err := nip4.ComputeSharedSecret(wallet, secret)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	var req PayRequest
 	req.Method = "pay_invoice"
 	req.Params.Invoice = invoice
 	b, err := json.Marshal(req)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	content, err := nip4.Encrypt(string(b), ss)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 
@@ -107,7 +107,7 @@ func pay(cfg *C, invoice string) (err error) {
 		Content:   content,
 	}
 	err = ev.Sign(secret)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 
@@ -121,12 +121,12 @@ func pay(cfg *C, invoice string) (err error) {
 		Limit: 1,
 	}}
 	sub, err := rl.Subscribe(context.Bg(), f)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 
 	err = rl.Publish(context.Bg(), ev)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 
@@ -134,18 +134,18 @@ func pay(cfg *C, invoice string) (err error) {
 	var c []byte
 	c, err = nip4.Decrypt(er.Content, ss)
 	content = string(c)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	var resp PayResponse
 	err = json.Unmarshal([]byte(content), &resp)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	if resp.Err != nil {
 		return fmt.Errorf(resp.Err.Message)
 	}
-	log.Fail(json.NewEncoder(os.Stdout).Encode(resp))
+	chk.D(json.NewEncoder(os.Stdout).Encode(resp))
 	return nil
 }
 
@@ -162,7 +162,7 @@ func doZap(cCtx *cli.Context) (err error) {
 
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var pub, sk string
-	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	receipt := ""
@@ -180,7 +180,7 @@ func doZap(cCtx *cli.Context) (err error) {
 	zr.Tags = zr.Tags.AppendUnique(rls)
 	var prefix string
 	var s any
-	if prefix, s, err = bech32encoding.Decode(cCtx.Args().First()); !log.Fail(err) {
+	if prefix, s, err = bech32encoding.Decode(cCtx.Args().First()); !chk.D(err) {
 		switch prefix {
 		case "nevent":
 			receipt = s.(pointers.Event).Author
@@ -204,20 +204,20 @@ func doZap(cCtx *cli.Context) (err error) {
 	zr.Kind = kind.ZapRequest // 9734
 	zr.CreatedAt = timestamp.Now()
 	zr.Content = comment
-	if err = zr.Sign(sk); log.Fail(err) {
+	if err = zr.Sign(sk); chk.D(err) {
 		return err
 	}
 	var b []byte
-	if b, err = zr.MarshalJSON(); log.Fail(err) {
+	if b, err = zr.MarshalJSON(); chk.D(err) {
 		return err
 	}
 	var zi *Lnurlp
-	if zi, err = cfg.ZapInfo(receipt); log.Fail(err) {
+	if zi, err = cfg.ZapInfo(receipt); chk.D(err) {
 		return err
 	}
 	var u *url.URL
 	u, err = url.Parse(zi.Callback)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	param := url.Values{}
@@ -225,12 +225,12 @@ func doZap(cCtx *cli.Context) (err error) {
 	param.Set("nostr", string(b))
 	u.RawQuery = param.Encode()
 	var resp *http.Response
-	if resp, err = http.Get(u.String()); log.Fail(err) {
+	if resp, err = http.Get(u.String()); chk.D(err) {
 		return err
 	}
-	defer log.Fail(resp.Body.Close())
+	defer chk.D(resp.Body.Close())
 	var iv Invoice
-	if err = json.NewDecoder(resp.Body).Decode(&iv); log.Fail(err) {
+	if err = json.NewDecoder(resp.Body).Decode(&iv); chk.D(err) {
 		return err
 	}
 	if cfg.NwcURI == "" {
@@ -246,7 +246,7 @@ func doZap(cCtx *cli.Context) (err error) {
 		fmt.Println("lightning:" + iv.PR)
 		qrterminal.GenerateWithConfig("lightning:"+iv.PR, config)
 	} else {
-		log.Fail(pay(cCtx.App.Metadata["config"].(*C), iv.PR))
+		chk.D(pay(cCtx.App.Metadata["config"].(*C), iv.PR))
 	}
 	return nil
 }

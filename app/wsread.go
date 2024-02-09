@@ -30,15 +30,15 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		deny = false
 	}
 	if deny {
-		// rl.T.F("denying access to '%s': dropping message", p.ws.RealRemote)
+		// log.T.F("denying access to '%s': dropping message", p.ws.RealRemote)
 		p.kill()
 		return
 	}
 	p.conn.SetReadLimit(rl.MaxMessageSize)
-	rl.E.Chk(p.conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
+	log.E.Chk(p.conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
 	p.conn.SetPongHandler(func(string) (err error) {
 		err = p.conn.SetReadDeadline(time.Now().Add(rl.PongWait))
-		rl.E.Chk(err)
+		log.E.Chk(err)
 		return
 	})
 	for _, onConnect := range rl.OnConnect {
@@ -49,7 +49,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		var typ int
 		var message []byte
 		typ, message, err = p.conn.ReadMessage()
-		if log.Fail(err) {
+		if log.T.Chk(err) {
 			if websocket.IsUnexpectedCloseError(
 				err,
 				websocket.CloseNormalClosure,    // 1000
@@ -57,14 +57,14 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 				websocket.CloseNoStatusReceived, // 1005
 				websocket.CloseAbnormalClosure,  // 1006
 			) {
-				rl.E.F("unexpected close error from %s: %v",
+				log.E.F("unexpected close error from %s: %v",
 					p.ws.RealRemote, err)
 			}
 			p.kill()
 			return
 		}
 		if typ == websocket.PingMessage {
-			rl.E.Chk(p.ws.WriteMessage(websocket.PongMessage, nil))
+			log.E.Chk(p.ws.WriteMessage(websocket.PongMessage, nil))
 			continue
 		}
 		trunc := make([]byte, 512)
@@ -73,7 +73,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		if len(message) > 512 {
 			ellipsis = "..."
 		}
-		rl.T.F("receiving message from %s %s\n%s%s",
+		log.T.F("receiving message from %s %s\n%s%s",
 			p.ws.RealRemote, p.ws.AuthPubKey, string(trunc), ellipsis)
 		go rl.wsProcessMessages(message, p.c, p.kill, p.ws)
 	}

@@ -2,6 +2,7 @@ package cache_memory
 
 import (
 	"encoding/binary"
+	"os"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
@@ -9,7 +10,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 type RistrettoCache[V any] struct {
 	Cache *ristretto.Cache[string, V]

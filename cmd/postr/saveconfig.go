@@ -15,7 +15,7 @@ func (cfg *C) save(profile string) (err error) {
 	}
 	var dir string
 	dir, err = configDir()
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	dir = filepath.Join(dir, appName)
@@ -28,7 +28,7 @@ func (cfg *C) save(profile string) (err error) {
 	}
 	var b []byte
 	b, err = json.MarshalIndent(&cfg, "", "\t")
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	if len(cfg.Follows) == 0 {

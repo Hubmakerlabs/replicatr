@@ -9,10 +9,12 @@ var PrivilegedKinds = T{
 	kind.ApplicationSpecificData,
 }
 
-func IsPrivileged(k kind.T) (is bool) {
+func IsPrivileged(k ...kind.T) (is bool) {
 	for i := range PrivilegedKinds {
-		if k == PrivilegedKinds[i] {
-			return true
+		for j := range k {
+			if k[j] == PrivilegedKinds[i] {
+				return true
+			}
 		}
 	}
 	return

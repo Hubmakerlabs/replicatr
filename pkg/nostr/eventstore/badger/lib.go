@@ -28,6 +28,7 @@ type Backend struct {
 	Path     string
 	MaxLimit int
 	*slog.Log
+	*slog.Check
 	*badger.DB
 	seq *badger.Sequence
 }
