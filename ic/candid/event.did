@@ -1,0 +1,26 @@
+type EventId = record {
+    T: text;
+};
+
+type TimeStamp = record{
+    T: int;
+}
+
+type Kind = record{
+    T:nat;
+}
+
+type Tags = record{
+    T : vec<text>;
+}
+
+
+type Event = record{
+    id: EventID;
+    pubkey: text;
+    createdAt: TimeStamp;
+    kind: Kind;
+    tags: Tags;
+    content: text;
+    sig: text;
+};

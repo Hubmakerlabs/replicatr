@@ -14,6 +14,7 @@
 !go.sum
 !go.mod
 
+
 !README.md
 !LICENSE
 !*.sh
@@ -23,5 +24,7 @@
 !*.csv
 !*.py
 !*.mediawiki
+!*.did
+!*.rs
 # ...even if they are in subdirectories
 !*/
