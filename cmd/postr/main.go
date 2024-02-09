@@ -12,7 +12,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 const appName = "postr"
 
@@ -23,7 +23,7 @@ var revision = "HEAD"
 func configDir() (dir string, err error) {
 	switch runtime.GOOS {
 	case "darwin":
-		if dir, err = os.UserHomeDir(); log.Fail(err) {
+		if dir, err = os.UserHomeDir(); chk.D(err) {
 			return
 		}
 		return filepath.Join(dir, ".config"), nil
@@ -34,7 +34,7 @@ func configDir() (dir string, err error) {
 
 func loadConfig(profile string) (cfg *C, err error) {
 	var dir string
-	if dir, err = configDir(); log.Fail(err) {
+	if dir, err = configDir(); chk.D(err) {
 		return nil, err
 	}
 	dir = filepath.Join(dir, appName)
@@ -45,7 +45,7 @@ func loadConfig(profile string) (cfg *C, err error) {
 	case "?":
 		var nn []string
 		p := filepath.Join(dir, "config-*.json")
-		if nn, err = filepath.Glob(p); log.Fail(err) {
+		if nn, err = filepath.Glob(p); chk.D(err) {
 			return
 		}
 		for _, n := range nn {
@@ -57,15 +57,15 @@ func loadConfig(profile string) (cfg *C, err error) {
 	default:
 		fp = filepath.Join(dir, "config-"+profile+".json")
 	}
-	if err = os.MkdirAll(filepath.Dir(fp), 0700); log.Fail(err) {
+	if err = os.MkdirAll(filepath.Dir(fp), 0700); chk.D(err) {
 		return
 	}
 	var b []byte
-	if b, err = os.ReadFile(fp); log.Fail(err) {
+	if b, err = os.ReadFile(fp); chk.D(err) {
 		return
 	}
 	cfg = new(C)
-	if err = json.Unmarshal(b, cfg); log.Fail(err) {
+	if err = json.Unmarshal(b, cfg); chk.D(err) {
 		return
 	}
 	log.D.Ln("relays", cfg.Relays)
@@ -305,7 +305,7 @@ func main() {
 			}
 			profile := cCtx.String("a")
 			var cfg *C
-			if cfg, err = loadConfig(profile); log.Fail(err) {
+			if cfg, err = loadConfig(profile); chk.D(err) {
 				return err
 			}
 			cCtx.App.Metadata = map[string]any{

@@ -65,7 +65,7 @@ func ParseReferences(evt *event.T) (refs []*Reference) {
 			// parse the number, get data from event tags.
 			n := content[r[6]:r[7]]
 			idx, err := strconv.Atoi(n)
-			if log.Fail(err) || len(evt.Tags) <= idx {
+			if chk.D(err) || len(evt.Tags) <= idx {
 				continue
 			}
 			if tag := evt.Tags[idx]; tag != nil && len(tag) >= 2 {

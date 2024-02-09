@@ -67,20 +67,20 @@ func Ingest(args *Config) int {
 				Until: until,
 			},
 		}
-		if sub, err = downRelay.Subscribe(c, f); log.Fail(err) {
+		if sub, err = downRelay.Subscribe(c, f); chk.D(err) {
 			// this could fail
 		}
 		if !downAuthed {
 			select {
 			case <-downRelay.AuthRequired:
-				if err = downRelay.Auth(c, func(evt *event.T) error { return evt.Sign(args.SeckeyHex) }); log.Fail(err) {
+				if err = downRelay.Auth(c, func(evt *event.T) error { return evt.Sign(args.SeckeyHex) }); chk.D(err) {
 					return 1
 				}
 				downAuthed = true
 			case <-time.After(2 * time.Second):
 			}
 			if sub, err = downRelay.Subscribe(c, f,
-				subscription.WithLabel(fmt.Sprint(time.Now().Unix()))); log.Fail(err) {
+				subscription.WithLabel(fmt.Sprint(time.Now().Unix()))); chk.D(err) {
 				return 1
 			}
 		}
@@ -106,7 +106,7 @@ func Ingest(args *Config) int {
 					break out
 				}
 				count++
-				if err = upRelay.Publish(uc, ev); log.Fail(err) {
+				if err = upRelay.Publish(uc, ev); chk.D(err) {
 					log.D.Ln(upAuthed)
 					if strings.Contains(err.Error(), "connection closed") {
 						if upRelay, err = relay.Connect(c, args.UploadRelay); log.E.Chk(err) {
@@ -120,11 +120,11 @@ func Ingest(args *Config) int {
 							if err = upRelay.Auth(c,
 								func(evt *event.T) error {
 									return evt.Sign(args.SeckeyHex)
-								}); log.Fail(err) {
+								}); chk.D(err) {
 								return 1
 							}
 							upAuthed = true
-							// if err = upRelay.Publish(uc, ev); log.Fail(err) {
+							// if err = upRelay.Publish(uc, ev); chk.D(err) {
 							// 	return 1
 							// }
 						case <-time.After(5 * time.Second):
@@ -134,7 +134,7 @@ func Ingest(args *Config) int {
 						log.I.Ln("authed")
 						return 0
 					}
-					if err = upRelay.Publish(uc, ev); log.Fail(err) {
+					if err = upRelay.Publish(uc, ev); chk.D(err) {
 						return 1
 					}
 				}

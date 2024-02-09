@@ -16,7 +16,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 var args app.Config
 
@@ -54,7 +54,7 @@ func main() {
 		}
 	} else {
 		// try to load the configuration file
-		if b, err = os.ReadFile(confFile); log.Fail(err) {
+		if b, err = os.ReadFile(confFile); chk.E(err) {
 			log.E.Ln(`
 if no nsec is given there must be configuration, easiest way is to give it in
 the -n,--nsec option and it will be created so it can be loaded in future until
@@ -63,7 +63,7 @@ this is done again
 			fail()
 		}
 		var cfg app.Config
-		if err = json.Unmarshal(b, &cfg); log.Fail(err) {
+		if err = json.Unmarshal(b, &cfg); chk.E(err) {
 			log.E.Ln(`
 unable to read configuration file
 `)

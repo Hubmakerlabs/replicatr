@@ -19,7 +19,7 @@ func (cfg *C) PopulateFollows(f *[]string, start, end *int) RelayIter {
 			Limit:   *end - *start,
 		})
 		log.T.S(rl.URL(), evs)
-		if log.Fail(err) {
+		if chk.D(err) {
 			return true
 		}
 		for _, ev := range evs {

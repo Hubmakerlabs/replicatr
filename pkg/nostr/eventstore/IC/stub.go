@@ -19,10 +19,10 @@ type Backend struct {
 // later this will include the ICP storage driver functionality.
 
 func (b *Backend) Init() (err error) {
-	if b.Badger.Log == nil {
-		b.Badger.Log = slog.New(os.Stderr)
+	if b.Badger.Log == nil || b.Badger.Check == nil {
+		b.Badger.Log, b.Badger.Check = slog.New(os.Stderr)
 	}
-	if err = b.Badger.Init(); b.Badger.Log.Fail(err) {
+	if err = b.Badger.Init(); b.Badger.Check.D(err) {
 		return
 	}
 

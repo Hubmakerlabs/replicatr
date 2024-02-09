@@ -2,7 +2,7 @@ package relay
 
 // func TestEOSEMadness(t *testing.T) {
 // 	rl := MustConnect(eoseenvelope.RELAY)
-// 	defer log.Fail(rl.Close())
+// 	defer chk.D(rl.Close())
 //
 // 	sub, e := rl.Subscribe(context.Bg(), filters.T{
 // 		{Kinds: kinds.T{kind.TextNote}, Limit: 2},
@@ -49,7 +49,7 @@ package relay
 // 	const RELAY = "wss://relay.nostr.band"
 //
 // 	rl := MustConnect(RELAY)
-// 	defer log.Fail(rl.Close())
+// 	defer chk.D(rl.Close())
 //
 // 	count, e := rl.Count(context.Bg(), filters.T{
 // 		{Kinds: kinds.T{kind.FollowList}, Tags: filter.TagMap{"p": []string{"3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d"}}},

@@ -70,7 +70,7 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 		}
 		var sid []byte
 		// read the string
-		if sid, err = buf.ReadUntil('"'); log.Fail(err) {
+		if sid, err = buf.ReadUntil('"'); chk.D(err) {
 			err = fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 			log.D.Ln(err)
 			return
@@ -88,7 +88,7 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 			return
 		}
 		var bb []byte
-		if bb, err = buf.ReadUntil('"'); log.Fail(err) {
+		if bb, err = buf.ReadUntil('"'); chk.D(err) {
 			err = fmt.Errorf("unknown object in count envelope '%s'",
 				buf.String())
 			return
@@ -128,7 +128,7 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 			return
 		}
 		var which byte
-		if which, err = buf.ScanForOneOf(false, '{', '"'); log.Fail(err) {
+		if which, err = buf.ScanForOneOf(false, '{', '"'); chk.D(err) {
 			return
 		}
 		switch which {

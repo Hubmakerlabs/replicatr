@@ -112,7 +112,7 @@ func (s *System) FetchUserEvents(c context.T,
 
 	var ff map[*relay.T]*filter.T
 	if ff, err = s.ExpandQueriesByAuthorAndRelays(c,
-		f); log.Fail(err) {
+		f); chk.D(err) {
 
 		return nil, fmt.Errorf("failed to expand queries: %w", err)
 	}
@@ -126,7 +126,7 @@ func (s *System) FetchUserEvents(c context.T,
 				len(f.Authors) // hack
 			var sub *subscription.T
 			if sub, err = rl.Subscribe(c,
-				filters.T{f}); log.Fail(err) {
+				filters.T{f}); chk.D(err) {
 
 				return
 			}

@@ -1,7 +1,9 @@
 package sdk
 
 import (
+	"os"
+
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)

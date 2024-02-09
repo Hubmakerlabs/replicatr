@@ -14,7 +14,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 const AuthRequired = "auth-required"
 
@@ -56,7 +56,7 @@ func ValidateAuthEvent(evt *event.T, challenge string,
 		return
 	}
 	var expected, found *url.URL
-	if expected, err = parseURL(relayURL); log.Fail(err) {
+	if expected, err = parseURL(relayURL); chk.D(err) {
 		log.D.Ln(err)
 		return
 	}
@@ -67,7 +67,7 @@ func ValidateAuthEvent(evt *event.T, challenge string,
 		log.D.Ln(err)
 		return
 	}
-	if found, err = parseURL(r); log.Fail(err) {
+	if found, err = parseURL(r); chk.D(err) {
 		err = fmt.Errorf("error parsing relay url")
 		log.D.Ln(err)
 		return

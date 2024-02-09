@@ -119,7 +119,7 @@ example:
 		}
 		defer func() {
 			for _, relay := range relays {
-				log.Fail(relay.Close())
+				chk.D(relay.Close())
 			}
 		}()
 		// gather the secret key
@@ -138,7 +138,7 @@ example:
 
 			if stdinEvent != "" {
 
-				if err := json.Unmarshal([]byte(stdinEvent), evt); log.Fail(err) {
+				if err := json.Unmarshal([]byte(stdinEvent), evt); chk.D(err) {
 					lineProcessingError(c, "invalid event received from stdin: %s", err)
 					continue
 				}
@@ -233,7 +233,7 @@ example:
 
 			// publish to relays
 			if len(relays) > 0 {
-				log.Fail(os.Stdout.Sync())
+				chk.D(os.Stdout.Sync())
 				for _, relay := range relays {
 				publish:
 					log.E.F("publishing to %s... ", relay.URL)
