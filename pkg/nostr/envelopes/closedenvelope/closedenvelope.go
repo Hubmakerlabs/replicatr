@@ -2,6 +2,7 @@ package closedenvelope
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
@@ -11,7 +12,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 // T is a wrapper for a signal to cancel a subscription.
 type T struct {
@@ -57,7 +58,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	}
 	var sid []byte
 	// read the string
-	if sid, err = buf.ReadUntil('"'); log.Fail(err) {
+	if sid, err = buf.ReadUntil('"'); chk.D(err) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 	}
 	E.ID = subscriptionid.T(sid[:])
@@ -67,7 +68,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 		return
 	}
 	var reason []byte
-	if reason, err = buf.ReadUntil('"'); log.Fail(err) {
+	if reason, err = buf.ReadUntil('"'); chk.D(err) {
 		return fmt.Errorf("did not find reason value in close envelope")
 	}
 	E.Reason = string(text.UnescapeByteString(reason))

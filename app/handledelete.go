@@ -16,7 +16,7 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
 				var ch chan *event.T
-				if ch, err = query(c, &filter.T{IDs: tag.T{t[1]}}); rl.E.Chk(err) {
+				if ch, err = query(c, &filter.T{IDs: tag.T{t[1]}}); chk.E(err) {
 					continue
 				}
 				target := <-ch
@@ -36,12 +36,12 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 				if acceptDeletion {
 					// delete it
 					for _, del := range rl.DeleteEvent {
-						rl.E.Chk(del(c, target))
+						chk.E(del(c, target))
 					}
 				} else {
 					// fail and stop here
 					err = fmt.Errorf("blocked: %s", msg)
-					rl.E.Ln(err)
+					log.E.Ln(err)
 					return
 				}
 				// don't try to query this same event again

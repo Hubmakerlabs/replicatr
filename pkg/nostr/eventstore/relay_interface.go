@@ -57,7 +57,7 @@ func (w RelayWrapper) Publish(c context.T, evt *event.T) (err error) {
 		// 	return fmt.Errorf("failed to query before parameterized replacing: %w", err)
 		// }
 		// if previous := <-ch; previous != nil && isOlder(previous, evt) {
-		// 	if err = w.Store.DeleteEvent(c, previous); log.Fail(err) {
+		// 	if err = w.Store.DeleteEvent(c, previous); chk.D(err) {
 		// 		return fmt.Errorf("failed to delete event for parameterized replacing: %w", err)
 		// 	}
 		// }

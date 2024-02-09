@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
@@ -14,7 +15,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 // ComputeSharedSecret computes an Elliptic Curve Diffie Hellman shared secret
 // out of one public key and another secret key.
@@ -36,21 +37,21 @@ func ComputeSharedSecret(pub string, sec string) (secret []byte, err error) {
 	var p *secp256k1.PublicKey
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
 	if pub[:bech32encoding.Bech32HRPLen] == bech32encoding.PubHRP {
-		if p, err = bech32encoding.NpubToPublicKey(pub); log.Fail(err) {
+		if p, err = bech32encoding.NpubToPublicKey(pub); chk.D(err) {
 			return
 		}
 	} else {
-		if p, err = bech32encoding.HexToPublicKey(pub); log.Fail(err) {
+		if p, err = bech32encoding.HexToPublicKey(pub); chk.D(err) {
 			return
 		}
 	}
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
 	if sec[:bech32encoding.Bech32HRPLen] == bech32encoding.SecHRP {
-		if s, err = bech32encoding.NsecToSecretKey(sec); log.Fail(err) {
+		if s, err = bech32encoding.NsecToSecretKey(sec); chk.D(err) {
 			return
 		}
 	} else {
-		if s, err = bech32encoding.HexToSecretKey(sec); log.Fail(err) {
+		if s, err = bech32encoding.HexToSecretKey(sec); chk.D(err) {
 			return
 		}
 	}

@@ -15,22 +15,21 @@ import (
 
 // Export prints the JSON of all events or writes them to a file.
 func (rl *Relay) Export(db *badger.Backend, filename string) {
-	rl.D.Ln("running export subcommand")
+	log.D.Ln("running export subcommand")
 	b := make([]byte, MaxMessageSize)
 	gob.Register(&event.T{})
 	var fh *os.File
 	var err error
 	if filename != "" {
 		fh, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0755)
-		if err != nil {
-			rl.F.Ln(err)
+		if chk.F(err) {
 			os.Exit(1)
 		}
 	} else {
 		fh = os.Stdout
 	}
 	var evs event.Array
-	rl.E.Chk(db.View(func(txn *bdb.Txn) (err error) {
+	chk.E(db.View(func(txn *bdb.Txn) (err error) {
 		it := txn.NewIterator(bdb.IteratorOptions{})
 		for it.Rewind(); it.Valid(); it.Next() {
 			if b, err = it.Item().ValueCopy(b); err != nil {

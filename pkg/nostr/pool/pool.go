@@ -4,6 +4,7 @@ package pool
 import (
 	"fmt"
 	"hash/maphash"
+	"os"
 	"sync"
 	"time"
 	"unsafe"
@@ -19,7 +20,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 const MAX_LOCKS = 50
 

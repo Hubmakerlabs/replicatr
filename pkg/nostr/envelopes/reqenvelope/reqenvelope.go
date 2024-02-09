@@ -15,7 +15,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 // T is the wrapper for a query to a relay.
 type T struct {
@@ -69,7 +69,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 		}
 		var sid []byte
 		// read the string
-		if sid, err = buf.ReadUntil('"'); log.Fail(err) {
+		if sid, err = buf.ReadUntil('"'); chk.D(err) {
 			return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
 		}
 		// log.T.F("Subscription ID: '%s'", sid)
@@ -91,18 +91,18 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 		// it should end with a close brace. This slice will be wrapped in
 		// braces and contain paired brackets, braces and quotes.
 		var filterArray []byte
-		if filterArray, err = buf.ReadEnclosed(); log.Fail(err) {
+		if filterArray, err = buf.ReadEnclosed(); chk.D(err) {
 			return
 		}
 		// log.D.F("filter: '%s'", filterArray)
 		f := &filter.T{}
-		if err = json.Unmarshal(filterArray, f); log.Fail(err) {
+		if err = json.Unmarshal(filterArray, f); chk.D(err) {
 			return
 		}
 		E.Filters = append(E.Filters, f)
 		// log.D.F("remaining: '%s'", buf.Buf[buf.Pos:])
 		which = 0
-		if which, err = buf.ScanForOneOf(true, ',', ']'); log.Fail(err) {
+		if which, err = buf.ScanForOneOf(true, ',', ']'); chk.D(err) {
 			return
 		}
 		// log.D.F("'%s'", string(which))

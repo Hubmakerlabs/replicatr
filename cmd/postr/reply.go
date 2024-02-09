@@ -29,7 +29,7 @@ func Reply(cCtx *cli.Context) (err error) {
 	sensitive, geohash := cCtx.String("sensitive"), cCtx.String("geohash")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var sk, pub string
-	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	ev := &event.T{}
@@ -43,7 +43,7 @@ func Reply(cCtx *cli.Context) (err error) {
 	ev.Kind = kind.TextNote
 	if stdin {
 		var b []byte
-		if b, err = io.ReadAll(os.Stdin); log.Fail(err) {
+		if b, err = io.ReadAll(os.Stdin); chk.D(err) {
 			return
 		}
 		ev.Content = string(b)
@@ -91,10 +91,10 @@ func Reply(cCtx *cli.Context) (err error) {
 		} else {
 			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, rl.URL(), "mention"})
 		}
-		if err := ev.Sign(sk); log.Fail(err) {
+		if err := ev.Sign(sk); chk.D(err) {
 			return true
 		}
-		if err = rl.Publish(c, ev); log.Fail(err) {
+		if err = rl.Publish(c, ev); chk.D(err) {
 			log.D.Ln(rl.URL(), err)
 		} else {
 			success.Add(1)

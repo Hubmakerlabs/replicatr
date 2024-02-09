@@ -36,7 +36,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 type Status int
 
@@ -200,7 +200,7 @@ func (r *T) Connect(c context.T) (err error) {
 				if err != nil {
 					log.D.F("{%s} error writing ping: %v; closing websocket",
 						r.URL(), err)
-					log.Fail(r.Close()) // this should trigger a context cancelation
+					chk.D(r.Close()) // this should trigger a context cancelation
 					return
 				}
 			case wr := <-r.writeQueue:
@@ -228,7 +228,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 		buf.Reset()
 		if err = conn.ReadMessage(r.connectionContext, buf); err != nil {
 			r.ConnectionError = err
-			log.Fail(r.Close())
+			chk.D(r.Close())
 			break
 		}
 
@@ -274,7 +274,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 				if !r.AssumeValid {
 					if ok, err = env.Event.CheckSignature(); !ok {
 						errmsg := ""
-						if log.Fail(err) {
+						if chk.D(err) {
 							errmsg = err.Error()
 						}
 						log.D.F("{%s} bad signature on %s; %s",
@@ -342,7 +342,7 @@ func (r *T) Auth(c context.T, sign func(ev *event.T) error) error {
 		},
 		Content: "",
 	}
-	if err := sign(authEvent); log.Fail(err) {
+	if err := sign(authEvent); chk.D(err) {
 		return fmt.Errorf("error signing auth event: %w", err)
 	}
 

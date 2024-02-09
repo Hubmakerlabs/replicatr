@@ -15,20 +15,20 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 	var remotes []string
 	listeners.Range(func(ws *relayws.WebSocket, subs ListenerMap) bool {
 
-		if ws.AuthPubKey == "" && rl.AccessControl.PublicAuth {
+		if ws.AuthPubKey == "" && rl.Info.Limitation.AuthRequired {
 			return true
 		}
-		rl.T.Ln("broadcasting", ws.RealRemote, ws.AuthPubKey, subs.Size())
+		log.T.Ln("broadcasting", ws.RealRemote, ws.AuthPubKey, subs.Size())
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {
-				// rl.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
+				// log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
 				// 	listener.ws.RealRemote, listener.ws.AuthPubKey,
 				// 	listener.filters, evt.ToObject().String())
 				return true
 			}
 			if kinds.IsPrivileged(evt.Kind) {
 				if ws.AuthPubKey == "" {
-					rl.D.Ln("not broadcasting privileged event to",
+					log.D.Ln("not broadcasting privileged event to",
 						ws.RealRemote, "not authenticated")
 					return true
 				}
@@ -38,13 +38,13 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 					parties = append(parties, pTags[i][1])
 				}
 				if !parties.Contains(ws.AuthPubKey) {
-					rl.D.Ln("not broadcasting privileged event to",
+					log.D.Ln("not broadcasting privileged event to",
 						ws.RealRemote, "not party to event")
 					return true
 				}
 			}
 			remotes = append(remotes, ws.RealRemote)
-			rl.E.Chk(ws.WriteEnvelope(&eventenvelope.T{
+			chk.E(ws.WriteEnvelope(&eventenvelope.T{
 				SubscriptionID: subscriptionid.T(id),
 				Event:          evt},
 			))
@@ -53,7 +53,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 		return true
 	})
 	if len(remotes) > 0 {
-		rl.T.F("sending event to subscribers %v '%s'",
+		log.T.F("sending event to subscribers %v '%s'",
 			remotes, evt.ToObject().String())
 	}
 }

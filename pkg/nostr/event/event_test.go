@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
@@ -18,7 +19,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 const (
 	TestSecBech32 = "nsec1z7tlduw3qkf4fz6kdw3jaq2h02jtexgwkrck244l3p834a930sjsh8t89c"
@@ -64,7 +65,7 @@ func GenTextNote(sk *secp256k1.SecretKey, replyID,
 		Tags:      t,
 		Content:   quoteText,
 	}
-	if err = ev.SignWithSecKey(sk); log.Fail(err) {
+	if err = ev.SignWithSecKey(sk); chk.D(err) {
 		return
 	}
 	note = ev.ToObject().String()
@@ -78,7 +79,7 @@ func TestGenerateEvent(t *testing.T) {
 	sec, pub := GetTestKeyPair()
 	_ = pub
 	for i := 0; i < 10; i++ {
-		if note, err = GenTextNote(sec, noteID, relayURL); log.Fail(err) {
+		if note, err = GenTextNote(sec, noteID, relayURL); chk.D(err) {
 			t.Error(err)
 			t.FailNow()
 		}

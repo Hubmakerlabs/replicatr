@@ -28,14 +28,14 @@ func Post(cCtx *cli.Context) (err error) {
 	sensitive, geohash := cCtx.String("sensitive"), cCtx.String("geohash")
 	cfg := cCtx.App.Metadata["config"].(*C)
 	var pub, sk string
-	if pub, sk, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, sk, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	ev := &event.T{}
 	ev.PubKey = pub
 	if stdin {
 		var b []byte
-		if b, err = io.ReadAll(os.Stdin); log.Fail(err) {
+		if b, err = io.ReadAll(os.Stdin); chk.D(err) {
 			return
 		}
 		ev.Content = string(b)
@@ -88,13 +88,13 @@ func Post(cCtx *cli.Context) (err error) {
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.TextNote
 	log.T.F("signing event `%s`", ev.ToObject())
-	if err = ev.Sign(sk); log.Fail(err) {
+	if err = ev.Sign(sk); chk.D(err) {
 		return err
 	}
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
 		err := rl.Publish(c, ev)
-		if log.Fail(err) {
+		if chk.D(err) {
 			log.D.Ln(rl.URL(), err)
 		} else {
 			success.Add(1)

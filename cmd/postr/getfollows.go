@@ -7,7 +7,7 @@ import (
 // GetFollows is
 func (cfg *C) GetFollows(profile string, update bool) (profiles Follows, err error) {
 	var pub string
-	if pub, _, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, _, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	log.D.Ln("pub", pub)
@@ -43,7 +43,7 @@ func (cfg *C) GetFollows(profile string, update bool) (profiles Follows, err err
 			}
 		}
 		cfg.Touch()
-		if err = cfg.save(profile); log.Fail(err) {
+		if err = cfg.save(profile); chk.D(err) {
 			return nil, err
 		}
 	}

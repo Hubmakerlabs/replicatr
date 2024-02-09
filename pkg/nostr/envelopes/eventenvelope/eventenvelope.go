@@ -3,6 +3,7 @@ package eventenvelope
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -13,7 +14,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 var _ enveloper.I = (*T)(nil)
 
@@ -38,7 +39,7 @@ func (env *T) UnmarshalJSON(bytes []byte) error {
 // error if the Subscription ID is invalid or the T is nil.
 func NewEventEnvelope(si string, ev *event.T) (ee *T, err error) {
 	var sid subscriptionid.T
-	if sid, err = subscriptionid.New(si); log.Fail(err) {
+	if sid, err = subscriptionid.New(si); chk.D(err) {
 		return
 	}
 	if ev == nil {
@@ -108,12 +109,12 @@ func (env *T) Unmarshal(buf *text.Buffer) (err error) {
 	// should end with a close brace. This slice will be wrapped in braces and
 	// contain paired brackets, braces and quotes.
 	var eventObj []byte
-	if eventObj, err = buf.ReadEnclosed(); log.Fail(err) {
+	if eventObj, err = buf.ReadEnclosed(); chk.D(err) {
 		return
 	}
 	// allocate an event to unmarshal into
 	env.Event = &event.T{}
-	if err = json.Unmarshal(eventObj, env.Event); log.Fail(err) {
+	if err = json.Unmarshal(eventObj, env.Event); chk.D(err) {
 		log.D.S(string(eventObj))
 		return
 	}

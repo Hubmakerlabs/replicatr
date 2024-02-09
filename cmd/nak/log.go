@@ -6,4 +6,4 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)

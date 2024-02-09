@@ -15,7 +15,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 type Response struct {
 	Event *event.T
@@ -72,12 +72,12 @@ func (a *Response) Unmarshal(buf *text.Buffer) (err error) {
 	// should end with a close brace. This slice will be wrapped in braces and
 	// contain paired brackets, braces and quotes.
 	var eventObj []byte
-	if eventObj, err = buf.ReadEnclosed(); log.Fail(err) {
+	if eventObj, err = buf.ReadEnclosed(); chk.D(err) {
 		return fmt.Errorf("event not found in auth envelope")
 	}
 	// allocate an event to unmarshal into
 	a.Event = &event.T{}
-	if err = json.Unmarshal(eventObj, a.Event); log.Fail(err) {
+	if err = json.Unmarshal(eventObj, a.Event); chk.D(err) {
 		log.D.S(string(eventObj))
 		return
 	}

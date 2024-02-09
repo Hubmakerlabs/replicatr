@@ -27,11 +27,11 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 				}
 			}
 			for _, ev := range events {
-				log.Fail(json.NewEncoder(os.Stdout).Encode(ev))
+				chk.D(json.NewEncoder(os.Stdout).Encode(ev))
 			}
 		} else {
 			for _, ev := range evs {
-				log.Fail(json.NewEncoder(os.Stdout).Encode(ev))
+				chk.D(json.NewEncoder(os.Stdout).Encode(ev))
 			}
 		}
 		return
@@ -47,7 +47,7 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 			fmt.Fprintln(buffer, ev.Content)
 			var rls []string
 			if rls, ok = cfg.FollowsRelays[ev.PubKey]; ok {
-				if nevent, err := bech32encoding.EncodeEvent(ev.ID, rls, ev.PubKey); !log.Fail(err) {
+				if nevent, err := bech32encoding.EncodeEvent(ev.ID, rls, ev.PubKey); !chk.D(err) {
 					fmt.Fprint(buffer, fgBlue.Sprint(cfg.EventURLPrefix, nevent))
 				}
 			} else {

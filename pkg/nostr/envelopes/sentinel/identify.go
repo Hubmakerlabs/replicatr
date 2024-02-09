@@ -9,7 +9,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 // Identify takes a byte slice and scans it as a nostr Envelope array, and
 // returns the label type and a text.Buffer that is ready for the Read function

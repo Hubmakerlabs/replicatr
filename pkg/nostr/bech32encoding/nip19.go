@@ -24,7 +24,7 @@ const (
 
 func DecodeToString(bech32String string) (prefix, value string, err error) {
 	var s any
-	if prefix, s, err = Decode(bech32String); log.Fail(err) {
+	if prefix, s, err = Decode(bech32String); chk.D(err) {
 		return
 	}
 	var ok bool
@@ -39,11 +39,11 @@ func DecodeToString(bech32String string) (prefix, value string, err error) {
 func Decode(bech32string string) (prefix string, value any, err error) {
 	var bits5 []byte
 	// log.D.Ln("decoding bech32", bech32string)
-	if prefix, bits5, err = bech32.DecodeNoLimit(bech32string); log.Fail(err) {
+	if prefix, bits5, err = bech32.DecodeNoLimit(bech32string); chk.D(err) {
 		return
 	}
 	var data []byte
-	if data, err = bech32.ConvertBits(bits5, 5, 8, false); log.Fail(err) {
+	if data, err = bech32.ConvertBits(bits5, 5, 8, false); chk.D(err) {
 		return prefix, nil, fmt.Errorf("failed translating data into 8 bits: %s",
 			err.Error())
 	}
@@ -166,7 +166,7 @@ func EncodeSecretKey(privateKeyHex string) (string, error) {
 
 func EncodePublicKey(publicKeyHex string) (s string, err error) {
 	var b []byte
-	if b, err = hex.Dec(publicKeyHex); log.Fail(err) {
+	if b, err = hex.Dec(publicKeyHex); chk.D(err) {
 		err = fmt.Errorf("failed to decode public key hex: %w", err)
 		return
 	}
@@ -180,12 +180,12 @@ func EncodePublicKey(publicKeyHex string) (s string, err error) {
 
 func EncodeNote(eventIDHex string) (s string, err error) {
 	var b []byte
-	if b, err = hex.Dec(eventIDHex); log.Fail(err) {
+	if b, err = hex.Dec(eventIDHex); chk.D(err) {
 		err = fmt.Errorf("failed to decode event id hex: %w", err)
 		return
 	}
 	var bits5 []byte
-	if bits5, err = bech32.ConvertBits(b, 8, 5, true); log.Fail(err) {
+	if bits5, err = bech32.ConvertBits(b, 8, 5, true); chk.D(err) {
 		return
 	}
 	return bech32.Encode(NoteHRP, bits5)
@@ -194,7 +194,7 @@ func EncodeNote(eventIDHex string) (s string, err error) {
 func EncodeProfile(publicKeyHex string, relays []string) (s string, err error) {
 	buf := &bytes.Buffer{}
 	var pb []byte
-	if pb, err = hex.Dec(publicKeyHex); log.Fail(err) {
+	if pb, err = hex.Dec(publicKeyHex); chk.D(err) {
 		err = fmt.Errorf("invalid pubkey '%s': %w", publicKeyHex, err)
 		return
 	}
@@ -203,7 +203,7 @@ func EncodeProfile(publicKeyHex string, relays []string) (s string, err error) {
 		writeTLVEntry(buf, TLVRelay, []byte(url))
 	}
 	var bits5 []byte
-	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); log.Fail(err) {
+	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); chk.D(err) {
 		err = fmt.Errorf("failed to convert bits: %w", err)
 		return
 	}
@@ -227,7 +227,7 @@ func EncodeEvent(eventIDHex eventid.T, relays []string,
 		writeTLVEntry(buf, TLVAuthor, pubkey)
 	}
 	var bits5 []byte
-	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); log.Fail(err) {
+	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); chk.D(err) {
 		err = fmt.Errorf("failed to convert bits: %w", err)
 		return
 	}
@@ -253,7 +253,7 @@ func EncodeEntity(publicKey string, kind kind.T, identifier string,
 	binary.BigEndian.PutUint32(kindBytes, uint32(kind))
 	writeTLVEntry(buf, TLVKind, kindBytes)
 	var bits5 []byte
-	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); log.Fail(err) {
+	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); chk.D(err) {
 		return "", fmt.Errorf("failed to convert bits: %w", err)
 	}
 	return bech32.Encode(NentityHRP, bits5)

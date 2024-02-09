@@ -56,11 +56,11 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 					iteratorClosers[i] = it.Close
 
 					if q.startingPoint == nil {
-						b.D.S("nil query starting point")
+						log.D.S("nil query starting point")
 						return
 					}
 					if q.prefix == nil {
-						b.D.S("nil query prefix")
+						log.D.S("nil query prefix")
 						return
 					}
 					for it.Seek(q.startingPoint); it.ValidForPrefix(q.prefix); it.Next() {
@@ -88,25 +88,25 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 							if errors.Is(err, badger.ErrDiscardedTxn) {
 								return
 							}
-							b.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
+							log.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
 								idx, q.prefix, key, err)
 							return
 						}
 						if item == nil {
-							b.D.Ln("nil item")
+							log.D.Ln("nil item")
 							break
 						}
 						var val []byte
 						val, err = item.ValueCopy(val)
 						evt := &event.T{}
 						if evt, err = nostrbinary.Unmarshal(val); err != nil {
-							b.D.F("badger: value read error (id %x): %s", spew.Sdump(val), err)
+							log.D.F("badger: value read error (id %x): %s", spew.Sdump(val), err)
 							break
 						}
 						if evt == nil {
-							b.D.F("got nil event from %s", spew.Sdump(val))
+							log.D.F("got nil event from %s", spew.Sdump(val))
 						}
-						b.D.F("unmarshaled %s", evt.ToObject().String())
+						log.T.F("unmarshaled %s", evt.ToObject().String())
 						// check if this matches the other filters that were not part of the index
 						if extraFilter == nil || extraFilter.Matches(evt) {
 							log.T.Ln("dispatching event to results queue", evt == nil)
@@ -196,7 +196,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 		})
 
 		if err != nil {
-			b.D.F("badger: query txn error: %s", err)
+			log.D.F("badger: query txn error: %s", err)
 		}
 	}()
 	log.T.Ln("completed query")

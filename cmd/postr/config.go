@@ -97,7 +97,7 @@ func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.T {
 		}
 		log.D.F("trying relay: %s", k)
 		rl, err := relay.Connect(c, k)
-		if log.Fail(err) {
+		if chk.D(err) {
 			continue
 		}
 		return rl
@@ -126,13 +126,13 @@ func (cfg *C) Do(r *RelayPerms, f RelayIter) {
 			defer wg.Done()
 			log.T.Ln("connecting to relay", k)
 			rl, err := relay.Connect(c, k)
-			if log.Fail(err) {
+			if chk.D(err) {
 				return
 			}
 			if !f(c, rl) {
 				c.Done()
 			}
-			log.Fail(rl.Close())
+			chk.D(rl.Close())
 		}(&wg, k, v)
 	}
 	log.T.Ln("waiting for iterators to finish")
@@ -143,7 +143,7 @@ func (cfg *C) Do(r *RelayPerms, f RelayIter) {
 func (cfg *C) Decode(ev *event.T) (err error) {
 	var sk string
 	var pub string
-	if pub, _, err = getPubFromSec(cfg.SecretKey); log.Fail(err) {
+	if pub, _, err = getPubFromSec(cfg.SecretKey); chk.D(err) {
 		return
 	}
 	tag := ev.Tags.GetFirst([]string{"p"})
@@ -159,11 +159,11 @@ func (cfg *C) Decode(ev *event.T) (err error) {
 		sp = ev.PubKey
 	}
 	ss, err := nip4.ComputeSharedSecret(sp, sk)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	content, err := nip4.Decrypt(ev.Content, ss)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return err
 	}
 	ev.Content = string(content)
@@ -177,7 +177,7 @@ func (cfg *C) GetEvents(ids []string) (evs []*event.T) {
 			Kinds: kinds.T{kind.TextNote},
 			Limit: len(ids),
 		})
-		if log.Fail(err) {
+		if chk.D(err) {
 			return false
 		}
 		evs = append(evs, events...)
@@ -201,14 +201,14 @@ func (cfg *C) Events(f filter.T) []*event.T {
 		}
 		mu.Unlock()
 		evs, err := rl.QuerySync(c, &f)
-		if log.Fail(err) {
+		if chk.D(err) {
 			return true
 		}
 		log.D.Ln("number of events found", len(evs))
 		for _, ev := range evs {
 			if _, ok := m.Load(ev.ID); !ok {
 				if ev.Kind == kind.EncryptedDirectMessage {
-					if err = cfg.Decode(ev); log.Fail(err) {
+					if err = cfg.Decode(ev); chk.D(err) {
 						continue
 					}
 				}
@@ -260,11 +260,11 @@ func (cfg *C) ZapInfo(pub string) (*Lnurlp, error) {
 	}
 	var profile Metadata
 	err := json.Unmarshal([]byte(evs[0].Content), &profile)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return nil, err
 	}
 	tok := strings.SplitN(profile.Lud16, "@", 2)
-	if log.Fail(err) {
+	if chk.D(err) {
 		return nil, err
 	}
 	if len(tok) != 2 {
@@ -272,13 +272,13 @@ func (cfg *C) ZapInfo(pub string) (*Lnurlp, error) {
 	}
 	var resp *http.Response
 	resp, err = http.Get("https://" + tok[1] + "/.well-known/lnurlp/" + tok[0])
-	if log.Fail(err) {
+	if chk.D(err) {
 		return nil, err
 	}
-	defer log.Fail(resp.Body.Close())
+	defer chk.D(resp.Body.Close())
 
 	var lp Lnurlp
-	if err = json.NewDecoder(resp.Body).Decode(&lp); log.Fail(err) {
+	if err = json.NewDecoder(resp.Body).Decode(&lp); chk.D(err) {
 		return nil, err
 	}
 	return &lp, nil

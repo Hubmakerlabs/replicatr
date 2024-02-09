@@ -2,6 +2,7 @@ package enveloper_test
 
 import (
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
@@ -17,7 +18,7 @@ import (
 	"mleku.online/git/slog"
 )
 
-var log = slog.GetStd()
+var log, chk = slog.New(os.Stderr)
 
 func TestEnveloper(t *testing.T) {
 	slog.SetLogLevel(slog.Debug)

@@ -31,7 +31,7 @@ var fetch = &cli.Command{
 		pool := pool.NewSimplePool(c.Context)
 		defer func() {
 			pool.Relays.Range(func(_ string, relay *relay.T) bool {
-				log.Fail(relay.Close())
+				chk.D(relay.Close())
 				return true
 			})
 		}()
