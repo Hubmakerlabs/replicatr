@@ -1,12 +1,13 @@
 package nip11
 
 import (
+	"encoding/json"
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 )
 
 type NIP struct {
@@ -219,8 +220,8 @@ type Limits struct {
 	// only events of a specific niche kind or content. Normal anti-spam
 	// heuristics, for example, do not qualify.q
 	RestrictedWrites bool        `json:"restricted_writes"`
-	Oldest           timestamp.T `json:"created_at_lower_limit"`
-	Newest           timestamp.T `json:"created_at_upper_limit"`
+	Oldest           timestamp.T `json:"created_at_lower_limit,omitempty"`
+	Newest           timestamp.T `json:"created_at_upper_limit,omitempty"`
 }
 type Payment struct {
 	Amount int    `json:"amount"`
@@ -246,37 +247,34 @@ type Fees struct {
 type NIPs []int
 
 type Info struct {
-	Name           string  `json:"name"`
-	Description    string  `json:"description"`
-	PubKey         string  `json:"pubkey"`
-	Contact        string  `json:"contact"`
-	Nips           NIPs    `json:"supported_nips"`
-	Software       string  `json:"software"`
-	Version        string  `json:"version"`
-	Limitation     *Limits `json:"limitation"`
-	Retention      array.T `json:"retention"`
-	RelayCountries tag.T   `json:"relay_countries"`
-	LanguageTags   tag.T   `json:"language_tags"`
-	Tags           tag.T   `json:"tags,omitempty"`
-	PostingPolicy  string  `json:"posting_policy"`
-	PaymentsURL    string  `json:"payments_url"`
-	Fees           *Fees   `json:"fees,omitempty"`
-	Icon           string  `json:"icon"`
+	Name           string   `json:"name"`
+	Description    string   `json:"description"`
+	PubKey         string   `json:"pubkey"`
+	Contact        string   `json:"contact,omitempty"`
+	Nips           NIPs     `json:"supported_nips"`
+	Software       string   `json:"software"`
+	Version        string   `json:"version"`
+	Limitation     Limits   `json:"limitation"`
+	Retention      object.T `json:"retention"`
+	RelayCountries tag.T    `json:"relay_countries"`
+	LanguageTags   tag.T    `json:"language_tags"`
+	Tags           tag.T    `json:"tags"`
+	PostingPolicy  string   `json:"posting_policy"`
+	PaymentsURL    string   `json:"payments_url"`
+	Fees           Fees     `json:"fees"`
+	Icon           string   `json:"icon"`
 	sync.Mutex
 }
 
 // NewInfo populates the nips map and if an Info structure is provided it is
 // used and its nips map is populated if it isn't already.
-func NewInfo(inf *Info) *Info {
+func NewInfo(inf *Info) (info *Info) {
 	if inf != nil {
-		inf.Lock()
-		if inf.Limitation == nil {
-			inf.Limitation = &Limits{}
-		}
-		inf.Unlock()
-		return inf
+		info = inf
+	} else {
+		info = &Info{}
 	}
-	return &Info{}
+	return
 }
 
 func (inf *Info) AddNIPs(n ...int) {
@@ -296,5 +294,19 @@ func (inf *Info) HasNIP(n int) (ok bool) {
 		}
 	}
 	inf.Unlock()
+	return
+}
+
+func (inf *Info) Save(filename string) (err error) {
+	var b []byte
+	if b, err = json.MarshalIndent(inf, "", "    "); chk.E(err) {
+		return
+	}
+	log.D.Ln(string(b))
+	return
+}
+
+func (inf *Info) Load(filename string) (err error) {
+
 	return
 }
