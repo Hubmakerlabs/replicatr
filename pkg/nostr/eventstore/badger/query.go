@@ -49,72 +49,72 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			// actually iterate
 			iteratorClosers := make([]func(), len(queries))
 			for i, q := range queries {
-				go func(i int, q query) {
-					txMx.Lock()
-					defer txMx.Unlock()
-					it := txn.NewIterator(opts)
-					iteratorClosers[i] = it.Close
+				// go func(i int, q query) {
+				txMx.Lock()
+				defer txMx.Unlock()
+				it := txn.NewIterator(opts)
+				iteratorClosers[i] = it.Close
 
-					if q.startingPoint == nil {
-						log.D.S("nil query starting point")
-						return
-					}
-					if q.prefix == nil {
-						log.D.S("nil query prefix")
-						return
-					}
-					for it.Seek(q.startingPoint); it.ValidForPrefix(q.prefix); it.Next() {
-						item := it.Item()
-						// log.D.Ln(item.ValueCopy(nil))
-						key := item.Key()
+				if q.startingPoint == nil {
+					log.D.S("nil query starting point")
+					return
+				}
+				if q.prefix == nil {
+					log.D.S("nil query prefix")
+					return
+				}
+				for it.Seek(q.startingPoint); it.ValidForPrefix(q.prefix); it.Next() {
+					item := it.Item()
+					// log.D.Ln(item.ValueCopy(nil))
+					key := item.Key()
 
-						idxOffset := len(key) - 4 // this is where the idx actually starts
+					idxOffset := len(key) - 4 // this is where the idx actually starts
 
-						// "id" indexes don't contain a timestamp
-						if !q.skipTimestamp {
-							createdAt := binary.BigEndian.Uint32(key[idxOffset-4 : idxOffset])
-							if createdAt < since {
-								break
-							}
+					// "id" indexes don't contain a timestamp
+					if !q.skipTimestamp {
+						createdAt := binary.BigEndian.Uint32(key[idxOffset-4 : idxOffset])
+						if createdAt < since {
+							break
 						}
+					}
 
-						idx := make([]byte, 5)
-						idx[0] = rawEventStorePrefix
-						copy(idx[1:], key[idxOffset:])
+					idx := make([]byte, 5)
+					idx[0] = rawEventStorePrefix
+					copy(idx[1:], key[idxOffset:])
 
-						// fetch actual event
-						item, err = txn.Get(idx)
-						if err != nil {
-							if errors.Is(err, badger.ErrDiscardedTxn) {
-								return
-							}
-							log.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
-								idx, q.prefix, key, err)
+					// fetch actual event
+					item, err = txn.Get(idx)
+					if err != nil {
+						if errors.Is(err, badger.ErrDiscardedTxn) {
 							return
 						}
-						if item == nil {
-							log.D.Ln("nil item")
-							break
-						}
-						var val []byte
-						val, err = item.ValueCopy(val)
-						evt := &event.T{}
-						if evt, err = nostrbinary.Unmarshal(val); err != nil {
-							log.D.F("badger: value read error (id %x): %s", spew.Sdump(val), err)
-							break
-						}
-						if evt == nil {
-							log.D.F("got nil event from %s", spew.Sdump(val))
-						}
-						log.T.F("unmarshaled %s", evt.ToObject().String())
-						// check if this matches the other filters that were not part of the index
-						if extraFilter == nil || extraFilter.Matches(evt) {
-							log.T.Ln("dispatching event to results queue", evt == nil)
-							q.results <- evt
-							log.T.Ln("results queue was consumed")
-						}
+						log.D.F("badger: failed to get %x based on prefix %x, index key %x from raw event store: %s",
+							idx, q.prefix, key, err)
+						return
 					}
-				}(i, q)
+					if item == nil {
+						log.D.Ln("nil item")
+						break
+					}
+					var val []byte
+					val, err = item.ValueCopy(val)
+					evt := &event.T{}
+					if evt, err = nostrbinary.Unmarshal(val); err != nil {
+						log.D.F("badger: value read error (id %x): %s", spew.Sdump(val), err)
+						break
+					}
+					if evt == nil {
+						log.D.F("got nil event from %s", spew.Sdump(val))
+					}
+					log.T.F("unmarshaled %s", evt.ToObject().String())
+					// check if this matches the other filters that were not part of the index
+					if extraFilter == nil || extraFilter.Matches(evt) {
+						log.T.Ln("dispatching event to results queue", evt == nil)
+						q.results <- evt
+						log.T.Ln("results queue was consumed")
+					}
+				}
+				// }(i, q)
 			}
 
 			// max number of events we'll return
