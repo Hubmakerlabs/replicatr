@@ -10,11 +10,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
-	"mleku.online/git/slog"
 )
 
 var Version = "v0.0.1"
-var Software = "https://github.com/Hubmakerlabs/replicatr/cmd/replicatrd"
+var Software = "https://github.com/Hubmakerlabs/replicatr"
 
 const (
 	WriteWait           = 10 * time.Second
@@ -78,11 +77,11 @@ type Relay struct {
 	Whitelist      []string // whitelist of allowed IPs for access
 }
 
-func NewRelay(logger *slog.Log, check *slog.Check, inf *nip11.Info,
+func NewRelay(inf *nip11.Info,
 	whitelist []string) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
-	if inf.Limitation != nil {
+	if inf.Limitation.MaxMessageLength > 0 {
 		maxMessageLength = inf.Limitation.MaxMessageLength
 	}
 	r = &Relay{

@@ -9,6 +9,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 	"github.com/alexflint/go-arg"
 	"mleku.online/git/slog"
 )
@@ -30,27 +32,24 @@ func main() {
 	}
 	dataDir := filepath.Join(dataDirBase, args.Profile)
 	log.D.F("using profile directory: %s", args.Profile)
-	if args.InitCfgCmd != nil {
-		// initialize configuration with whatever has been read from the CLI.
-		// include adding nip-11 configuration documents to this...
-	}
-	rl := app.NewRelay(log, chk, &nip11.Info{
+	rl := app.NewRelay(&nip11.Info{
 		Name:        args.Name,
 		Description: args.Description,
 		PubKey:      args.Pubkey,
 		Contact:     args.Contact,
 		Software:    AppName,
 		Version:     Version,
-		Limitation: &nip11.Limits{
+		Limitation: nip11.Limits{
 			MaxMessageLength: app.MaxMessageSize,
 			Oldest:           1640305963,
 		},
-		RelayCountries: nil,
-		LanguageTags:   nil,
-		Tags:           nil,
+		Retention:      object.T{},
+		RelayCountries: tag.T{},
+		LanguageTags:   tag.T{},
+		Tags:           tag.T{},
 		PostingPolicy:  "",
 		PaymentsURL:    "",
-		Fees:           &nip11.Fees{},
+		Fees:           nip11.Fees{},
 		Icon:           args.Icon,
 	}, args.Whitelist)
 	rl.Info.AddNIPs(
@@ -69,6 +68,15 @@ func main() {
 		nip11.Authentication.Number,           // auth
 		nip11.CountingResults.Number,          // count requests
 	)
+	if args.InitCfgCmd != nil {
+		// initialize configuration with whatever has been read from the CLI.
+		// include adding nip-11 configuration documents to this...
+		if err = args.Save(filepath.Join(dataDir, "config.json")); chk.E(err) {
+		}
+		if err = rl.Info.Save(filepath.Join(dataDir, "config.json")); chk.E(err) {
+		}
+
+	}
 	db := &IC.Backend{
 		Badger: &badger.Backend{
 			Path:  dataDir,
