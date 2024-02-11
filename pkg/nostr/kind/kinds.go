@@ -267,13 +267,13 @@ var Map = map[T]string{
 	CommunityDefinition:         "CommunityDefinition",
 }
 
+func (ki T) IsEphemeral() bool {
+	return ki >= EphemeralStart && ki < EphemeralEnd
+}
+
 func (ki T) IsReplaceable() bool {
 	return ki == ProfileMetadata || ki == FollowList ||
 		(ki >= ReplaceableStart && ki < ReplaceableEnd)
-}
-
-func (ki T) IsEphemeral() bool {
-	return ki >= EphemeralStart && ki < EphemeralEnd
 }
 
 func (ki T) IsParameterizedReplaceable() bool {

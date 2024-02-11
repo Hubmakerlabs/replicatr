@@ -28,7 +28,7 @@ func (rl *Relay) Export(db *badger.Backend, filename string) {
 	} else {
 		fh = os.Stdout
 	}
-	var evs event.Array
+	var evs event.Ascending
 	chk.E(db.View(func(txn *bdb.Txn) (err error) {
 		it := txn.NewIterator(bdb.IteratorOptions{})
 		for it.Rewind(); it.Valid(); it.Next() {

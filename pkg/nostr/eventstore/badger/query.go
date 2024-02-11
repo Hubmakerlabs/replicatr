@@ -51,8 +51,8 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			for i, q := range queries {
 				// go func(i int, q query) {
 				txMx.Lock()
-				defer txMx.Unlock()
 				it := txn.NewIterator(opts)
+				txMx.Unlock()
 				iteratorClosers[i] = it.Close
 
 				if q.startingPoint == nil {
@@ -120,9 +120,38 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			// max number of events we'll return
 			limit := b.MaxLimit
 			if f.Limit > 0 && f.Limit < limit {
+				log.T.Ln("clamping results: filter", f.Limit, "max", b.MaxLimit)
 				limit = f.Limit
 			}
-			log.T.Ln("clamping results: filter", f.Limit, "max", b.MaxLimit)
+			// default an empty or zero limit to 1 so replaceable events come
+			// out as expected.
+			var nonzeroLimit bool
+			for i := range f.Kinds {
+				if f.Kinds[i].IsReplaceable() || f.Kinds[i].IsParameterizedReplaceable() {
+					nonzeroLimit = true
+				}
+			}
+			// note that this will trigger if replaceable event kinds appear in
+			// a filter, even if not all are replaceable, so if this happens and
+			// the limit is zero then it will be set to 1 result only, which may
+			// not be what the querant intends, however, they should specify a
+			// limit for replaceable events as they should only want the newest
+			// one
+			//
+			// this ensures that clients that are looking for replaceable events
+			// and don't specify a limit they get the expected single, newest
+			// version
+			if nonzeroLimit {
+				if f.Limit == 0 {
+					log.T.Ln("setting limit to 1 for missing or zero limit to handle replaceable events correctly")
+					limit = 1
+				}
+			} else {
+				if f.Limit == 0 {
+					log.T.Ln("setting limit to max for missing or zero limit to handle non-replaceable filters correctly:", b.MaxLimit)
+					limit = b.MaxLimit
+				}
+			}
 
 			// receive results and ensure we only return the most recent ones always
 			emittedEvents := 0
@@ -141,31 +170,31 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			}()
 
 			// first pass
-			emitQueue := make(priorityQueue, 0, len(queries)+limit)
+			emitQueue := NewPriorityQueue(len(queries) + limit)
 			for i, q := range queries {
 				log.T.Ln("receiving query", i)
 				select {
 				case evt := <-q.results:
 					log.T.Ln("received query", i)
-					emitQueue = append(emitQueue, &queryEvent{T: evt, query: q.i})
+					emitQueue.Queries = append(emitQueue.Queries, &queryEvent{T: evt, query: q.i})
 				}
 			}
 			log.T.Ln("scheduling closing iterators")
 
 			// queue may be empty here if we have literally nothing
-			if len(emitQueue) == 0 {
+			if emitQueue.Len() == 0 {
 				log.T.Ln("emit queue is empty")
 				return nil
 			}
 
 			log.T.Ln("initialising emit queue")
-			heap.Init(&emitQueue)
+			heap.Init(emitQueue)
 
 			// iterate until we've emitted all events required
 			for {
 				// emit latest event in queue
 				log.T.Ln("emitting latest event in queue")
-				latest := emitQueue[0]
+				latest := emitQueue.Queries[0]
 				ch <- latest.T
 				log.T.Ln("emitted event")
 				// stop when reaching limit
@@ -178,15 +207,15 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 				// fetch a new one from query results and replace the previous one with it
 				if evt, ok := <-queries[latest.query].results; ok {
 					log.T.Ln("adding event to queue")
-					emitQueue[0].T = evt
-					heap.Fix(&emitQueue, 0)
+					emitQueue.Queries[0].T = evt
+					heap.Fix(emitQueue, 0)
 				} else {
 					log.T.Ln("removing event from queue")
 					// if this query has no more events we just remove this and proceed normally
-					heap.Remove(&emitQueue, 0)
+					heap.Remove(emitQueue, 0)
 
 					// check if the list is empty and end
-					if len(emitQueue) == 0 {
+					if emitQueue.Len() == 0 {
 						log.T.Ln("emit queue empty")
 						break
 					}
@@ -201,32 +230,6 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 	}()
 	log.T.Ln("completed query")
 	return ch, nil
-}
-
-type priorityQueue []*queryEvent
-
-func (pq priorityQueue) Len() int { return len(pq) }
-
-func (pq priorityQueue) Less(i, j int) bool {
-	return pq[i].CreatedAt > pq[j].CreatedAt
-}
-
-func (pq priorityQueue) Swap(i, j int) {
-	pq[i], pq[j] = pq[j], pq[i]
-}
-
-func (pq *priorityQueue) Push(x any) {
-	item := x.(*queryEvent)
-	*pq = append(*pq, item)
-}
-
-func (pq *priorityQueue) Pop() any {
-	old := *pq
-	n := len(old)
-	item := old[n-1]
-	old[n-1] = nil // avoid memory leak
-	*pq = old[0 : n-1]
-	return item
 }
 
 func prepareQueries(f *filter.T) (
@@ -256,6 +259,7 @@ func prepareQueries(f *filter.T) (
 			queries = make([]query, len(f.Authors))
 			for i, pubkeyHex := range f.Authors {
 				if len(pubkeyHex) != 64 {
+					// todo: some clients are sending invalid pubkeyhex of 69 chars
 					return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 				}
 				pubkeyPrefix8, _ := hex.Dec(pubkeyHex[0 : 8*2])
@@ -271,6 +275,8 @@ func prepareQueries(f *filter.T) (
 			for _, pubkeyHex := range f.Authors {
 				for _, kind := range f.Kinds {
 					if len(pubkeyHex) != 64 {
+						// todo: some clients are sending invalid pubkeyhex of 69 chars
+						// eg; ["NOTICE","invalid pubkey '0020bf2376e17ba4ec269d10fcc996a4746b451152be9031fa48e74553dde5526bce'"]
 						return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
 					}
 					pubkeyPrefix8, _ := hex.Dec(pubkeyHex[0 : 8*2])

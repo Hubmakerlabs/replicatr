@@ -3,6 +3,7 @@ package eventstore
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -29,7 +30,7 @@ func (w RelayWrapper) Publish(c context.T, evt *event.T) (err error) {
 	if evt.Kind.IsEphemeral() {
 		// do not store ephemeral events
 		return nil
-		// todo: this seems to be unnecessary for badger
+		// todo: we are no longer deleting old replaceable events because this is racy
 		// } else if evt.Kind.IsReplaceable() {
 		// replaceable event, delete before storing
 		// ch, err = w.Store.QueryEvents(c, &filter.T{
@@ -80,10 +81,10 @@ func (w RelayWrapper) QuerySync(c context.T, f *filter.T,
 	if n == 0 {
 		n = 500
 	}
-	results := make([]*event.T, 0, n)
+	results := make(event.Descending, 0, n)
 	for evt := range ch {
 		results = append(results, evt)
 	}
-
+	sort.Sort(results)
 	return results, nil
 }
