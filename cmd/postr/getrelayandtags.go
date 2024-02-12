@@ -13,7 +13,7 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
 		evs, err := rl.QuerySync(c, &filter.T{
 			Kinds:   kinds.T{kind.FollowList},
 			Authors: []string{pub},
-			Limit:   1,
+			Limit:   &one,
 		})
 		if chk.D(err) {
 			return true

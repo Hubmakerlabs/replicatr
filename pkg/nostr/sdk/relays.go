@@ -20,6 +20,8 @@ type Relay struct {
 	Outbox bool
 }
 
+var two = 2
+
 func FetchRelaysForPubkey(c context.T, pool *pool.Simple, pubkey string, relays ...string) (r []Relay) {
 	c, cancel := context.Cancel(c)
 	defer cancel()
@@ -30,7 +32,7 @@ func FetchRelaysForPubkey(c context.T, pool *pool.Simple, pubkey string, relays 
 				kind.FollowList,
 			},
 			Authors: []string{pubkey},
-			Limit:   2,
+			Limit:   &two,
 		},
 	}, true)
 	r = make([]Relay, 0, 20)

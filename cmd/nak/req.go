@@ -229,7 +229,7 @@ example:
 				}
 			}
 			if limit := c.Int("limit"); limit != 0 {
-				f.Limit = limit
+				f.Limit = &limit
 			}
 
 			if len(relayUrls) > 0 {

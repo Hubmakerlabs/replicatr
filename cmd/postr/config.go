@@ -172,10 +172,11 @@ func (cfg *C) Decode(ev *event.T) (err error) {
 
 func (cfg *C) GetEvents(ids []string) (evs []*event.T) {
 	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
+		limit := len(ids)
 		events, err := rl.QuerySync(c, &filter.T{
 			IDs:   ids,
 			Kinds: kinds.T{kind.TextNote},
-			Limit: len(ids),
+			Limit: &limit,
 		})
 		if chk.D(err) {
 			return false
@@ -241,6 +242,8 @@ func (cfg *C) Events(f filter.T) []*event.T {
 	return evs
 }
 
+var one = 1
+
 // ZapInfo is
 func (cfg *C) ZapInfo(pub string) (*Lnurlp, error) {
 	rl := cfg.FindRelay(context.Bg(), readPerms)
@@ -249,10 +252,11 @@ func (cfg *C) ZapInfo(pub string) (*Lnurlp, error) {
 	}
 	defer rl.Close()
 	// get set-metadata
+
 	f := filter.T{
 		Kinds:   kinds.T{kind.ProfileMetadata},
 		Authors: []string{pub},
-		Limit:   1,
+		Limit:   &one,
 	}
 	evs := cfg.Events(f)
 	if len(evs) == 0 {

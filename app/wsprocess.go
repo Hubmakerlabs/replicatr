@@ -42,7 +42,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	deny := true
 	if len(rl.Whitelist) > 0 {
 		for i := range rl.Whitelist {
-			if rl.Whitelist[i] == ws.RealRemote {
+			if rl.Whitelist[i] == ws.RealRemote.Load() {
 				deny = false
 			}
 		}
@@ -50,7 +50,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		deny = false
 	}
 	if deny {
-		log.T.F("denying access to '%s': dropping message", ws.RealRemote)
+		log.T.F("denying access to '%s': dropping message", ws.RealRemote.Load())
 		return
 	}
 	var en enveloper.I
@@ -206,8 +206,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		wsBaseUrl := strings.Replace(rl.ServiceURL, "http", "ws", 1)
 		var ok bool
 		var pubkey string
-		if pubkey, ok, err = nip42.ValidateAuthEvent(env.Event, ws.Challenge, wsBaseUrl); ok {
-			ws.AuthPubKey = pubkey
+		if pubkey, ok, err = nip42.ValidateAuthEvent(env.Event, ws.Challenge.Load(), wsBaseUrl); ok {
+			ws.AuthPubKey.Store(pubkey)
 			ws.Authed <- struct{}{}
 			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,

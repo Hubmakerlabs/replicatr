@@ -55,6 +55,8 @@ func (p ProfileMetadata) ShortName() string {
 	return npub[0:7] + "…" + npub[58:]
 }
 
+var one = 1
+
 func FetchProfileMetadata(c context.T, pool *pool.Simple,
 	pubkey string, relays ...string) (pm *ProfileMetadata) {
 
@@ -64,7 +66,7 @@ func FetchProfileMetadata(c context.T, pool *pool.Simple,
 		{
 			Kinds:   kinds.T{kind.ProfileMetadata},
 			Authors: []string{pubkey},
-			Limit:   1,
+			Limit:   &one,
 		},
 	}, true)
 	var err error

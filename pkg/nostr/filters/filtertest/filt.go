@@ -11,6 +11,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
+var ten = 10
+
 var D = filters.T{
 	{
 		IDs: tag.T{
@@ -33,7 +35,7 @@ var D = filters.T{
 		},
 		Since:  timestamp.T(time.Now().Unix() - (60 * 60)).Ptr(),
 		Until:  timestamp.Now().Ptr(),
-		Limit:  10,
+		Limit:  &ten,
 		Search: "some search] terms} with bogus ]brrackets and }braces and \\\" escaped quotes \"",
 	},
 	{

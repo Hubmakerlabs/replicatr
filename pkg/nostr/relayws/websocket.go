@@ -13,6 +13,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/fasthttp/websocket"
+	"go.uber.org/atomic"
 	"mleku.online/git/slog"
 )
 
@@ -22,11 +23,11 @@ var log, chk = slog.New(os.Stderr)
 // NIP-42 Auth support
 type WebSocket struct {
 	Conn       *websocket.Conn
-	RealRemote string
+	RealRemote atomic.String
 	mutex      sync.Mutex
 	Request    *http.Request // original request
-	Challenge  string        // nip42
-	AuthPubKey string
+	Challenge  atomic.String // nip42
+	AuthPubKey atomic.String
 	Authed     chan struct{}
 }
 
@@ -39,9 +40,9 @@ func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 		var line int
 		_, file, line, _ = runtime.Caller(1)
 		loc := fmt.Sprintf("%s:%d", file, line)
-		log.T.F("sending ping/pong to %s %s %s", ws.RealRemote, ws.AuthPubKey, loc)
+		log.T.F("sending ping/pong to %s %s %s", ws.RealRemote.Load(), ws.AuthPubKey.Load(), loc)
 	} else if len(b) != 0 {
-		log.D.F("sending message to %s %s\n%s", ws.RealRemote, ws.AuthPubKey, string(b))
+		log.D.F("sending message to %s %s\n%s", ws.RealRemote.Load(), ws.AuthPubKey.Load(), string(b))
 	}
 	return ws.Conn.WriteMessage(t, b)
 }
@@ -67,10 +68,12 @@ func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 	}
 	// log privileged kinds more visibly for debugging
 	if kinds.IsPrivileged(ek) {
-		log.D.F("sending message to %s %s %s\n%s\n%s\n", ws.RealRemote, ws.AuthPubKey,
+		log.D.F("sending message to %s %s %s\n%s\n%s\n",
+			ws.RealRemote.Load(), ws.AuthPubKey.Load(),
 			evkind, env.ToArray().String(), loc)
 	} else {
-		log.T.F("sending message to %s %s %s\n%s\n%s", ws.RealRemote, ws.AuthPubKey,
+		log.T.F("sending message to %s %s %s\n%s\n%s",
+			ws.AuthPubKey.Load(), ws.AuthPubKey.Load(),
 			evkind, env.ToArray().String(), loc)
 	}
 	return ws.Conn.WriteMessage(websocket.TextMessage, env.Bytes())

@@ -124,6 +124,8 @@ func doDMList(cCtx *cli.Context) (err error) {
 	return nil
 }
 
+var ninenineninenine = 9999
+
 func doDMTimeline(cCtx *cli.Context) (err error) {
 	u := cCtx.String("u")
 	j := cCtx.Bool("json")
@@ -152,7 +154,7 @@ func doDMTimeline(cCtx *cli.Context) (err error) {
 		Kinds:   kinds.T{kind.EncryptedDirectMessage},
 		Authors: []string{npub, pub},
 		Tags:    filter.TagMap{"p": []string{npub, pub}},
-		Limit:   9999,
+		Limit:   &ninenineninenine,
 	}
 	evs := cfg.Events(f)
 	cfg.PrintEvents(evs, followsMap, j, extra)

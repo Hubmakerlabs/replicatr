@@ -122,8 +122,7 @@ func (s *System) FetchUserEvents(c context.T,
 	for rl, f := range ff {
 		go func(rl *relay.T, f *filter.T) {
 			defer wg.Done()
-			f.Limit = f.Limit *
-				len(f.Authors) // hack
+			*f.Limit += len(f.Authors) // hack
 			var sub *subscription.T
 			if sub, err = rl.Subscribe(c,
 				filters.T{f}); chk.D(err) {
