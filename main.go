@@ -25,11 +25,12 @@ var (
 var args, conf app.Config
 
 func main() {
+	var log, chk = slog.New(os.Stderr)
 	arg.MustParse(&args)
+	log.T.S(args)
 	runtime.GOMAXPROCS(args.MaxProcs)
 	var dataDirBase string
 	var err error
-	var log, chk = slog.New(os.Stderr)
 	if dataDirBase, err = os.UserHomeDir(); log.E.Chk(err) {
 		os.Exit(1)
 	}
@@ -37,12 +38,33 @@ func main() {
 	log.D.F("using profile directory: %s", args.Profile)
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
-	inf := nip11.NewInfo(nil)
+	inf := *nip11.NewInfo(nil)
 	// initialize configuration with whatever has been read from the CLI.
 	if args.InitCfgCmd != nil {
 		// generate a relay identity key if one wasn't given
 		if args.SecKey == "" {
 			args.SecKey = keys.GeneratePrivateKey()
+		}
+		inf = nip11.Info{
+			Name:        args.Name,
+			Description: args.Description,
+			PubKey:      args.Pubkey,
+			Contact:     args.Contact,
+			Software:    AppName,
+			Version:     Version,
+			Limitation: nip11.Limits{
+				MaxMessageLength: app.MaxMessageSize,
+				Oldest:           1640305963,
+				AuthRequired:     args.AuthRequired,
+			},
+			Retention:      object.T{},
+			RelayCountries: tag.T{},
+			LanguageTags:   tag.T{},
+			Tags:           tag.T{},
+			PostingPolicy:  "",
+			PaymentsURL:    "",
+			Fees:           nip11.Fees{},
+			Icon:           args.Icon,
 		}
 		if err = args.Save(configPath); chk.E(err) {
 			log.E.F("failed to write relay configuration: '%s'", err)
@@ -90,7 +112,7 @@ func main() {
 			args.SecKey = conf.SecKey
 		}
 		if err = inf.Load(infoPath); chk.E(err) {
-			inf = &nip11.Info{
+			inf = nip11.Info{
 				Name:        args.Name,
 				Description: args.Description,
 				PubKey:      args.Pubkey,
@@ -113,10 +135,10 @@ func main() {
 			}
 			log.D.F("failed to load relay information document: '%s' "+
 				"deriving from config", err)
-			log.D.S(inf)
 		}
 	}
-	rl := app.NewRelay(inf, &args)
+	log.T.S(&inf)
+	rl := app.NewRelay(&inf, &args)
 	rl.Info.AddNIPs(
 		nip11.BasicProtocol.Number,            // events, envelopes and filters
 		nip11.FollowList.Number,               // follow lists
