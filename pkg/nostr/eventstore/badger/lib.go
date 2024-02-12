@@ -6,6 +6,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/dgraph-io/badger/v4"
+	"github.com/dgraph-io/badger/v4/options"
 	"mleku.online/git/slog"
 )
 
@@ -34,7 +35,8 @@ type Backend struct {
 }
 
 func (b *Backend) Init() (err error) {
-	db, err := badger.Open(badger.DefaultOptions(b.Path))
+	db, err := badger.Open(badger.DefaultOptions(b.Path).
+		WithCompactL0OnClose(true).WithCompression(options.ZSTD))
 	if err != nil {
 		return err
 	}
