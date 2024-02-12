@@ -32,7 +32,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	for _, ovw := range rl.OverwriteFilter {
 		ovw(h.c, h.f)
 	}
-	if h.f.Limit < 0 {
+	if h.f.Limit != nil && *h.f.Limit < 0 {
 		err = errors.New("blocked: filter invalidated")
 		log.E.Ln(err)
 		return

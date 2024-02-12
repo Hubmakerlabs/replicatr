@@ -78,13 +78,13 @@ func (w RelayWrapper) QuerySync(c context.T, f *filter.T,
 		return nil, fmt.Errorf("failed to query: %w", err)
 	}
 	n := f.Limit
-	if n == 0 {
-		n = 500
+	if n != nil {
+		results := make(event.Descending, 0, *n)
+		for evt := range ch {
+			results = append(results, evt)
+		}
+		sort.Sort(results)
+		return results, nil
 	}
-	results := make(event.Descending, 0, n)
-	for evt := range ch {
-		results = append(results, evt)
-	}
-	sort.Sort(results)
-	return results, nil
+	return nil, nil
 }

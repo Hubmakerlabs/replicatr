@@ -52,7 +52,7 @@ type T struct {
 	Tags    TagMap        `json:"-,omitempty"`
 	Since   *timestamp.Tp `json:"since,omitempty"`
 	Until   *timestamp.Tp `json:"until,omitempty"`
-	Limit   int           `json:"limit,omitempty"`
+	Limit   *int          `json:"limit,omitempty"`
 	Search  string        `json:"search,omitempty"`
 }
 

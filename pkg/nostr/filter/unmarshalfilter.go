@@ -66,7 +66,7 @@ type UnmarshalingFilter struct {
 	TY      tag.T         `json:"#Y,omitempty"`
 	Since   *timestamp.Tp `json:"since,omitempty"`
 	Until   *timestamp.Tp `json:"until,omitempty"`
-	Limit   int           `json:"limit,omitempty"`
+	Limit   *int          `json:"limit,omitempty"`
 	Search  string        `json:"search,omitempty"`
 }
 

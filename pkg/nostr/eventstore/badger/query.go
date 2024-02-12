@@ -119,16 +119,17 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 
 			// max number of events we'll return
 			limit := b.MaxLimit
-			if f.Limit > 0 && f.Limit < limit {
+			if f.Limit != nil && *f.Limit > 0 && *f.Limit < limit {
 				log.T.Ln("clamping results: filter", f.Limit, "max", b.MaxLimit)
-				limit = f.Limit
+				limit = *f.Limit
 			}
 			// default an empty or zero limit to 1 so replaceable events come
 			// out as expected.
-			var nonzeroLimit bool
+			var isReplaceable bool
 			for i := range f.Kinds {
 				if f.Kinds[i].IsReplaceable() || f.Kinds[i].IsParameterizedReplaceable() {
-					nonzeroLimit = true
+					isReplaceable = true
+					break
 				}
 			}
 			// note that this will trigger if replaceable event kinds appear in
@@ -141,13 +142,13 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			// this ensures that clients that are looking for replaceable events
 			// and don't specify a limit they get the expected single, newest
 			// version
-			if nonzeroLimit {
-				if f.Limit == 0 {
+			if isReplaceable {
+				if f.Limit != nil && *f.Limit == 0 {
 					log.T.Ln("setting limit to 1 for missing or zero limit to handle replaceable events correctly")
 					limit = 1
 				}
 			} else {
-				if f.Limit == 0 {
+				if f.Limit != nil && *f.Limit == 0 {
 					log.T.Ln("setting limit to max for missing or zero limit to handle non-replaceable filters correctly:", b.MaxLimit)
 					limit = b.MaxLimit
 				}
