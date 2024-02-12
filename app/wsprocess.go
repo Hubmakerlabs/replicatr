@@ -17,6 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/reqenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip42"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
@@ -52,8 +53,9 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		log.T.F("denying access to '%s': dropping message", ws.RealRemote)
 		return
 	}
-	en, _, err := envelopes.ProcessEnvelope(msg)
-	if log.T.Chk(err) {
+	var en enveloper.I
+	var err error
+	if en, _, err = envelopes.ProcessEnvelope(msg); log.T.Chk(err) {
 		return
 	}
 	if en == nil {

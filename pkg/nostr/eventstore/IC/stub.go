@@ -7,8 +7,11 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"mleku.online/git/slog"
 )
+
+var log, chk = slog.New(os.Stderr)
 
 type Backend struct {
 	// Badger backend must populated
@@ -18,11 +21,8 @@ type Backend struct {
 // for now this is just a stub that calls all of the badger.Backend methods,
 // later this will include the ICP storage driver functionality.
 
-func (b *Backend) Init() (err error) {
-	if b.Badger.Log == nil || b.Badger.Check == nil {
-		b.Badger.Log, b.Badger.Check = slog.New(os.Stderr)
-	}
-	if err = b.Badger.Init(); b.Badger.Check.D(err) {
+func (b *Backend) Init(inf *nip11.Info) (err error) {
+	if err = b.Badger.Init(inf); chk.D(err) {
 		return
 	}
 
