@@ -120,7 +120,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			// max number of events we'll return
 			limit := b.MaxLimit
 			if f.Limit != nil && *f.Limit > 0 && *f.Limit < limit {
-				log.T.Ln("clamping results: filter", f.Limit, "max", b.MaxLimit)
+				log.T.Ln("clamping results: filter", *f.Limit, "max", b.MaxLimit)
 				limit = *f.Limit
 			}
 			// default an empty or zero limit to 1 so replaceable events come
