@@ -28,7 +28,7 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 			deny := true
 			if len(rl.Whitelist) > 0 {
 				for i := range rl.Whitelist {
-					if rl.Whitelist[i] == p.ws.RealRemote {
+					if rl.Whitelist[i] == p.ws.RealRemote.Load() {
 						deny = false
 					}
 				}
@@ -36,7 +36,8 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 				deny = false
 			}
 			if deny {
-				log.T.F("denying access to '%s': dropping message", p.ws.RealRemote)
+				log.T.F("denying access to '%s': dropping message",
+					p.ws.RealRemote.Load())
 				return
 			}
 			if err = p.ws.WriteMessage(websocket.PingMessage, nil); log.E.Chk(err) {

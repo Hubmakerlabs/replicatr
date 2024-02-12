@@ -118,7 +118,7 @@ func pay(cfg *C, invoice string) (err error) {
 		},
 		Kinds: kinds.T{kind.NWCWalletInfo, kind.NWCWalletResponse,
 			kind.NWCWalletRequest},
-		Limit: 1,
+		Limit: &one,
 	}}
 	sub, err := rl.Subscribe(context.Bg(), f)
 	if chk.D(err) {

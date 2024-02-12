@@ -42,12 +42,12 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		rr = r.RemoteAddr
 	}
 	ws := &relayws.WebSocket{
-		Conn:       conn,
-		RealRemote: rr,
-		Request:    r,
-		Challenge:  hex.Enc(challenge),
-		Authed:     make(chan struct{}),
+		Conn:    conn,
+		Request: r,
+		Authed:  make(chan struct{}),
 	}
+	ws.RealRemote.Store(rr)
+	ws.Challenge.Store(hex.Enc(challenge))
 	c, cancel := context.Cancel(
 		context.Value(
 			context.Bg(),

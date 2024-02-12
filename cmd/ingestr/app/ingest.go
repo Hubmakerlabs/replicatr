@@ -55,14 +55,14 @@ func Ingest(args *Config) int {
 			{
 				Kinds:   args.Kinds,
 				Authors: tag.T{args.PubkeyHex},
-				Limit:   args.Limit,
+				Limit:   &args.Limit,
 				Since:   since,
 				Until:   until,
 			},
 			{
 				Kinds: args.Kinds,
 				Tags:  filter.TagMap{"#p": {args.PubkeyHex}},
-				Limit: args.Limit,
+				Limit: &args.Limit,
 				Since: since,
 				Until: until,
 			},

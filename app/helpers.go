@@ -31,12 +31,12 @@ func RequestAuth(c context.T) {
 	// 	ws.Authed = make(chan struct{})
 	// }
 	// ws.authLock.Unlock()
-	log.E.Chk(ws.WriteEnvelope(&authenvelope.Challenge{Challenge: ws.Challenge}))
+	log.E.Chk(ws.WriteEnvelope(&authenvelope.Challenge{Challenge: ws.Challenge.Load()}))
 }
 
 func GetConnection(c context.T) *relayws.WebSocket { return c.Value(wsKey).(*relayws.WebSocket) }
 
-func GetAuthed(c context.T) string { return GetConnection(c).AuthPubKey }
+func GetAuthed(c context.T) string { return GetConnection(c).AuthPubKey.Load() }
 
 func GetIP(c context.T) string { return xff.GetRemoteAddr(GetConnection(c).Request) }
 

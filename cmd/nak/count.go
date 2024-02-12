@@ -113,7 +113,7 @@ var count = &cli.Command{
 			f.Until = ts.Ptr()
 		}
 		if limit := c.Int("limit"); limit != 0 {
-			f.Limit = limit
+			f.Limit = &limit
 		}
 
 		relays := c.Args().Slice()

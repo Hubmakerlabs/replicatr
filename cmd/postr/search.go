@@ -28,7 +28,7 @@ func Search(cCtx *cli.Context) (err error) {
 	f := filter.T{
 		Kinds:  kinds.T{kind.TextNote},
 		Search: strings.Join(cCtx.Args().Slice(), " "),
-		Limit:  n,
+		Limit:  &n,
 	}
 	evs := cfg.Events(f)
 	cfg.PrintEvents(evs, followsMap, j, extra)

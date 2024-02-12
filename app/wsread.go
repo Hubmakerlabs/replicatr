@@ -22,7 +22,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 	deny := true
 	if len(rl.Whitelist) > 0 {
 		for i := range rl.Whitelist {
-			if rl.Whitelist[i] == p.ws.RealRemote {
+			if rl.Whitelist[i] == p.ws.RealRemote.Load() {
 				deny = false
 			}
 		}
@@ -58,7 +58,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 				websocket.CloseAbnormalClosure,  // 1006
 			) {
 				log.E.F("unexpected close error from %s: %v",
-					p.ws.RealRemote, err)
+					p.ws.RealRemote.Load(), err)
 			}
 			p.kill()
 			return
@@ -74,7 +74,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 			ellipsis = "..."
 		}
 		log.T.F("receiving message from %s %s\n%s%s",
-			p.ws.RealRemote, p.ws.AuthPubKey, string(trunc), ellipsis)
+			p.ws.RealRemote.Load(), p.ws.AuthPubKey, string(trunc), ellipsis)
 		go rl.wsProcessMessages(message, p.c, p.kill, p.ws)
 	}
 }

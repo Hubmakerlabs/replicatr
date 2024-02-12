@@ -39,7 +39,7 @@ func Profile(cCtx *cli.Context) (err error) {
 	f := filter.T{
 		Kinds:   kinds.T{kind.ProfileMetadata},
 		Authors: []string{pub},
-		Limit:   1,
+		Limit:   &one,
 	}
 	evs := cfg.Events(f)
 	if len(evs) == 0 {

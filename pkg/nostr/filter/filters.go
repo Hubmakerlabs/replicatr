@@ -87,7 +87,9 @@ func (f *T) ToObject() (o object.T) {
 		{"since,omitempty", f.Since},
 		{"until,omitempty", f.Until},
 	}...)
-	o = append(o, object.KV{Key: "limit,omitempty", Value: f.Limit})
+	if f.Limit != nil {
+		o = append(o, object.KV{Key: "limit,omitempty", Value: *f.Limit})
+	}
 	if f.Search != "" {
 		o = append(o, object.NewKV("search,omitempty", f.Search))
 	}
