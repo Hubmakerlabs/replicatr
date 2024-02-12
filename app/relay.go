@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
@@ -56,6 +58,7 @@ type Relay struct {
 	OnConnect                []Hook
 	OnDisconnect             []Hook
 	OnEventSaved             []OnEventSaved
+	Config                   *Config
 	Info                     *nip11.Info
 	// for establishing websockets
 	upgrader websocket.Upgrader
@@ -75,6 +78,8 @@ type Relay struct {
 	PingPeriod     time.Duration
 	MaxMessageSize int64    // Maximum message size allowed from peer.
 	Whitelist      []string // whitelist of allowed IPs for access
+	RelayPubHex    string
+	RelayNpub      string
 }
 
 func NewRelay(inf *nip11.Info,
@@ -84,8 +89,14 @@ func NewRelay(inf *nip11.Info,
 	if inf.Limitation.MaxMessageLength > 0 {
 		maxMessageLength = inf.Limitation.MaxMessageLength
 	}
+	pubKey, err := keys.GetPublicKey(conf.SecKey)
+	chk.E(err)
+	var npub string
+	npub, err = bech32encoding.EncodePublicKey(pubKey)
+	chk.E(err)
 	r = &Relay{
-		Info: nip11.NewInfo(inf),
+		Config: conf,
+		Info:   nip11.NewInfo(inf),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  ReadBufferSize,
 			WriteBufferSize: WriteBufferSize,
@@ -98,7 +109,10 @@ func NewRelay(inf *nip11.Info,
 		PingPeriod:     PingPeriod,
 		MaxMessageSize: int64(maxMessageLength),
 		Whitelist:      conf.Whitelist,
+		RelayPubHex:    pubKey,
+		RelayNpub:      npub,
 	}
+	log.I.F("relay chat pubkey: %s %s", pubKey, npub)
 	r.Info.Software = Software
 	r.Info.Version = Version
 	return

@@ -170,6 +170,7 @@ func main() {
 	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
+	rl.OnEventSaved = append(rl.OnEventSaved, rl.Chat)
 	switch {
 	case args.ImportCmd != nil:
 		rl.Import(db.Badger, args.ImportCmd.FromFile)
