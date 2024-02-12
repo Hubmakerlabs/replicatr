@@ -274,7 +274,9 @@ func NewInfo(inf *Info) (info *Info) {
 	if inf != nil {
 		info = inf
 	} else {
-		info = &Info{}
+		info = &Info{Limitation: Limits{
+			MaxLimit: 500,
+		}}
 	}
 	return
 }

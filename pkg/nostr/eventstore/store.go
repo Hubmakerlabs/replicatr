@@ -4,13 +4,14 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 )
 
 // Store is a persistence layer for nostr events handled by a relay.
 type Store interface {
 	// Init is called at the very beginning by [Server.Start], after [Relay.Init],
 	// allowing a storage to initialize its internal resources.
-	Init() error
+	Init(inf *nip11.Info) error
 
 	// Close must be called after you're done using the store, to free up resources and so on.
 	Close()

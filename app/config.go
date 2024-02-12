@@ -33,6 +33,7 @@ type Config struct {
 	Public       bool       `arg:"--public" json:"public" default:"true" help:"allow public read access to users not on ACL"`
 	Owners       []string   `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
 	SecKey       string     `arg:"-s" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
+	MaxProcs     int        `args:"-m" json:"max_procs" default:"128" help:"maximum number of goroutines to use"`
 }
 
 func (c *Config) Save(filename string) (err error) {

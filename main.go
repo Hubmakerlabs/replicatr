@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
@@ -25,6 +26,7 @@ var args, conf app.Config
 
 func main() {
 	arg.MustParse(&args)
+	runtime.GOMAXPROCS(args.MaxProcs)
 	var dataDirBase string
 	var err error
 	var log, chk = slog.New(os.Stderr)
@@ -133,12 +135,10 @@ func main() {
 	)
 	db := &IC.Backend{
 		Badger: &badger.Backend{
-			Path:  dataDir,
-			Log:   log,
-			Check: chk,
+			Path: dataDir,
 		},
 	}
-	if err = db.Init(); chk.E(err) {
+	if err = db.Init(rl.Info); chk.E(err) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
