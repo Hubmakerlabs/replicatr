@@ -78,7 +78,7 @@ type Relay struct {
 }
 
 func NewRelay(inf *nip11.Info,
-	whitelist []string) (r *Relay) {
+	conf *Config) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
 	if inf.Limitation.MaxMessageLength > 0 {
@@ -97,7 +97,7 @@ func NewRelay(inf *nip11.Info,
 		PongWait:       PongWait,
 		PingPeriod:     PingPeriod,
 		MaxMessageSize: int64(maxMessageLength),
-		Whitelist:      whitelist,
+		Whitelist:      conf.Whitelist,
 	}
 	r.Info.Software = Software
 	r.Info.Version = Version

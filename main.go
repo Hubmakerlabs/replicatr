@@ -8,6 +8,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
@@ -20,7 +21,7 @@ var (
 	Version = "v0.0.1"
 )
 
-var args app.Config
+var args, conf app.Config
 
 func main() {
 	arg.MustParse(&args)
@@ -32,26 +33,88 @@ func main() {
 	}
 	dataDir := filepath.Join(dataDirBase, args.Profile)
 	log.D.F("using profile directory: %s", args.Profile)
-	rl := app.NewRelay(&nip11.Info{
-		Name:        args.Name,
-		Description: args.Description,
-		PubKey:      args.Pubkey,
-		Contact:     args.Contact,
-		Software:    AppName,
-		Version:     Version,
-		Limitation: nip11.Limits{
-			MaxMessageLength: app.MaxMessageSize,
-			Oldest:           1640305963,
-		},
-		Retention:      object.T{},
-		RelayCountries: tag.T{},
-		LanguageTags:   tag.T{},
-		Tags:           tag.T{},
-		PostingPolicy:  "",
-		PaymentsURL:    "",
-		Fees:           nip11.Fees{},
-		Icon:           args.Icon,
-	}, args.Whitelist)
+	infoPath := filepath.Join(dataDir, "info.json")
+	configPath := filepath.Join(dataDir, "config.json")
+	inf := nip11.NewInfo(nil)
+	// initialize configuration with whatever has been read from the CLI.
+	if args.InitCfgCmd != nil {
+		// generate a relay identity key if one wasn't given
+		if args.SecKey == "" {
+			args.SecKey = keys.GeneratePrivateKey()
+		}
+		if err = args.Save(configPath); chk.E(err) {
+			log.E.F("failed to write relay configuration: '%s'", err)
+			os.Exit(1)
+		}
+		if err = inf.Save(infoPath); chk.E(err) {
+			log.E.F("failed to write relay information document: '%s'", err)
+			os.Exit(1)
+		}
+	} else {
+		if err = conf.Load(configPath); chk.E(err) {
+			log.T.F("failed to load relay configuration: '%s'", err)
+		}
+		// if fields are empty, overwrite them with the cli args file
+		// versions
+		if args.Listen != "" {
+			args.Listen = conf.Listen
+		}
+		if args.Profile != "" {
+			args.Profile = conf.Profile
+		}
+		if args.Name != "" {
+			args.Name = conf.Name
+		}
+		if args.Description != "" {
+			args.Description = conf.Description
+		}
+		if args.Pubkey != "" {
+			args.Description = conf.Description
+		}
+		if args.Contact != "" {
+			args.Contact = conf.Contact
+		}
+		if args.Icon == "" {
+			args.Icon = conf.Icon
+		}
+		// CLI args on "separate" items add to the ones in the config
+		if len(args.Whitelist) == 0 {
+			args.Whitelist = append(args.Whitelist, conf.Whitelist...)
+		}
+		if len(args.Owners) == 0 {
+			args.Owners = append(args.Owners, conf.Owners...)
+		}
+		if args.SecKey == "" {
+			args.SecKey = conf.SecKey
+		}
+		if err = inf.Load(infoPath); chk.E(err) {
+			inf = &nip11.Info{
+				Name:        args.Name,
+				Description: args.Description,
+				PubKey:      args.Pubkey,
+				Contact:     args.Contact,
+				Software:    AppName,
+				Version:     Version,
+				Limitation: nip11.Limits{
+					MaxMessageLength: app.MaxMessageSize,
+					Oldest:           1640305963,
+					AuthRequired:     args.AuthRequired,
+				},
+				Retention:      object.T{},
+				RelayCountries: tag.T{},
+				LanguageTags:   tag.T{},
+				Tags:           tag.T{},
+				PostingPolicy:  "",
+				PaymentsURL:    "",
+				Fees:           nip11.Fees{},
+				Icon:           args.Icon,
+			}
+			log.D.F("failed to load relay information document: '%s' "+
+				"deriving from config", err)
+			log.D.S(inf)
+		}
+	}
+	rl := app.NewRelay(inf, &args)
 	rl.Info.AddNIPs(
 		nip11.BasicProtocol.Number,            // events, envelopes and filters
 		nip11.FollowList.Number,               // follow lists
@@ -68,15 +131,6 @@ func main() {
 		nip11.Authentication.Number,           // auth
 		nip11.CountingResults.Number,          // count requests
 	)
-	if args.InitCfgCmd != nil {
-		// initialize configuration with whatever has been read from the CLI.
-		// include adding nip-11 configuration documents to this...
-		if err = args.Save(filepath.Join(dataDir, "config.json")); chk.E(err) {
-		}
-		if err = rl.Info.Save(filepath.Join(dataDir, "config.json")); chk.E(err) {
-		}
-
-	}
 	db := &IC.Backend{
 		Badger: &badger.Backend{
 			Path:  dataDir,

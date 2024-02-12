@@ -2,6 +2,8 @@ package nip11
 
 import (
 	"encoding/json"
+	"errors"
+	"os"
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
@@ -298,15 +300,34 @@ func (inf *Info) HasNIP(n int) (ok bool) {
 }
 
 func (inf *Info) Save(filename string) (err error) {
+	if inf == nil {
+		err = errors.New("cannot save nil relay info document")
+		log.E.Ln(err)
+		return
+	}
 	var b []byte
 	if b, err = json.MarshalIndent(inf, "", "    "); chk.E(err) {
 		return
 	}
-	log.D.Ln(string(b))
+	if err = os.WriteFile(filename, b, 0600); chk.E(err) {
+		return
+	}
 	return
 }
 
 func (inf *Info) Load(filename string) (err error) {
-
+	if inf == nil {
+		err = errors.New("cannot load into nil config")
+		log.E.Ln(err)
+		return
+	}
+	var b []byte
+	if b, err = os.ReadFile(filename); chk.E(err) {
+		return
+	}
+	log.T.F("relay information document\n%s", string(b))
+	if err = json.Unmarshal(b, inf); chk.E(err) {
+		return
+	}
 	return
 }

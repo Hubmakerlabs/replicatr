@@ -161,8 +161,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		for _, f := range env.Filters {
 			// if we are not given a limit we will be stingy and only return 5
 			// results
-			if f.Limit == 0 {
-				f.Limit = 5
+			if f.Limit != nil && *f.Limit == 0 {
+				*f.Limit = 5
 			}
 			err = rl.handleFilter(handleFilterParams{
 				reqCtx,
