@@ -83,9 +83,6 @@ const (
 	Reporting  T = 1984
 	// Label is an event type has L and l tags, namespace and type - NIP-32
 	Label T = 1985
-	// RelayAccessControl is an event that adds or modifies the permissions of a
-	// user for accessing a relay, DRAFT number for replicatr
-	RelayAccessControl T = 3473
 	// CommunityPostApproval is an event type that...
 	CommunityPostApproval T = 4550
 	JobRequestStart       T = 5000
