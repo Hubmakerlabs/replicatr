@@ -143,14 +143,18 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			// and don't specify a limit they get the expected single, newest
 			// version
 			if isReplaceable {
-				if f.Limit != nil && *f.Limit == 0 {
-					log.T.Ln("setting limit to 1 for missing or zero limit to handle replaceable events correctly")
+				if f.Limit == nil {
+					log.T.Ln("setting limit to 1 for missing limit to handle replaceable events correctly")
 					limit = 1
 				}
 			} else {
 				if f.Limit != nil && *f.Limit == 0 {
-					log.T.Ln("setting limit to max for missing or zero limit to handle non-replaceable filters correctly:", b.MaxLimit)
+					log.T.Ln("setting limit to max for zero limit to handle non-replaceable events correctly:", b.MaxLimit)
 					limit = b.MaxLimit
+				}
+				if len(f.Kinds) == 1 && f.Kinds[0].IsEphemeral() {
+					log.T.Ln("setting limit to 0 for ephemeral event, only one to be returned")
+					limit = 0
 				}
 			}
 
