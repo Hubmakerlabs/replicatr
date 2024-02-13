@@ -74,7 +74,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 			ellipsis = "..."
 		}
 		log.T.F("receiving message from %s %s\n%s%s",
-			p.ws.RealRemote.Load(), p.ws.AuthPubKey, string(trunc), ellipsis)
+			p.ws.RealRemote.Load(), p.ws.AuthPubKey.Load(), string(trunc), ellipsis)
 		go rl.wsProcessMessages(message, p.c, p.kill, p.ws)
 	}
 }
