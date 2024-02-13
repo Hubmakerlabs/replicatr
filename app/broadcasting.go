@@ -21,9 +21,9 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 		log.T.Ln("broadcasting", ws.RealRemote.Load(), ws.AuthPubKey.Load(), subs.Size())
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {
-				// log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
-				// 	listener.ws.RealRemote, listener.ws.AuthPubKey,
-				// 	listener.filters, evt.ToObject().String())
+				log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
+					listener.ws.RealRemote.Load(), listener.ws.AuthPubKey.Load(),
+					listener.filters, evt.ToObject().String())
 				return true
 			}
 			if kinds.IsPrivileged(evt.Kind) {

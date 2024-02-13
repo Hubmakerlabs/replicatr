@@ -77,6 +77,7 @@ func main() {
 	} else {
 		if err = conf.Load(configPath); chk.E(err) {
 			log.T.F("failed to load relay configuration: '%s'", err)
+			os.Exit(1)
 		}
 		// if fields are empty, overwrite them with the cli args file
 		// versions
@@ -171,6 +172,8 @@ func main() {
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
 	rl.OnEventSaved = append(rl.OnEventSaved, rl.Chat)
+	// Load ACL events
+
 	switch {
 	case args.ImportCmd != nil:
 		rl.Import(db.Badger, args.ImportCmd.FromFile)

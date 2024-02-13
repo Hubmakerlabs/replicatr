@@ -156,7 +156,7 @@ func (f *T) Matches(ev *event.T) bool {
 		if strings.HasPrefix(ff, "#") {
 			ff = ff[1:]
 		}
-		if len(v) > 0 && !ev.Tags.ContainsAny(ff, v) {
+		if len(v) > 0 && !ev.Tags.ContainsAny(ff, v...) {
 			// log.T.F("no matching tags in filter\nEVENT %s\nFILTER %s", ev.ToObject().String(), f.ToObject().String())
 			return false
 		}
