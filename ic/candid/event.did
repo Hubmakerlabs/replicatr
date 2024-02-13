@@ -10,9 +10,24 @@ type Kind = record{
     T:nat;
 }
 
-type Tags = record{
+type Kinds = record{
+    T: vec<Kind>;
+}
+
+type Tag = record{
     T : vec<text>;
 }
+
+type Tags = record{
+    T: vec<Tag>;
+}
+
+type KeyValuePair = record {
+  key: text;
+  value: Tag;
+};
+
+type TagMap= vec<KeyValuePair>;
 
 
 type Event = record{
@@ -23,4 +38,16 @@ type Event = record{
     tags: Tags;
     content: text;
     sig: text;
+};
+
+
+type Filter = record{
+    ids: Tag;
+    kinds: Kinds;
+    authors: Tag;
+    tags: TagMap;
+    since: TimeStamp;
+    until: TimeStamp;
+    limit: int;
+    search: text;
 };
