@@ -94,7 +94,7 @@ func (t T) Scan(src any) (err error) {
 
 // ContainsAny returns true if any of the strings given in `values` matches any
 // of the tag elements.
-func (t T) ContainsAny(tagName string, values []string) bool {
+func (t T) ContainsAny(tagName string, values ...string) bool {
 	for _, v := range t {
 		if len(v) < 2 {
 			continue

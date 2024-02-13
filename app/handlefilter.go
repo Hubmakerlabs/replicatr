@@ -73,14 +73,16 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 						continue
 					}
 					// check the filter first
-					receivers, _ := h.f.Tags["#p"]
-					parties := make(tag.T, len(receivers)+len(h.f.Authors))
+					receivers, _ := h.f.Tags["p"]
+					receivers2, _ := h.f.Tags["#p"]
+					parties := make(tag.T, len(receivers)+len(receivers2)+len(h.f.Authors))
 					copy(parties[:len(h.f.Authors)], h.f.Authors)
 					copy(parties[len(h.f.Authors):], receivers)
+					copy(parties[len(h.f.Authors)+len(receivers):], receivers2)
 					// log.T.Ln(h.ws.RealRemote, "parties", parties)
 					if !parties.Contains(h.ws.AuthPubKey.Load()) {
-						log.D.Ln("not sending privileged event to user " +
-							"without matching auth")
+						log.D.Ln("not sending privileged event to user "+
+							"without matching auth", h.ws.AuthPubKey.Load())
 						continue
 					}
 					// then check the event
@@ -92,8 +94,8 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					if !parties.Contains(h.ws.AuthPubKey.Load()) {
 						log.T.Ln("not broadcasting privileged event to",
 							h.ws.RealRemote.Load(), "not party to event")
+						return
 					}
-
 				}
 				chk.E(h.ws.WriteEnvelope(&eventenvelope.T{
 					SubscriptionID: h.id,

@@ -80,6 +80,8 @@ type Relay struct {
 	Whitelist      []string // whitelist of allowed IPs for access
 	RelayPubHex    string
 	RelayNpub      string
+	// ACL is the list of users and privileges on this relay
+	*ACL
 }
 
 func NewRelay(inf *nip11.Info,
@@ -111,9 +113,20 @@ func NewRelay(inf *nip11.Info,
 		Whitelist:      conf.Whitelist,
 		RelayPubHex:    pubKey,
 		RelayNpub:      npub,
+		ACL:            &ACL{},
 	}
 	log.I.F("relay chat pubkey: %s %s", pubKey, npub)
 	r.Info.Software = Software
 	r.Info.Version = Version
+	// populate ACL with owners to start
+	for _, owner := range r.Config.Owners {
+		if err = r.ACL.AddEntry(&ACLEntry{
+			Role:   RoleOwner,
+			Pubkey: owner,
+		}); chk.E(err) {
+			continue
+		}
+		log.D.Ln("added owner pubkey", owner)
+	}
 	return
 }

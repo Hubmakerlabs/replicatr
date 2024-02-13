@@ -173,7 +173,7 @@ func (ev *T) Sign(skStr string, so ...schnorr.SignOption) (err error) {
 	sk := secp256k1.SecKeyFromBytes(skBytes)
 	ev.PubKey = hex.Enc(schnorr.SerializePubKey(sk.PubKey()))
 	err = ev.SignWithSecKey(sk, so...)
-	log.D.Ln(err)
+	chk.D(err)
 	return
 }
 

@@ -106,7 +106,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 					if evt == nil {
 						log.D.F("got nil event from %s", spew.Sdump(val))
 					}
-					log.T.F("unmarshaled %s", evt.ToObject().String())
+					log.T.Ln("unmarshaled", evt.ToObject().String())
 					// check if this matches the other filters that were not part of the index
 					if extraFilter == nil || extraFilter.Matches(evt) {
 						log.T.Ln("dispatching event to results queue", evt == nil)
