@@ -14,7 +14,8 @@ import (
 
 // Chat implements the control interface, intercepting kind 4 encrypted direct
 // messages and processing them if they are for the relay's pubkey
-func (rl *Relay) Chat(c context.T, ev *event.T) {
+func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
+	log.I.Ln("chat event", ev.ToObject().String())
 	if ev.Kind != kind.EncryptedDirectMessage {
 		return
 	}
@@ -23,7 +24,6 @@ func (rl *Relay) Chat(c context.T, ev *event.T) {
 		return
 	}
 	log.I.Ln(rl.RelayPubHex, "receiving message via DM", ev.ToObject().String())
-	var err error
 	var secret, decrypted []byte
 	if secret, err = nip4.ComputeSharedSecret(ev.PubKey,
 		rl.Config.SecKey); chk.E(err) {
@@ -49,11 +49,18 @@ func (rl *Relay) Chat(c context.T, ev *event.T) {
 		return
 	}
 	log.I.Ln("reply", reply.ToObject().String())
-	for i, store := range rl.StoreEvent {
-		log.T.Ln("running event store function", i)
-		if err = store(c, reply); chk.T(err) {
-			return
-		}
-	}
+	// for i, store := range rl.StoreEvent {
+	// 	log.T.Ln("running event store function", i)
+	// 	if err = store(c, reply); chk.T(err) {
+	// 		return
+	// 	}
+	// }
+	// ws := GetConnection(c)
+	// id := GetSubscriptionID(c)
 	rl.BroadcastEvent(reply)
+	// chk.E(ws.WriteEnvelope(&eventenvelope.T{
+	// 	SubscriptionID: subscriptionid.T(id),
+	// 	Event:          reply},
+	// ))
+	return
 }
