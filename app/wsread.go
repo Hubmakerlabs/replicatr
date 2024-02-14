@@ -68,8 +68,8 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 			chk.E(p.ws.WriteMessage(websocket.PongMessage, nil))
 			continue
 		}
-		log.T.F("receiving message from %s %s\n%s%s",
-			p.ws.RealRemote.Load(), p.ws.AuthPubKey.Load(), message)
+		log.T.F("receiving message from %s %s: %s",
+			p.ws.RealRemote.Load(), p.ws.AuthPubKey.Load(), string(message))
 		go rl.wsProcessMessages(message, p.c, p.kill, p.ws)
 	}
 }
