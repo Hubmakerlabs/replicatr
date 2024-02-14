@@ -55,7 +55,7 @@ func main() {
 			Limitation: nip11.Limits{
 				MaxMessageLength: app.MaxMessageSize,
 				Oldest:           1640305963,
-				AuthRequired:     args.AuthRequired,
+				// AuthRequired:     args.AuthRequired,
 			},
 			Retention:      object.T{},
 			RelayCountries: tag.T{},
@@ -169,9 +169,9 @@ func main() {
 	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
 	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
 	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
-	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
-	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
-	rl.OnEventSaved = append(rl.OnEventSaved, rl.Chat)
+	// rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
+	// rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
+	rl.StoreEvent = append(rl.StoreEvent, rl.Chat)
 	// Load ACL events
 
 	switch {

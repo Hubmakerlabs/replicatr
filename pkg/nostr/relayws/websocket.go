@@ -7,11 +7,7 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/fasthttp/websocket"
 	"go.uber.org/atomic"
 	"mleku.online/git/slog"
@@ -51,30 +47,30 @@ func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
-	var file string
-	var line int
-	_, file, line, _ = runtime.Caller(1)
-	loc := fmt.Sprintf("%s:%d", file, line)
-	var evkind string
-	var ek kind.T
-	if env.Label() == labels.EVENT {
-		kind.MapMx.Lock()
-		ek = env.(*eventenvelope.T).Event.Kind
-		v, ok := kind.Map[ek]
-		if ok {
-			evkind = fmt.Sprintf(" (%s)", v)
-		}
-		kind.MapMx.Unlock()
-	}
+	// var file string
+	// var line int
+	// _, file, line, _ = runtime.Caller(1)
+	// loc := fmt.Sprintf("%s:%d", file, line)
+	// var evkind string
+	// var ek kind.T
+	// if env.Label() == labels.EVENT {
+	// 	kind.MapMx.Lock()
+	// 	ek = env.(*eventenvelope.T).Event.Kind
+	// 	v, ok := kind.Map[ek]
+	// 	if ok {
+	// 		evkind = fmt.Sprintf(" (%s)", v)
+	// 	}
+	// 	kind.MapMx.Unlock()
+	// }
 	// log privileged kinds more visibly for debugging
-	if kinds.IsPrivileged(ek) {
-		log.D.F("sending message to %s %s %s\n%s\n%s\n",
-			ws.RealRemote.Load(), ws.AuthPubKey.Load(),
-			evkind, env.ToArray().String(), loc)
-	} else {
-		log.T.F("sending message to %s %s %s\n%s\n%s",
-			ws.AuthPubKey.Load(), ws.AuthPubKey.Load(),
-			evkind, env.ToArray().String(), loc)
-	}
+	// if kinds.IsPrivileged(ek) {
+	// 	log.D.F("sending message to %s %s %s\n%s\n%s\n",
+	// 		ws.RealRemote.Load(), ws.AuthPubKey.Load(),
+	// 		evkind, env.ToArray().String(), loc)
+	// } else {
+	// 	log.T.F("sending message to %s %s %s\n%s\n%s",
+	// 		ws.AuthPubKey.Load(), ws.AuthPubKey.Load(),
+	// 		evkind, env.ToArray().String(), loc)
+	// }
 	return ws.Conn.WriteMessage(websocket.TextMessage, env.Bytes())
 }

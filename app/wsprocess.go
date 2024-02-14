@@ -28,6 +28,7 @@ import (
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	kill func(), ws *relayws.WebSocket) {
 
+	log.D.Ln("processing message", string(msg))
 	if len(msg) > rl.Info.Limitation.MaxMessageLength {
 		log.T.F("rejecting event with size: %d", len(msg))
 		log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
@@ -50,7 +51,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		deny = false
 	}
 	if deny {
-		log.T.F("denying access to '%s': dropping message", ws.RealRemote.Load())
+		log.E.F("denying access to '%s': dropping message", ws.RealRemote.Load())
 		return
 	}
 	var en enveloper.I
@@ -59,7 +60,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		return
 	}
 	if en == nil {
-		log.T.Ln("'silently' ignoring message")
+		log.E.Ln("'silently' ignoring message")
 		return
 	}
 	// log.D.Ln("received envelope from", ws.conn.LocalAddr(), ws.conn.RemoteAddr())

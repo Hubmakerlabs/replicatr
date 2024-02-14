@@ -33,12 +33,12 @@ type queryEvent struct {
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
-	log.T.Ln("preparing queries")
+	// log.T.Ln("preparing queries")
 	queries, extraFilter, since, err := prepareQueries(f)
 	if err != nil {
 		return nil, err
 	}
-	log.T.Ln("scanning database")
+	// log.T.Ln("scanning database")
 	go func() {
 		err = b.View(func(txn *badger.Txn) (err error) {
 			// iterate only through keys and in reverse order
@@ -106,12 +106,12 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 					if evt == nil {
 						log.D.F("got nil event from %s", spew.Sdump(val))
 					}
-					log.T.Ln("unmarshaled", evt.ToObject().String())
+					// log.T.Ln("unmarshaled", evt.ToObject().String())
 					// check if this matches the other filters that were not part of the index
 					if extraFilter == nil || extraFilter.Matches(evt) {
-						log.T.Ln("dispatching event to results queue", evt == nil)
+						// log.T.Ln("dispatching event to results queue", evt == nil)
 						q.results <- evt
-						log.T.Ln("results queue was consumed")
+						// log.T.Ln("results queue was consumed")
 					}
 				}
 				// }(i, q)
@@ -119,44 +119,46 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 
 			// max number of events we'll return
 			limit := b.MaxLimit
-			if f.Limit != nil && *f.Limit > 0 && *f.Limit < limit {
-				log.T.Ln("clamping results: filter", *f.Limit, "max", b.MaxLimit)
-				limit = *f.Limit
-			}
-			// default an empty or zero limit to 1 so replaceable events come
-			// out as expected.
-			var isReplaceable bool
-			for i := range f.Kinds {
-				if f.Kinds[i].IsReplaceable() || f.Kinds[i].IsParameterizedReplaceable() {
-					isReplaceable = true
-					break
+			if f.Limit != nil {
+				if *f.Limit > 0 && *f.Limit < limit {
+					limit = *f.Limit
 				}
 			}
-			// note that this will trigger if replaceable event kinds appear in
-			// a filter, even if not all are replaceable, so if this happens and
-			// the limit is zero then it will be set to 1 result only, which may
-			// not be what the querant intends, however, they should specify a
-			// limit for replaceable events as they should only want the newest
-			// one
-			//
-			// this ensures that clients that are looking for replaceable events
-			// and don't specify a limit they get the expected single, newest
-			// version
-			if isReplaceable {
-				if f.Limit == nil {
-					log.T.Ln("setting limit to 1 for missing limit to handle replaceable events correctly")
-					limit = 1
-				}
-			} else {
-				if f.Limit != nil && *f.Limit == 0 {
-					log.T.Ln("setting limit to max for zero limit to handle non-replaceable events correctly:", b.MaxLimit)
-					limit = b.MaxLimit
-				}
-				if len(f.Kinds) == 1 && f.Kinds[0].IsEphemeral() {
-					log.T.Ln("setting limit to 0 for ephemeral event, only one to be returned")
-					limit = 0
-				}
-			}
+
+			// // default an empty or zero limit to 1 so replaceable events come
+			// // out as expected.
+			// var isReplaceable bool
+			// for i := range f.Kinds {
+			// 	if f.Kinds[i].IsReplaceable() || f.Kinds[i].IsParameterizedReplaceable() {
+			// 		isReplaceable = true
+			// 		break
+			// 	}
+			// }
+			// // note that this will trigger if replaceable event kinds appear in
+			// // a filter, even if not all are replaceable, so if this happens and
+			// // the limit is zero then it will be set to 1 result only, which may
+			// // not be what the querant intends, however, they should specify a
+			// // limit for replaceable events as they should only want the newest
+			// // one
+			// //
+			// // this ensures that clients that are looking for replaceable events
+			// // and don't specify a limit they get the expected single, newest
+			// // version
+			// if isReplaceable {
+			// 	if f.Limit == nil {
+			// 		log.T.Ln("setting limit to 1 for missing limit to handle replaceable events correctly")
+			// 		limit = 1
+			// 	}
+			// } else {
+			// 	if f.Limit != nil && *f.Limit == 0 {
+			// 		log.T.Ln("setting limit to max for zero limit to handle non-replaceable events correctly:", b.MaxLimit)
+			// 		limit = b.MaxLimit
+			// 	}
+			// 	if len(f.Kinds) == 1 && f.Kinds[0].IsEphemeral() {
+			// 		log.T.Ln("setting limit to 0 for ephemeral event, only one to be returned")
+			// 		limit = 0
+			// 	}
+			// }
 
 			// receive results and ensure we only return the most recent ones always
 			emittedEvents := 0
@@ -233,7 +235,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			log.D.F("badger: query txn error: %s", err)
 		}
 	}()
-	log.T.Ln("completed query")
+	// log.T.Ln("completed query")
 	return ch, nil
 }
 
