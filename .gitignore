@@ -1,30 +1,24 @@
-# Allowlisting gitignore template for GO projects prevents us
-# from adding various unwanted local files, such as generated
-# files, developer configurations or IDE-specific files etc.
-#
-# Recommended: Go.AllowList.gitignore
+# Various IDEs and Editors
+.vscode/
+.idea/
+**/*~
 
-# Ignore everything
-*
+# Mac OSX temporary files
+.DS_Store
+**/.DS_Store
 
-# But not these files...
-!/.gitignore
+# dfx temporary files
+.dfx/
 
-!*.go
-!go.sum
-!go.mod
+# generated files
+src/declarations/
 
+# rust
+target/
 
-!README.md
-!LICENSE
-!*.sh
-!Makefile
-!*.json
-!*.pdf
-!*.csv
-!*.py
-!*.mediawiki
-!*.did
-!*.rs
-# ...even if they are in subdirectories
-!*/
+# frontend code
+node_modules/
+dist/
+
+# environment variables
+.env
