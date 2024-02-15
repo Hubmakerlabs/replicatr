@@ -49,7 +49,7 @@ func (p *StaticKeySigner) getOrCreateSession(clientPubkey string) (Session, erro
 		return p.sessions[idx], nil
 	}
 
-	shared, err := nip4.ComputeSharedSecret(clientPubkey, p.secretKey)
+	shared, err := nip4.ComputeSharedSecret(p.secretKey, clientPubkey)
 	if err != nil {
 		return Session{}, fmt.Errorf("failed to compute shared secret: %w", err)
 	}
@@ -142,7 +142,7 @@ func (p *StaticKeySigner) HandleRequest(ev *event.T) (
 			break
 		}
 		plaintext := req.Params[1]
-		sharedSecret, err := nip4.ComputeSharedSecret(thirdPartyPubkey, p.secretKey)
+		sharedSecret, err := nip4.ComputeSharedSecret(p.secretKey, thirdPartyPubkey)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to compute shared secret: %w", err)
 			break
@@ -164,7 +164,7 @@ func (p *StaticKeySigner) HandleRequest(ev *event.T) (
 			break
 		}
 		ciphertext := req.Params[1]
-		sharedSecret, err := nip4.ComputeSharedSecret(thirdPartyPubkey, p.secretKey)
+		sharedSecret, err := nip4.ComputeSharedSecret(p.secretKey, thirdPartyPubkey)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to compute shared secret: %w", err)
 			break

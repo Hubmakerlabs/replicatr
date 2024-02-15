@@ -83,7 +83,7 @@ func pay(cfg *C, invoice string) (err error) {
 	}
 	defer chk.D(rl.Close())
 
-	ss, err := nip4.ComputeSharedSecret(wallet, secret)
+	ss, err := nip4.ComputeSharedSecret(secret, wallet)
 	if chk.D(err) {
 		return err
 	}
