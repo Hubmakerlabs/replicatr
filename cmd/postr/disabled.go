@@ -206,7 +206,7 @@ func doDMPost(cCtx *cli.Context) (err error) {
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.EncryptedDirectMessage
 	var secret []byte
-	if secret, err = nip4.ComputeSharedSecret(ev.PubKey, secHex); chk.D(err) {
+	if secret, err = nip4.ComputeSharedSecret(secHex, ev.PubKey); chk.D(err) {
 		return
 	}
 	if ev.Content, err = nip4.Encrypt(ev.Content, secret); chk.D(err) {

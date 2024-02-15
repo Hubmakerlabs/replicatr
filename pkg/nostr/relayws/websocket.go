@@ -23,7 +23,7 @@ type WebSocket struct {
 	mutex      sync.Mutex
 	Request    *http.Request // original request
 	Challenge  atomic.String // nip42
-	Pending    atomic.String // for DM CLI authentication
+	Pending    atomic.Value  // for DM CLI authentication
 	AuthPubKey atomic.String
 	Authed     chan struct{}
 }

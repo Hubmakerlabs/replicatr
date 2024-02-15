@@ -100,7 +100,7 @@ func (p *DynamicSigner) HandleRequest(ev *event.T) (
 	} else {
 		session = Session{}
 
-		session.SharedKey, err = nip4.ComputeSharedSecret(ev.PubKey, privateKey)
+		session.SharedKey, err = nip4.ComputeSharedSecret(privateKey, ev.PubKey)
 		if err != nil {
 			return req, resp, eventResponse, false, fmt.Errorf("failed to compute shared secret: %w", err)
 		}
@@ -164,7 +164,7 @@ func (p *DynamicSigner) HandleRequest(ev *event.T) (
 		}
 		plaintext := req.Params[1]
 		var sharedSecret []byte
-		sharedSecret, err = nip4.ComputeSharedSecret(thirdPartyPubkey, privateKey)
+		sharedSecret, err = nip4.ComputeSharedSecret(privateKey, thirdPartyPubkey)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to compute shared secret: %w", err)
 			break
@@ -190,7 +190,7 @@ func (p *DynamicSigner) HandleRequest(ev *event.T) (
 			break
 		}
 		ciphertext := req.Params[1]
-		sharedSecret, err := nip4.ComputeSharedSecret(thirdPartyPubkey, privateKey)
+		sharedSecret, err := nip4.ComputeSharedSecret(privateKey, thirdPartyPubkey)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to compute shared secret: %w", err)
 			break

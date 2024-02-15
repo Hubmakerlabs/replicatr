@@ -264,6 +264,12 @@ var Map = map[T]string{
 	CommunityDefinition:         "CommunityDefinition",
 }
 
+func GetString(t T) string {
+	MapMx.Lock()
+	defer MapMx.Unlock()
+	return Map[t]
+}
+
 func (ki T) IsEphemeral() bool {
 	return ki >= EphemeralStart && ki < EphemeralEnd
 }

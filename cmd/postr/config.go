@@ -158,7 +158,7 @@ func (cfg *C) Decode(ev *event.T) (err error) {
 	} else {
 		sp = ev.PubKey
 	}
-	ss, err := nip4.ComputeSharedSecret(sp, sk)
+	ss, err := nip4.ComputeSharedSecret(sk, sp)
 	if chk.D(err) {
 		return err
 	}
