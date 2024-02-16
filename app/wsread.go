@@ -30,8 +30,8 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		deny = false
 	}
 	if deny {
-		log.T.F("denying access to '%s': dropping message",
-			p.ws.RealRemote.Load())
+		// log.T.F("denying access to '%s': dropping message",
+		// 	p.ws.RealRemote.Load())
 		// p.kill()
 		return
 	}
@@ -67,8 +67,12 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 			chk.E(p.ws.WriteMessage(websocket.PongMessage, nil))
 			continue
 		}
+		strMsg := string(message)
+		if len(strMsg) > 256 {
+			strMsg = strMsg[:256]
+		}
 		log.T.F("receiving message from %s %s: %s",
-			p.ws.RealRemote.Load(), p.ws.AuthPubKey.Load(), string(message))
+			p.ws.RealRemote.Load(), p.ws.AuthPubKey.Load(), strMsg)
 		rl.wsProcessMessages(message, p.c, p.kill, p.ws)
 	}
 }

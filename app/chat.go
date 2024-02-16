@@ -13,7 +13,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/davecgh/go-spew/spew"
 )
 
 // DecryptDM decrypts a DM, kind 4, 1059 or 1060
@@ -182,7 +181,7 @@ note that if you have NIP-42 enabled in the client and you are already authorise
 
 func (rl *Relay) command(ev *event.T, cmd string) (err error) {
 	log.D.S(cmd)
-	reply := MakeReply(ev, fmt.Sprintf("received message: %v", spew.Sdump(cmd)))
+	reply := MakeReply(ev, fmt.Sprintf("received message: '%v'", cmd))
 	log.I.F("executing command '%s' - currently only echo", cmd)
 	if reply, err = EncryptDM(reply, rl.Config.SecKey, ev.PubKey); chk.E(err) {
 		return
