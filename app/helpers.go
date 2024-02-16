@@ -26,6 +26,7 @@ var log, chk = slog.New(os.Stderr)
 
 func RequestAuth(c context.T) {
 	ws := GetConnection(c)
+	log.D.Ln("requesting auth from", ws.RealRemote.Load())
 	// ws.authLock.Lock()
 	// if ws.Authed == nil {
 	// 	ws.Authed = make(chan struct{})

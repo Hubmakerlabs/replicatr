@@ -20,10 +20,10 @@ func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
 		}
 		// log.D.S(evs)
 		for _, ev := range evs {
-			log.T.S(ev.Tags)
+			log.D.S(ev.Tags)
 			for _, tag := range ev.Tags {
 				if len(tag) >= 2 && tag[0] == "p" {
-					log.T.Ln("p tag", tag.Relay(), tag.Key(), tag.Value())
+					log.D.Ln("p tag", tag.Relay(), tag.Key(), tag.Value())
 					cfg.Lock()
 					(*m)[tag[1]] = struct{}{}
 					cfg.Unlock()

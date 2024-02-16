@@ -12,6 +12,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
+	"mleku.online/git/atomic"
 )
 
 var Version = "v0.0.1"
@@ -42,7 +43,7 @@ type (
 )
 
 type Relay struct {
-	ServiceURL               string
+	ServiceURL               atomic.String
 	RejectEvent              []RejectEvent
 	RejectFilter             []RejectFilter
 	RejectCountFilter        []RejectFilter
@@ -82,6 +83,12 @@ type Relay struct {
 	RelayNpub      string
 	// ACL is the list of users and privileges on this relay
 	*ACL
+}
+
+func (rl *Relay) AuthCheck(c context.T) {
+	if rl.Info.Limitation.AuthRequired {
+		RequestAuth(c)
+	}
 }
 
 func NewRelay(inf *nip11.Info,

@@ -233,7 +233,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 		}
 
 		message := buf.Bytes()
-		log.T.F("{%s} received %v", r.URL(), string(message))
+		log.D.F("{%s} received %v", r.URL(), string(message))
 		var envelope enveloper.I
 		envelope, _, err = envelopes.ProcessEnvelope(message)
 		if envelope == nil {
@@ -266,7 +266,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 			} else {
 				// check if the event matches the desired filter, ignore otherwise
 				if !s.Filters.Match(env.Event) {
-					log.T.F("{%s} filter does not match: %v ~ %v",
+					log.D.F("{%s} filter does not match: %v ~ %v",
 						r.URL(), s.Filters, env.Event)
 					continue
 				}
@@ -287,9 +287,9 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 				s.DispatchEvent(env.Event)
 			}
 		case *eoseenvelope.T:
-			log.T.Ln("eose", r.Subscriptions.Size())
+			log.D.Ln("eose", r.Subscriptions.Size())
 			if s, ok := r.Subscriptions.Load(env.Sub.String()); ok {
-				log.T.Ln("dispatching eose", env.Sub.String())
+				log.D.Ln("dispatching eose", env.Sub.String())
 				s.DispatchEose()
 			}
 		case *closedenvelope.T:

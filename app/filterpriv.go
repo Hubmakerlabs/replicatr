@@ -28,7 +28,7 @@ func (rl *Relay) FilterPrivileged(c context.T, f *filter.T) (reject bool, msg st
 	// 	case <-ws.Authed:
 	// 		// log.D.Ln("user authed", GetAuthed(c))
 	// 	case <-c.Done():
-	// 		log.T.Ln("context canceled while waiting for auth")
+	// 		log.D.Ln("context canceled while waiting for auth")
 	// 	case <-time.After(5 * time.Second):
 	// 		if ws.AuthPubKey.Load() == "" {
 	// 			return true, "Authorization timeout"
@@ -48,7 +48,7 @@ func (rl *Relay) FilterPrivileged(c context.T, f *filter.T) (reject bool, msg st
 	// parties := make(tag.T, len(receivers)+len(f.Authors))
 	// copy(parties[:len(f.Authors)], f.Authors)
 	// copy(parties[len(f.Authors):], receivers)
-	// log.T.Ln(ws.RealRemote.Load(), "parties", parties)
+	// log.D.Ln(ws.RealRemote.Load(), "parties", parties)
 	// switch {
 	// case ws.AuthPubKey.Load() == "":
 	// 	// not authenticated

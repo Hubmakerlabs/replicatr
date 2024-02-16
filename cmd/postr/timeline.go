@@ -39,7 +39,7 @@ func Timeline(cCtx *cli.Context) (err error) {
 	for k := range followsMap {
 		follows = append(follows, k)
 	}
-	log.T.Ln("follows", cfg.Follows)
+	log.D.Ln("follows", cfg.Follows)
 	// get timeline
 	f := filter.T{
 		Kinds:   kinds.T{kind.TextNote},

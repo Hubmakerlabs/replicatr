@@ -37,10 +37,10 @@ func (rl *Relay) Import(db *badger.Backend, files []string) {
 			hash := sha256.Sum256(evb)
 			id := hex.Enc(hash[:])
 			if id != ev.ID.String() {
-				log.T.F("id mismatch got %s, expected %s", id, ev.ID.String())
+				log.D.F("id mismatch got %s, expected %s", id, ev.ID.String())
 				continue
 			}
-			log.T.Ln("ID was valid")
+			log.D.Ln("ID was valid")
 			// check signature
 			var ok bool
 			if ok, err = ev.CheckSignature(); log.E.Chk(err) {
@@ -50,7 +50,7 @@ func (rl *Relay) Import(db *badger.Backend, files []string) {
 				log.E.Ln("invalid: signature is invalid")
 				return
 			}
-			log.T.Ln("signature was valid")
+			log.D.Ln("signature was valid")
 			if ev.Kind == kind.Deletion {
 				// this always returns "blocked: " whenever it returns an error
 				err = rl.handleDeleteRequest(context.Bg(), ev)

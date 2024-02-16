@@ -121,10 +121,10 @@ func (cfg *C) Do(r *RelayPerms, f RelayIter) {
 			continue
 		}
 		wg.Add(1)
-		log.T.Ln("running iterator on", k, v)
+		log.D.Ln("running iterator on", k, v)
 		go func(wg *sync.WaitGroup, k string, v *RelayPerms) {
 			defer wg.Done()
-			log.T.Ln("connecting to relay", k)
+			log.D.Ln("connecting to relay", k)
 			rl, err := relay.Connect(c, k)
 			if chk.D(err) {
 				return
@@ -135,7 +135,7 @@ func (cfg *C) Do(r *RelayPerms, f RelayIter) {
 			chk.D(rl.Close())
 		}(&wg, k, v)
 	}
-	log.T.Ln("waiting for iterators to finish")
+	log.D.Ln("waiting for iterators to finish")
 	wg.Wait()
 }
 

@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
@@ -16,10 +17,10 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 		// if ws.AuthPubKey.Load() == "" && rl.Info.Limitation.AuthRequired {
 		// 	return true
 		// }
-		log.T.Ln("broadcasting", ws.RealRemote.Load(), ws.AuthPubKey.Load(), subs.Size())
+		log.D.Ln("broadcasting", ws.RealRemote.Load(), ws.AuthPubKey.Load(), subs.Size())
 		subs.Range(func(id string, listener *Listener) bool {
 			// if !listener.filters.Match(evt) {
-			// 	log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
+			// 	log.D.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
 			// 		listener.ws.RealRemote.Load(), listener.ws.AuthPubKey.Load(),
 			// 		listener.filters, evt.ToObject().String())
 			// 	return true
@@ -41,9 +42,11 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 			// 		return true
 			// 	}
 			// }
-			log.T.F("sending event to subscriber %v %s '%s'",
+			log.D.F("sending event to subscriber %v %s (%s)",
 				ws.RealRemote.Load(), ws.AuthPubKey.Load(),
-				evt.ToObject().String())
+				// evt.ToObject().String(),
+				kind.GetString(evt.Kind),
+			)
 			// remotes = append(remotes, ws.RealRemote.Load())
 			chk.E(ws.WriteEnvelope(&eventenvelope.T{
 				SubscriptionID: subscriptionid.T(id),
