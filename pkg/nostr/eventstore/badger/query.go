@@ -13,7 +13,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -103,11 +102,11 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 					val, err = item.ValueCopy(val)
 					evt := &event.T{}
 					if evt, err = nostrbinary.Unmarshal(val); err != nil {
-						log.D.F("badger: value read error (id %x): %s", spew.Sdump(val), err)
+						log.D.S("badger: value read error", val, err)
 						break
 					}
 					if evt == nil {
-						log.D.F("got nil event from %s", spew.Sdump(val))
+						log.D.S("got nil event from", val)
 					}
 					// log.D.Ln("unmarshaled", evt.ToObject().String())
 					// check if this matches the other filters that were not part of the index
@@ -170,7 +169,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			// first pass
 			emitQueue := NewPriorityQueue(len(queries) + limit)
 			for i, q := range queries {
-				log.T.Ln("receiving query", i, q.f.ToObject().String())
+				// log.T.Ln("receiving query", i, q.f.ToObject().String())
 				select {
 				case evt := <-q.results:
 					log.T.F("returning event from query %d %s\nEVENT: %s", i,

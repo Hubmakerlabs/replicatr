@@ -28,7 +28,11 @@ import (
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	kill func(), ws *relayws.WebSocket) {
 
-	log.T.Ln("processing message", ws.RealRemote.Load(), string(msg))
+	strMsg := string(msg)
+	if len(strMsg) > 256 {
+		strMsg = strMsg[:256]
+	}
+	log.T.Ln("processing message", ws.RealRemote.Load(), strMsg)
 	if len(msg) > rl.Info.Limitation.MaxMessageLength {
 		log.D.F("rejecting event with size: %d", len(msg))
 		log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
@@ -51,7 +55,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		deny = false
 	}
 	if deny {
-		log.E.F("denying access to '%s': dropping message", ws.RealRemote.Load())
+		// log.E.F("denying access to '%s': dropping message", ws.RealRemote.Load())
+		kill()
 		return
 	}
 	var en enveloper.I

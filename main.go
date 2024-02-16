@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 	"github.com/alexflint/go-arg"
+	"mleku.online/git/interrupt"
 	"mleku.online/git/slog"
 )
 
@@ -172,6 +175,7 @@ func main() {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
+	rl.StoreEvent = append(rl.StoreEvent, rl.Chat)
 	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
 	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
 	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
@@ -179,9 +183,51 @@ func main() {
 	rl.OnConnect = append(rl.OnConnect, rl.AuthCheck)
 	// rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	// rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
-	rl.StoreEvent = append(rl.StoreEvent, rl.Chat)
-	// Load ACL events
-
+	srvr := http.Server{
+		Addr:    args.Listen,
+		Handler: rl,
+	}
+	interrupt.AddHandler(func() {
+		chk.E(srvr.Close())
+		exec.Command("stty", "-F", "/dev/tty", "echo").Run()
+	})
+	// disable input buffering
+	exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
+	// do not display entered characters on the screen
+	exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
+	go func() {
+		var b []byte = make([]byte, 1)
+		for {
+			_, err = os.Stdin.Read(b)
+			if !chk.E(err) {
+				switch b[0] {
+				case '1':
+					fmt.Println("logging off")
+					slog.SetLogLevel(slog.Off)
+				case '2':
+					fmt.Println("logging fatal")
+					slog.SetLogLevel(slog.Fatal)
+				case '3':
+					fmt.Println("logging error")
+					slog.SetLogLevel(slog.Error)
+				case '4':
+					fmt.Println("logging warn")
+					slog.SetLogLevel(slog.Warn)
+				case '5':
+					fmt.Println("logging info")
+					slog.SetLogLevel(slog.Info)
+				case '6':
+					fmt.Println("logging debug")
+					slog.SetLogLevel(slog.Debug)
+				case '7':
+					fmt.Println("logging trace")
+					slog.SetLogLevel(slog.Trace)
+				case 27:
+					interrupt.Request()
+				}
+			}
+		}
+	}()
 	switch {
 	case args.ImportCmd != nil:
 		rl.Import(db.Badger, args.ImportCmd.FromFile)
@@ -189,6 +235,6 @@ func main() {
 		rl.Export(db.Badger, args.ExportCmd.ToFile)
 	default:
 		log.I.Ln("listening on", args.Listen)
-		chk.E(http.ListenAndServe(args.Listen, rl))
+		go chk.E(srvr.ListenAndServe())
 	}
 }
