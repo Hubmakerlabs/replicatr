@@ -11,10 +11,20 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"os"
 
 	"golang.org/x/crypto/chacha20"
 	"golang.org/x/crypto/hkdf"
 	"mleku.online/git/ec/secp256k1"
+	"mleku.online/git/slog"
+)
+
+var log, chk = slog.New(os.Stderr)
+
+const (
+	Reserved int = iota
+	Deprecated1
+	Standard1
 )
 
 var (
@@ -29,7 +39,7 @@ type EncryptOptions struct {
 
 func Encrypt(conversationKey []byte, plaintext string, options *EncryptOptions) (string, error) {
 	var (
-		version    int = 2
+		version    int = Standard1
 		salt       []byte
 		enc        []byte
 		nonce      []byte
@@ -46,7 +56,7 @@ func Encrypt(conversationKey []byte, plaintext string, options *EncryptOptions) 
 	if options.Salt != nil {
 		salt = options.Salt
 	} else {
-		if salt, err = randomBytes(32); err != nil {
+		if salt, err = randomBytes(32); chk.E(err) {
 			return "", err
 		}
 	}
@@ -56,16 +66,16 @@ func Encrypt(conversationKey []byte, plaintext string, options *EncryptOptions) 
 	if len(salt) != 32 {
 		return "", errors.New("salt must be 32 bytes")
 	}
-	if enc, nonce, auth, err = messageKeys(conversationKey, salt); err != nil {
+	if enc, nonce, auth, err = messageKeys(conversationKey, salt); chk.E(err) {
 		return "", err
 	}
-	if padded, err = pad(plaintext); err != nil {
+	if padded, err = pad(plaintext); chk.E(err) {
 		return "", err
 	}
-	if ciphertext, err = chacha20_(enc, nonce, []byte(padded)); err != nil {
+	if ciphertext, err = chacha20_(enc, nonce, []byte(padded)); chk.E(err) {
 		return "", err
 	}
-	if hmac_, err = sha256Hmac(auth, ciphertext, salt); err != nil {
+	if hmac_, err = sha256Hmac(auth, ciphertext, salt); chk.E(err) {
 		return "", err
 	}
 	concat = append(concat, []byte{byte(version)}...)
@@ -78,7 +88,7 @@ func Encrypt(conversationKey []byte, plaintext string, options *EncryptOptions) 
 func Decrypt(conversationKey []byte, ciphertext string) (string, error) {
 	var (
 		version     int = 2
-		decoded     []byte
+		dcd         []byte
 		cLen        int
 		dLen        int
 		salt        []byte
@@ -95,41 +105,56 @@ func Decrypt(conversationKey []byte, ciphertext string) (string, error) {
 	)
 	cLen = len(ciphertext)
 	if cLen < 132 || cLen > 87472 {
-		return "", errors.New(fmt.Sprintf("invalid payload length: %d", cLen))
-	}
-	if ciphertext[0:1] == "#" {
-		return "", errors.New("unknown version")
-	}
-	if decoded, err = base64.StdEncoding.DecodeString(ciphertext); err != nil {
-		return "", errors.New("invalid base64")
-	}
-	if version = int(decoded[0]); version != 2 {
-		return "", errors.New(fmt.Sprintf("unknown version %d", version))
-	}
-	dLen = len(decoded)
-	if dLen < 99 || dLen > 65603 {
-		return "", errors.New(fmt.Sprintf("invalid data length: %d", dLen))
-	}
-	salt, ciphertext_, hmac_ = decoded[1:33], decoded[33:dLen-32], decoded[dLen-32:]
-	if enc, nonce, auth, err = messageKeys(conversationKey, salt); err != nil {
+		err = errors.New(fmt.Sprintf("invalid payload length: %d", cLen))
+		log.E.Ln(err)
 		return "", err
 	}
-	if hmac, err = sha256Hmac(auth, ciphertext_, salt); err != nil {
+	if ciphertext[0:1] == "#" {
+		err = errors.New("unknown version")
+		log.E.Ln(err)
+		return "", err
+	}
+	if dcd, err = base64.StdEncoding.DecodeString(ciphertext); chk.E(err) {
+		err = errors.New("invalid base64")
+		log.E.Ln(err)
+		return "", err
+	}
+	log.D.Ln("decoded", dcd)
+	if version = int(dcd[0]); version != 2 {
+		err = errors.New(fmt.Sprintf("unknown version %d", version))
+		log.E.Ln(err)
+		return "", err
+	}
+	dLen = len(dcd)
+	if dLen < 99 || dLen > 65603 {
+		err = errors.New(fmt.Sprintf("invalid data length: %d", dLen))
+		log.E.Ln(err)
+		return "", err
+	}
+	salt, ciphertext_, hmac_ = dcd[1:33], dcd[33:dLen-32], dcd[dLen-32:]
+	log.D.Ln(salt, ciphertext_, hmac_)
+	if enc, nonce, auth, err = messageKeys(conversationKey, salt); chk.E(err) {
+		return "", err
+	}
+	if hmac, err = sha256Hmac(auth, ciphertext_, salt); chk.E(err) {
 		return "", err
 	}
 	if !bytes.Equal(hmac_, hmac) {
 		return "", errors.New("invalid hmac")
 	}
-	if padded, err = chacha20_(enc, nonce, ciphertext_); err != nil {
+	if padded, err = chacha20_(enc, nonce, ciphertext_); chk.E(err) {
 		return "", err
 	}
 	unpaddedLen = binary.BigEndian.Uint16(padded[0:2])
 	if unpaddedLen < uint16(MinPlaintextSize) || unpaddedLen > uint16(MaxPlaintextSize) || len(padded) != 2+calcPadding(int(unpaddedLen)) {
-		return "", errors.New("invalid padding")
+		err = errors.New("invalid padding")
+		return "", err
 	}
 	unpadded = padded[2 : unpaddedLen+2]
 	if len(unpadded) == 0 || len(unpadded) != int(unpaddedLen) {
-		return "", errors.New("invalid padding")
+		err = errors.New("invalid padding")
+		log.D.Ln(err)
+		return "", err
 	}
 	return string(unpadded), nil
 }
@@ -155,7 +180,7 @@ func chacha20_(key []byte, nonce []byte, message []byte) ([]byte, error) {
 		dst    = make([]byte, len(message))
 		err    error
 	)
-	if cipher, err = chacha20.NewUnauthenticatedCipher(key, nonce); err != nil {
+	if cipher, err = chacha20.NewUnauthenticatedCipher(key, nonce); chk.E(err) {
 		return nil, err
 	}
 	cipher.XORKeyStream(dst, message)
@@ -164,7 +189,7 @@ func chacha20_(key []byte, nonce []byte, message []byte) ([]byte, error) {
 
 func randomBytes(n int) ([]byte, error) {
 	buf := make([]byte, n)
-	if _, err := rand.Read(buf); err != nil {
+	if _, err := rand.Read(buf); chk.E(err) {
 		return nil, err
 	}
 	return buf, nil
@@ -195,13 +220,13 @@ func messageKeys(conversationKey []byte, salt []byte) ([]byte, []byte, []byte, e
 		return nil, nil, nil, errors.New("salt must be 32 bytes")
 	}
 	r = hkdf.Expand(sha256.New, conversationKey, salt)
-	if _, err = io.ReadFull(r, enc); err != nil {
+	if _, err = io.ReadFull(r, enc); chk.E(err) {
 		return nil, nil, nil, err
 	}
-	if _, err = io.ReadFull(r, nonce); err != nil {
+	if _, err = io.ReadFull(r, nonce); chk.E(err) {
 		return nil, nil, nil, err
 	}
-	if _, err = io.ReadFull(r, auth); err != nil {
+	if _, err = io.ReadFull(r, auth); chk.E(err) {
 		return nil, nil, nil, err
 	}
 	return enc, nonce, auth, nil
