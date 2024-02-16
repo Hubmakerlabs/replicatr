@@ -192,6 +192,7 @@ var Map = map[T]string{
 	Repost:                      "Repost",
 	Reaction:                    "Reaction",
 	BadgeAward:                  "BadgeAward",
+	ReadReceipt:                 "ReadReceipt",
 	GenericRepost:               "GenericRepost",
 	ChannelCreation:             "ChannelCreation",
 	ChannelMetadata:             "ChannelMetadata",

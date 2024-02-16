@@ -167,6 +167,18 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			// receive results and ensure we only return the most recent ones always
 			emittedEvents := 0
 
+			// first pass
+			emitQueue := NewPriorityQueue(len(queries) + limit)
+			for i, q := range queries {
+				log.T.Ln("receiving query", i, q.f.ToObject().String())
+				select {
+				case evt := <-q.results:
+					log.T.F("returning event from query %d %s\nEVENT: %s", i,
+						q.f.ToObject().String(), evt.ToObject().String())
+					emitQueue.Queries = append(emitQueue.Queries, &queryEvent{T: evt, query: q.i})
+				}
+			}
+
 			// now it's a good time to schedule this
 			defer func() {
 				log.D.Ln("closing iterators")
@@ -180,18 +192,6 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 					close(q.results)
 				}
 			}()
-
-			// first pass
-			emitQueue := NewPriorityQueue(len(queries) + limit)
-			for i, q := range queries {
-				log.T.Ln("receiving query", i, q.f.ToObject().String())
-				select {
-				case evt := <-q.results:
-					log.D.Ln("returning event from query", i,
-						q.f.ToObject().String(), evt.ToObject().String())
-					emitQueue.Queries = append(emitQueue.Queries, &queryEvent{T: evt, query: q.i})
-				}
-			}
 
 			// queue may be empty here if we have literally nothing
 			if emitQueue.Len() == 0 {

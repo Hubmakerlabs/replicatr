@@ -42,9 +42,10 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 			// 		return true
 			// 	}
 			// }
-			log.D.F("sending event to subscriber %v %s (%s)",
+			log.D.F("sending event to subscriber %v %s (%d %s)",
 				ws.RealRemote.Load(), ws.AuthPubKey.Load(),
 				// evt.ToObject().String(),
+				evt.Kind,
 				kind.GetString(evt.Kind),
 			)
 			// remotes = append(remotes, ws.RealRemote.Load())

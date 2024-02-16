@@ -63,12 +63,14 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		log.E.Ln("'silently' ignoring message")
 		return
 	}
-	log.D.Ln("received envelope from", ws.RealRemote.Load())
 	switch env := en.(type) {
 	case *eventenvelope.T:
+		log.D.Ln("received event envelope from",
+			ws.RealRemote.Load(), en.ToArray().String())
 		// reject old dated events according to nip11
 		if env.Event.CreatedAt <= rl.Info.Limitation.Oldest {
-			log.D.F("rejecting event with date: %s", env.Event.CreatedAt.Time().String())
+			log.D.F("rejecting event with date: %s",
+				env.Event.CreatedAt.Time().String())
 			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: false,
@@ -114,7 +116,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			// this always returns "blocked: " whenever it returns an error
 			err = rl.handleDeleteRequest(c, env.Event)
 		} else {
-			log.T.Ln("adding event", env.Event.ToObject().String())
+			log.D.Ln("adding event", env.Event.ToObject().String())
 			// this will also always return a prefixed reason
 			err = rl.AddEvent(c, env.Event)
 		}
@@ -201,8 +203,12 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}()
 		SetListener(env.SubscriptionID.String(), ws, env.Filters, cancelReqCtx)
 	case *closeenvelope.T:
+		log.D.Ln("received close envelope from",
+			ws.RealRemote.Load(), en.ToArray().String())
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
+		log.D.Ln("received auth response envelope from",
+			ws.RealRemote.Load(), en.ToArray().String())
 		// log.D.Ln("received auth response")
 		wsBaseUrl := strings.Replace(rl.ServiceURL.Load(), "http", "ws", 1)
 		var ok bool
