@@ -34,15 +34,15 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 	// var ch chan *event.T
 	// defer close(ch)
 	if ev.Kind.IsEphemeral() {
-		log.T.Ln("ephemeral event")
+		log.D.Ln("ephemeral event")
 		// do not store ephemeral events
 	} else {
 		// todo: this seems to be unnecessary for badger
 		// if ev.Kind.IsReplaceable() {
-		// 	log.T.Ln("replaceable event")
+		// 	log.D.Ln("replaceable event")
 		// 	// replaceable event, delete before storing
 		// 	for i, query := range rl.QueryEvents {
-		// 		log.T.Ln("running query", i)
+		// 		log.D.Ln("running query", i)
 		// 		ch, err = query(c, &filter.T{
 		// 			Authors: tag.T{ev.PubKey},
 		// 			Kinds:   kinds.T{ev.Kind},
@@ -56,9 +56,9 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		// 			}
 		// 		}
 		// 	}
-		// 	log.T.Ln("finished replaceable event")
+		// 	log.D.Ln("finished replaceable event")
 		// } else if ev.Kind.IsParameterizedReplaceable() {
-		// 	log.T.Ln("parameterized replaceable event")
+		// 	log.D.Ln("parameterized replaceable event")
 		// 	// parameterized replaceable event, delete before storing
 		// 	d := ev.Tags.GetFirst([]string{"d", ""})
 		// 	if d != nil {
@@ -78,18 +78,18 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		// 		}
 		// 	}
 		// }
-		log.T.Ln("storing event")
+		log.D.Ln("storing event")
 		// store
 		for i, store := range rl.StoreEvent {
-			log.T.Ln("running event store function", i)
+			log.D.Ln("running event store function", i)
 			if saveErr := store(c, ev); chk.T(saveErr) {
 				switch {
 				case errors.Is(saveErr, eventstore.ErrDupEvent):
-					log.T.Ln(saveErr)
+					log.D.Ln(saveErr)
 					return saveErr
 				default:
 					err = fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))
-					log.T.Ln(ev.ID, err)
+					log.D.Ln(ev.ID, err)
 					return
 				}
 			}

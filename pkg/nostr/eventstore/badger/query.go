@@ -19,6 +19,7 @@ import (
 
 type query struct {
 	i             int
+	f             *filter.T
 	prefix        []byte
 	startingPoint []byte // todo: rework this to use 64 bit numbers
 	results       chan *event.T
@@ -33,14 +34,14 @@ type queryEvent struct {
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 	ch := make(chan *event.T)
 
-	// log.T.Ln("preparing queries")
+	// log.D.Ln("preparing queries")
 	queries, extraFilter, since, err := prepareQueries(f)
 	if err != nil {
 		return nil, err
 	}
-	// log.T.Ln("scanning database")
+	// log.D.Ln("scanning database")
 	go func() {
-		err = b.View(func(txn *badger.Txn) (err error) {
+		err := b.View(func(txn *badger.Txn) (err error) {
 			// iterate only through keys and in reverse order
 			opts := badger.IteratorOptions{
 				Reverse: true,
@@ -49,7 +50,9 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			// actually iterate
 			iteratorClosers := make([]func(), len(queries))
 			for i, q := range queries {
+				// txMx.Lock()
 				// go func(i int, q query) {
+				// var err error
 				txMx.Lock()
 				it := txn.NewIterator(opts)
 				txMx.Unlock()
@@ -106,15 +109,16 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 					if evt == nil {
 						log.D.F("got nil event from %s", spew.Sdump(val))
 					}
-					// log.T.Ln("unmarshaled", evt.ToObject().String())
+					// log.D.Ln("unmarshaled", evt.ToObject().String())
 					// check if this matches the other filters that were not part of the index
 					if extraFilter == nil || extraFilter.Matches(evt) {
-						// log.T.Ln("dispatching event to results queue", evt == nil)
+						// log.D.Ln("dispatching event to results queue", evt == nil)
 						q.results <- evt
-						// log.T.Ln("results queue was consumed")
+						// log.D.Ln("results queue was consumed")
 					}
 				}
 				// }(i, q)
+				// txMx.Unlock()
 			}
 
 			// max number of events we'll return
@@ -146,16 +150,16 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			// // version
 			// if isReplaceable {
 			// 	if f.Limit == nil {
-			// 		log.T.Ln("setting limit to 1 for missing limit to handle replaceable events correctly")
+			// 		log.D.Ln("setting limit to 1 for missing limit to handle replaceable events correctly")
 			// 		limit = 1
 			// 	}
 			// } else {
 			// 	if f.Limit != nil && *f.Limit == 0 {
-			// 		log.T.Ln("setting limit to max for zero limit to handle non-replaceable events correctly:", b.MaxLimit)
+			// 		log.D.Ln("setting limit to max for zero limit to handle non-replaceable events correctly:", b.MaxLimit)
 			// 		limit = b.MaxLimit
 			// 	}
 			// 	if len(f.Kinds) == 1 && f.Kinds[0].IsEphemeral() {
-			// 		log.T.Ln("setting limit to 0 for ephemeral event, only one to be returned")
+			// 		log.D.Ln("setting limit to 0 for ephemeral event, only one to be returned")
 			// 		limit = 0
 			// 	}
 			// }
@@ -165,6 +169,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 
 			// now it's a good time to schedule this
 			defer func() {
+				log.D.Ln("closing iterators")
 				txMx.Lock()
 				defer txMx.Unlock()
 				for _, itclose := range iteratorClosers {
@@ -179,51 +184,52 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			// first pass
 			emitQueue := NewPriorityQueue(len(queries) + limit)
 			for i, q := range queries {
-				log.T.Ln("receiving query", i)
+				log.T.Ln("receiving query", i, q.f.ToObject().String())
 				select {
 				case evt := <-q.results:
-					log.T.Ln("received query", i)
+					log.D.Ln("returning event from query", i,
+						q.f.ToObject().String(), evt.ToObject().String())
 					emitQueue.Queries = append(emitQueue.Queries, &queryEvent{T: evt, query: q.i})
 				}
 			}
-			log.T.Ln("scheduling closing iterators")
 
 			// queue may be empty here if we have literally nothing
 			if emitQueue.Len() == 0 {
-				log.T.Ln("emit queue is empty")
+				log.D.Ln("emit queue is empty")
 				return nil
 			}
 
-			log.T.Ln("initialising emit queue")
+			log.D.Ln("initialising emit queue")
 			heap.Init(emitQueue)
 
 			// iterate until we've emitted all events required
 			for {
 				// emit latest event in queue
-				log.T.Ln("emitting latest event in queue")
+				log.D.Ln("emitting latest event in queue")
 				latest := emitQueue.Queries[0]
 				ch <- latest.T
-				log.T.Ln("emitted event")
+				log.D.Ln("emitted event")
 				// stop when reaching limit
 				emittedEvents++
 				if emittedEvents == limit {
-					log.T.Ln("emitted the limit amount of events", limit)
+					log.D.Ln("emitted the limit amount of events", limit)
 					break
 				}
 
-				// fetch a new one from query results and replace the previous one with it
+				// fetch a new one from query results and replace the previous
+				// one with it
 				if evt, ok := <-queries[latest.query].results; ok {
-					log.T.Ln("adding event to queue")
+					log.D.Ln("adding event to queue")
 					emitQueue.Queries[0].T = evt
 					heap.Fix(emitQueue, 0)
 				} else {
-					log.T.Ln("removing event from queue")
+					log.D.Ln("removing event from queue")
 					// if this query has no more events we just remove this and proceed normally
 					heap.Remove(emitQueue, 0)
 
 					// check if the list is empty and end
 					if emitQueue.Len() == 0 {
-						log.T.Ln("emit queue empty")
+						log.D.Ln("emit queue empty")
 						break
 					}
 				}
@@ -235,7 +241,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			log.D.F("badger: query txn error: %s", err)
 		}
 	}()
-	// log.T.Ln("completed query")
+	// log.D.Ln("completed query")
 	return ch, nil
 }
 
@@ -258,7 +264,7 @@ func prepareQueries(f *filter.T) (
 			}
 			idPrefix8, _ := hex.Dec(idHex[0 : 8*2])
 			copy(prefix[1:], idPrefix8)
-			queries[i] = query{i: i, prefix: prefix, skipTimestamp: true}
+			queries[i] = query{i: i, f: f, prefix: prefix, skipTimestamp: true}
 		}
 	} else if len(f.Authors) > 0 {
 		if len(f.Kinds) == 0 {
@@ -273,7 +279,7 @@ func prepareQueries(f *filter.T) (
 				prefix := make([]byte, 1+8)
 				prefix[0] = index
 				copy(prefix[1:], pubkeyPrefix8)
-				queries[i] = query{i: i, prefix: prefix}
+				queries[i] = query{i: i, f: f, prefix: prefix}
 			}
 		} else {
 			index = indexPubkeyKindPrefix
@@ -291,7 +297,7 @@ func prepareQueries(f *filter.T) (
 					prefix[0] = index
 					copy(prefix[1:], pubkeyPrefix8)
 					binary.BigEndian.PutUint16(prefix[1+8:], uint16(kind))
-					queries[i] = query{i: i, prefix: prefix}
+					queries[i] = query{i: i, f: f, prefix: prefix}
 					i++
 				}
 			}
@@ -318,7 +324,7 @@ func prepareQueries(f *filter.T) (
 				// remove the last parts part to get just the prefix we want here
 				prefix := k[0:offset]
 
-				queries[i] = query{i: i, prefix: prefix}
+				queries[i] = query{i: i, f: f, prefix: prefix}
 				i++
 			}
 		}
@@ -329,14 +335,14 @@ func prepareQueries(f *filter.T) (
 			prefix := make([]byte, 1+2)
 			prefix[0] = index
 			binary.BigEndian.PutUint16(prefix[1:], uint16(kind))
-			queries[i] = query{i: i, prefix: prefix}
+			queries[i] = query{i: i, f: f, prefix: prefix}
 		}
 	} else {
 		index = indexCreatedAtPrefix
 		queries = make([]query, 1)
 		prefix := make([]byte, 1)
 		prefix[0] = index
-		queries[0] = query{i: 0, prefix: prefix}
+		queries[0] = query{i: 0, f: f, prefix: prefix}
 		extraFilter = nil
 	}
 

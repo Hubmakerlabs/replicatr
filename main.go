@@ -27,7 +27,7 @@ var args, conf app.Config
 func main() {
 	var log, chk = slog.New(os.Stderr)
 	arg.MustParse(&args)
-	log.T.S(args)
+	log.D.S(args)
 	runtime.GOMAXPROCS(args.MaxProcs)
 	var dataDirBase string
 	var err error
@@ -76,7 +76,7 @@ func main() {
 		}
 	} else {
 		if err = conf.Load(configPath); chk.E(err) {
-			log.T.F("failed to load relay configuration: '%s'", err)
+			log.D.F("failed to load relay configuration: '%s'", err)
 			os.Exit(1)
 		}
 		// if fields are empty, overwrite them with the cli args file
@@ -86,6 +86,9 @@ func main() {
 		}
 		if args.Profile != "" {
 			args.Profile = conf.Profile
+		}
+		if args.AuthRequired {
+			conf.AuthRequired = true
 		}
 		if args.Name != "" {
 			args.Name = conf.Name
@@ -112,6 +115,7 @@ func main() {
 		if args.SecKey == "" {
 			args.SecKey = conf.SecKey
 		}
+		log.D.S(conf)
 		if err = inf.Load(infoPath); chk.E(err) {
 			inf = nip11.Info{
 				Name:        args.Name,
@@ -137,8 +141,11 @@ func main() {
 			log.D.F("failed to load relay information document: '%s' "+
 				"deriving from config", err)
 		}
+		if args.AuthRequired {
+			inf.Limitation.AuthRequired = true
+		}
 	}
-	log.T.S(&inf)
+	log.D.S(&inf)
 	rl := app.NewRelay(&inf, &args)
 	rl.Info.AddNIPs(
 		nip11.BasicProtocol.Number,            // events, envelopes and filters
@@ -169,6 +176,7 @@ func main() {
 	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
 	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
 	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
+	rl.OnConnect = append(rl.OnConnect, rl.AuthCheck)
 	// rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	// rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
 	rl.StoreEvent = append(rl.StoreEvent, rl.Chat)

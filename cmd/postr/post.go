@@ -87,7 +87,7 @@ func Post(cCtx *cli.Context) (err error) {
 	}
 	ev.CreatedAt = timestamp.Now()
 	ev.Kind = kind.TextNote
-	log.T.F("signing event `%s`", ev.ToObject())
+	log.D.F("signing event `%s`", ev.ToObject())
 	if err = ev.Sign(sk); chk.D(err) {
 		return err
 	}

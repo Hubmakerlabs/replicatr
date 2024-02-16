@@ -62,7 +62,7 @@ func (c *Config) Load(filename string) (err error) {
 	if b, err = os.ReadFile(filename); chk.E(err) {
 		return
 	}
-	log.T.F("configuration\n%s", string(b))
+	log.D.F("configuration\n%s", string(b))
 	if err = json.Unmarshal(b, c); chk.E(err) {
 		return
 	}

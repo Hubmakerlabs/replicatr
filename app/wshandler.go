@@ -35,7 +35,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	if len(splitted) == 2 {
 		rr = splitted[1]
 	}
-	// in case upstream doesn't set this or we are directly ristening instead of
+	// in case upstream doesn't set this or we are directly listening instead of
 	// via reverse proxy or just if the header field is missing, put the
 	// connection remote address into the websocket state data.
 	if rr == "" {
@@ -54,7 +54,9 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 			wsKey, ws,
 		),
 	)
+	log.D.Ln("inbound connection from", rr)
 	kill := func() {
+		log.W.Ln("disconnecting websocket", rr)
 		for _, onDisconnect := range rl.OnDisconnect {
 			onDisconnect(c)
 		}

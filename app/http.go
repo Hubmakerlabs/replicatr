@@ -8,8 +8,8 @@ import (
 
 // ServeHTTP implements http.Handler interface.
 func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if rl.ServiceURL == "" {
-		rl.ServiceURL = getServiceBaseURL(r)
+	if rl.ServiceURL.Load() == "" {
+		rl.ServiceURL.Store(getServiceBaseURL(r))
 	}
 	if r.Header.Get("Upgrade") == "websocket" {
 		rl.HandleWebsocket(w, r)

@@ -28,9 +28,9 @@ import (
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	kill func(), ws *relayws.WebSocket) {
 
-	log.D.Ln("processing message", string(msg))
+	log.T.Ln("processing message", ws.RealRemote.Load(), string(msg))
 	if len(msg) > rl.Info.Limitation.MaxMessageLength {
-		log.T.F("rejecting event with size: %d", len(msg))
+		log.D.F("rejecting event with size: %d", len(msg))
 		log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 			OK: false,
 			Reason: fmt.Sprintf(
@@ -56,19 +56,19 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	}
 	var en enveloper.I
 	var err error
-	if en, _, err = envelopes.ProcessEnvelope(msg); log.T.Chk(err) {
+	if en, _, err = envelopes.ProcessEnvelope(msg); log.D.Chk(err) {
 		return
 	}
 	if en == nil {
 		log.E.Ln("'silently' ignoring message")
 		return
 	}
-	// log.D.Ln("received envelope from", ws.conn.LocalAddr(), ws.conn.RemoteAddr())
+	log.D.Ln("received envelope from", ws.RealRemote.Load())
 	switch env := en.(type) {
 	case *eventenvelope.T:
 		// reject old dated events according to nip11
 		if env.Event.CreatedAt <= rl.Info.Limitation.Oldest {
-			log.T.F("rejecting event with date: %s", env.Event.CreatedAt.Time().String())
+			log.D.F("rejecting event with date: %s", env.Event.CreatedAt.Time().String())
 			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: false,
@@ -80,11 +80,11 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}
 		// check id
 		evs := env.Event.ToCanonical().Bytes()
-		// log.T.F("serialized %s", evs)
+		// log.D.F("serialized %s", evs)
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
-			log.T.F("id mismatch got %s, expected %s",
+			log.D.F("id mismatch got %s, expected %s",
 				id, env.Event.ID.String())
 			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
@@ -130,7 +130,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		} else {
 			ok = true
 		}
-		log.T.Ln("sending back ok envelope")
+		log.D.Ln("sending back ok envelope")
 		log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,
 			OK:     ok,
@@ -174,14 +174,14 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 				ws,
 				f,
 			})
-			if log.T.Chk(err) {
+			if log.D.Chk(err) {
 				// fail everything if any filter is rejected
 				reason := err.Error()
 				if strings.HasPrefix(reason, nip42.AuthRequired) {
 					RequestAuth(c)
 				}
 				if strings.HasPrefix(reason, "blocked") {
-					kill()
+					// kill()
 					return
 				}
 				log.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
@@ -203,8 +203,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	case *closeenvelope.T:
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
-		// log.T.Ln("received auth response")
-		wsBaseUrl := strings.Replace(rl.ServiceURL, "http", "ws", 1)
+		// log.D.Ln("received auth response")
+		wsBaseUrl := strings.Replace(rl.ServiceURL.Load(), "http", "ws", 1)
 		var ok bool
 		var pubkey string
 		if pubkey, ok, err = nip42.ValidateAuthEvent(env.Event, ws.Challenge.Load(), wsBaseUrl); ok {
@@ -224,5 +224,5 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			))
 		}
 	}
-	log.T.Chk(err)
+	log.D.Chk(err)
 }

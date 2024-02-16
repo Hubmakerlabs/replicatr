@@ -75,14 +75,13 @@ func MakeReply(ev *event.T, content string) (evo *event.T) {
 // Chat implements the control interface, intercepting kind 4 encrypted direct
 // messages and processing them if they are for the relay's pubkey
 func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
+	log.D.Ln("running chat checker")
 	if ev.Kind != kind.EncryptedDirectMessage {
-		kind.MapMx.Lock()
 		log.I.Ln("not chat event", ev.Kind, kind.GetString(ev.Kind))
-		kind.MapMx.Unlock()
 		return
 	}
 	if !ev.Tags.ContainsAny("p", rl.RelayPubHex) && ev.PubKey != rl.RelayPubHex {
-		log.T.Ln("direct message not for relay chat", ev.PubKey, rl.RelayPubHex)
+		log.D.Ln("direct message not for relay chat", ev.PubKey, rl.RelayPubHex)
 		return
 	}
 	meSec, youPub := rl.Config.SecKey, ev.PubKey

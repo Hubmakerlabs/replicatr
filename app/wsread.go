@@ -30,9 +30,9 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		deny = false
 	}
 	if deny {
-		log.E.F("denying access to '%s': dropping message",
+		log.T.F("denying access to '%s': dropping message",
 			p.ws.RealRemote.Load())
-		p.kill()
+		// p.kill()
 		return
 	}
 	p.conn.SetReadLimit(rl.MaxMessageSize)
@@ -50,7 +50,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		var typ int
 		var message []byte
 		typ, message, err = p.conn.ReadMessage()
-		if log.T.Chk(err) {
+		if log.D.Chk(err) {
 			if websocket.IsUnexpectedCloseError(
 				err,
 				websocket.CloseNormalClosure,    // 1000
@@ -61,7 +61,6 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 				log.E.F("unexpected close error from %s: %v",
 					p.ws.RealRemote.Load(), err)
 			}
-			p.kill()
 			return
 		}
 		if typ == websocket.PingMessage {
@@ -70,6 +69,6 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		}
 		log.T.F("receiving message from %s %s: %s",
 			p.ws.RealRemote.Load(), p.ws.AuthPubKey.Load(), string(message))
-		go rl.wsProcessMessages(message, p.c, p.kill, p.ws)
+		rl.wsProcessMessages(message, p.c, p.kill, p.ws)
 	}
 }
