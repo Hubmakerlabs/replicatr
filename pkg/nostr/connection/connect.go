@@ -15,7 +15,7 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsflate"
 	"github.com/gobwas/ws/wsutil"
-	"mleku.online/git/slog"
+	"mleku.dev/git/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

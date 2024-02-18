@@ -9,7 +9,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"mleku.online/git/slog"
+	"mleku.dev/git/slog"
 )
 
 // const RELAY = "wss://nos.lol"

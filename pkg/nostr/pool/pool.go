@@ -17,7 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/fiatjaf/generic-ristretto/z"
 	"github.com/puzpuzpuz/xsync/v2"
-	"mleku.online/git/slog"
+	"mleku.dev/git/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

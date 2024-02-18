@@ -12,7 +12,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
-	"mleku.online/git/atomic"
+	"mleku.dev/git/atomic"
 )
 
 var Version = "v0.0.1"

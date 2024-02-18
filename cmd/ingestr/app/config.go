@@ -5,7 +5,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"mleku.online/git/slog"
+	"mleku.dev/git/slog"
 )
 
 const Name = "ingestr"

@@ -8,7 +8,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/dgraph-io/badger/v4/options"
-	"mleku.online/git/slog"
+	"mleku.dev/git/slog"
 )
 
 const (

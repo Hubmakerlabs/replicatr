@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/schnorr"
+	"mleku.dev/git/ec"
+	"mleku.dev/git/ec/schnorr"
 )
 
 func GeneratePrivateKey() string {

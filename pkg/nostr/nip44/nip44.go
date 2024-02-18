@@ -15,8 +15,8 @@ import (
 
 	"golang.org/x/crypto/chacha20"
 	"golang.org/x/crypto/hkdf"
-	"mleku.online/git/ec/secp256k1"
-	"mleku.online/git/slog"
+	"mleku.dev/git/ec/secp256k1"
+	"mleku.dev/git/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

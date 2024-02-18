@@ -11,9 +11,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/alexflint/go-arg"
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/schnorr"
-	"mleku.online/git/slog"
+	"mleku.dev/git/ec"
+	"mleku.dev/git/ec/schnorr"
+	"mleku.dev/git/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

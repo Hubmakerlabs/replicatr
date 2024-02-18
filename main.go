@@ -16,8 +16,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 	"github.com/alexflint/go-arg"
-	"mleku.online/git/interrupt"
-	"mleku.online/git/slog"
+	"mleku.dev/git/interrupt"
+	"mleku.dev/git/slog"
 )
 
 var (

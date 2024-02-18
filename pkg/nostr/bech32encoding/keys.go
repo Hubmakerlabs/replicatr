@@ -5,11 +5,11 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	"mleku.online/git/bech32"
-	"mleku.online/git/ec"
-	"mleku.online/git/ec/schnorr"
-	"mleku.online/git/ec/secp256k1"
-	"mleku.online/git/slog"
+	"mleku.dev/git/bech32"
+	"mleku.dev/git/ec"
+	"mleku.dev/git/ec/schnorr"
+	"mleku.dev/git/ec/secp256k1"
+	"mleku.dev/git/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

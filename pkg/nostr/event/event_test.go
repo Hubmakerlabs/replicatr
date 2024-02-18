@@ -15,8 +15,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	secp256k1 "mleku.online/git/ec/secp256k1"
-	"mleku.online/git/slog"
+	secp256k1 "mleku.dev/git/ec/secp256k1"
+	"mleku.dev/git/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
