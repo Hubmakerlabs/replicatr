@@ -8,7 +8,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip44"
 	"github.com/stretchr/testify/assert"
-	"mleku.online/git/ec/secp256k1"
+	"mleku.dev/git/ec/secp256k1"
 )
 
 func assertCryptPriv(t *testing.T, sk1 string, sk2 string, conversationKey string, salt string, plaintext string, expected string) {

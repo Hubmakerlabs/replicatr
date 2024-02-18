@@ -13,22 +13,20 @@ require (
 	github.com/gookit/color v1.5.4
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/minio/sha256-simd v1.0.1
-	github.com/pkg/term v1.1.0
 	github.com/puzpuzpuz/xsync/v2 v2.5.1
 	github.com/rs/cors v1.10.1
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/stretchr/testify v1.8.4
-	github.com/tj/go-terminput v1.0.0
 	github.com/urfave/cli/v2 v2.27.1
 	golang.org/x/crypto v0.19.0
 	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
 	golang.org/x/net v0.21.0
 	lukechampine.com/frand v1.4.2
-	mleku.online/git/atomic v1.11.3
-	mleku.online/git/bech32 v1.0.4
-	mleku.online/git/ec v1.0.6
-	mleku.online/git/interrupt v1.0.9
-	mleku.online/git/slog v1.0.12
+	mleku.dev/git/atomic v1.11.5
+	mleku.dev/git/bech32 v1.0.5
+	mleku.dev/git/ec v1.0.8
+	mleku.dev/git/interrupt v1.0.10
+	mleku.dev/git/slog v1.0.13
 )
 
 require (
@@ -66,6 +64,6 @@ require (
 	golang.org/x/term v0.17.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	mleku.online/git/qu v1.0.6 // indirect
+	mleku.dev/git/qu v1.0.8 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )

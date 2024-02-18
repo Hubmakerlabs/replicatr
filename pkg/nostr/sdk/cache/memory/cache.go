@@ -7,7 +7,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	ristretto "github.com/fiatjaf/generic-ristretto"
-	"mleku.online/git/slog"
+	"mleku.dev/git/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

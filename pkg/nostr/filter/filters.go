@@ -12,7 +12,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
-	"mleku.online/git/slog"
+	"mleku.dev/git/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

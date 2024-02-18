@@ -12,8 +12,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/fasthttp/websocket"
-	"mleku.online/git/atomic"
-	"mleku.online/git/slog"
+	"mleku.dev/git/atomic"
+	"mleku.dev/git/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
