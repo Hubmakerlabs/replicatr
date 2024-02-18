@@ -23,7 +23,7 @@ require (
 	golang.org/x/net v0.21.0
 	lukechampine.com/frand v1.4.2
 	mleku.dev/git/atomic v1.11.5
-	mleku.dev/git/bech32 v1.0.5
+	mleku.dev/git/bech32 v1.0.6
 	mleku.dev/git/ec v1.0.8
 	mleku.dev/git/interrupt v1.0.10
 	mleku.dev/git/slog v1.0.13
