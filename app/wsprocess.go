@@ -153,7 +153,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}
 		var total int64
 		for _, f := range env.Filters {
-			total += rl.handleCountRequest(c, ws, f)
+			total += rl.handleCountRequest(c, env.ID, ws, f)
 		}
 		log.E.Chk(ws.WriteEnvelope(&countenvelope.Response{
 			ID:    env.ID,
@@ -219,13 +219,19 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		var ok bool
 		var pubkey string
 		if pubkey, ok, err = nip42.ValidateAuthEvent(env.Event, ws.Challenge.Load(), wsBaseUrl); ok {
+			if ws.AuthPubKey.Load() == env.Event.PubKey {
+				log.D.Ln("user already authed")
+				break
+			}
+			log.I.Ln("user authenticated")
 			ws.AuthPubKey.Store(pubkey)
-			ws.Authed <- struct{}{}
+			close(ws.Authed)
 			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: true,
 			}))
 		} else {
+			log.E.Ln("user sent bogus auth response")
 			log.E.Chk(ws.WriteMessage(
 				websocket.TextMessage, (&okenvelope.T{
 					ID:     env.Event.ID,
@@ -235,5 +241,5 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			))
 		}
 	}
-	log.D.Chk(err)
+	chk.D(err)
 }

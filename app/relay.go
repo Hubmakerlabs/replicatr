@@ -10,6 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
 	"mleku.dev/git/atomic"
@@ -29,8 +30,9 @@ const (
 
 // function types used in the relay state
 type (
-	RejectEvent               func(c context.T, ev *event.T) (rej bool, msg string)
-	RejectFilter              func(c context.T, f *filter.T) (reject bool, msg string)
+	RejectEvent  func(c context.T, ev *event.T) (rej bool, msg string)
+	RejectFilter func(c context.T, id subscriptionid.T,
+		f *filter.T) (reject bool, msg string)
 	OverwriteFilter           func(c context.T, f *filter.T)
 	OverwriteDeletionOutcome  func(c context.T, tgt, del *event.T) (ok bool, msg string)
 	OverwriteResponseEvent    func(c context.T, ev *event.T)

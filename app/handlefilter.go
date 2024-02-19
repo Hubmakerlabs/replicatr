@@ -40,8 +40,8 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// that we know we don't support, and then if the end result is an empty
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
-		if rej, msg := reject(h.c, h.f); rej {
-			return errors.New(normalize.OKMessage(msg, "blocked"))
+		if rej, msg := reject(h.c, h.id, h.f); rej {
+			return errors.New(normalize.Reason(msg, "blocked"))
 		}
 	}
 	// run the functions to query events (generally just one, but we might be

@@ -25,7 +25,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 				log.E.Ln(err)
 				return
 			} else {
-				err = errors.New(normalize.OKMessage(msg, "blocked"))
+				err = errors.New(normalize.Reason(msg, "blocked"))
 				log.E.Ln(err)
 				return
 			}
@@ -88,7 +88,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 					log.D.Ln(saveErr)
 					return saveErr
 				default:
-					err = fmt.Errorf(normalize.OKMessage(saveErr.Error(), "error"))
+					err = fmt.Errorf(normalize.Reason(saveErr.Error(), "error"))
 					log.D.Ln(ev.ID, err)
 					return
 				}
