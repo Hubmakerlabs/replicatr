@@ -90,10 +90,10 @@ func URL(u string) string {
 	return p.String()
 }
 
-// OKMessage takes a string message that is to be sent in an `OK` or `CLOSED`
+// Reason takes a string message that is to be sent in an `OK` or `CLOSED`
 // command and prefixes it with "<prefix>: " if it doesn't already have an
 // acceptable prefix.
-func OKMessage(reason string, prefix string) string {
+func Reason(reason string, prefix string) string {
 	if idx := strings.Index(reason, ": "); idx == -1 || strings.IndexByte(reason[0:idx], ' ') != -1 {
 		return prefix + ": " + reason
 	}

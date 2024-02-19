@@ -5,10 +5,11 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
-func (rl *Relay) handleCountRequest(c context.T, ws *relayws.WebSocket,
-	f *filter.T) (subtotal int64) {
+func (rl *Relay) handleCountRequest(c context.T, id subscriptionid.T,
+	ws *relayws.WebSocket, f *filter.T) (subtotal int64) {
 
 	// overwrite the filter (for example, to eliminate some kinds or tags that
 	// we know we don't support)
@@ -17,7 +18,7 @@ func (rl *Relay) handleCountRequest(c context.T, ws *relayws.WebSocket,
 	}
 	// then check if we'll reject this filter
 	for _, reject := range rl.RejectCountFilter {
-		if rej, msg := reject(c, f); rej {
+		if rej, msg := reject(c, id, f); rej {
 			chk.E(ws.WriteEnvelope(&noticeenvelope.T{Text: msg}))
 			return 0
 		}
