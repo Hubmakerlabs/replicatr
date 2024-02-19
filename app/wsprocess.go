@@ -55,7 +55,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		deny = false
 	}
 	if deny {
-		// log.E.F("denying access to '%s': dropping message", ws.RealRemote.Load())
+		log.E.F("denying access to '%s': dropping message", ws.RealRemote.Load())
 		kill()
 		return
 	}
