@@ -66,8 +66,8 @@ func (b *Backend) Init(inf *nip11.Info) (err error) {
 }
 
 func (b *Backend) Close() {
-	log.E.Chk(b.DB.Close())
-	log.E.Chk(b.seq.Release())
+	chk.E(b.DB.Close())
+	chk.E(b.seq.Release())
 }
 
 func (b *Backend) Serial() []byte {

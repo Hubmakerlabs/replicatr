@@ -61,36 +61,36 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 		// ParseEnvelope, which are not used there.
 		//
 		// Next, find the comma after the label.
-		if err = buf.ScanThrough(','); err != nil {
+		if err = buf.ScanThrough(','); chk.T(err) {
 			return
 		}
 		// Next character we find will be open quotes for the subscription ID.
-		if err = buf.ScanThrough('"'); err != nil {
+		if err = buf.ScanThrough('"'); chk.T(err) {
 			return
 		}
 		var sid []byte
 		// read the string
 		if sid, err = buf.ReadUntil('"'); chk.D(err) {
-			err = fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+			err = fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
 			log.D.Ln(err)
 			return
 		}
 		s := subscriptionid.T(sid)
 		// next we need to determine whether this is a request or response
-		if err = buf.ScanUntil('{'); err != nil {
+		if err = buf.ScanUntil('{'); chk.T(err) {
 			err = fmt.Errorf("event not found in event envelope")
 			log.D.Ln(err)
 			return
 		}
 		// as it is the simplest thing to look for, we search for a match on the
 		// count response, which has only two fields, "count" and "approximate".
-		if err = buf.ScanThrough('"'); err != nil {
+		if err = buf.ScanThrough('"'); chk.T(err) {
 			return
 		}
 		var bb []byte
 		if bb, err = buf.ReadUntil('"'); chk.D(err) {
-			err = fmt.Errorf("unknown object in count envelope '%s'",
-				buf.String())
+			err = fmt.Errorf("unknown object in count envelope : %s '%s'",
+				err, buf.String())
 			return
 		}
 		// we should now have a string to compare
@@ -124,7 +124,7 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 		// this has two subtypes, a request and a response, but backwards, the
 		// challenge is from a relay, and the response is from a client
 		// Next, find the comma after the label
-		if err = buf.ScanThrough(','); err != nil {
+		if err = buf.ScanThrough(','); chk.T(err) {
 			return
 		}
 		var which byte

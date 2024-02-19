@@ -58,7 +58,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	var sid []byte
 	// read the string
 	if sid, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
 	}
 	E.Sub = subscriptionid.T(sid[:])
 	return

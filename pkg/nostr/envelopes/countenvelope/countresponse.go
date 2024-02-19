@@ -68,8 +68,8 @@ func (env *Response) Unmarshal(buf *text.Buffer) (err error) {
 	var sid []byte
 	// read the string
 	if sid, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("unterminated quotes in JSON, " +
-			"probably truncated read")
+		return fmt.Errorf("unterminated quotes in JSON, "+
+			"probably truncated read: %s", err)
 	}
 	env.ID = subscriptionid.T(sid)
 	// Next, find the comma after the subscription ID.
@@ -78,8 +78,8 @@ func (env *Response) Unmarshal(buf *text.Buffer) (err error) {
 	}
 	var countObject []byte
 	if countObject, err = buf.ReadEnclosed(); chk.D(err) {
-		return fmt.Errorf("did not find a properly formatted JSON " +
-			"object for the count")
+		return fmt.Errorf("did not find a properly formatted JSON "+
+			"object for the count: %s", err)
 	}
 	var count Count
 	if err = json.Unmarshal(countObject, &count); chk.D(err) {

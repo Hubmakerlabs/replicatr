@@ -34,7 +34,7 @@ func main() {
 	runtime.GOMAXPROCS(args.MaxProcs)
 	var dataDirBase string
 	var err error
-	if dataDirBase, err = os.UserHomeDir(); log.E.Chk(err) {
+	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {
 		os.Exit(1)
 	}
 	dataDir := filepath.Join(dataDirBase, args.Profile)

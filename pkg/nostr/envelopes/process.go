@@ -27,11 +27,11 @@ func ProcessEnvelope(b []byte) (env enveloper.I, buf *text.Buffer, err error) {
 	// }
 	// log.D.F("processing envelope:\n%s%s", string(trunc), ellipsis)
 	var match string
-	if match, buf, err = sentinel.Identify(b); log.D.Chk(err) {
+	if match, buf, err = sentinel.Identify(b); log.T.Chk(err) {
 		return
 	}
 	// log.D.Ln("envelope type", match)
-	if env, err = sentinel.Read(buf, match); log.D.Chk(err) {
+	if env, err = sentinel.Read(buf, match); log.T.Chk(err) {
 		return
 	}
 	return

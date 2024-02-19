@@ -16,7 +16,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var conn *websocket.Conn
 	conn, err = rl.upgrader.Upgrade(w, r, nil)
-	if log.E.Chk(err) {
+	if chk.E(err) {
 		log.E.F("failed to upgrade websocket: %v", err)
 		return
 	}
@@ -25,7 +25,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	// NIP-42 challenge
 	challenge := make([]byte, 8)
 	_, err = rand.Read(challenge)
-	log.E.Chk(err)
+	chk.E(err)
 	rem := r.Header.Get("X-Forwarded-For")
 	splitted := strings.Split(rem, " ")
 	var rr string
@@ -57,14 +57,14 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	if len(rl.Whitelist) > 0 {
 		for i := range rl.Whitelist {
 			if rr == rl.Whitelist[i] {
-				log.D.Ln("inbound connection from", rr)
+				log.T.Ln("inbound connection from", rr)
 			}
 		}
 	} else {
-		log.D.Ln("inbound connection from", rr)
+		log.T.Ln("inbound connection from", rr)
 	}
 	kill := func() {
-		// log.T.Ln("disconnecting websocket", rr)
+		log.T.Ln("disconnecting websocket", rr)
 		for _, onDisconnect := range rl.OnDisconnect {
 			onDisconnect(c)
 		}

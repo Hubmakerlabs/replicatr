@@ -38,7 +38,7 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 		} else if authRequired {
 			reason = "this relay requires authentication for all access"
 		}
-		log.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
+		chk.E(ws.WriteEnvelope(&closedenvelope.T{
 			ID:     id,
 			Reason: normalize.Reason(reason, nip42.AuthRequired),
 		}))

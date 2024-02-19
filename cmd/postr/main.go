@@ -333,7 +333,7 @@ func main() {
 			return nil
 		},
 	}
-	if err := app.Run(os.Args); log.E.Chk(err) {
+	if err := app.Run(os.Args); chk.E(err) {
 		os.Exit(1)
 	}
 }

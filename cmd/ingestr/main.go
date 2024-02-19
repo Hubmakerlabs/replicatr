@@ -24,7 +24,7 @@ func main() {
 	arg.MustParse(&args)
 	var err error
 	var dataDirBase string
-	if dataDirBase, err = os.UserHomeDir(); log.E.Chk(err) {
+	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {
 		fail()
 	}
 	confFile := filepath.Join(dataDirBase, "."+app.Name+".json")
@@ -32,24 +32,24 @@ func main() {
 	if args.Nsec != "" {
 		// if an nsec is given, write it to a file so it doesn't have to be
 		// given again
-		if _, _, err = bech32encoding.Decode(args.Nsec); log.E.Chk(err) {
+		if _, _, err = bech32encoding.Decode(args.Nsec); chk.E(err) {
 			log.E.F("invalid nsec provided '%s'", args.Nsec)
 			fail()
 		}
 		log.I.F("writing configuration to file %s", confFile)
-		if b, err = json.MarshalIndent(&args, "", "    "); log.E.Chk(err) {
+		if b, err = json.MarshalIndent(&args, "", "    "); chk.E(err) {
 			fail()
 		}
 		if _, err = os.Stat(dataDirBase); errors.Is(err, os.ErrNotExist) {
-			if log.E.Chk(os.MkdirAll(dataDirBase, 0700)) {
+			if chk.E(os.MkdirAll(dataDirBase, 0700)) {
 				fail()
 			}
 			err = nil
 		}
-		if log.E.Chk(err) {
+		if chk.E(err) {
 			fail()
 		}
-		if err = os.WriteFile(confFile, b, 0700); log.E.Chk(err) {
+		if err = os.WriteFile(confFile, b, 0700); chk.E(err) {
 			fail()
 		}
 	} else {
@@ -72,24 +72,24 @@ unable to read configuration file
 		args.Nsec = cfg.Nsec
 	}
 	var nsecDecoded any
-	if _, nsecDecoded, err = bech32encoding.Decode(args.Nsec); log.E.Chk(err) {
+	if _, nsecDecoded, err = bech32encoding.Decode(args.Nsec); chk.E(err) {
 		log.E.F("invalid nsec provided '%s'", args.Nsec)
 		fail()
 	}
 	args.SeckeyHex = nsecDecoded.(string)
-	if args.PubkeyHex, err = keys.GetPublicKey(args.SeckeyHex); log.E.Chk(err) {
+	if args.PubkeyHex, err = keys.GetPublicKey(args.SeckeyHex); chk.E(err) {
 		fail()
 	}
 	var pkb []byte
-	if pkb, err = hex.Dec(args.PubkeyHex); log.E.Chk(err) {
+	if pkb, err = hex.Dec(args.PubkeyHex); chk.E(err) {
 		fail()
 	}
 	var pk *ec.PublicKey
-	if pk, err = schnorr.ParsePubKey(pkb); log.E.Chk(err) {
+	if pk, err = schnorr.ParsePubKey(pkb); chk.E(err) {
 		fail()
 	}
 	var npub string
-	if npub, err = bech32encoding.PublicKeyToNpub(pk); log.E.Chk(err) {
+	if npub, err = bech32encoding.PublicKeyToNpub(pk); chk.E(err) {
 		fail()
 	}
 	log.I.F("will auth using nsec corresponding to %s", npub)

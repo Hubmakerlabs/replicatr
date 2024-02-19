@@ -57,12 +57,12 @@ func (C *Request) Unmarshal(buf *text.Buffer) (err error) {
 	var sid []byte
 	// read the string
 	if sid, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
 	}
 	C.ID = subscriptionid.T(sid)
 	// find the opening brace of the first or only filter object.
-	if err = buf.ScanUntil('{'); err != nil {
-		return fmt.Errorf("event not found in event envelope")
+	if err = buf.ScanUntil('{'); chk.D(err) {
+		return fmt.Errorf("event not found in event envelope: %s", err)
 	}
 	// T in the count envelope are variadic, there can be more than one,
 	// with subsequent items separated by a comma, so we read them in in a loop,

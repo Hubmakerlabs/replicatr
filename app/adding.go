@@ -47,7 +47,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		// 			Authors: tag.T{ev.PubKey},
 		// 			Kinds:   kinds.T{ev.Kind},
 		// 		})
-		// 		if log.E.Chk(err) {
+		// 		if chk.E(err) {
 		// 			continue
 		// 		}
 		// 		if previous := <-ch; previous != nil && isOlder(previous, ev) {
@@ -67,12 +67,12 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		// 				Authors: tag.T{ev.PubKey},
 		// 				Kinds:   kinds.T{ev.Kind},
 		// 				Tags:    filter.TagMap{"d": []string{d.Value()}},
-		// 			}); log.E.Chk(err) {
+		// 			}); chk.E(err) {
 		// 				continue
 		// 			}
 		// 			if previous := <-ch; previous != nil && isOlder(previous, ev) {
 		// 				for _, del := range rl.DeleteEvent {
-		// 					log.E.Chk(del(c, previous))
+		// 					chk.E(del(c, previous))
 		// 				}
 		// 			}
 		// 		}

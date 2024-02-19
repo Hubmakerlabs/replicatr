@@ -71,7 +71,7 @@ func FetchProfileMetadata(c context.T, pool *pool.Simple,
 	}, true)
 	var err error
 	for ie := range ch {
-		if pm, err = ParseMetadata(ie.Event); !log.E.Chk(err) {
+		if pm, err = ParseMetadata(ie.Event); !chk.E(err) {
 			return
 		}
 	}

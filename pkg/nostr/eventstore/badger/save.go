@@ -25,7 +25,7 @@ func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
 			// event exists
 			return eventstore.ErrDupEvent
 		}
-		log.D.Ln("encoding to binary")
+		log.T.Ln("encoding to binary")
 		// encode to binary
 		var bin []byte
 		if bin, err = nostrbinary.Marshal(evt); chk.D(err) {
@@ -34,18 +34,18 @@ func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
 		// log.D.F("binary encoded %x", bin)
 		idx := b.Serial()
 		// raw event store
-		log.D.F("setting event")
+		log.T.F("setting event")
 		if err = txn.Set(idx, bin); chk.D(err) {
 			return err
 		}
-		log.D.F("get index keys for event")
+		log.T.F("get index keys for event")
 		for _, k := range getIndexKeysForEvent(evt, idx[1:]) {
-			log.D.F("index key %x", k)
+			log.T.F("index key %x", k)
 			if err = txn.Set(k, nil); chk.D(err) {
 				return err
 			}
 		}
-		log.D.F("event saved")
+		log.T.F("event saved")
 		return nil
 	})
 }

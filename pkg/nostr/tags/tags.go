@@ -88,7 +88,7 @@ func (t T) Scan(src any) (err error) {
 		return errors.New("couldn'tag scan tag, it's not a json string")
 	}
 	err = json.Unmarshal(jtags, &t)
-	log.E.Chk(err)
+	chk.E(err)
 	return
 }
 

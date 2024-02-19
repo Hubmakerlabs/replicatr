@@ -19,7 +19,7 @@ func (b *Backend) runMigrations() (err error) {
 		} else if err != nil {
 			return
 		} else {
-			log.E.Chk(item.Value(func(val []byte) (err error) {
+			chk.E(item.Value(func(val []byte) (err error) {
 				version = binary.BigEndian.Uint16(val)
 				return nil
 			}))
@@ -55,7 +55,7 @@ func (b *Backend) runMigrations() (err error) {
 					"new version, import the data back in", version)
 			}
 
-			log.E.Chk(b.bumpVersion(txn, 3))
+			chk.E(b.bumpVersion(txn, 3))
 		}
 
 		if version < 4 {

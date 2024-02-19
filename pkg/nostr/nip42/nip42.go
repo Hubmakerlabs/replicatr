@@ -68,7 +68,7 @@ func ValidateAuthEvent(evt *event.T, challenge string,
 		return
 	}
 	if found, err = parseURL(r); chk.D(err) {
-		err = fmt.Errorf("error parsing relay url")
+		err = fmt.Errorf("error parsing relay url: %s", err)
 		log.D.Ln(err)
 		return
 	}

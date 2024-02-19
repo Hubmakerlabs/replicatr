@@ -46,7 +46,7 @@ func shortUint64(idOrPubkey string) uint64 {
 	}
 	var b []byte
 	var err error
-	if b, err = hex.Dec(idOrPubkey[length-8:]); log.E.Chk(err) {
+	if b, err = hex.Dec(idOrPubkey[length-8:]); chk.E(err) {
 		return 0
 	}
 	return uint64(binary.BigEndian.Uint32(b))

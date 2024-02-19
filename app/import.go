@@ -43,7 +43,7 @@ func (rl *Relay) Import(db *badger.Backend, files []string) {
 			log.D.Ln("ID was valid")
 			// check signature
 			var ok bool
-			if ok, err = ev.CheckSignature(); log.E.Chk(err) {
+			if ok, err = ev.CheckSignature(); chk.E(err) {
 				log.E.F("error: failed to verify signature: %v", err)
 				continue
 			} else if !ok {
@@ -59,7 +59,7 @@ func (rl *Relay) Import(db *badger.Backend, files []string) {
 				// this will also always return a prefixed reason
 				err = rl.AddEvent(context.Bg(), ev)
 			}
-			log.E.Chk(err)
+			chk.E(err)
 		}
 		chk.D(fh.Close())
 	}
