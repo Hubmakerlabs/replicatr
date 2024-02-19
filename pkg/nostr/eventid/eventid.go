@@ -21,7 +21,7 @@ func (ei T) String() string {
 
 func (ei T) Bytes() (b []byte) {
 	var err error
-	if b, err = hex.Dec(string(ei)); log.E.Chk(err) {
+	if b, err = hex.Dec(string(ei)); chk.E(err) {
 		return
 	}
 	return

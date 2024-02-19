@@ -22,7 +22,7 @@ func Profile(cCtx *cli.Context) (err error) {
 	if rl = cfg.FindRelay(context.Bg(), readPerms); rl == nil {
 		return errors.New("cannot connect relays")
 	}
-	defer log.E.Chk(rl.Close())
+	defer chk.E(rl.Close())
 	var pub string
 	if user == "" {
 		if pub, _, err = getPubFromSec(cfg.SecretKey); chk.D(err) {

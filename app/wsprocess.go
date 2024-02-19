@@ -32,10 +32,12 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	if len(strMsg) > 256 {
 		strMsg = strMsg[:256]
 	}
-	log.T.Ln("processing message", ws.RealRemote.Load(), strMsg)
+	log.T.Ln("processing message", ws.RealRemote.Load(),
+		ws.AuthPubKey.Load(), strMsg)
 	if len(msg) > rl.Info.Limitation.MaxMessageLength {
-		log.D.F("rejecting event with size: %d", len(msg))
-		log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+		log.D.F("rejecting event with size: %d from %s %s", len(msg), ws.RealRemote.Load(),
+			ws.AuthPubKey.Load())
+		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			OK: false,
 			Reason: fmt.Sprintf(
 				"invalid: relay limit disallows messages larger than %d bytes,"+
@@ -55,7 +57,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		deny = false
 	}
 	if deny {
-		log.E.F("denying access to '%s': dropping message", ws.RealRemote.Load())
+		log.E.F("denying access to '%s' %s: dropping message", ws.RealRemote.Load(),
+			ws.AuthPubKey.Load())
 		kill()
 		return
 	}
@@ -70,13 +73,14 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	}
 	switch env := en.(type) {
 	case *eventenvelope.T:
-		log.D.Ln("received event envelope from",
-			ws.RealRemote.Load(), en.ToArray().String())
+		log.D.Ln("received event envelope from", ws.RealRemote.Load(),
+			ws.AuthPubKey.Load(), en.ToArray().String())
 		// reject old dated events according to nip11
 		if env.Event.CreatedAt <= rl.Info.Limitation.Oldest {
-			log.D.F("rejecting event with date: %s",
-				env.Event.CreatedAt.Time().String())
-			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+			log.D.F("rejecting event with date: %s %s %s",
+				env.Event.CreatedAt.Time().String(), ws.RealRemote.Load(),
+				ws.AuthPubKey.Load())
+			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: false,
 				Reason: fmt.Sprintf(
@@ -91,9 +95,9 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
-			log.D.F("id mismatch got %s, expected %s",
-				id, env.Event.ID.String())
-			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+			log.D.F("id mismatch got %s, expected %s %s %s", ws.RealRemote.Load(),
+				ws.AuthPubKey.Load(), id, env.Event.ID.String())
+			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
 				Reason: "invalid: id is computed incorrectly",
@@ -102,16 +106,17 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}
 		// check signature
 		var ok bool
-		if ok, err = env.Event.CheckSignature(); log.E.Chk(err) {
-			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+		if ok, err = env.Event.CheckSignature(); chk.E(err) {
+			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
 				Reason: "error: failed to verify signature: " + err.Error(),
 			}))
 			return
 		} else if !ok {
-			log.E.Ln("invalid: signature is invalid")
-			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+			log.E.Ln("invalid: signature is invalid", ws.RealRemote.Load(),
+				ws.AuthPubKey.Load())
+			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
 				Reason: "invalid: signature is invalid"}))
@@ -121,12 +126,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			// this always returns "blocked: " whenever it returns an error
 			err = rl.handleDeleteRequest(c, env.Event)
 		} else {
-			log.D.Ln("adding event", env.Event.ToObject().String())
+			log.D.Ln("adding event", ws.AuthPubKey.Load(),
+				ws.RealRemote.Load(), env.Event.ToObject().String())
 			// this will also always return a prefixed reason
 			err = rl.AddEvent(c, env.Event)
 		}
 		var reason string
-		if ok = !log.E.Chk(err); !ok {
+		if ok = !chk.E(err); !ok {
 			reason = err.Error()
 			if strings.HasPrefix(reason, nip42.AuthRequired) {
 				RequestAuth(c)
@@ -137,15 +143,16 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		} else {
 			ok = true
 		}
-		log.D.Ln("sending back ok envelope")
-		log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+		log.D.Ln("sending back ok envelope", ws.AuthPubKey.Load(),
+			ws.RealRemote.Load())
+		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,
 			OK:     ok,
 			Reason: reason,
 		}))
 	case *countenvelope.Request:
 		if rl.CountEvents == nil {
-			log.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
+			chk.E(ws.WriteEnvelope(&closedenvelope.T{
 				ID:     env.ID,
 				Reason: "unsupported: this relay does not support NIP-45",
 			}))
@@ -155,7 +162,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		for _, f := range env.Filters {
 			total += rl.handleCountRequest(c, env.ID, ws, f)
 		}
-		log.E.Chk(ws.WriteEnvelope(&countenvelope.Response{
+		chk.E(ws.WriteEnvelope(&countenvelope.Response{
 			ID:    env.ID,
 			Count: total,
 		}))
@@ -191,7 +198,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 					// kill()
 					return
 				}
-				log.E.Chk(ws.WriteEnvelope(&closedenvelope.T{
+				chk.E(ws.WriteEnvelope(&closedenvelope.T{
 					ID:     env.SubscriptionID,
 					Reason: reason,
 				}))
@@ -204,12 +211,12 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			// we can cancel the context and fire the EOSE message
 			wg.Wait()
 			cancelReqCtx(nil)
-			log.E.Chk(ws.WriteEnvelope(&eoseenvelope.T{Sub: env.SubscriptionID}))
+			chk.E(ws.WriteEnvelope(&eoseenvelope.T{Sub: env.SubscriptionID}))
 		}()
 		SetListener(env.SubscriptionID.String(), ws, env.Filters, cancelReqCtx)
 	case *closeenvelope.T:
-		log.D.Ln("received close envelope from",
-			ws.RealRemote.Load(), en.ToArray().String())
+		log.D.Ln("received close envelope from", ws.RealRemote.Load(),
+			ws.AuthPubKey.Load(), en.ToArray().String())
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
 		log.D.Ln("received auth response envelope from",
@@ -226,13 +233,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			log.I.Ln("user authenticated")
 			ws.AuthPubKey.Store(pubkey)
 			close(ws.Authed)
-			log.E.Chk(ws.WriteEnvelope(&okenvelope.T{
+			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: true,
 			}))
 		} else {
 			log.E.Ln("user sent bogus auth response")
-			log.E.Chk(ws.WriteMessage(
+			chk.E(ws.WriteMessage(
 				websocket.TextMessage, (&okenvelope.T{
 					ID:     env.Event.ID,
 					OK:     false,
@@ -241,5 +248,4 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			))
 		}
 	}
-	chk.D(err)
 }

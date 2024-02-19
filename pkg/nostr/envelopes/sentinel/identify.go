@@ -19,15 +19,15 @@ func Identify(b []byte) (match string, buf *text.Buffer, err error) {
 	// whitespace... So we will use some tools.
 	buf = text.NewBuffer(b)
 	// First there must be an opening bracket.
-	if err = buf.ScanThrough('['); log.D.Chk(err) {
+	if err = buf.ScanThrough('['); chk.T(err) {
 		return
 	}
 	// Then a quote.
-	if err = buf.ScanThrough('"'); log.D.Chk(err) {
+	if err = buf.ScanThrough('"'); chk.T(err) {
 		return
 	}
 	var candidate []byte
-	if candidate, err = buf.ReadUntil('"'); log.D.Chk(err) {
+	if candidate, err = buf.ReadUntil('"'); chk.T(err) {
 		return
 	}
 	// log.D.F("label: '%s' %v", string(candidate), List)

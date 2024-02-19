@@ -70,7 +70,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 		var sid []byte
 		// read the string
 		if sid, err = buf.ReadUntil('"'); chk.D(err) {
-			return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+			return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
 		}
 		// log.T.F("Subscription ID: '%s'", sid)
 		E.SubscriptionID = subscriptionid.T(sid)
@@ -84,8 +84,8 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 		// find the opening brace of the event object, usually this is the very
 		// next character, we aren't checking for valid whitespace because
 		// laziness.
-		if err = buf.ScanUntil('{'); err != nil {
-			return fmt.Errorf("event not found in event envelope")
+		if err = buf.ScanUntil('{'); chk.D(err) {
+			return fmt.Errorf("event not found in event envelope: %s", err)
 		}
 		// now we should have an event object next. It has no embedded object so
 		// it should end with a close brace. This slice will be wrapped in

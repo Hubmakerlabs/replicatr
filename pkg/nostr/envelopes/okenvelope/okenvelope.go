@@ -91,7 +91,7 @@ func (env *T) Unmarshal(buf *text.Buffer) (err error) {
 	}
 	var eventID []byte
 	if eventID, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("did not find event ID value in ok envelope")
+		return fmt.Errorf("did not find event ID value in ok envelope: %s", err)
 	}
 	// check event is a valid length
 	if len(eventID) != 64 {
@@ -130,7 +130,7 @@ next:
 	// next comes a boolean value
 	var isOK []byte
 	if isOK, err = buf.ReadUntil(','); chk.D(err) {
-		return fmt.Errorf("did not find OK value in ok envelope")
+		return fmt.Errorf("did not find OK value in ok envelope: %s", err)
 	}
 	isOK = []byte(strings.TrimSpace(string(isOK)))
 	// trim any whitespace
@@ -166,11 +166,11 @@ maybeOK:
 	}
 	var reason []byte
 	if reason, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("did not find reason value in ok envelope")
+		return fmt.Errorf("did not find reason value in ok envelope: %s", err)
 	}
 	// Scan for the proper envelope ending.
-	if err = buf.ScanThrough(']'); err != nil {
-		log.D.Ln("envelope unterminated but all fields found")
+	if err = buf.ScanThrough(']'); chk.D(err) {
+		log.D.Ln("envelope unterminated but all fields found: %s", err)
 	}
 	env.Reason = string(text.UnescapeByteString(reason))
 	return

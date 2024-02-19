@@ -73,7 +73,7 @@ func (a *Response) Unmarshal(buf *text.Buffer) (err error) {
 	// contain paired brackets, braces and quotes.
 	var eventObj []byte
 	if eventObj, err = buf.ReadEnclosed(); chk.D(err) {
-		return fmt.Errorf("event not found in auth envelope")
+		return fmt.Errorf("event not found in auth envelope: %s", err)
 	}
 	// allocate an event to unmarshal into
 	a.Event = &event.T{}
@@ -84,7 +84,7 @@ func (a *Response) Unmarshal(buf *text.Buffer) (err error) {
 	// technically we maybe should read ahead further to make sure the JSON
 	// closes correctly. Not going to abort because of this.
 	if err = buf.ScanUntil(']'); err != nil {
-		return fmt.Errorf("malformed JSON, no closing bracket on array")
+		return fmt.Errorf("malformed JSON, no closing bracket on array: %s", err)
 	}
 	// whatever remains doesn't matter as the envelope has fully unmarshaled.
 	return

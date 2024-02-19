@@ -64,7 +64,7 @@ func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 	}
 	// log privileged kinds more visibly for debugging
 	// if kinds.IsPrivileged(ek) {
-	log.T.F("sending message to %s %s %s\n%s\n%s",
+	log.D.F("sending message to %s %s %s\n%s\n%s",
 		ws.RealRemote.Load(),
 		ws.AuthPubKey.Load(),
 		evkind,

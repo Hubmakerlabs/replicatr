@@ -49,12 +49,12 @@ func (a *Challenge) Unmarshal(buf *text.Buffer) (err error) {
 	}
 	var challengeString []byte
 	if challengeString, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("did not find challenge string in auth challenge envelope")
+		return fmt.Errorf("did not find challenge string in auth challenge envelope: %s", err)
 	}
 	a.Challenge = string(text.UnescapeByteString(challengeString))
 	// Scan for the proper envelope ending.
-	if err = buf.ScanThrough(']'); err != nil {
-		log.D.Ln("envelope unterminated but all fields found")
+	if err = buf.ScanThrough(']'); chk.D(err) {
+		log.D.Ln("envelope unterminated but all fields found: %s", err)
 	}
 	return
 }

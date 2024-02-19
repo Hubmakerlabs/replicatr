@@ -34,10 +34,10 @@ func Ingest(args *Config) int {
 	c := context.Bg()
 	var err error
 	var downRelay, upRelay *relay.T
-	if downRelay, err = relay.Connect(c, args.DownloadRelay); log.E.Chk(err) {
+	if downRelay, err = relay.Connect(c, args.DownloadRelay); chk.E(err) {
 		return 1
 	}
-	if upRelay, err = relay.Connect(c, args.UploadRelay); log.E.Chk(err) {
+	if upRelay, err = relay.Connect(c, args.UploadRelay); chk.E(err) {
 		return 1
 	}
 	_, _ = downRelay, upRelay
@@ -109,7 +109,7 @@ func Ingest(args *Config) int {
 				if err = upRelay.Publish(uc, ev); chk.D(err) {
 					log.D.Ln(upAuthed)
 					if strings.Contains(err.Error(), "connection closed") {
-						if upRelay, err = relay.Connect(c, args.UploadRelay); log.E.Chk(err) {
+						if upRelay, err = relay.Connect(c, args.UploadRelay); chk.E(err) {
 							return 1
 						}
 					}

@@ -32,7 +32,7 @@ func RequestAuth(c context.T) {
 	// 	ws.Authed = make(chan struct{})
 	// }
 	// ws.authLock.Unlock()
-	log.E.Chk(ws.WriteEnvelope(&authenvelope.Challenge{Challenge: ws.Challenge.Load()}))
+	chk.E(ws.WriteEnvelope(&authenvelope.Challenge{Challenge: ws.Challenge.Load()}))
 }
 
 func GetConnection(c context.T) *relayws.WebSocket { return c.Value(wsKey).(*relayws.WebSocket) }
@@ -76,7 +76,7 @@ func getServiceBaseURL(r *http.Request) string {
 		} else if strings.Index(host, ":") != -1 {
 			// has a port number
 			proto = "http"
-		} else if _, err := strconv.Atoi(strings.ReplaceAll(host, ".", "")); log.E.Chk(err) {
+		} else if _, err := strconv.Atoi(strings.ReplaceAll(host, ".", "")); chk.E(err) {
 			// it's a naked IP
 			proto = "http"
 		} else {

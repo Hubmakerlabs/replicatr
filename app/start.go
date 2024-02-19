@@ -47,8 +47,8 @@ func (rl *Relay) Start(host string, port int, started ...chan bool) (err error) 
 func (rl *Relay) Shutdown(c context.T) {
 	chk.E(rl.httpServer.Shutdown(c))
 	rl.clients.Range(func(conn *websocket.Conn, _ struct{}) bool {
-		log.E.Chk(conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second)))
-		log.E.Chk(conn.Close())
+		chk.E(conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second)))
+		chk.E(conn.Close())
 		rl.clients.Delete(conn)
 		return true
 	})

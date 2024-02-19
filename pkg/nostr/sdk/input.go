@@ -15,7 +15,7 @@ func InputToProfile(c context.T, input string) (pp *pointers.Profile) {
 	var err error
 	// handle if it is a hex string
 	if len(input) == 64 {
-		if _, err = hex.Dec(input); !log.E.Chk(err) {
+		if _, err = hex.Dec(input); !chk.E(err) {
 			return &pointers.Profile{PublicKey: input}
 		}
 	}
@@ -52,7 +52,7 @@ func InputToEventPointer(input string) (ep *pointers.Event) {
 	var err error
 	// handle if it is a hex string
 	if len(input) == 64 {
-		if _, err = hex.Dec(input); !log.E.Chk(err) {
+		if _, err = hex.Dec(input); !chk.E(err) {
 			return &pointers.Event{ID: eventid.T(input)}
 		}
 	}

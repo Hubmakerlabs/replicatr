@@ -59,7 +59,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	var sid []byte
 	// read the string
 	if sid, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
 	}
 	E.ID = subscriptionid.T(sid[:])
 	// Next must be a string, which can be empty, but must be at minimum a pair
@@ -69,7 +69,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	}
 	var reason []byte
 	if reason, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("did not find reason value in close envelope")
+		return fmt.Errorf("did not find reason value in close envelope: %s", err)
 	}
 	E.Reason = string(text.UnescapeByteString(reason))
 	return

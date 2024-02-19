@@ -84,6 +84,7 @@ func ParseRelaysFromKind3(evt *event.T) (r []Relay) {
 	items := make(map[string]Item, 20)
 	var err error
 	if err = json.Unmarshal([]byte(evt.Content), &items); chk.D(err) {
+		log.D.Ln("failed to parse relays from kind 3", kind.GetString(3))
 		// shouldn't this be fatal?
 	}
 	r = make([]Relay, len(items))

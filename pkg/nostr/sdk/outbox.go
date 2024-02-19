@@ -28,7 +28,7 @@ func (s *System) ExpandQueriesByAuthorAndRelays(
 			c := 0
 			for _, r := range relayURLs {
 				var rl *relay.T
-				if rl, err = s.Pool.EnsureRelay(r); log.E.Chk(err) {
+				if rl, err = s.Pool.EnsureRelay(r); chk.E(err) {
 					continue
 				}
 				relaysForPubkey[pubkey] = append(relaysForPubkey[pubkey], rl)

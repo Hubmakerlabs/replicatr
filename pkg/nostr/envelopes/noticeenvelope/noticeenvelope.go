@@ -61,7 +61,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	var noticeText []byte
 	// read the string
 	if noticeText, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("unterminated quotes in JSON, probably truncated read")
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
 	}
 	E.Text = string(text.UnescapeByteString(noticeText))
 	// log.D.F("'%s'", E.Text)

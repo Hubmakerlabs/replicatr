@@ -45,7 +45,7 @@ func QueryIdentifier(c context.T, fullname string) (pp *pointers.Profile, err er
 	var req *http.Request
 	req, err = http.NewRequestWithContext(c, "GET",
 		fmt.Sprintf("https://%s/.well-known/nostr.json?name=%s", domain, name), nil)
-	if log.E.Chk(err) {
+	if chk.E(err) {
 		return nil, fmt.Errorf("failed to create a request: %w", err)
 	}
 	client := &http.Client{
@@ -54,12 +54,12 @@ func QueryIdentifier(c context.T, fullname string) (pp *pointers.Profile, err er
 		},
 	}
 	var res *http.Response
-	if res, err = client.Do(req); log.E.Chk(err) {
+	if res, err = client.Do(req); chk.E(err) {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer res.Body.Close()
 	var result WellKnownResponse
-	if err = json.NewDecoder(res.Body).Decode(&result); log.E.Chk(err) {
+	if err = json.NewDecoder(res.Body).Decode(&result); chk.E(err) {
 		return nil, fmt.Errorf("failed to decode json response: %w", err)
 	}
 	pubkey, ok := result.Names[name]

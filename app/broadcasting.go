@@ -19,14 +19,14 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 		if ws.AuthPubKey.Load() == "" && rl.Info.Limitation.AuthRequired {
 			return true
 		}
-		log.D.Ln("broadcasting", ws.RealRemote.Load(), ws.AuthPubKey.Load(), subs.Size())
+		log.T.Ln("broadcasting", ws.RealRemote.Load(), ws.AuthPubKey.Load(), subs.Size())
 		subs.Range(func(id string, listener *Listener) bool {
-			if !listener.filters.Match(evt) {
-				log.D.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
-					listener.ws.RealRemote.Load(), listener.ws.AuthPubKey.Load(),
-					listener.filters, evt.ToObject().String())
-				return true
-			}
+			// if !listener.filters.Match(evt) {
+			// 	log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
+			// 		listener.ws.RealRemote.Load(), listener.ws.AuthPubKey.Load(),
+			// 		listener.filters, evt.ToObject().String())
+			// 	return true
+			// }
 			if kinds.IsPrivileged(evt.Kind) {
 				if ws.AuthPubKey.Load() == "" {
 					log.D.Ln("not broadcasting privileged event to",

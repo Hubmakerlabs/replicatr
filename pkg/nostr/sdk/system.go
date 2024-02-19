@@ -87,7 +87,7 @@ func (s *System) fetchProfileMetadata(c context.T,
 			Authors: []string{pubkey}})
 		log.D.Chk(err)
 		if len(res) != 0 {
-			if pm, err = ParseMetadata(res[0]); !log.E.Chk(err) {
+			if pm, err = ParseMetadata(res[0]); !chk.E(err) {
 				pm.PubKey = pubkey
 				pm.Event = res[0]
 				s.MetadataCache.SetWithTTL(pubkey, pm, time.Hour*6)

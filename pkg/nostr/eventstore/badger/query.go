@@ -198,16 +198,16 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 				return nil
 			}
 
-			log.D.Ln("initialising emit queue")
+			log.T.Ln("initialising emit queue")
 			heap.Init(emitQueue)
 
 			// iterate until we've emitted all events required
 			for {
 				// emit latest event in queue
-				log.D.Ln("emitting latest event in queue")
+				log.T.Ln("emitting latest event in queue")
 				latest := emitQueue.Queries[0]
 				ch <- latest.T
-				log.D.Ln("emitted event")
+				log.T.Ln("emitted event")
 				// stop when reaching limit
 				emittedEvents++
 				if emittedEvents == limit {
@@ -218,17 +218,17 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 				// fetch a new one from query results and replace the previous
 				// one with it
 				if evt, ok := <-queries[latest.query].results; ok {
-					log.D.Ln("adding event to queue")
+					log.T.Ln("adding event to queue")
 					emitQueue.Queries[0].T = evt
 					heap.Fix(emitQueue, 0)
 				} else {
-					log.D.Ln("removing event from queue")
+					log.T.Ln("removing event from queue")
 					// if this query has no more events we just remove this and proceed normally
 					heap.Remove(emitQueue, 0)
 
 					// check if the list is empty and end
 					if emitQueue.Len() == 0 {
-						log.D.Ln("emit queue empty")
+						log.T.Ln("emit queue empty")
 						break
 					}
 				}
@@ -240,7 +240,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
 			log.D.F("badger: query txn error: %s", err)
 		}
 	}()
-	// log.D.Ln("completed query")
+	log.T.Ln("completed query")
 	return ch, nil
 }
 
@@ -272,7 +272,9 @@ func prepareQueries(f *filter.T) (
 			for i, pubkeyHex := range f.Authors {
 				if len(pubkeyHex) != 64 {
 					// todo: some clients are sending invalid pubkeyhex of 69 chars
-					return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
+					err = fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
+					log.D.Ln(err)
+					return nil, nil, 0, err
 				}
 				pubkeyPrefix8, _ := hex.Dec(pubkeyHex[0 : 8*2])
 				prefix := make([]byte, 1+8)
@@ -289,7 +291,9 @@ func prepareQueries(f *filter.T) (
 					if len(pubkeyHex) != 64 {
 						// todo: some clients are sending invalid pubkeyhex of 69 chars
 						// eg; ["NOTICE","invalid pubkey '0020bf2376e17ba4ec269d10fcc996a4746b451152be9031fa48e74553dde5526bce'"]
-						return nil, nil, 0, fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
+						err = fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
+						log.D.Ln(err)
+						return nil, nil, 0, err
 					}
 					pubkeyPrefix8, _ := hex.Dec(pubkeyHex[0 : 8*2])
 					prefix := make([]byte, 1+8+2)

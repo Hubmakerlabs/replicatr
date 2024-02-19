@@ -36,10 +36,10 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		return
 	}
 	p.conn.SetReadLimit(rl.MaxMessageSize)
-	log.E.Chk(p.conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
+	chk.E(p.conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
 	p.conn.SetPongHandler(func(string) (err error) {
 		err = p.conn.SetReadDeadline(time.Now().Add(rl.PongWait))
-		log.E.Chk(err)
+		chk.E(err)
 		return
 	})
 	for _, onConnect := range rl.OnConnect {
