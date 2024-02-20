@@ -1,0 +1,1 @@
+dfx canister call testnet_backend greet world
