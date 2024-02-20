@@ -28,3 +28,4 @@
 !*.rs
 # ...even if they are in subdirectories
 !*/
+/ic/testnet/
