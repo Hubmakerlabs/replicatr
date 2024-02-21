@@ -1,4 +1,4 @@
-package relay
+package client
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"

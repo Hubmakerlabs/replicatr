@@ -67,9 +67,9 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					ovw(h.c, ev)
 				}
 				if kinds.IsPrivileged(ev.Kind) {
-					if h.ws.AuthPubKey.Load() == "" {
+					if h.ws.AuthPubKey() == "" {
 						log.D.Ln("not broadcasting privileged event to",
-							h.ws.RealRemote.Load(), "not authenticated")
+							h.ws.RealRemote(), "not authenticated")
 						continue
 					}
 					// check the filter first
@@ -80,9 +80,9 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					copy(parties[len(h.f.Authors):], receivers)
 					copy(parties[len(h.f.Authors)+len(receivers):], receivers2)
 					// log.D.Ln(h.ws.RealRemote, "parties", parties)
-					if !parties.Contains(h.ws.AuthPubKey.Load()) {
+					if !parties.Contains(h.ws.AuthPubKey()) {
 						log.D.Ln("not sending privileged event to user "+
-							"without matching auth", h.ws.AuthPubKey.Load())
+							"without matching auth", h.ws.AuthPubKey())
 						continue
 					}
 					// then check the event
@@ -91,9 +91,9 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					for i := range pTags {
 						parties = append(parties, pTags[i][1])
 					}
-					if !parties.Contains(h.ws.AuthPubKey.Load()) {
+					if !parties.Contains(h.ws.AuthPubKey()) {
 						log.D.Ln("not broadcasting privileged event to",
-							h.ws.RealRemote.Load(), h.ws.AuthPubKey.Load(),
+							h.ws.RealRemote(), h.ws.AuthPubKey(),
 							"not party to event")
 						return
 					}

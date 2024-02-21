@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscription"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
@@ -33,11 +33,11 @@ func Ingest(args *Config) int {
 	)
 	c := context.Bg()
 	var err error
-	var downRelay, upRelay *relay.T
-	if downRelay, err = relay.Connect(c, args.DownloadRelay); chk.E(err) {
+	var downRelay, upRelay *client.T
+	if downRelay, err = client.Connect(c, args.DownloadRelay); chk.E(err) {
 		return 1
 	}
-	if upRelay, err = relay.Connect(c, args.UploadRelay); chk.E(err) {
+	if upRelay, err = client.Connect(c, args.UploadRelay); chk.E(err) {
 		return 1
 	}
 	_, _ = downRelay, upRelay
@@ -111,7 +111,7 @@ func Ingest(args *Config) int {
 				if err = upRelay.Publish(uc, ev); chk.D(err) {
 					log.D.Ln(upAuthed)
 					if strings.Contains(err.Error(), "connection closed") {
-						if upRelay, err = relay.Connect(c, args.UploadRelay); chk.E(err) {
+						if upRelay, err = client.Connect(c, args.UploadRelay); chk.E(err) {
 							return 1
 						}
 					}

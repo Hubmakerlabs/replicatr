@@ -26,13 +26,13 @@ var log, chk = slog.New(os.Stderr)
 
 func RequestAuth(c context.T) {
 	ws := GetConnection(c)
-	log.D.Ln("requesting auth from", ws.RealRemote.Load())
+	log.D.Ln("requesting auth from", ws.RealRemote())
 	// ws.authLock.Lock()
 	// if ws.Authed == nil {
 	// 	ws.Authed = make(chan struct{})
 	// }
 	// ws.authLock.Unlock()
-	chk.E(ws.WriteEnvelope(&authenvelope.Challenge{Challenge: ws.Challenge.Load()}))
+	chk.E(ws.WriteEnvelope(&authenvelope.Challenge{Challenge: ws.Challenge()}))
 }
 
 func GetConnection(c context.T) *relayws.WebSocket {
@@ -43,7 +43,7 @@ func GetConnection(c context.T) *relayws.WebSocket {
 	return v
 }
 
-func GetAuthed(c context.T) string { return GetConnection(c).AuthPubKey.Load() }
+func GetAuthed(c context.T) string { return GetConnection(c).AuthPubKey() }
 
 func GetIP(c context.T) string { return xff.GetRemoteAddr(GetConnection(c).Request) }
 

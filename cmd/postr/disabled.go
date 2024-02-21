@@ -13,13 +13,13 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscription"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
@@ -47,7 +47,7 @@ func postMsg(cCtx *cli.Context, msg string) (err error) {
 		return err
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(writePerms, func(c context.T, rl *client.T) bool {
 		err := rl.Publish(c, ev)
 		if chk.D(err) {
 			log.D.Ln(rl.URL(), err)
@@ -216,7 +216,7 @@ func doDMPost(cCtx *cli.Context) (err error) {
 		return
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(writePerms, func(c context.T, rl *client.T) bool {
 		if err := rl.Publish(c, ev); !chk.D(err) {
 			success.Add(1)
 		}
@@ -247,7 +247,7 @@ func doUnrepost(cCtx *cli.Context) (err error) {
 	}
 	var repostID string
 	var mu sync.Mutex
-	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(readPerms, func(c context.T, rl *client.T) bool {
 		evs, err := rl.QuerySync(c, &f)
 		if chk.D(err) {
 			return true
@@ -267,7 +267,7 @@ func doUnrepost(cCtx *cli.Context) (err error) {
 		return err
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(writePerms, func(c context.T, rl *client.T) bool {
 		err := rl.Publish(c, ev)
 		if chk.D(err) {
 			log.D.Ln(rl.URL(), err)
@@ -301,7 +301,7 @@ func doUnlike(cCtx *cli.Context) (err error) {
 	}
 	var likeID string
 	var mu sync.Mutex
-	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(readPerms, func(c context.T, rl *client.T) bool {
 		evs, err := rl.QuerySync(c, &f)
 		if chk.D(err) {
 			return true
@@ -321,7 +321,7 @@ func doUnlike(cCtx *cli.Context) (err error) {
 		return err
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(writePerms, func(c context.T, rl *client.T) bool {
 		err := rl.Publish(c, ev)
 		if !chk.D(err) {
 			success.Add(1)
@@ -355,7 +355,7 @@ func doDelete(cCtx *cli.Context) (err error) {
 		return err
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(writePerms, func(c context.T, rl *client.T) bool {
 		err := rl.Publish(c, ev)
 		if !chk.D(err) {
 			success.Add(1)
@@ -433,7 +433,7 @@ func doStream(cCtx *cli.Context) (err error) {
 				if err := evr.Sign(sk); chk.D(err) {
 					return err
 				}
-				cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+				cfg.Do(writePerms, func(c context.T, rl *client.T) bool {
 					if err = rl.Publish(c, evr); chk.D(err) {
 					}
 					return true

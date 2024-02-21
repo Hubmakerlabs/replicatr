@@ -32,11 +32,11 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	if len(strMsg) > 256 {
 		strMsg = strMsg[:256]
 	}
-	log.T.Ln("processing message", ws.RealRemote.Load(),
-		ws.AuthPubKey.Load(), strMsg)
+	log.T.Ln("processing message", ws.RealRemote(),
+		ws.AuthPubKey(), strMsg)
 	if len(msg) > rl.Info.Limitation.MaxMessageLength {
-		log.D.F("rejecting event with size: %d from %s %s", len(msg), ws.RealRemote.Load(),
-			ws.AuthPubKey.Load())
+		log.D.F("rejecting event with size: %d from %s %s", len(msg), ws.RealRemote(),
+			ws.AuthPubKey())
 		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			OK: false,
 			Reason: fmt.Sprintf(
@@ -49,7 +49,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	deny := true
 	if len(rl.Whitelist) > 0 {
 		for i := range rl.Whitelist {
-			if rl.Whitelist[i] == ws.RealRemote.Load() {
+			if rl.Whitelist[i] == ws.RealRemote() {
 				deny = false
 			}
 		}
@@ -57,8 +57,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		deny = false
 	}
 	if deny {
-		log.E.F("denying access to '%s' %s: dropping message", ws.RealRemote.Load(),
-			ws.AuthPubKey.Load())
+		log.E.F("denying access to '%s' %s: dropping message", ws.RealRemote(),
+			ws.AuthPubKey())
 		kill()
 		return
 	}
@@ -73,13 +73,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	}
 	switch env := en.(type) {
 	case *eventenvelope.T:
-		log.D.Ln("received event envelope from", ws.RealRemote.Load(),
-			ws.AuthPubKey.Load(), en.ToArray().String())
+		log.D.Ln("received event envelope from", ws.RealRemote(),
+			ws.AuthPubKey(), en.ToArray().String())
 		// reject old dated events according to nip11
 		if env.Event.CreatedAt <= rl.Info.Limitation.Oldest {
 			log.D.F("rejecting event with date: %s %s %s",
-				env.Event.CreatedAt.Time().String(), ws.RealRemote.Load(),
-				ws.AuthPubKey.Load())
+				env.Event.CreatedAt.Time().String(), ws.RealRemote(),
+				ws.AuthPubKey())
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: false,
@@ -95,8 +95,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
-			log.D.F("id mismatch got %s, expected %s %s %s", ws.RealRemote.Load(),
-				ws.AuthPubKey.Load(), id, env.Event.ID.String())
+			log.D.F("id mismatch got %s, expected %s %s %s", ws.RealRemote(),
+				ws.AuthPubKey(), id, env.Event.ID.String())
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
@@ -114,8 +114,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			}))
 			return
 		} else if !ok {
-			log.E.Ln("invalid: signature is invalid", ws.RealRemote.Load(),
-				ws.AuthPubKey.Load())
+			log.E.Ln("invalid: signature is invalid", ws.RealRemote(),
+				ws.AuthPubKey())
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
@@ -126,8 +126,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			// this always returns "blocked: " whenever it returns an error
 			err = rl.handleDeleteRequest(c, env.Event)
 		} else {
-			log.D.Ln("adding event", ws.AuthPubKey.Load(),
-				ws.RealRemote.Load(), env.Event.ToObject().String())
+			log.D.Ln("adding event", ws.AuthPubKey(),
+				ws.RealRemote(), env.Event.ToObject().String())
 			// this will also always return a prefixed reason
 			err = rl.AddEvent(c, env.Event)
 		}
@@ -143,8 +143,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		} else {
 			ok = true
 		}
-		log.D.Ln("sending back ok envelope", ws.AuthPubKey.Load(),
-			ws.RealRemote.Load())
+		log.D.Ln("sending back ok envelope", ws.AuthPubKey(),
+			ws.RealRemote())
 		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,
 			OK:     ok,
@@ -215,23 +215,23 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}()
 		SetListener(env.SubscriptionID.String(), ws, env.Filters, cancelReqCtx)
 	case *closeenvelope.T:
-		log.D.Ln("received close envelope from", ws.RealRemote.Load(),
-			ws.AuthPubKey.Load(), en.ToArray().String())
+		log.D.Ln("received close envelope from", ws.RealRemote(),
+			ws.AuthPubKey(), en.ToArray().String())
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
 		log.D.Ln("received auth response envelope from",
-			ws.RealRemote.Load(), en.ToArray().String())
+			ws.RealRemote(), en.ToArray().String())
 		// log.D.Ln("received auth response")
 		wsBaseUrl := strings.Replace(rl.ServiceURL.Load(), "http", "ws", 1)
 		var ok bool
 		var pubkey string
-		if pubkey, ok, err = nip42.ValidateAuthEvent(env.Event, ws.Challenge.Load(), wsBaseUrl); ok {
-			if ws.AuthPubKey.Load() == env.Event.PubKey {
+		if pubkey, ok, err = nip42.ValidateAuthEvent(env.Event, ws.Challenge(), wsBaseUrl); ok {
+			if ws.AuthPubKey() == env.Event.PubKey {
 				log.D.Ln("user already authed")
 				break
 			}
 			log.I.Ln("user authenticated")
-			ws.AuthPubKey.Store(pubkey)
+			ws.SetAuthPubKey(pubkey)
 			close(ws.Authed)
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,

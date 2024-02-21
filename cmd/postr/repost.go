@@ -6,11 +6,11 @@ import (
 	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
@@ -42,7 +42,7 @@ func Repost(cCtx *cli.Context) (err error) {
 	var first atomic.Bool
 	first.Store(true)
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(writePerms, func(c context.T, rl *client.T) bool {
 		if first.Load() {
 			evs, err := rl.QuerySync(c, &f)
 			if chk.D(err) {

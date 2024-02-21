@@ -1,6 +1,8 @@
 package relayws
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"net/http"
 	"os"
@@ -22,12 +24,12 @@ var log, chk = slog.New(os.Stderr)
 // NIP-42 Auth support
 type WebSocket struct {
 	Conn       *websocket.Conn
-	RealRemote atomic.String
+	remote     atomic.String
 	mutex      sync.Mutex
 	Request    *http.Request // original request
-	Challenge  atomic.String // nip42
+	challenge  atomic.String // nip42
 	Pending    atomic.Value  // for DM CLI authentication
-	AuthPubKey atomic.String
+	authPubKey atomic.String
 	Authed     chan struct{}
 }
 
@@ -35,15 +37,8 @@ type WebSocket struct {
 func (ws *WebSocket) WriteMessage(t int, b []byte) (err error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
-	// if slog.GetLogLevel() >= slog.Trace && len(b) == 0 {
-	// 	var file string
-	// 	var line int
-	// 	_, file, line, _ = runtime.Caller(1)
-	// 	loc := fmt.Sprintf("%s:%d", file, line)
-	// log.T.F("sending ping/pong to %s %s %s", ws.RealRemote.Load(), ws.AuthPubKey.Load(), loc)
-	// } else
 	if len(b) != 0 {
-		log.T.F("sending message to %s %s\n%s", ws.RealRemote.Load(), ws.AuthPubKey.Load(), string(b))
+		log.T.F("sending message to %s %s\n%s", ws.RealRemote(), ws.AuthPubKey(), string(b))
 	}
 	return ws.Conn.WriteMessage(t, b)
 }
@@ -62,18 +57,38 @@ func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 		ek = env.(*eventenvelope.T).Event.Kind
 		evkind = kind.GetString(ek)
 	}
-	// log privileged kinds more visibly for debugging
-	// if kinds.IsPrivileged(ek) {
 	log.D.F("sending message to %s %s %s\n%s\n%s",
-		ws.RealRemote.Load(),
-		ws.AuthPubKey.Load(),
+		ws.RealRemote(),
+		ws.AuthPubKey(),
 		evkind,
 		env.ToArray().String(),
 		loc)
-	// } else {
-	// log.T.F("sending message to %s %s %s\n%s\n%s",
-	// 	ws.AuthPubKey.Load(), ws.AuthPubKey.Load(),
-	// 	evkind, env.ToArray().String(), loc)
-	// }
 	return ws.Conn.WriteMessage(websocket.TextMessage, env.Bytes())
 }
+
+const ChallengeLength = 32
+
+// GenerateChallenge gathers new entropy to generate a new challenge.
+func (ws *WebSocket) GenerateChallenge() (challenge string) {
+	var err error
+	// create a new challenge for this connection
+	challengeBytes := make([]byte, ChallengeLength)
+	if _, err = rand.Read(challengeBytes); chk.E(err) {
+		// i never know what to do for this case, panic? usually
+		// just ignore, it should never happen
+	}
+	challenge = hex.EncodeToString(challengeBytes)
+	ws.challenge.Store(challenge)
+	return
+}
+
+// Challenge returns the current challenge on a websocket.
+func (ws *WebSocket) Challenge() (challenge string) { return ws.challenge.Load() }
+
+// RealRemote returns the current real remote.
+func (ws *WebSocket) RealRemote() (remote string) { return ws.remote.Load() }
+func (ws *WebSocket) SetRealRemote(remote string) { ws.remote.Store(remote) }
+
+// AuthPubKey returns the current authed Pubkey.
+func (ws *WebSocket) AuthPubKey() (a string) { return ws.authPubKey.Load() }
+func (ws *WebSocket) SetAuthPubKey(a string) { ws.authPubKey.Store(a) }

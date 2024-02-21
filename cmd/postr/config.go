@@ -10,13 +10,13 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 )
 
 // RelayPerms is
@@ -53,7 +53,7 @@ type (
 	Relays        map[string]*RelayPerms
 	Emojis        map[string]string
 	Checklist     map[string]struct{}
-	RelayIter     func(context.T, *relay.T) bool
+	RelayIter     func(context.T, *client.T) bool
 )
 
 // C is the configuration for the client
@@ -84,7 +84,7 @@ func (cfg *C) LastUpdated(t time.Duration) bool {
 func (cfg *C) Touch() { cfg.Updated = time.Now() }
 
 // FindRelay is
-func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.T {
+func (cfg *C) FindRelay(c context.T, r *RelayPerms) *client.T {
 	for k, v := range cfg.Relays {
 		if r.Write && !v.Write {
 			continue
@@ -96,7 +96,7 @@ func (cfg *C) FindRelay(c context.T, r *RelayPerms) *relay.T {
 			continue
 		}
 		log.D.F("trying relay: %s", k)
-		rl, err := relay.Connect(c, k)
+		rl, err := client.Connect(c, k)
 		if chk.D(err) {
 			continue
 		}
@@ -125,7 +125,7 @@ func (cfg *C) Do(r *RelayPerms, f RelayIter) {
 		go func(wg *sync.WaitGroup, k string, v *RelayPerms) {
 			defer wg.Done()
 			log.D.Ln("connecting to relay", k)
-			rl, err := relay.Connect(c, k)
+			rl, err := client.Connect(c, k)
 			if chk.D(err) {
 				return
 			}
@@ -171,7 +171,7 @@ func (cfg *C) Decode(ev *event.T) (err error) {
 }
 
 func (cfg *C) GetEvents(ids []string) (evs []*event.T) {
-	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(readPerms, func(c context.T, rl *client.T) bool {
 		limit := len(ids)
 		events, err := rl.QuerySync(c, &filter.T{
 			IDs:   ids,
@@ -194,7 +194,7 @@ func (cfg *C) Events(f filter.T) []*event.T {
 	var mu sync.Mutex
 	found := false
 	var m sync.Map
-	cfg.Do(readPerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(readPerms, func(c context.T, rl *client.T) bool {
 		mu.Lock()
 		if found {
 			mu.Unlock()

@@ -1,4 +1,4 @@
-package relay
+package client
 
 // func TestEOSEMadness(t *testing.T) {
 // 	rl := MustConnect(eoseenvelope.RELAY)

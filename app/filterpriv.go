@@ -30,7 +30,7 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 	privileged := kinds.IsPrivileged(f.Kinds...)
 	ws := GetConnection(c)
 	// if access requires auth, check that auth is present.
-	if (privileged || authRequired) && ws.AuthPubKey.Load() == "" {
+	if (privileged || authRequired) && ws.AuthPubKey() == "" {
 		log.I.Ln("authorization required", authRequired, privileged, f.Kinds)
 		var reason string
 		if privileged {
@@ -51,13 +51,13 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 		case <-c.Done():
 			log.D.Ln("context canceled while waiting for auth")
 		case <-time.After(10 * time.Second):
-			if ws.AuthPubKey.Load() == "" {
+			if ws.AuthPubKey() == "" {
 				return true, "Authorization timeout"
 			}
 		}
 	}
 	// if the user has now authed we can check if they have privileges
-	if authRequired && ws.AuthPubKey.Load() == "" {
+	if authRequired && ws.AuthPubKey() == "" {
 		// acl enabled but no pubkey, unauthorized
 		return true, "Unauthorized"
 	}
@@ -69,13 +69,13 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 	parties := make(tag.T, len(receivers)+len(f.Authors))
 	copy(parties[:len(f.Authors)], f.Authors)
 	copy(parties[len(f.Authors):], receivers)
-	log.D.Ln(ws.RealRemote.Load(), "parties", parties)
+	log.D.Ln(ws.RealRemote(), "parties", parties)
 	switch {
-	case ws.AuthPubKey.Load() == "":
+	case ws.AuthPubKey() == "":
 		// not authenticated
 		return true, "restricted: this relay does not serve privileged events" +
 			" to unauthenticated users, does your client implement NIP-42?"
-	case parties.Contains(ws.AuthPubKey.Load()):
+	case parties.Contains(ws.AuthPubKey()):
 		// if the authed key is party to the messages, either as authors or
 		// recipients then they are permitted to see the message.
 		return
