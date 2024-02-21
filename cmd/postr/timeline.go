@@ -4,16 +4,16 @@ import (
 	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/urfave/cli/v2"
 )
 
 func (cfg *C) publish(ev *event.T, s *atomic.Int64) RelayIter {
-	return func(c context.T, rl *relay.T) bool {
+	return func(c context.T, rl *client.T) bool {
 		err := rl.Publish(c, ev)
 		if chk.D(err) {
 			log.D.Ln(rl.URL(), err)

@@ -10,6 +10,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
@@ -18,7 +19,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip4"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
@@ -77,7 +77,7 @@ func pay(cfg *C, invoice string) (err error) {
 		return err
 	}
 
-	rl, err := relay.Connect(context.Bg(), host)
+	rl, err := client.Connect(context.Bg(), host)
 	if chk.D(err) {
 		return err
 	}

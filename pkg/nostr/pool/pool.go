@@ -10,11 +10,11 @@ import (
 	"unsafe"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/fiatjaf/generic-ristretto/z"
 	"github.com/puzpuzpuz/xsync/v2"
 	"mleku.dev/git/slog"
@@ -54,7 +54,7 @@ func namedLock(name string) (unlock func()) {
 }
 
 type Simple struct {
-	Relays      *xsync.MapOf[string, *relay.T]
+	Relays      *xsync.MapOf[string, *client.T]
 	authHandler func(*event.T) error
 	Context     context.T
 	cancel      context.F
@@ -62,14 +62,14 @@ type Simple struct {
 
 type IncomingEvent struct {
 	Event *event.T
-	Relay *relay.T
+	Relay *client.T
 }
 
 func NewSimplePool(c context.T, opts ...Option) (p *Simple) {
 	c, cancel := context.Cancel(c)
 
 	p = &Simple{
-		Relays:  xsync.NewTypedMapOf[string, *relay.T](PointerHasher),
+		Relays:  xsync.NewTypedMapOf[string, *client.T](PointerHasher),
 		Context: c,
 		cancel:  cancel,
 	}
@@ -81,7 +81,7 @@ func NewSimplePool(c context.T, opts ...Option) (p *Simple) {
 	return
 }
 
-func (p *Simple) EnsureRelay(url string) (rl *relay.T, err error) {
+func (p *Simple) EnsureRelay(url string) (rl *client.T, err error) {
 	nm := normalize.URL(url)
 
 	defer namedLock(url)()
@@ -94,7 +94,7 @@ func (p *Simple) EnsureRelay(url string) (rl *relay.T, err error) {
 		// we use this ctx here so when the pool dies everything dies
 		c, cancel := context.Timeout(p.Context, time.Second*15)
 		defer cancel()
-		if rl, err = relay.Connect(c, nm); err != nil {
+		if rl, err = client.Connect(c, nm); err != nil {
 			return nil, fmt.Errorf("failed to connect: %w", err)
 		}
 		p.Relays.Store(nm, rl)

@@ -10,9 +10,9 @@ import (
 	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
@@ -85,7 +85,7 @@ func Reply(cCtx *cli.Context) (err error) {
 		ev.Tags = ev.Tags.AppendUnique(hashtag)
 	}
 	var success atomic.Int64
-	cfg.Do(writePerms, func(c context.T, rl *relay.T) bool {
+	cfg.Do(writePerms, func(c context.T, rl *client.T) bool {
 		if !quote {
 			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, rl.URL(), "reply"})
 		} else {

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -14,7 +15,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pool"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscription"
 )
 
@@ -110,7 +110,7 @@ func (s *System) fetchProfileMetadata(c context.T,
 func (s *System) FetchUserEvents(c context.T,
 	f *filter.T) (r map[string][]*event.T, err error) {
 
-	var ff map[*relay.T]*filter.T
+	var ff map[*client.T]*filter.T
 	if ff, err = s.ExpandQueriesByAuthorAndRelays(c,
 		f); chk.D(err) {
 
@@ -120,7 +120,7 @@ func (s *System) FetchUserEvents(c context.T,
 	wg := sync.WaitGroup{}
 	wg.Add(len(ff))
 	for rl, f := range ff {
-		go func(rl *relay.T, f *filter.T) {
+		go func(rl *client.T, f *filter.T) {
 			defer wg.Done()
 			*f.Limit += len(f.Authors) // hack
 			var sub *subscription.T

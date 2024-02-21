@@ -1,13 +1,11 @@
 package app
 
 import (
-	"crypto/rand"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/fasthttp/websocket"
 )
@@ -22,9 +20,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	}
 	rl.clients.Store(conn, struct{}{})
 	ticker := time.NewTicker(rl.PingPeriod)
-	// NIP-42 challenge
-	challenge := make([]byte, 8)
-	_, err = rand.Read(challenge)
+
 	chk.E(err)
 	rem := r.Header.Get("X-Forwarded-For")
 	splitted := strings.Split(rem, " ")
@@ -46,8 +42,10 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		Request: r,
 		Authed:  make(chan struct{}),
 	}
-	ws.RealRemote.Store(rr)
-	ws.Challenge.Store(hex.Enc(challenge))
+	ws.SetRealRemote(rr)
+
+	// NIP-42 challenge
+	ws.GenerateChallenge()
 	c, cancel := context.Cancel(
 		context.Value(
 			context.Bg(),

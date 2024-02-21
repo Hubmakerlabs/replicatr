@@ -42,7 +42,7 @@ hosting address:
 ```
 [
   '([/]([a-zA-Z@0-9-_.]+/)+([a-zA-Z@0-9-_.]+)):([0-9]+)$,goland --line $4 $1,false',
-  '([^/]([a-zA-Z@0-9-_.]+/)+([a-zA-Z@0-9-_.]+)):([0-9]+)$,openhyperlink $1 $4,false'
+  '([^/]([a-zA-Z@0-9-_.]+/)+([a-zA-Z@0-9-_.]+)):([0-9]+),openhyperlink $1 $4,false'
 ]
 ```
 

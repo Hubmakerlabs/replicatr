@@ -7,10 +7,10 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
 	"github.com/urfave/cli/v2"
 )
@@ -18,7 +18,7 @@ import (
 func Profile(cCtx *cli.Context) (err error) {
 	user, j := cCtx.String("u"), cCtx.Bool("json")
 	cfg := cCtx.App.Metadata["config"].(*C)
-	var rl *relay.T
+	var rl *client.T
 	if rl = cfg.FindRelay(context.Bg(), readPerms); rl == nil {
 		return errors.New("cannot connect relays")
 	}

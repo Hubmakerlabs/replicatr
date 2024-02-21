@@ -5,20 +5,20 @@ import (
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 )
 
 func (s *System) ExpandQueriesByAuthorAndRelays(
 	c context.T,
 	f *filter.T,
-) (filters map[*relay.T]*filter.T, err error) {
+) (filters map[*client.T]*filter.T, err error) {
 
 	n := len(f.Authors)
 	if n == 0 {
 		return nil, fmt.Errorf("no authors in filter")
 	}
-	relaysForPubkey := make(map[string][]*relay.T, n)
+	relaysForPubkey := make(map[string][]*client.T, n)
 	wg := sync.WaitGroup{}
 	wg.Add(n)
 	for _, pubkey := range f.Authors {
@@ -27,7 +27,7 @@ func (s *System) ExpandQueriesByAuthorAndRelays(
 			relayURLs := s.FetchOutboxRelays(c, pubkey)
 			c := 0
 			for _, r := range relayURLs {
-				var rl *relay.T
+				var rl *client.T
 				if rl, err = s.Pool.EnsureRelay(r); chk.E(err) {
 					continue
 				}
@@ -40,7 +40,7 @@ func (s *System) ExpandQueriesByAuthorAndRelays(
 		}(pubkey)
 	}
 	wg.Wait()
-	filters = make(map[*relay.T]*filter.T, n) // { [relay]: filter }
+	filters = make(map[*client.T]*filter.T, n) // { [relay]: filter }
 	for pubkey, relays := range relaysForPubkey {
 		for _, rl := range relays {
 			flt, ok := filters[rl]

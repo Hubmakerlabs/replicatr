@@ -1,4 +1,4 @@
-package relay
+package client
 
 import (
 	"bytes"
@@ -52,10 +52,10 @@ type T struct {
 	Subscriptions *xsync.MapOf[string, *subscription.T]
 
 	ConnectionError         error
-	connectionContext       context.T // will be canceled when the connection closes
+	connectionContext       context.T // will be canceled when connection closes
 	connectionContextCancel context.F
 
-	challenge                     string // NIP-42 challenge, we only keep the last
+	challenge                     string // NIP-42 challenge, only keep the last
 	AuthRequired                  chan struct{}
 	notices                       chan string // NIP-01 NOTICEs
 	okCallbacks                   *xsync.MapOf[string, func(bool, string)]
@@ -64,7 +64,7 @@ type T struct {
 
 	// custom things that aren't often used
 	//
-	AssumeValid bool // this will skip verifying signatures for events received from this relay
+	AssumeValid bool // skip verifying signatures of events from this relay
 }
 
 func (r *T) URL() string { return r.url }
@@ -249,9 +249,6 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 				log.D.F("NOTICE from %s: '%s'", r.URL(), env.Text)
 			}
 		case *authenvelope.Challenge:
-			// if env.Challenge == nil {
-			// 	continue
-			// }
 			r.challenge = env.Challenge
 			log.D.Ln("challenge", r.challenge)
 			close(r.AuthRequired)

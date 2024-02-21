@@ -1,4 +1,4 @@
-package relay
+package client
 
 import (
 	"net/url"

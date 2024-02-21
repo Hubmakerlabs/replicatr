@@ -28,7 +28,7 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 			deny := true
 			if len(rl.Whitelist) > 0 {
 				for i := range rl.Whitelist {
-					if rl.Whitelist[i] == p.ws.RealRemote.Load() {
+					if rl.Whitelist[i] == p.ws.RealRemote() {
 						deny = false
 					}
 				}

@@ -2,14 +2,14 @@ package main
 
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relay"
 )
 
 func (cfg *C) GetRelaysAndTags(pub string, m *Checklist) RelayIter {
-	return func(c context.T, rl *relay.T) bool {
+	return func(c context.T, rl *client.T) bool {
 		evs, err := rl.QuerySync(c, &filter.T{
 			Kinds:   kinds.T{kind.FollowList},
 			Authors: []string{pub},

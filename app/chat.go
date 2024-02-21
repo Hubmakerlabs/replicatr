@@ -1,8 +1,6 @@
 package app
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"strconv"
 	"strings"
@@ -94,11 +92,11 @@ func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
 	log.T.F("decrypted message: '%s'", decryptedStr)
 	decryptedStr = strings.TrimSpace(decryptedStr)
 	var reply *event.T
-	if ws.AuthPubKey.Load() == "" {
+	if ws.AuthPubKey() == "" {
 		if strings.HasPrefix(decryptedStr, "AUTH_") {
 			var authed bool
 			authStr := strings.Split(decryptedStr, "_")
-			log.I.Ln(authStr, ws.Challenge.Load())
+			log.I.Ln(authStr, ws.Challenge())
 			if len(authStr) == 3 {
 				var ts int64
 				if ts, err = strconv.ParseInt(authStr[1], 10, 64); chk.E(err) {
@@ -107,9 +105,9 @@ func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
 				now := timestamp.Now().Time().Unix()
 				log.I.Ln()
 				if ts < now+15 || ts > now-15 {
-					if authStr[2] == ws.Challenge.Load() {
+					if authStr[2] == ws.Challenge() {
 						authed = true
-						ws.AuthPubKey.Store(ev.PubKey)
+						ws.SetAuthPubKey(ev.PubKey)
 					}
 				}
 			}
@@ -120,23 +118,9 @@ func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
 				}
 				log.T.Ln("reply", reply.ToObject().String())
 				rl.BroadcastEvent(reply)
-				// create a new challenge for this connection
-				challenge := make([]byte, 8)
-				if _, err = rand.Read(challenge); chk.E(err) {
-					// i never know what to do for this case, panic? usually
-					// just ignore, it should never happen
-				}
-				ws.Challenge.Store(hex.EncodeToString(challenge))
+				ws.GenerateChallenge()
 				return
 			} else {
-				// reply = MakeReply(ev,
-				// 	fmt.Sprintf("access granted, now executing previously"+
-				// 		" entered command: '%v'", ws.Pending.Load()))
-				// if reply, err = EncryptDM(reply, meSec, youPub); chk.E(err) {
-				// 	return
-				// }
-				// log.I.Ln("reply", reply.ToObject().String())
-				// rl.BroadcastEvent(reply)
 				// now process cached
 				log.T.Ln("pending message:", ws.Pending.Load())
 				cmd := ws.Pending.Load().(string)
@@ -161,7 +145,7 @@ AUTH_%d_%v
 after this you will not have to do this again unless there is a long idle, disconnect or you refresh your session
 
 note that if you have NIP-42 enabled in the client and you are already authorised this notice will not appear
-`, decryptedStr, timestamp.Now(), ws.Challenge.Load())
+`, decryptedStr, timestamp.Now(), ws.Challenge())
 			reply = MakeReply(ev, content)
 			if reply, err = EncryptDM(reply, meSec, youPub); chk.E(err) {
 				return
