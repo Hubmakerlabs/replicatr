@@ -5,6 +5,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"mleku.dev/git/slog"
 )
 
@@ -23,6 +24,7 @@ type Config struct {
 	Limit         int     `arg:"-l,--limit" help:"maximum of number of events to return for each interval" default:"1000"`
 	Interval      int64   `arg:"-i,--interval" help:"number of hours per interval of requests"`
 	Pause         int     `arg:"-p,--pause" help:"time in seconds to wait between requests"`
+	OtherPubkeys  tag.T   `arg:"-f,--follows,separate" help:"other pubkeys to search for"`
 }
 
 var defaultKinds = kinds.T{kind.TextNote}

@@ -29,7 +29,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 			// }
 			if kinds.IsPrivileged(evt.Kind) {
 				if ws.AuthPubKey.Load() == "" {
-					log.D.Ln("not broadcasting privileged event to",
+					log.T.Ln("not broadcasting privileged event to",
 						ws.RealRemote.Load(), "not authenticated")
 					return true
 				}
@@ -39,7 +39,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 					parties = append(parties, pTags[i][1])
 				}
 				if !parties.Contains(ws.AuthPubKey.Load()) {
-					log.D.Ln("not broadcasting privileged event to",
+					log.T.Ln("not broadcasting privileged event to",
 						ws.RealRemote.Load(), "not party to event")
 					return true
 				}
