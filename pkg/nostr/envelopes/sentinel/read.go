@@ -1,6 +1,5 @@
 package sentinel
 
-import "C"
 import (
 	"bytes"
 	"fmt"
