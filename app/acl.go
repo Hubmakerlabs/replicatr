@@ -38,12 +38,12 @@ const (
 
 // RoleStrings are the human readable form of the role enums.
 var RoleStrings = []string{
-	"Owner",
-	"Admin",
-	"Writer",
-	"Reader",
-	"Denied",
-	"None",
+	"owner",
+	"admin",
+	"writer",
+	"reader",
+	"denied",
+	"none",
 }
 
 type (

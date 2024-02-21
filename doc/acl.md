@@ -1,48 +1,77 @@
-# access control
+# access control lists
 
-A minimal ACL file looks like this, stored in the location `~/replicatr` by
-default or if on windows or mac can be other places - set environment
-GODEBUG="debug" to see it print the path at startup.
+Access Control Lists are a data structure for storing the user privileges for a
+computer system. In `replicatr` this applies to several use cases, mainly the 
+blacklisting use case, and the paid relay use case.
+
+To implement this, in `replicatr` we use a special type of internal event 
+that is stored directly by the relay in response to interactions that take place
+in Direct Messages sent by users.
+
+Rather than build a whole client infrastructure to implement this, it is simpler
+to simply build a chat bot interface, with the relay having a specific user 
+identity, and when a user DMs the relay identity, it detects it is being 
+messaged and processes the input and returns a response to the message as 
+well as whatever relevant processing that takes place.
+
+A special event kind has been created for this purpose, with the kind number 
+39998 - a number that hopefully will not be interesting to anyone until 
+after this protocol becomes part of the specification, if it does ever, and 
+if not, the relay can always have special handling to recognise these events 
+by the combination of the kind number *and* the pubkey publishing them, 
+which is the relay's chat identity public key.
+
+The specification of the event data structure is as follows:
 
 ```json
 {
-  "users": [
-    {
-      "role": "owner",
-      "pubkey": "4c800257a588a82849d049817c2bdaad984b25a45ad9f6dad66e47d3b47e3b2f"
-    }
+  "id": "event ID",
+  "pubkey": "relay pubkey",
+  "created_at": 1708516744,
+  "kind": 39998,
+  "tags": [
+    [
+      "p",
+      "pubkey of user",
+      "role as string eg: 'reader'"
+    ],
+    [
+      "replaces",
+      "id of previous event that set a role for this pubkey"
+    ],
+    [
+      "expiry",
+      "unix timestamp as string for expiry, if none set, no change to previous"
+    ]
   ],
-  "public": true,
-  "public_auth_required": false
+  "content": "",
+  "sig": "event signature"
 }
 ```
 
-This file can be generated automatically for you with the subcommond
-`initacl` which takes one positional parameter, the hex encoded pubkey of
-the primary owner, and an optional flag `--public` which creates an empty
-reader key as above.
+As is the convention with most event types, the public key is tagged with a 
+"p" tag, and then there is two more tags that can appear:
 
-There is 4 types of privilege in the file, these are:
+- "replaces" - if there is an existing previous record that has a "p" tag 
+  the same as this current event, the Event ID of this tag comes after it.
+- "expiry" - a timestamp as a decimal representation of the unix timestamp 
+  representing the expiry time of the role, after which the role reverts to 
+  "none" by default
 
-- `owner` - permitted to add, change and remove all other entries except
-  owner itself (owner should have the ability to manually edit the
-  configuration to change owners)
-- `administrator` - permitted to read and publish events, add and change
-  readers and writers
-- `writer` - permitted to read and publish events to the relay
-- `reader` - permitted to read events from the relay
+The role strings are as follows:	
+- "owner"
+- "admin"
+- "writer"
+- "reader"
+- "denied"
+- "none"
 
-If it is desired that the relay respond to queries from the public, set the `public` field to true, if you want to enforce authentication for public access, set `public_auth_required` to true. Both fields are optional to omit.
+At startup the relay will search for all stored events with this kind, 
+published by the relay's pubkey, and use this to populate the in-memory form 
+of the ACL that is then used by the filters to process or reject envelopes 
+received by the relay.
 
-All access to privileged events, such as application specific data and
-private messages require authentication and the authenticated pubkey must
-match a party in the filters and events that will be returned.
-
-When public auth is required, the possibility of rate limiting per user more 
-exactly becomes possible, otherwise the rate limiter would rely on IP 
-addresses as identifiers.
-
-TODO: there is no rate limiting presently, 
-implement this with a per-ip and per-pubkey basis.
-
-
+When the user is not authenticated, they are treated as though they have 
+"none" role, which in an auth-required relay means no access, when they are 
+authenticated, their public key is searched for in the ACL and the role they 
+have at the current time of this check is enforced.
