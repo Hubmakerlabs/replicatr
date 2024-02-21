@@ -35,7 +35,13 @@ func RequestAuth(c context.T) {
 	chk.E(ws.WriteEnvelope(&authenvelope.Challenge{Challenge: ws.Challenge.Load()}))
 }
 
-func GetConnection(c context.T) *relayws.WebSocket { return c.Value(wsKey).(*relayws.WebSocket) }
+func GetConnection(c context.T) *relayws.WebSocket {
+	v, ok := c.Value(wsKey).(*relayws.WebSocket)
+	if !ok {
+		return nil
+	}
+	return v
+}
 
 func GetAuthed(c context.T) string { return GetConnection(c).AuthPubKey.Load() }
 

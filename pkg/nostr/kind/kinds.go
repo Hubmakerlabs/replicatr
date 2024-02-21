@@ -177,6 +177,7 @@ const (
 	// WaveLakeTrack which has no spec and uses malformed tags
 	WaveLakeTrack       T = 32123
 	CommunityDefinition T = 34550
+	ACLEvent            T = 39998
 	// ParameterizedReplaceableEnd is an event type that...
 	ParameterizedReplaceableEnd T = 40000
 )

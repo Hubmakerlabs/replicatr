@@ -51,6 +51,8 @@ func Ingest(args *Config) int {
 		var sub *subscription.T
 		since := timestamp.FromUnix(i).Ptr()
 		until := timestamp.FromUnix(i + increment - 1).Ptr()
+		authors := append(tag.T{args.PubkeyHex}, args.OtherPubkeys...)
+		pTags := filter.TagMap{"#p": authors}
 		f := filters.T{
 			{
 				Kinds:   args.Kinds,
@@ -61,7 +63,7 @@ func Ingest(args *Config) int {
 			},
 			{
 				Kinds: args.Kinds,
-				Tags:  filter.TagMap{"#p": {args.PubkeyHex}},
+				Tags:  pTags,
 				Limit: &args.Limit,
 				Since: since,
 				Until: until,

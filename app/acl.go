@@ -3,6 +3,10 @@ package app
 import (
 	"errors"
 	"time"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 )
 
 type Role int
@@ -14,6 +18,10 @@ const (
 	RoleWriter
 	RoleReader
 	RoleDenied
+)
+
+const (
+	ACLKind = kind.ACLEvent
 )
 
 var RoleStrings = []string{
@@ -28,6 +36,8 @@ type (
 	ACLEntry struct {
 		Role         Role
 		Pubkey       string
+		AuthKey      string
+		Replaces     eventid.T
 		Created      int64
 		LastModified int64
 		Expires      int64
@@ -53,5 +63,15 @@ func (a *ACL) AddEntry(entry *ACLEntry) (err error) {
 		}
 	}
 	a.Entries = append(a.Entries, entry)
+	return
+}
+
+func (a *ACLEntry) ToEvent() (ev event.T) {
+
+	return
+}
+
+func ACLFromEvent(ev event.T) (a *ACLEntry) {
+
 	return
 }

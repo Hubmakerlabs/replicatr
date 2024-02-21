@@ -74,21 +74,24 @@ func MakeReply(ev *event.T, content string) (evo *event.T) {
 // Chat implements the control interface, intercepting kind 4 encrypted direct
 // messages and processing them if they are for the relay's pubkey
 func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
+	ws := GetConnection(c)
+	if ws == nil {
+		return
+	}
 	log.D.Ln("running chat checker")
 	if ev.Kind != kind.EncryptedDirectMessage {
-		log.I.Ln("not chat event", ev.Kind, kind.GetString(ev.Kind))
+		log.T.Ln("not chat event", ev.Kind, kind.GetString(ev.Kind))
 		return
 	}
 	if !ev.Tags.ContainsAny("p", rl.RelayPubHex) && ev.PubKey != rl.RelayPubHex {
-		log.D.Ln("direct message not for relay chat", ev.PubKey, rl.RelayPubHex)
+		log.T.Ln("direct message not for relay chat", ev.PubKey, rl.RelayPubHex)
 		return
 	}
 	meSec, youPub := rl.Config.SecKey, ev.PubKey
 	log.I.Ln(rl.RelayPubHex, "receiving message via DM", ev.ToObject().String())
 	var decryptedStr string
 	decryptedStr, err = DecryptDM(ev, meSec, youPub)
-	log.I.F("decrypted message: '%s'", decryptedStr)
-	ws := GetConnection(c)
+	log.T.F("decrypted message: '%s'", decryptedStr)
 	decryptedStr = strings.TrimSpace(decryptedStr)
 	var reply *event.T
 	if ws.AuthPubKey.Load() == "" {
@@ -115,7 +118,7 @@ func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
 				if reply, err = EncryptDM(reply, meSec, youPub); chk.E(err) {
 					return
 				}
-				log.I.Ln("reply", reply.ToObject().String())
+				log.T.Ln("reply", reply.ToObject().String())
 				rl.BroadcastEvent(reply)
 				// create a new challenge for this connection
 				challenge := make([]byte, 8)
@@ -135,7 +138,7 @@ func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
 				// log.I.Ln("reply", reply.ToObject().String())
 				// rl.BroadcastEvent(reply)
 				// now process cached
-				log.I.Ln("pending message:", ws.Pending.Load())
+				log.T.Ln("pending message:", ws.Pending.Load())
 				cmd := ws.Pending.Load().(string)
 				// erase
 				ws.Pending.Store("")
@@ -163,7 +166,7 @@ note that if you have NIP-42 enabled in the client and you are already authorise
 			if reply, err = EncryptDM(reply, meSec, youPub); chk.E(err) {
 				return
 			}
-			log.I.Ln("reply", reply.ToObject().String())
+			log.T.Ln("reply", reply.ToObject().String())
 			rl.BroadcastEvent(reply)
 			return
 		}
@@ -186,7 +189,7 @@ func (rl *Relay) command(ev *event.T, cmd string) (err error) {
 	if reply, err = EncryptDM(reply, rl.Config.SecKey, ev.PubKey); chk.E(err) {
 		return
 	}
-	log.I.Ln("reply", reply.ToObject().String())
+	log.T.Ln("reply", reply.ToObject().String())
 	rl.BroadcastEvent(reply)
 	return
 }
