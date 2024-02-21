@@ -39,9 +39,9 @@ to give you absolute and relative paths when you are using the
 project and also on several of the dependencies that live at the same git 
 hosting address:
 
-```json
+```
 [
-  '([/]([a-zA-Z@0-9-_.]+/)+([a-zA-Z@0-9-_.]+)):([0-9]+)$,goland $1 --line $4,false',
+  '([/]([a-zA-Z@0-9-_.]+/)+([a-zA-Z@0-9-_.]+)):([0-9]+)$,goland --line $4 $1,false',
   '([^/]([a-zA-Z@0-9-_.]+/)+([a-zA-Z@0-9-_.]+)):([0-9]+)$,openhyperlink $1 $4,false'
 ]
 ```
@@ -53,7 +53,7 @@ second of these two entries:
 `openhyperlink` should look like this:
 ```bash
 #!/usr/bin/bash
-goland $(cat ~/.currpath)/$1 --line $2
+goland --line $2 $(cat ~/.currpath)/$1
 
 ```
 and to set that `.currpath` file to contain a useful path:
