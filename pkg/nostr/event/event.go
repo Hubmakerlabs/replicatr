@@ -1,7 +1,6 @@
 package event
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
@@ -116,7 +115,7 @@ func (ev *T) CheckSignature() (valid bool, err error) {
 	// decode pubkey hex to bytes.
 	var pkBytes []byte
 	if pkBytes, err = hex.Dec(ev.PubKey); chk.D(err) {
-		err = fmt.Errorf("event pubkey '%s' is invalid hex: %w", ev.PubKey, err)
+		err = log.E.Err("event pubkey '%s' is invalid hex: %w", ev.PubKey, err)
 		log.D.Ln(err)
 		return
 	}
@@ -124,7 +123,7 @@ func (ev *T) CheckSignature() (valid bool, err error) {
 	// parse pubkey bytes.
 	var pk *secp256k1.PublicKey
 	if pk, err = schnorr.ParsePubKey(pkBytes); chk.D(err) {
-		err = fmt.Errorf("event has invalid pubkey '%s': %w", ev.PubKey, err)
+		err = log.E.Err("event has invalid pubkey '%s': %w", ev.PubKey, err)
 		log.D.Ln(err)
 		return
 	}
@@ -132,7 +131,7 @@ func (ev *T) CheckSignature() (valid bool, err error) {
 	// decode signature hex to bytes.
 	var sigBytes []byte
 	if sigBytes, err = hex.Dec(ev.Sig); chk.D(err) {
-		err = fmt.Errorf("signature '%s' is invalid hex: %w", ev.Sig, err)
+		err = log.E.Err("signature '%s' is invalid hex: %w", ev.Sig, err)
 		log.D.Ln(err)
 		return
 	}
@@ -140,7 +139,7 @@ func (ev *T) CheckSignature() (valid bool, err error) {
 	// parse signature bytes.
 	var sig *schnorr.Signature
 	if sig, err = schnorr.ParseSignature(sigBytes); chk.D(err) {
-		err = fmt.Errorf("failed to parse signature: %w", err)
+		err = log.E.Err("failed to parse signature: %w", err)
 		log.D.Ln(err)
 		return
 	}
@@ -155,7 +154,7 @@ func (ev *T) Sign(skStr string, so ...schnorr.SignOption) (err error) {
 
 	// secret key hex must be 64 characters.
 	if len(skStr) != 64 {
-		err = fmt.Errorf("invalid secret key length, 64 required, got %d: %s",
+		err = log.E.Err("invalid secret key length, 64 required, got %d: %s",
 			len(skStr), skStr)
 		log.D.Ln(err)
 		return
@@ -164,7 +163,7 @@ func (ev *T) Sign(skStr string, so ...schnorr.SignOption) (err error) {
 	// decode secret key hex to bytes
 	var skBytes []byte
 	if skBytes, err = hex.Dec(skStr); chk.D(err) {
-		err = fmt.Errorf("sign called with invalid secret key '%s': %w", skStr, err)
+		err = log.E.Err("sign called with invalid secret key '%s': %w", skStr, err)
 		log.D.Ln(err)
 		return
 	}

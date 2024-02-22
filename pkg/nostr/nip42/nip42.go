@@ -1,7 +1,6 @@
 package nip42
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 	"strings"
@@ -45,13 +44,13 @@ func ValidateAuthEvent(evt *event.T, challenge string,
 	relayURL string) (pubkey string, ok bool, err error) {
 
 	if evt.Kind != kind.ClientAuthentication {
-		err = fmt.Errorf("event incorrect kind for auth: %d %s",
+		err = log.E.Err("event incorrect kind for auth: %d %s",
 			evt.Kind, kind.Map[evt.Kind])
 		log.D.Ln(err)
 		return
 	}
 	if evt.Tags.GetFirst([]string{"challenge", challenge}) == nil {
-		err = fmt.Errorf("challenge tag missing from auth response")
+		err = log.E.Err("challenge tag missing from auth response")
 		log.D.Ln(err)
 		return
 	}
@@ -63,29 +62,29 @@ func ValidateAuthEvent(evt *event.T, challenge string,
 	r := evt.Tags.
 		GetFirst([]string{"relay", ""}).Value()
 	if r == "" {
-		err = fmt.Errorf("relay tag missing from auth response")
+		err = log.E.Err("relay tag missing from auth response")
 		log.D.Ln(err)
 		return
 	}
 	if found, err = parseURL(r); chk.D(err) {
-		err = fmt.Errorf("error parsing relay url: %s", err)
+		err = log.E.Err("error parsing relay url: %s", err)
 		log.D.Ln(err)
 		return
 	}
 	if expected.Scheme != found.Scheme {
-		err = fmt.Errorf("HTTP Scheme incorrect: expected '%s' got '%s",
+		err = log.E.Err("HTTP Scheme incorrect: expected '%s' got '%s",
 			expected.Scheme, found.Scheme)
 		log.D.Ln(err)
 		return
 	}
 	if expected.Host != found.Host {
-		err = fmt.Errorf("HTTP Host incorrect: expected '%s' got '%s",
+		err = log.E.Err("HTTP Host incorrect: expected '%s' got '%s",
 			expected.Host, found.Host)
 		log.D.Ln(err)
 		return
 	}
 	if expected.Path != found.Path {
-		err = fmt.Errorf("HTTP Path incorrect: expected '%s' got '%s",
+		err = log.E.Err("HTTP Path incorrect: expected '%s' got '%s",
 			expected.Path, found.Path)
 		log.D.Ln(err)
 		return
@@ -94,7 +93,7 @@ func ValidateAuthEvent(evt *event.T, challenge string,
 	now := time.Now()
 	if evt.CreatedAt.Time().After(now.Add(10*time.Minute)) ||
 		evt.CreatedAt.Time().Before(now.Add(-10*time.Minute)) {
-		err = fmt.Errorf(
+		err = log.E.Err(
 			"auth event more than 10 minutes before or after current time")
 		log.D.Ln(err)
 		return
