@@ -31,7 +31,7 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 	ws := GetConnection(c)
 	// if access requires auth, check that auth is present.
 	if (privileged || authRequired) && ws.AuthPubKey() == "" {
-		log.I.Ln("authorization required", authRequired, privileged, f.Kinds)
+		log.T.Ln("authorization required", authRequired, privileged, f.Kinds)
 		var reason string
 		if privileged {
 			reason = "this relay only sends privileged events to parties to the event"
@@ -42,7 +42,6 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 			ID:     id,
 			Reason: normalize.Reason(reason, nip42.AuthRequired),
 		}))
-		log.I.Ln(reason)
 		// send out authorization request
 		RequestAuth(c)
 		select {

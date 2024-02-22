@@ -188,7 +188,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 				ws,
 				f,
 			})
-			if log.D.Chk(err) {
+			if log.T.Chk(err) {
 				// fail everything if any filter is rejected
 				reason := err.Error()
 				if strings.HasPrefix(reason, nip42.AuthRequired) {
