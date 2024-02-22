@@ -184,6 +184,8 @@ func main() {
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
 	rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
+	// run the chat ACL initialization
+	rl.Init()
 	srvr := http.Server{
 		Addr:    args.Listen,
 		Handler: rl,

@@ -286,7 +286,8 @@ func (ae *T) FromEvent(ev *event.T) (e *Entry, err error) {
 			if replaces != previous.EventID.String() {
 				// this shouldn't happen because that entry should be the latest
 				// and this event is relay-internal. Log this for forensics.
-				log.W.Ln("replaces field in event does not match the latest in the current ACL")
+				log.W.Ln("replaces field in event does not match the latest" +
+					" in the current ACL")
 			}
 		}
 		e.Replaces = eventid.T(replaces)
