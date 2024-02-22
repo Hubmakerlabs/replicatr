@@ -159,21 +159,73 @@ note that if you have NIP-42 enabled in the client and you are already authorise
 			return
 		}
 	}
-	// log.I.S(fmt.Sprint(decryptedStr), fmt.Sprint(ws.Pending.Load()))
-	// if fmt.Sprint(decryptedStr) == fmt.Sprint(ws.Pending.Load()) {
-	// 	return
-	// }
+	return
+}
+
+type Command struct {
+	Name string
+	Help string
+	Func func(ev *event.T, cmd *Command, args ...string) (reply *event.T, err error)
+}
+
+var Commands []*Command
+
+func (rl *Relay) Init() {
+	Commands = []*Command{
+		{"help", `
+this is the help
+
+it has many lines
+
+many lines indeed
+`, rl.help},
+	}
+}
+
+func (rl *Relay) help(ev *event.T, cmd *Command, args ...string) (reply *event.T, err error) {
+	var replyString string
+	if len(args) < 2 {
+		replyString = cmd.Help
+	} else {
+		for i := range Commands {
+			if Commands[i].Name == args[1] {
+				replyString = strings.TrimSpace(Commands[i].Help)
+			}
+		}
+	}
+	reply = MakeReply(ev, fmt.Sprintf(replyString))
 	return
 }
 
 func (rl *Relay) command(ev *event.T, cmd string) (err error) {
 	log.D.S(cmd)
-	reply := MakeReply(ev, fmt.Sprintf("received message: '%v'", cmd))
-	log.I.F("executing command '%s' - currently only echo", cmd)
+	args := strings.Split(cmd, " ")
+	if len(args) < 1 {
+		err = log.E.Err("no command received")
+		return
+	}
+	var reply *event.T
+	for i := range Commands {
+		if Commands[i].Name == args[0] {
+			if reply, err = Commands[i].Func(ev, Commands[i], args...); chk.E(err) {
+				return
+			}
+			break
+		}
+	}
+	if reply == nil {
+		for i := range Commands {
+			if Commands[i].Name == "help" {
+				replyString := fmt.Sprintf("unknown command: '%s'\n\n%s",
+					cmd, strings.TrimSpace(Commands[i].Help))
+				reply = MakeReply(ev, replyString)
+			}
+		}
+	}
+	log.T.Ln("reply", reply.ToObject().String())
 	if reply, err = EncryptDM(reply, rl.Config.SecKey, ev.PubKey); chk.E(err) {
 		return
 	}
-	log.T.Ln("reply", reply.ToObject().String())
 	rl.BroadcastEvent(reply)
 	return
 }
