@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/acl"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -83,7 +84,7 @@ type Relay struct {
 	RelayPubHex    string
 	RelayNpub      string
 	// ACL is the list of users and privileges on this relay
-	*ACL
+	ACL *acl.T
 }
 
 func (rl *Relay) AuthCheck(c context.T) {
@@ -112,7 +113,8 @@ func NewRelay(inf *nip11.Info,
 			WriteBufferSize: WriteBufferSize,
 			CheckOrigin:     func(r *http.Request) bool { return true },
 		},
-		clients:        xsync.NewTypedMapOf[*websocket.Conn, struct{}](PointerHasher[websocket.Conn]),
+		clients: xsync.NewTypedMapOf[*websocket.Conn,
+			struct{}](PointerHasher[websocket.Conn]),
 		serveMux:       &http.ServeMux{},
 		WriteWait:      WriteWait,
 		PongWait:       PongWait,
@@ -121,15 +123,15 @@ func NewRelay(inf *nip11.Info,
 		Whitelist:      conf.Whitelist,
 		RelayPubHex:    pubKey,
 		RelayNpub:      npub,
-		ACL:            &ACL{},
+		ACL:            &acl.T{},
 	}
 	log.I.F("relay chat pubkey: %s %s", pubKey, npub)
 	r.Info.Software = Software
 	r.Info.Version = Version
 	// populate ACL with owners to start
 	for _, owner := range r.Config.Owners {
-		if err = r.ACL.AddEntry(&ACLEntry{
-			Role:   RoleOwner,
+		if err = r.ACL.AddEntry(&acl.Entry{
+			Role:   acl.Owner,
 			Pubkey: owner,
 		}); chk.E(err) {
 			continue
