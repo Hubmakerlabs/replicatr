@@ -31,7 +31,7 @@ func DecodeToString(bech32String string) (prefix, value string, err error) {
 	if value, ok = s.(string); ok {
 		return
 	}
-	err = fmt.Errorf("value was not decoded to a string, found type %s",
+	err = log.E.Err("value was not decoded to a string, found type %s",
 		reflect.TypeOf(s))
 	return
 }
@@ -167,7 +167,7 @@ func EncodeSecretKey(privateKeyHex string) (string, error) {
 func EncodePublicKey(publicKeyHex string) (s string, err error) {
 	var b []byte
 	if b, err = hex.Dec(publicKeyHex); chk.D(err) {
-		err = fmt.Errorf("failed to decode public key hex: %w", err)
+		err = log.E.Err("failed to decode public key hex: %w", err)
 		return
 	}
 	var bits5 []byte
@@ -181,7 +181,7 @@ func EncodePublicKey(publicKeyHex string) (s string, err error) {
 func EncodeNote(eventIDHex string) (s string, err error) {
 	var b []byte
 	if b, err = hex.Dec(eventIDHex); chk.D(err) {
-		err = fmt.Errorf("failed to decode event id hex: %w", err)
+		err = log.E.Err("failed to decode event id hex: %w", err)
 		return
 	}
 	var bits5 []byte
@@ -195,7 +195,7 @@ func EncodeProfile(publicKeyHex string, relays []string) (s string, err error) {
 	buf := &bytes.Buffer{}
 	var pb []byte
 	if pb, err = hex.Dec(publicKeyHex); chk.D(err) {
-		err = fmt.Errorf("invalid pubkey '%s': %w", publicKeyHex, err)
+		err = log.E.Err("invalid pubkey '%s': %w", publicKeyHex, err)
 		return
 	}
 	writeTLVEntry(buf, TLVDefault, pb)
@@ -204,7 +204,7 @@ func EncodeProfile(publicKeyHex string, relays []string) (s string, err error) {
 	}
 	var bits5 []byte
 	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); chk.D(err) {
-		err = fmt.Errorf("failed to convert bits: %w", err)
+		err = log.E.Err("failed to convert bits: %w", err)
 		return
 	}
 	return bech32.Encode(NprofileHRP, bits5)
@@ -228,7 +228,7 @@ func EncodeEvent(eventIDHex eventid.T, relays []string,
 	}
 	var bits5 []byte
 	if bits5, err = bech32.ConvertBits(buf.Bytes(), 8, 5, true); chk.D(err) {
-		err = fmt.Errorf("failed to convert bits: %w", err)
+		err = log.E.Err("failed to convert bits: %w", err)
 		return
 	}
 

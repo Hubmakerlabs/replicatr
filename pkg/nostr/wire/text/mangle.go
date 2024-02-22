@@ -6,7 +6,6 @@
 package text
 
 import (
-	"fmt"
 	"io"
 )
 
@@ -164,7 +163,7 @@ func (b *Buffer) ReadEnclosed() (bb []byte, err error) {
 	bracketed := c == byte('[')
 	braced := c == '{'
 	if !bracketed && !braced {
-		err = fmt.Errorf("cursor of buffer not on open brace or bracket. found: '%s'",
+		err = log.E.Err("cursor of buffer not on open brace or bracket. found: '%s'",
 			string(c))
 		return
 	}
@@ -213,7 +212,7 @@ func (b *Buffer) ReadEnclosed() (bb []byte, err error) {
 // if through is set to true, the cursor is advanced to the next after the match
 func (b *Buffer) ScanForOneOf(through bool, c ...byte) (which byte, err error) {
 	if len(c) < 2 {
-		err = fmt.Errorf("at least two bytes required for ScanUntilOneOf, " +
+		err = log.E.Err("at least two bytes required for ScanUntilOneOf, " +
 			"otherwise just use ScanUntil")
 		return
 	}

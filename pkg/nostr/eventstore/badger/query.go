@@ -272,7 +272,7 @@ func prepareQueries(f *filter.T) (
 			for i, pubkeyHex := range f.Authors {
 				if len(pubkeyHex) != 64 {
 					// todo: some clients are sending invalid pubkeyhex of 69 chars
-					err = fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
+					err = log.E.Err("invalid pubkey '%s'", pubkeyHex)
 					log.D.Ln(err)
 					return nil, nil, 0, err
 				}
@@ -291,7 +291,7 @@ func prepareQueries(f *filter.T) (
 					if len(pubkeyHex) != 64 {
 						// todo: some clients are sending invalid pubkeyhex of 69 chars
 						// eg; ["NOTICE","invalid pubkey '0020bf2376e17ba4ec269d10fcc996a4746b451152be9031fa48e74553dde5526bce'"]
-						err = fmt.Errorf("invalid pubkey '%s'", pubkeyHex)
+						err = log.E.Err("invalid pubkey '%s'", pubkeyHex)
 						log.D.Ln(err)
 						return nil, nil, 0, err
 					}

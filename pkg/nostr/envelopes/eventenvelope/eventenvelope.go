@@ -43,7 +43,7 @@ func NewEventEnvelope(si string, ev *event.T) (ee *T, err error) {
 		return
 	}
 	if ev == nil {
-		err = fmt.Errorf("cannot make event envelope with nil event")
+		err = log.E.Err("cannot make event envelope with nil event")
 		return
 	}
 	return &T{SubscriptionID: sid, Event: ev}, nil

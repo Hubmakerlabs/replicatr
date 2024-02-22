@@ -7,6 +7,7 @@ var PrivilegedKinds = T{
 	kind.GiftWrap,
 	kind.GiftWrapWithKind4,
 	kind.ApplicationSpecificData,
+	kind.Deletion,
 }
 
 func IsPrivileged(k ...kind.T) (is bool) {

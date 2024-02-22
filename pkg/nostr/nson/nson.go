@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -14,22 +15,26 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"mleku.dev/git/slog"
 )
 
 /*
-           nson size
-             kind chars
-               content chars
-                   number of tags (let's say it's two)
-                     number of items on the first tag (let's say it's three)
-                       number of chars on the first item
-                           number of chars on the second item
-                               number of chars on the third item
-                                   number of items on the second tag (let's say it's two)
-                                     number of chars on the first item
-                                         number of chars on the second item
-   "nson":"xxkkccccttnn111122223333nn11112222"
+	nson size
+	  kind chars
+	    content chars
+	        number of tags (let's say it's two)
+	          number of items on the first tag (let's say it's three)
+	            number of chars on the first item
+	                number of chars on the second item
+	                    number of chars on the third item
+	                        number of items on the second tag (let's say it's two)
+	                          number of chars on the first item
+	                              number of chars on the second item
+
+"nson":"xxkkccccttnn111122223333nn11112222"
 */
+
+var log, chk = slog.New(os.Stderr)
 
 const (
 	IdStart        = 7
@@ -58,7 +63,7 @@ func UnmarshalBytes(data []byte, evt *event.T) (err error) {
 func Unmarshal(data string, evt *event.T) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("failed to decode nson: %v", r)
+			err = log.E.Err("failed to decode nson: %v", r)
 		}
 	}()
 

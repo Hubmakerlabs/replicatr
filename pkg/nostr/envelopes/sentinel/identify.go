@@ -1,7 +1,6 @@
 package sentinel
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
@@ -52,7 +51,7 @@ matched:
 	// if there was no match we still have zero.
 	if match == "" {
 		// no match
-		err = fmt.Errorf("label '%s' not recognised as envelope label",
+		err = log.E.Err("label '%s' not recognised as envelope label",
 			string(candidate))
 		return
 	}

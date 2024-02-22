@@ -1,7 +1,6 @@
 package bech32encoding
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/hex"
@@ -67,7 +66,7 @@ func NsecToSecretKey(encoded string) (sk *secp256k1.SecretKey, err error) {
 		return
 	}
 	if hrp != SecHRP {
-		err = fmt.Errorf("wrong human readable part, got '%s' want '%s'",
+		err = log.E.Err("wrong human readable part, got '%s' want '%s'",
 			hrp, SecHRP)
 		return
 	}
@@ -86,11 +85,11 @@ func NpubToPublicKey(encoded string) (pk *secp256k1.PublicKey, err error) {
 	var hrp string
 	hrp, b5, err = bech32.Decode(encoded)
 	if err != nil {
-		err = fmt.Errorf("ERROR: '%s'", err)
+		err = log.E.Err("ERROR: '%s'", err)
 		return
 	}
 	if hrp != PubHRP {
-		err = fmt.Errorf("wrong human readable part, got '%s' want '%s'",
+		err = log.E.Err("wrong human readable part, got '%s' want '%s'",
 			hrp, PubHRP)
 		return
 	}
@@ -107,7 +106,7 @@ func NpubToPublicKey(encoded string) (pk *secp256k1.PublicKey, err error) {
 // signature or encode to Bech32.
 func HexToPublicKey(pk string) (p *ec.PublicKey, err error) {
 	if len(pk) != HexKeyLen {
-		err = fmt.Errorf("seckey is %d bytes, must be %d", len(pk), HexKeyLen)
+		err = log.E.Err("secret key is %d bytes, must be %d", len(pk), HexKeyLen)
 		return
 	}
 	var pb []byte
@@ -125,7 +124,7 @@ func HexToPublicKey(pk string) (p *ec.PublicKey, err error) {
 // signature or encode to Bech32.
 func HexToSecretKey(sk string) (s *ec.SecretKey, err error) {
 	if len(sk) != HexKeyLen {
-		err = fmt.Errorf("seckey is %d bytes, must be %d", len(sk), HexKeyLen)
+		err = log.E.Err("secret key is %d bytes, must be %d", len(sk), HexKeyLen)
 		return
 	}
 	var pb []byte

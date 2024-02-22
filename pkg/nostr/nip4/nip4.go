@@ -24,12 +24,12 @@ var log, chk = slog.New(os.Stderr)
 // since this is easily determined by reading the first 4 bytes of the string
 func ComputeSharedSecret(sec, pub string) (secret []byte, err error) {
 	if len(pub) < bech32encoding.MinKeyStringLen {
-		err = fmt.Errorf("public key is too short, must be at least %d, "+
+		err = log.E.Err("public key is too short, must be at least %d, "+
 			"'%s' is only %d chars", bech32encoding.MinKeyStringLen, pub, len(pub))
 		return
 	}
 	if len(sec) < bech32encoding.MinKeyStringLen {
-		err = fmt.Errorf("public key is too short, must be at least %d, "+
+		err = log.E.Err("public key is too short, must be at least %d, "+
 			"'%s' is only %d chars", bech32encoding.MinKeyStringLen, pub, len(pub))
 		return
 	}

@@ -3,7 +3,6 @@ package sentinel
 import "C"
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closedenvelope"
@@ -71,14 +70,14 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 		var sid []byte
 		// read the string
 		if sid, err = buf.ReadUntil('"'); chk.D(err) {
-			err = fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
+			err = log.E.Err("unterminated quotes in JSON, probably truncated read: %s", err)
 			log.D.Ln(err)
 			return
 		}
 		s := subscriptionid.T(sid)
 		// next we need to determine whether this is a request or response
 		if err = buf.ScanUntil('{'); chk.T(err) {
-			err = fmt.Errorf("event not found in event envelope")
+			err = log.E.Err("event not found in event envelope")
 			log.D.Ln(err)
 			return
 		}
@@ -89,7 +88,7 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 		}
 		var bb []byte
 		if bb, err = buf.ReadUntil('"'); chk.D(err) {
-			err = fmt.Errorf("unknown object in count envelope : %s '%s'",
+			err = log.E.Err("unknown object in count envelope : %s '%s'",
 				err, buf.String())
 			return
 		}
@@ -137,13 +136,13 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 		case '{':
 			env = &authenvelope.Response{}
 		default:
-			err = fmt.Errorf("auth envelope malformed: '%s'", buf.String())
+			err = log.E.Err("auth envelope malformed: '%s'", buf.String())
 			log.D.Ln(err)
 			return
 		}
 	default:
 		// this should not happen so it is an error
-		err = fmt.Errorf("unable to match envelope '%s': '%s'", match, buf)
+		err = log.E.Err("unable to match envelope '%s': '%s'", match, buf)
 		return
 	}
 	buf.Pos = pos

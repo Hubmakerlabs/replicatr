@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -88,7 +87,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 					log.D.Ln(saveErr)
 					return saveErr
 				default:
-					err = fmt.Errorf(normalize.Reason(saveErr.Error(), "error"))
+					err = log.E.Err(normalize.Reason(saveErr.Error(), "error"))
 					log.D.Ln(ev.ID, err)
 					return
 				}

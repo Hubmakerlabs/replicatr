@@ -1,8 +1,6 @@
 package app
 
 import (
-	"fmt"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -40,7 +38,7 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 					}
 				} else {
 					// fail and stop here
-					err = fmt.Errorf("blocked: %s", msg)
+					err = log.E.Err("blocked: %s", msg)
 					log.E.Ln(err)
 					return
 				}

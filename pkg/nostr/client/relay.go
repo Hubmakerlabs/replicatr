@@ -368,7 +368,7 @@ func (r *T) publish(c context.T, id string, env enveloper.I) error {
 	r.okCallbacks.Store(id, func(ok bool, reason string) {
 		gotOk = true
 		if !ok {
-			err = fmt.Errorf("msg: %s", reason)
+			err = log.E.Err("msg: %s", reason)
 		}
 		cancel()
 	})

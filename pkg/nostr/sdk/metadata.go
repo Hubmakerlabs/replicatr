@@ -2,7 +2,6 @@ package sdk
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
@@ -80,14 +79,14 @@ func FetchProfileMetadata(c context.T, pool *pool.Simple,
 
 func ParseMetadata(ev *event.T) (pm *ProfileMetadata, err error) {
 	if ev.Kind != 0 {
-		err = fmt.Errorf("event %s is kind %d, not 0", ev.ID, ev.Kind)
+		err = log.E.Err("event %s is kind %d, not 0", ev.ID, ev.Kind)
 		return
 	} else if err = json.Unmarshal([]byte(ev.Content), &pm); chk.D(err) {
 		cont := ev.Content
 		if len(cont) > 100 {
 			cont = cont[0:99]
 		}
-		err = fmt.Errorf("failed to parse metadata (%s) from event %s: %w",
+		err = log.E.Err("failed to parse metadata (%s) from event %s: %w",
 			cont, ev.ID, err)
 		return
 	}

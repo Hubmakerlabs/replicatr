@@ -26,7 +26,7 @@ require (
 	mleku.dev/git/bech32 v1.0.6
 	mleku.dev/git/ec v1.0.8
 	mleku.dev/git/interrupt v1.0.10
-	mleku.dev/git/slog v1.0.14
+	mleku.dev/git/slog v1.0.15
 )
 
 require (
