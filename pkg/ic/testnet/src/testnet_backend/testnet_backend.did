@@ -1,3 +1,9 @@
+type Record = record {
+  id: nat64;
+  content: text;
+};
+
 service : {
-    "greet": (text) -> (text) query;
-}
+  "get_record": (nat64) -> (opt Record) query;
+  "save_record": (nat64, text) -> (text);
+};
