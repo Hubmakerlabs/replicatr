@@ -7,6 +7,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
 
+// handleDeleteRequest handles a delete event (kind 5)
 func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 	// event deletion -- nip09
 	for _, t := range evt.Tags {
@@ -27,10 +28,16 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 				if acceptDeletion == false {
 					msg = "you are not the author of this event"
 				}
-				// but if we have a function to overwrite this outcome, use that instead
-				for _, odo := range rl.OverwriteDeletionOutcome {
-					acceptDeletion, msg = odo(c, target, evt)
+				// but if we have a function to override this outcome, use that
+				// instead
+				for _, odo := range rl.OverrideDeletion {
+					var override bool
+					override, msg = odo(c, target, evt)
+					// if any override rejects, do not delete
+					acceptDeletion = acceptDeletion && override
 				}
+				// at this point only if the pubkey matches AND the overrides
+				// all accept will the delete be performed.
 				if acceptDeletion {
 					// delete it
 					for _, del := range rl.DeleteEvent {
@@ -48,4 +55,13 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 		}
 	}
 	return nil
+}
+
+// OverrideDelete decides whether to veto a delete event.
+//
+// Temporarily removing delete functionality until a proper tombstone/indexing
+// strategy is devised to filter out these events from database results.
+func (rl *Relay) OverrideDelete(c context.T, tgt, del *event.T) (ok bool, msg string) {
+	ok = false
+	return
 }

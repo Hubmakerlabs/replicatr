@@ -183,6 +183,7 @@ func main() {
 	rl.OnConnect = append(rl.OnConnect, rl.AuthCheck)
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
+	rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	srvr := http.Server{
 		Addr:    args.Listen,
 		Handler: rl,
