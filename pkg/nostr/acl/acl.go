@@ -182,7 +182,7 @@ func (a *Entry) ToEvent() (ev *event.T) {
 	ev = &event.T{
 		CreatedAt: timestamp.Now(),
 		Kind:      Kind,
-		Tags:      tags.T{{"p", a.EventID.String(), RoleStrings[a.Role]}},
+		Tags:      tags.T{{"p", a.Pubkey, RoleStrings[a.Role]}},
 	}
 	if a.Expires > 0 {
 		ev.Tags = append(ev.Tags, tag.T{ExpiryTag, fmt.Sprint(a.Expires)})
@@ -200,7 +200,7 @@ func (a *Entry) ToEvent() (ev *event.T) {
 // FromEvent to validate it after which it will then sign it and store the event
 // into the database so it is available for searches and for initializing the
 // acl.T at startup to configure the ACL.
-func (ae *T) FromEvent(ev event.T) (e *Entry, err error) {
+func (ae *T) FromEvent(ev *event.T) (e *Entry, err error) {
 	// first populate the fields that are instantly transferable
 	e = &Entry{
 		EventID:      ev.ID,
@@ -269,11 +269,11 @@ func (ae *T) FromEvent(ev event.T) (e *Entry, err error) {
 	}
 	// Look for the replaces tag.
 	replacesTags := ev.Tags.GetAll("replaces")
-	if len(replacesTags) != 1 {
+	if len(replacesTags) > 1 {
 		err = log.E.Err("other than 1 replaces tag found: %d %v",
 			len(replacesTags), replacesTags)
 		return
-	} else {
+	} else if len(replacesTags) > 0 {
 		replacesTag := replacesTags[0]
 		if len(replacesTag) < 2 {
 			err = log.E.Err("expiry tag with insufficient fields found: %d %v",
