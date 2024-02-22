@@ -30,11 +30,10 @@ const (
 
 // function types used in the relay state
 type (
-	RejectEvent  func(c context.T, ev *event.T) (rej bool, msg string)
-	RejectFilter func(c context.T, id subscriptionid.T,
-		f *filter.T) (reject bool, msg string)
+	RejectEvent               func(c context.T, ev *event.T) (rej bool, msg string)
+	RejectFilter              func(c context.T, id subscriptionid.T, f *filter.T) (reject bool, msg string)
 	OverwriteFilter           func(c context.T, f *filter.T)
-	OverwriteDeletionOutcome  func(c context.T, tgt, del *event.T) (ok bool, msg string)
+	OverrideDeletionOutcome   func(c context.T, tgt, del *event.T) (ok bool, msg string)
 	OverwriteResponseEvent    func(c context.T, ev *event.T)
 	Events                    func(c context.T, ev *event.T) error
 	Hook                      func(c context.T)
@@ -45,24 +44,24 @@ type (
 )
 
 type Relay struct {
-	ServiceURL               atomic.String
-	RejectEvent              []RejectEvent
-	RejectFilter             []RejectFilter
-	RejectCountFilter        []RejectFilter
-	OverwriteDeletionOutcome []OverwriteDeletionOutcome
-	OverwriteResponseEvent   []OverwriteResponseEvent
-	OverwriteFilter          []OverwriteFilter
-	OverwriteCountFilter     []OverwriteFilter
-	OverwriteRelayInfo       []OverwriteRelayInformation
-	StoreEvent               []Events
-	DeleteEvent              []Events
-	QueryEvents              []QueryEvents
-	CountEvents              []CountEvents
-	OnConnect                []Hook
-	OnDisconnect             []Hook
-	OnEventSaved             []OnEventSaved
-	Config                   *Config
-	Info                     *nip11.Info
+	ServiceURL             atomic.String
+	RejectEvent            []RejectEvent
+	RejectFilter           []RejectFilter
+	RejectCountFilter      []RejectFilter
+	OverrideDeletion       []OverrideDeletionOutcome
+	OverwriteResponseEvent []OverwriteResponseEvent
+	OverwriteFilter        []OverwriteFilter
+	OverwriteCountFilter   []OverwriteFilter
+	OverwriteRelayInfo     []OverwriteRelayInformation
+	StoreEvent             []Events
+	DeleteEvent            []Events
+	QueryEvents            []QueryEvents
+	CountEvents            []CountEvents
+	OnConnect              []Hook
+	OnDisconnect           []Hook
+	OnEventSaved           []OnEventSaved
+	Config                 *Config
+	Info                   *nip11.Info
 	// for establishing websockets
 	upgrader websocket.Upgrader
 	// keep a connection reference to all connected clients for Server.Shutdown
