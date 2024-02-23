@@ -165,102 +165,7 @@ note that if you have NIP-42 enabled in the client and you are already authorise
 type Command struct {
 	Name string
 	Help string
-	Func func(prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error)
-}
-
-var Commands []*Command
-
-func (rl *Relay) Init() {
-	Commands = []*Command{
-		{
-			Name: "help",
-			Help: `help [command name]
-
-shows help for a command
-
-this relay chat bot understands the following commands:
-`,
-			Func: rl.help,
-		},
-		{
-			Name: "set",
-			Help: `set <pubkey> [admin|writer|reader|none|denied]
-
-sets the permission for access by the user with <pubkey> to the relay
-
-- admin : being able to change lower privilege levels on user accounts - only owners can change admins
-
-- writer : permission to request events and publish events to the relay
-
-- reader : permission to request events from the relay
-
-- none : no permission, this is effectively the same as denied on auth-required relay
-
-- denied : that this user will not have any requests or events accepted by the relay
-`,
-			Func: rl.set,
-		},
-		{
-			Name: "list",
-			Help: `list [admin|writer|reader|none|denied]
-
-returns the list of pubkeys, optionally from a given privilege level
-
-only owner and admin users can use this command
-`,
-			Func: rl.list,
-		},
-	}
-}
-
-func (rl *Relay) help(prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error) {
-	var replyString string
-	switch {
-	case len(args) < 2:
-		replyString += cmd.Help
-		for i := range Commands {
-			replyString += "\n"
-			split := strings.Split(Commands[i].Help, "\n")
-			replyString += split[0]
-			replyString += "\n ➞ " + split[2]
-			replyString += "\n"
-		}
-		replyString += "\n"
-		reply = MakeReply(ev, fmt.Sprintf(replyString))
-	case len(args) == 2 && args[1] == "help":
-		if prefix != "" {
-			replyString = prefix + "\n\n"
-		}
-		replyString += cmd.Help
-		for i := range Commands {
-			replyString += "\n"
-			split := strings.Split(Commands[i].Help, "\n")
-			replyString += split[0]
-			replyString += "\n ➞ " + split[2]
-			replyString += "\n"
-		}
-		replyString += "\n"
-		reply = MakeReply(ev, fmt.Sprintf(replyString))
-	default:
-		for i := range Commands {
-			if Commands[i].Name == args[1] {
-				replyString = strings.TrimSpace(Commands[i].Help)
-				reply = MakeReply(ev, fmt.Sprintf(replyString))
-				return
-			}
-		}
-	}
-	return
-}
-
-func (rl *Relay) set(prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error) {
-	reply = MakeReply(ev, fmt.Sprintf("set not implemented yet\n args: %v\nevent: %s\nprefix: %s", args, ev.ToObject().String(), prefix))
-	return
-}
-
-func (rl *Relay) list(prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error) {
-	reply = MakeReply(ev, fmt.Sprintf("list not implemented yet\n args: %v\nevent: %s\nprefix: %s", args, ev.ToObject().String(), prefix))
-	return
+	Func func(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error)
 }
 
 func (rl *Relay) command(ev *event.T, cmd string) (err error) {
@@ -273,7 +178,7 @@ func (rl *Relay) command(ev *event.T, cmd string) (err error) {
 	var reply *event.T
 	for i := range Commands {
 		if Commands[i].Name == args[0] {
-			if reply, err = Commands[i].Func("", ev, Commands[i], args...); chk.E(err) {
+			if reply, err = Commands[i].Func(rl, "", ev, Commands[i], args...); chk.E(err) {
 				return
 			}
 			break
@@ -282,7 +187,7 @@ func (rl *Relay) command(ev *event.T, cmd string) (err error) {
 	if reply == nil {
 		for i := range Commands {
 			if Commands[i].Name == "help" {
-				reply, err = rl.help(fmt.Sprintf("unknown command: '%s'", cmd),
+				reply, err = help(rl, fmt.Sprintf("unknown command: '%s'", cmd),
 					ev, Commands[i], args...)
 				if chk.E(err) {
 					return
