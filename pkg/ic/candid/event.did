@@ -1,53 +1,28 @@
-type EventId = record {
-    T: text;
-};
-
-type TimeStamp = record{
-    T: int;
-}
-
-type Kind = record{
-    T:nat;
-}
-
-type Kinds = record{
-    T: vec<Kind>;
-}
-
-type Tag = record{
-    T : vec<text>;
-}
-
-type Tags = record{
-    T: vec<Tag>;
-}
-
 type KeyValuePair = record {
   key: text;
   value: Tag;
 };
 
-type TagMap= vec<KeyValuePair>;
 
 
 type Event = record{
-    id: EventID;
+    id: text; 
     pubkey: text;
-    createdAt: TimeStamp;
-    kind: Kind;
-    tags: Tags;
+    createdAt: int; //must be converted to idl.Int
+    kind: nat16;
+    tags: vec< vec<text>>;
     content: text;
     sig: text;
 };
 
 
 type Filter = record{
-    ids: Tag;
-    kinds: Kinds;
-    authors: Tag;
-    tags: TagMap;
-    since: TimeStamp;
-    until: TimeStamp;
-    limit: int;
+    ids: vec<text>;
+    kinds: vec<nat16>;
+    authors: vec<text>;
+    tags: vec<KeyValuePair>;
+    since: int; //must be converted to idl.Int
+    until: int; //must be converted to idl.Int
+    limit: int; //must be converted to idl.Int
     search: text;
 };
