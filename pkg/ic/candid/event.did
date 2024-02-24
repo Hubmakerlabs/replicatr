@@ -1,6 +1,6 @@
 type KeyValuePair = record {
   key: text;
-  value: Tag;
+  value:vec<text>;
 };
 
 
