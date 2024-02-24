@@ -1,0 +1,28 @@
+type KeyValuePair = record {
+  key: text;
+  value:vec<text>;
+};
+
+
+
+type Event = record{
+    id: text; 
+    pubkey: text;
+    createdAt: int; //must be converted to idl.Int
+    kind: nat16;
+    tags: vec< vec<text>>;
+    content: text;
+    sig: text;
+};
+
+
+type Filter = record{
+    ids: vec<text>;
+    kinds: vec<nat16>;
+    authors: vec<text>;
+    tags: vec<KeyValuePair>;
+    since: int; //must be converted to idl.Int
+    until: int; //must be converted to idl.Int
+    limit: int; //must be converted to idl.Int
+    search: text;
+};
