@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/fasthttp/websocket"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/relayws"
-	"github.com/fasthttp/websocket"
 )
 
 type readParams struct {

@@ -3,11 +3,11 @@ package app
 import (
 	"fmt"
 
+	"github.com/puzpuzpuz/xsync/v2"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/filters"
 	"mleku.dev/git/nostr/relayws"
-	"github.com/puzpuzpuz/xsync/v2"
 )
 
 type Listener struct {

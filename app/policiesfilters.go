@@ -1,11 +1,11 @@
 package app
 
 import (
+	"golang.org/x/exp/slices"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/kind"
 	"mleku.dev/git/nostr/kinds"
-	"golang.org/x/exp/slices"
 )
 
 // NoComplexFilters disallows filters with more than 2 tags.
