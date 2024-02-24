@@ -7,6 +7,8 @@
 # Ignore everything
 *
 
+
+
 # But not these files...
 !/.gitignore
 
@@ -28,3 +30,14 @@
 !*.rs
 # ...even if they are in subdirectories
 !*/
+
+pkg/ic/testnet/*
+!pkg/ic/testnet/src/
+!pkg/ic/testnet/src/**/*
+
+
+
+
+
+
+
