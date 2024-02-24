@@ -83,7 +83,20 @@ func help(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (
 			// help item:
 			for i := range Commands {
 				if Commands[i].Name == args[1] {
-					replyString = Commands[i].Help
+					if Commands[i].Name == "help" {
+						for j := range Commands {
+							if Commands[j].Name == "help" {
+								replyString += cmd.Help
+								continue
+							}
+							split := strings.Split(Commands[j].Help, "\n")
+							replyString += split[0]
+							replyString += "\n ➞ " + split[2]
+							replyString += "\n\n"
+						}
+					} else {
+						replyString = Commands[i].Help
+					}
 				}
 			}
 			if replyString == "" {
