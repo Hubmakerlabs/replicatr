@@ -18,6 +18,7 @@ func (rl *Relay) Init() {
 shows help for a command
 
 this relay chat bot understands the following commands:
+
 `,
 			Func: help,
 		},
@@ -27,7 +28,7 @@ this relay chat bot understands the following commands:
 
 sets the permission for access by the user with <pubkey> to the relay
 
-- admin : being able to change lower privilege levels on user accounts - only owners can change admins
+- admin : permission to change lower privilege levels on user accounts - only owners can change admins
 
 - writer : permission to request events and publish events to the relay
 
@@ -54,41 +55,45 @@ only owner and admin users can use this command
 
 func help(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error) {
 	var replyString string
-	switch {
-	case len(args) < 2:
+	if prefix != "" {
+		// this is an error print
+		prefix = strings.TrimSpace(prefix) + "\n\n"
 		replyString += cmd.Help
 		for i := range Commands {
-			replyString += "\n"
 			split := strings.Split(Commands[i].Help, "\n")
 			replyString += split[0]
 			replyString += "\n ➞ " + split[2]
-			replyString += "\n"
+			replyString += "\n\n"
 		}
-		replyString += "\n"
-		reply = MakeReply(ev, fmt.Sprintf(replyString))
-	case len(args) == 2 && args[1] == "help":
-		if prefix != "" {
-			replyString = prefix + "\n\n"
-		}
-		replyString += cmd.Help
-		for i := range Commands {
-			replyString += "\n"
-			split := strings.Split(Commands[i].Help, "\n")
-			replyString += split[0]
-			replyString += "\n ➞ " + split[2]
-			replyString += "\n"
-		}
-		replyString += "\n"
-		reply = MakeReply(ev, fmt.Sprintf(replyString))
-	default:
-		for i := range Commands {
-			if Commands[i].Name == args[1] {
-				replyString = strings.TrimSpace(Commands[i].Help)
-				reply = MakeReply(ev, fmt.Sprintf(replyString))
-				return
+	} else {
+		// this is a direct invocation
+		if len(args) == 1 {
+			replyString += cmd.Help
+			for i := range Commands {
+				if Commands[i].Name == "help" {
+					continue
+				}
+				split := strings.Split(Commands[i].Help, "\n")
+				replyString += split[0]
+				replyString += "\n ➞ " + split[2]
+				replyString += "\n\n"
+			}
+		} else if len(args) >= 2 {
+			// pretty much all commands are one level deep so second item is the
+			// help item:
+			for i := range Commands {
+				if Commands[i].Name == args[1] {
+					replyString = Commands[i].Help
+				}
+			}
+			if replyString == "" {
+				replyString = fmt.Sprintf(`command '%s' unknown
+
+type 'help' to see a list of valid commands`, strings.Join(args[1:], " "))
 			}
 		}
 	}
+	reply = MakeReply(ev, fmt.Sprintf("%s%s", prefix, replyString))
 	return
 }
 

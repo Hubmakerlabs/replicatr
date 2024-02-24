@@ -169,7 +169,6 @@ type Command struct {
 }
 
 func (rl *Relay) command(ev *event.T, cmd string) (err error) {
-	log.D.S(cmd)
 	args := strings.Split(cmd, " ")
 	if len(args) < 1 {
 		err = log.E.Err("no command received")
