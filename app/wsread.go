@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
+	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/relayws"
 	"github.com/fasthttp/websocket"
 )
 

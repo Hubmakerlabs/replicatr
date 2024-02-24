@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"mleku.dev/git/nostr/event"
 )
 
 var Commands []*Command

@@ -3,14 +3,14 @@ package app
 import (
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closedenvelope"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip42"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/envelopes/closedenvelope"
+	"mleku.dev/git/nostr/filter"
+	"mleku.dev/git/nostr/kinds"
+	"mleku.dev/git/nostr/nip42"
+	"mleku.dev/git/nostr/normalize"
+	"mleku.dev/git/nostr/subscriptionid"
+	"mleku.dev/git/nostr/tag"
 )
 
 // FilterPrivileged interacts between filters and the privileges of the

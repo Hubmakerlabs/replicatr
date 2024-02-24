@@ -7,10 +7,10 @@ import (
 	"os"
 	"sort"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"mleku.dev/git/nostr/event"
 	bdb "github.com/dgraph-io/badger/v4"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"mleku.dev/git/nostr/eventstore/badger"
 )
 
 // Export prints the JSON of all events or writes them to a file.

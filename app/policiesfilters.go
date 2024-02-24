@@ -1,10 +1,10 @@
 package app
 
 import (
-	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/filter"
+	"mleku.dev/git/nostr/kind"
+	"mleku.dev/git/nostr/kinds"
 	"golang.org/x/exp/slices"
 )
 

@@ -3,11 +3,11 @@ package IC
 import (
 	"os"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
+	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/event"
+	"mleku.dev/git/nostr/eventstore/badger"
+	"mleku.dev/git/nostr/filter"
+	"mleku.dev/git/nostr/nip11"
 	"mleku.dev/git/slog"
 )
 
