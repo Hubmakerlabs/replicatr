@@ -3,11 +3,11 @@ package acl
 import (
 	"testing"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"lukechampine.com/frand"
 	"mleku.dev/git/ec/schnorr"
 	"mleku.dev/git/ec/secp256k1"
+	"mleku.dev/git/nostr/hex"
+	"mleku.dev/git/nostr/timestamp"
 )
 
 var testRelaySec = "f16dca5c36931305a4ac30d31b77962af96ea6b7240736da11af318fb7e11317"

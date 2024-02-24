@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
+	"mleku.dev/git/nostr/bech32encoding"
+	"mleku.dev/git/nostr/keys"
 )
 
 func getPubFromSec(sk string) (pubHex string, secHex string, err error) {

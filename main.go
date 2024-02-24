@@ -10,13 +10,13 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 	"github.com/alexflint/go-arg"
 	"mleku.dev/git/interrupt"
+	"mleku.dev/git/nostr/eventstore/badger"
+	"mleku.dev/git/nostr/keys"
+	"mleku.dev/git/nostr/nip11"
+	"mleku.dev/git/nostr/tag"
+	"mleku.dev/git/nostr/wire/object"
 	"mleku.dev/git/slog"
 )
 

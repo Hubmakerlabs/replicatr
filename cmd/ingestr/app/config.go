@@ -3,9 +3,9 @@ package app
 import (
 	"os"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"mleku.dev/git/nostr/kind"
+	"mleku.dev/git/nostr/kinds"
+	"mleku.dev/git/nostr/tag"
 	"mleku.dev/git/slog"
 )
 

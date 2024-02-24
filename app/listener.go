@@ -3,10 +3,10 @@ package app
 import (
 	"fmt"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
+	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/filter"
+	"mleku.dev/git/nostr/filters"
+	"mleku.dev/git/nostr/relayws"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 

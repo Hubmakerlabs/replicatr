@@ -3,9 +3,9 @@ package main
 import (
 	"strings"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"mleku.dev/git/nostr/filter"
+	"mleku.dev/git/nostr/kind"
+	"mleku.dev/git/nostr/kinds"
 	"github.com/urfave/cli/v2"
 )
 

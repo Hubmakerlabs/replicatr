@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"mleku.dev/git/nostr/bech32encoding"
+	"mleku.dev/git/nostr/event"
 	"github.com/gookit/color"
 )
 

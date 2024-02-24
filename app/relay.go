@@ -5,16 +5,16 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/app/acl"
-	"github.com/Hubmakerlabs/replicatr/pkg/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nip11"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
 	"mleku.dev/git/atomic"
+	"mleku.dev/git/nostr/bech32encoding"
+	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/event"
+	"mleku.dev/git/nostr/filter"
+	"mleku.dev/git/nostr/keys"
+	"mleku.dev/git/nostr/nip11"
+	"mleku.dev/git/nostr/subscriptionid"
 )
 
 var Version = "v0.0.1"

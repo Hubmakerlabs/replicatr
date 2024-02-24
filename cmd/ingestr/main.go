@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 
 	"github.com/Hubmakerlabs/replicatr/cmd/ingestr/app"
-	"github.com/Hubmakerlabs/replicatr/pkg/hex"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/alexflint/go-arg"
 	"mleku.dev/git/ec"
 	"mleku.dev/git/ec/schnorr"
+	"mleku.dev/git/nostr/bech32encoding"
+	"mleku.dev/git/nostr/hex"
+	"mleku.dev/git/nostr/keys"
 	"mleku.dev/git/slog"
 )
 
