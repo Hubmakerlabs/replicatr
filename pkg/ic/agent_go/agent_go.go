@@ -1,6 +1,6 @@
 package agent_go
 
-import "github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+import "mleku.dev/git/nostr/event"
 
 type Event struct {
 	Event event.T

@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
-	"mleku.dev/git/nostr/context"
 	"github.com/fasthttp/websocket"
 	"github.com/rs/cors"
+	"mleku.dev/git/nostr/context"
 )
 
 func (rl *Relay) Router() *http.ServeMux {

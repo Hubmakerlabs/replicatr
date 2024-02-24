@@ -62,5 +62,4 @@ require (
 	mleku.dev/git/bech32 v1.0.6 // indirect
 	mleku.dev/git/qu v1.0.8 // indirect
 	rsc.io/qr v0.2.0 // indirect
-	github.com/aviate-labs/agent-go v0.3.3
 )

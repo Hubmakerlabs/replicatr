@@ -1,12 +1,12 @@
 package app
 
 import (
+	"golang.org/x/exp/slices"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/kind"
 	"mleku.dev/git/nostr/kinds"
 	"mleku.dev/git/nostr/timestamp"
-	"golang.org/x/exp/slices"
 )
 
 // PreventExcessTags returns a function that can be used as a

@@ -7,8 +7,8 @@ import (
 	"os"
 	"sort"
 
-	"mleku.dev/git/nostr/event"
 	bdb "github.com/dgraph-io/badger/v4"
+	"mleku.dev/git/nostr/event"
 
 	"mleku.dev/git/nostr/eventstore/badger"
 )

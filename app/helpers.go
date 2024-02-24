@@ -8,12 +8,12 @@ import (
 	"strings"
 	"unsafe"
 
+	"github.com/sebest/xff"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/envelopes/authenvelope"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filters"
 	"mleku.dev/git/nostr/relayws"
-	"github.com/sebest/xff"
 	"mleku.dev/git/slog"
 )
 
