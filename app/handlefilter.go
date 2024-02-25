@@ -82,7 +82,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					// log.D.Ln(h.ws.RealRemote, "parties", parties)
 					if !parties.Contains(h.ws.AuthPubKey()) {
 						log.D.Ln("not sending privileged event to user "+
-							"without matching auth", h.ws.AuthPubKey())
+							"without matching auth", parties, h.ws.AuthPubKey())
 						continue
 					}
 					// then check the event

@@ -67,7 +67,7 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 	parties := make(tag.T, len(receivers)+len(f.Authors))
 	copy(parties[:len(f.Authors)], f.Authors)
 	copy(parties[len(f.Authors):], receivers)
-	log.D.Ln(ws.RealRemote(), "parties", parties)
+	log.D.Ln(ws.RealRemote(), "parties", parties, "querant", ws.AuthPubKey())
 	switch {
 	case ws.AuthPubKey() == "":
 		// not authenticated

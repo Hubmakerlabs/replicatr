@@ -149,7 +149,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		} else {
 			ok = true
 		}
-		log.D.Ln("sending back ok envelope", ws.AuthPubKey(),
+		log.T.Ln("sending back ok envelope", ws.AuthPubKey(),
 			ws.RealRemote())
 		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,
@@ -221,11 +221,11 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}()
 		SetListener(env.SubscriptionID.String(), ws, env.Filters, cancelReqCtx)
 	case *closeenvelope.T:
-		log.D.Ln("received close envelope from", ws.RealRemote(),
+		log.T.Ln("received close envelope from", ws.RealRemote(),
 			ws.AuthPubKey(), en.ToArray().String())
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
-		log.D.Ln("received auth response envelope from",
+		log.T.Ln("received auth response envelope from",
 			ws.RealRemote(), en.ToArray().String())
 		// log.D.Ln("received auth response")
 		wsBaseUrl := strings.Replace(rl.ServiceURL.Load(), "http", "ws", 1)

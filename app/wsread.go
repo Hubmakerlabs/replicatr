@@ -74,7 +74,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		}
 		log.T.F("receiving message from %s %s: %s",
 			p.ws.RealRemote(), p.ws.AuthPubKey(), strMsg)
-		if err = rl.wsProcessMessages(message, p.c, p.kill, p.ws); chk.E(err) {
+		if err = rl.wsProcessMessages(message, p.c, p.kill, p.ws); err != nil {
 			return
 		}
 	}
