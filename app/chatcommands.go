@@ -60,6 +60,9 @@ func help(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (
 		prefix = strings.TrimSpace(prefix) + "\n\n"
 		replyString += cmd.Help
 		for i := range Commands {
+			if Commands[i].Name == "help" {
+				continue
+			}
 			split := strings.Split(Commands[i].Help, "\n")
 			replyString += split[0]
 			replyString += "\n ➞ " + split[2]
