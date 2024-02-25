@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/client"
+	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/eventid"
 	"mleku.dev/git/nostr/filter"

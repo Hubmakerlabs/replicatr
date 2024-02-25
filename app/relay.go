@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/app/acl"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
 	"mleku.dev/git/atomic"
+	"mleku.dev/git/nostr/acl"
 	"mleku.dev/git/nostr/bech32encoding"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"

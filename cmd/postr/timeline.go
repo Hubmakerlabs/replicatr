@@ -3,13 +3,13 @@ package main
 import (
 	"sync/atomic"
 
-	"mleku.dev/git/nostr/context"
+	"github.com/urfave/cli/v2"
 	"mleku.dev/git/nostr/client"
+	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/kind"
 	"mleku.dev/git/nostr/kinds"
-	"github.com/urfave/cli/v2"
 )
 
 func (cfg *C) publish(ev *event.T, s *atomic.Int64) RelayIter {

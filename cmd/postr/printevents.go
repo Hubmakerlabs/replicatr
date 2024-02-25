@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gookit/color"
 	"mleku.dev/git/nostr/bech32encoding"
 	"mleku.dev/git/nostr/event"
-	"github.com/gookit/color"
 )
 
 const NostrProtocol = "nostr:"

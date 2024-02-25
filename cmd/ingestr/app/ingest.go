@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/client"
+	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/filters"

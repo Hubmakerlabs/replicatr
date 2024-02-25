@@ -3,10 +3,10 @@ package main
 import (
 	"strings"
 
+	"github.com/urfave/cli/v2"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/kind"
 	"mleku.dev/git/nostr/kinds"
-	"github.com/urfave/cli/v2"
 )
 
 func Search(cCtx *cli.Context) (err error) {

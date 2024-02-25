@@ -8,9 +8,11 @@ import (
 	"net/url"
 	"os"
 
-	"mleku.dev/git/nostr/context"
+	"github.com/mdp/qrterminal/v3"
+	"github.com/urfave/cli/v2"
 	"mleku.dev/git/nostr/bech32encoding"
 	"mleku.dev/git/nostr/client"
+	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/filters"
@@ -22,8 +24,6 @@ import (
 	"mleku.dev/git/nostr/tag"
 	"mleku.dev/git/nostr/tags"
 	"mleku.dev/git/nostr/timestamp"
-	"github.com/mdp/qrterminal/v3"
-	"github.com/urfave/cli/v2"
 )
 
 // Lnurlp is

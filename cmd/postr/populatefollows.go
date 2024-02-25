@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 
-	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/client"
+	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/kind"
 	"mleku.dev/git/nostr/kinds"

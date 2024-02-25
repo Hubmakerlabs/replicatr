@@ -9,15 +9,15 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"mleku.dev/git/nostr/context"
+	"github.com/urfave/cli/v2"
 	"mleku.dev/git/nostr/client"
+	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/kind"
 	"mleku.dev/git/nostr/sdk"
 	"mleku.dev/git/nostr/tag"
 	"mleku.dev/git/nostr/tags"
 	"mleku.dev/git/nostr/timestamp"
-	"github.com/urfave/cli/v2"
 )
 
 func Reply(cCtx *cli.Context) (err error) {

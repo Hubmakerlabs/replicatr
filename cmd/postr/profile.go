@@ -5,14 +5,14 @@ import (
 	"errors"
 	"fmt"
 
-	"mleku.dev/git/nostr/context"
+	"github.com/urfave/cli/v2"
 	"mleku.dev/git/nostr/bech32encoding"
 	"mleku.dev/git/nostr/client"
+	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/kind"
 	"mleku.dev/git/nostr/kinds"
 	"mleku.dev/git/nostr/sdk"
-	"github.com/urfave/cli/v2"
 )
 
 func Profile(cCtx *cli.Context) (err error) {
