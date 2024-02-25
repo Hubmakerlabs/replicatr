@@ -17,12 +17,12 @@ require (
 	mleku.dev/git/atomic v1.11.5
 	mleku.dev/git/ec v1.0.8
 	mleku.dev/git/interrupt v1.0.10
-	mleku.dev/git/nostr v1.0.4
+	mleku.dev/git/nostr v1.0.6
 	mleku.dev/git/slog v1.0.16
 )
 
 require (
-	github.com/alexflint/go-scalar v1.1.0 // indirect
+	github.com/alexflint/go-scalar v1.2.0 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
