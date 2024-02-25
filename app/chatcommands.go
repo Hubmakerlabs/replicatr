@@ -82,26 +82,7 @@ func help(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (
 				replyString += "\n\n"
 			}
 		} else if len(args) >= 2 {
-			// pretty much all commands are one level deep so second item is the
-			// help item:
-			for i := range Commands {
-				if Commands[i].Name == args[1] {
-					if Commands[i].Name == "help" {
-						for j := range Commands {
-							if Commands[j].Name == "help" {
-								replyString += cmd.Help
-								continue
-							}
-							split := strings.Split(Commands[j].Help, "\n")
-							replyString += split[0]
-							replyString += "\n ➞ " + split[2]
-							replyString += "\n\n"
-						}
-					} else {
-						replyString = Commands[i].Help
-					}
-				}
-			}
+			replyString = commandHelp(cmd, args...)
 			if replyString == "" {
 				replyString = fmt.Sprintf(`command '%s' unknown
 
@@ -113,8 +94,39 @@ type 'help' to see a list of valid commands`, strings.Join(args[1:], " "))
 	return
 }
 
+func commandHelp(cmd *Command, args ...string) (replyString string) {
+	for i := range Commands {
+		if Commands[i].Name == args[1] {
+			if Commands[i].Name == "help" {
+				for j := range Commands {
+					if Commands[j].Name == "help" {
+						replyString += cmd.Help
+						continue
+					}
+					split := strings.Split(Commands[j].Help, "\n")
+					replyString += split[0]
+					replyString += "\n ➞ " + split[2]
+					replyString += "\n\n"
+				}
+			} else {
+				replyString = Commands[i].Help
+			}
+		}
+	}
+	return
+}
+
 func set(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error) {
-	reply = MakeReply(ev, fmt.Sprintf("set not implemented yet\n args: %v\nevent: %s\nprefix: %s", args, ev.ToObject().String(), prefix))
+	var replytext string
+	if len(args) < 3 {
+		replytext = fmt.Sprintf(
+			"wrong number of parameters, three required, got: %d '%s'\n\n",
+			len(args), strings.Join(args, " "))
+		replytext += commandHelp(cmd, append([]string{"help"}, args...)...)
+		reply = MakeReply(ev, replytext)
+		return
+	}
+	reply = MakeReply(ev, replytext)
 	return
 }
 

@@ -15,11 +15,10 @@ require (
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/urfave/cli/v2 v2.27.1
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
-	lukechampine.com/frand v1.4.2
 	mleku.dev/git/atomic v1.11.5
 	mleku.dev/git/ec v1.0.8
 	mleku.dev/git/interrupt v1.0.10
-	mleku.dev/git/nostr v1.0.0
+	mleku.dev/git/nostr v1.0.2
 	mleku.dev/git/slog v1.0.15
 )
 
@@ -53,12 +52,12 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
-	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
+	github.com/xrash/smetrics v0.0.0-20231213231151-1d8dd44e695e // indirect
 	go.opencensus.io v0.24.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/term v0.17.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.32.0 // indirect
 	mleku.dev/git/bech32 v1.0.6 // indirect
 	mleku.dev/git/qu v1.0.8 // indirect
 	rsc.io/qr v0.2.0 // indirect

@@ -31,7 +31,6 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 	ws := GetConnection(c)
 	// if access requires auth, check that auth is present.
 	if (privileged || authRequired) && ws.AuthPubKey() == "" {
-		log.T.Ln("authorization required", authRequired, privileged, f.Kinds)
 		var reason string
 		if privileged {
 			reason = "this relay only sends privileged events to parties to the event"

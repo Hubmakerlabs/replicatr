@@ -26,8 +26,12 @@ import (
 )
 
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
-	kill func(), ws *relayws.WebSocket) {
+	kill func(), ws *relayws.WebSocket) (err error) {
 
+	if len(msg) == 0 {
+		err = log.E.Err("empty message, probably dropped connection")
+		return
+	}
 	strMsg := string(msg)
 	if len(strMsg) > 256 {
 		strMsg = strMsg[:256]
@@ -35,8 +39,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	log.T.Ln("processing message", ws.RealRemote(),
 		ws.AuthPubKey(), strMsg)
 	if len(msg) > rl.Info.Limitation.MaxMessageLength {
-		log.D.F("rejecting event with size: %d from %s %s", len(msg), ws.RealRemote(),
-			ws.AuthPubKey())
+		log.D.F("rejecting event with size: %d from %s %s",
+			len(msg), ws.RealRemote(), ws.AuthPubKey())
 		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			OK: false,
 			Reason: fmt.Sprintf(
@@ -63,13 +67,14 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		return
 	}
 	var en enveloper.I
-	var err error
 	if en, _, err = envelopes.ProcessEnvelope(msg); log.E.Chk(err) {
-		kill()
-		return
-	}
-	if en == nil {
-		log.E.Ln("'silently' ignoring message")
+		if en == nil {
+			log.E.Ln("nil envelope label: ignoring message\n%s", string(msg))
+			kill()
+			chk.E(ws.Conn.Close())
+			return
+		}
+		// kill()
 		return
 	}
 	switch env := en.(type) {
@@ -231,7 +236,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 				log.D.Ln("user already authed")
 				break
 			}
-			log.I.Ln("user authenticated")
+			log.I.Ln("user authenticated", pubkey)
 			ws.SetAuthPubKey(pubkey)
 			close(ws.Authed)
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
@@ -249,4 +254,5 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			))
 		}
 	}
+	return
 }
