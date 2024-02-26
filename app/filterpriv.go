@@ -26,10 +26,14 @@ import (
 func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 	f *filter.T) (reject bool, msg string) {
 
+	ws := GetConnection(c)
 	authRequired := rl.Info.Limitation.AuthRequired
+	if !authRequired {
+		return
+	}
+	log.I.Ln("checking privilege", ws.RealRemote(), ws.AuthPubKey())
 	// check if the request filter kinds are privileged
 	privileged := kinds.IsPrivileged(f.Kinds...)
-	ws := GetConnection(c)
 	// if access requires auth, check that auth is present.
 	if (privileged || authRequired) && ws.AuthPubKey() == "" {
 		var reason string
@@ -44,16 +48,22 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 		}))
 		// send out authorization request
 		RequestAuth(c)
-		select {
-		case <-ws.Authed:
-			log.I.Ln("user authed", GetAuthed(c))
-		case <-c.Done():
-			log.D.Ln("context canceled while waiting for auth")
-		case <-time.After(10 * time.Second):
-			if ws.AuthPubKey() == "" {
-				return true,
-				fmt.Sprint("Authorization timeout from ", ws.RealRemote())
+ 	out:
+		for {
+			select {
+			case <-ws.Authed:
+				log.I.Ln("user authed", ws.RealRemote(), ws.AuthPubKey())
+				break out
+			case <-c.Done():
+				log.D.Ln("context canceled while waiting for auth")
+				break out
+ 			case <-time.After(30 * time.Second):
+				if ws.AuthPubKey() == "" {
+					return true,
+						fmt.Sprint("Authorization timeout from ", ws.RealRemote())
+				}
 			}
+
 		}
 	}
 	// if the user has now authed we can check if they have privileges

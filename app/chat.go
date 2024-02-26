@@ -146,6 +146,7 @@ after this you will not have to do this again unless there is a long idle, disco
 
 note that if you have NIP-42 enabled in the client and you are already authorised this notice will not appear
 `, decryptedStr, timestamp.Now(), ws.Challenge())
+			log.I.F("sending message to user\n%s", content)
 			reply = MakeReply(ev, content)
 			if reply, err = EncryptDM(reply, meSec, youPub); chk.E(err) {
 				return
@@ -195,7 +196,6 @@ func (rl *Relay) command(ev *event.T, cmd string) (err error) {
 			}
 		}
 	}
-	log.T.Ln("reply", reply.ToObject().String())
 	if reply, err = EncryptDM(reply, rl.Config.SecKey, ev.PubKey); chk.E(err) {
 		return
 	}

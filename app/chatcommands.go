@@ -90,6 +90,7 @@ type 'help' to see a list of valid commands`, strings.Join(args[1:], " "))
 			}
 		}
 	}
+	log.I.F("sending message to user\n%s", replyString)
 	reply = MakeReply(ev, fmt.Sprintf("%s%s", prefix, replyString))
 	return
 }
@@ -117,20 +118,23 @@ func commandHelp(cmd *Command, args ...string) (replyString string) {
 }
 
 func set(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error) {
-	var replytext string
+	var replyString string
 	if len(args) < 3 {
-		replytext = fmt.Sprintf(
+		replyString = fmt.Sprintf(
 			"wrong number of parameters, three required, got: %d '%s'\n\n",
 			len(args), strings.Join(args, " "))
-		replytext += commandHelp(cmd, append([]string{"help"}, args...)...)
-		reply = MakeReply(ev, replytext)
+		replyString += commandHelp(cmd, append([]string{"help"}, args...)...)
+		log.I.F("sending message to user\n%s", replyString)
+		reply = MakeReply(ev, replyString)
 		return
 	}
-	reply = MakeReply(ev, replytext)
+	reply = MakeReply(ev, replyString)
 	return
 }
 
 func list(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error) {
-	reply = MakeReply(ev, fmt.Sprintf("list not implemented yet\n args: %v\nevent: %s\nprefix: %s", args, ev.ToObject().String(), prefix))
+	replyString := fmt.Sprintf("list not implemented yet\n args: %v\nevent: %s\nprefix: %s", args, ev.ToObject().String(), prefix)
+	log.I.F("sending message to user\n%s", replyString)
+	reply = MakeReply(ev, replyString)
 	return
 }

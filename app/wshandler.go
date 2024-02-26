@@ -69,7 +69,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		ticker.Stop()
 		cancel()
 		if _, ok := rl.clients.Load(conn); ok {
-			chk.E(conn.Close())
+			chk.D(conn.Close())
 			rl.clients.Delete(conn)
 			RemoveListener(ws)
 		}

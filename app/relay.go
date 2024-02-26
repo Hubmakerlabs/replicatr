@@ -87,6 +87,8 @@ type Relay struct {
 	ACL *acl.T
 }
 
+// AuthCheck sends out a request if auth is required (this is an OnConnect
+// method).
 func (rl *Relay) AuthCheck(c context.T) {
 	if rl.Info.Limitation.AuthRequired {
 		RequestAuth(c)

@@ -16,6 +16,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 	listeners.Range(func(ws *relayws.WebSocket, subs ListenerMap) bool {
 
 		if ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
+			log.E.Ln("cannot broadcast to", ws.RealRemote(), "not authorized")
 			return true
 		}
 		log.T.Ln("broadcasting", ws.RealRemote(), ws.AuthPubKey(), subs.Size())
@@ -26,7 +27,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 					listener.filters, evt.ToObject().String())
 				return true
 			}
-			if kinds.IsPrivileged(evt.Kind) {
+			if kinds.IsPrivileged(evt.Kind) && rl.Info.Limitation.AuthRequired {
 				if ws.AuthPubKey() == "" {
 					log.T.Ln("not broadcasting privileged event to",
 						ws.RealRemote(), "not authenticated")
