@@ -1,8 +1,6 @@
 module github.com/Hubmakerlabs/replicatr
 
-go 1.21.0
-
-toolchain go1.22.0
+go 1.22
 
 require (
 	github.com/alexflint/go-arg v1.4.3
@@ -48,7 +46,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
-	github.com/herumi/bls-go-binary v1.32.0 // indirect
+	github.com/herumi/bls-go-binary v1.33.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/klauspost/compress v1.17.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
