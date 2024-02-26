@@ -1,4 +1,4 @@
-package agent_nostricgo
+package main
 
 import (
 	"fmt"
@@ -11,29 +11,29 @@ import (
 )
 
 type KeyValuePair struct {
-	Key   string   `json:"key"`
-	Value []string `json:"value"`
+	Key   string   `ic:"key"`
+	Value []string `ic:"value"`
 }
 
 type Event struct {
-	ID        string     `json:"id"`
-	Pubkey    string     `json:"pubkey"`
-	CreatedAt idl.Int    `json:"created_at"`
-	Kind      uint16     `json:"kind"`
-	Tags      [][]string `json:"tags"`
-	Content   string     `json:"content"`
-	Sig       string     `json:"sig"`
+	ID        string     `ic:"id"`
+	Pubkey    string     `ic:"pubkey"`
+	CreatedAt idl.Int    `ic:"created_at"`
+	Kind      uint16     `ic:"kind"`
+	Tags      [][]string `ic:"tags"`
+	Content   string     `ic:"content"`
+	Sig       string     `ic:"sig"`
 }
 
 type Filter struct {
-	IDs     []string       `json:"ids"`
-	Kinds   []uint16       `json:"kinds"`
-	Authors []string       `json:"authors"`
-	Tags    []KeyValuePair `json:"tags"`
-	Since   idl.Int        `json:"since"`
-	Until   idl.Int        `json:"until"`
-	Limit   idl.Int        `json:"limit"`
-	Search  string         `json:"search"`
+	IDs     []string       `ic:"ids"`
+	Kinds   []uint16       `ic:"kinds"`
+	Authors []string       `ic:"authors"`
+	Tags    []KeyValuePair `ic:"tags"`
+	Since   idl.Int        `ic:"since"`
+	Until   idl.Int        `ic:"until"`
+	Limit   idl.Int        `ic:"limit"`
+	Search  string         `ic:"search"`
 }
 
 type E struct {
@@ -47,18 +47,14 @@ type F struct {
 func SaveEvent(ag *agent.Agent, canisterID principal.Principal, event Event) (string, error) {
 	methodName := "save_event"
 	args := []any{event}
-	var result []any
-
-	err := ag.Call(canisterID, methodName, args, &result)
+	var result string
+	err := ag.Call(canisterID, methodName, args, []any{&result})
 	if err != nil {
 		return "", err
 	}
 
-	// Assuming the result is a single text value
 	if len(result) > 0 {
-		if res, ok := result[0].(string); ok {
-			return res, nil
-		}
+		return result, nil
 	}
 
 	return "", fmt.Errorf("unexpected result format")
@@ -69,106 +65,114 @@ func GetEvents(ag *agent.Agent, canisterID principal.Principal, filter Filter) (
 	args := []any{filter}
 	var result []Event
 
-	err := ag.Query(canisterID, methodName, args, &result)
+	err := ag.Query(canisterID, methodName, args, []any{&result})
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	return result, err
 }
 
-func LocalConfigHelper() (*agent.Agent, principal.Principal) {
-	identity := new(identity.AnonymousIdentity)
+func mapToEvent(item map[string]interface{}) (Event, error) {
 
-	// Parse the local replica URL
-	localReplicaURL, _ := url.Parse("http://localhost:46847/")
-
-	// Create a new agent configuration
-	cfg := agent.Config{
-		Identity:      identity,
-		IngressExpiry: 5 * time.Minute,
-		ClientConfig: &agent.ClientConfig{
-			Host: localReplicaURL,
-		},
+	event := Event{
+		ID: item["id"].(string),
 	}
 
-	// Initialize the agent with the configuration
-	ag, err := agent.New(cfg)
-	if err != nil {
-		panic(err)
-	}
-
-	canisterID, _ := principal.Decode("testnet_backend")
-
-	return ag, canisterID
+	return event, nil
 }
 
-func FilterToCandid(f filter.T)(Filter) {
-	return Filter{
-		f.IDs,
-		f.Kinds,
-		f.Authors,
-		f.Tags,
-		f.Since,
-		f.Until,
-		f.Limit,
-		f.Search
-}
+// func LocalConfigHelper() (*agent.Agent, principal.Principal) {
+// 	identity := new(identity.AnonymousIdentity)
 
-}
+// 	// Parse the local replica URL
+// 	localReplicaURL, _ := url.Parse("http://localhost:46847/")
 
-func EventToCandid(e event.T)(Event) {
-	return Event{
-		e.ID,
-		e.Pubkey,
-		e.CreatedAt,
-		e.Kind,
-		e.Tags,
-		e.Content,
-		e.Sig
-	}
-}
+// 	// Create a new agent configuration
+// 	cfg := agent.Config{
+// 		Identity:      identity,
+// 		IngressExpiry: 5 * time.Minute,
+// 		ClientConfig: &agent.ClientConfig{
+// 			Host: localReplicaURL,
+// 		},
+// 	}
 
-func CandidToEvent(e Event)(event.T){
-	return event.T{
-		e.ID,
-		e.Pubkey,
-		e.CreatedAt,
-		e.Kind,
-		e.Tags,
-		e.Content,
-		e.Sig
-	}
-}
+// 	// Initialize the agent with the configuration
+// 	ag, err := agent.New(cfg)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-func LocalGetEvents(f filter.T)([]event.T, error) {
-	ag, canisterID := LocalConfigHelper()
-	
-	filter := FilterToCandid(f)
+// 	canisterID, _ := principal.Decode("testnet_backend")
 
-	candidEvents, err := myiclib.GetEvents(ag, canisterID, filter)
-    if err != nil {
-        fmt.Println("Error getting events:", err)
-        return nil, err
-    }
+// 	return ag, canisterID
+// }
 
-	 var events []event.T
+// func FilterToCandid(f filter.T)(Filter) {
+// 	return Filter{
+// 		f.IDs,
+// 		f.Kinds,
+// 		f.Authors,
+// 		f.Tags,
+// 		f.Since,
+// 		f.Until,
+// 		f.Limit,
+// 		f.Search,
+// }
 
-	 // Iterate through the slice of Person structs
-	 for _, e := range candidEvents {
-		 // Add the Name field of each Person to the names slice
-		events = append(events, CandidToEvent(e))
-	 }
+// }
 
-	 return events,err
+// func EventToCandid(e event.T)(Event) {
+// 	return Event{
+// 		e.ID,
+// 		e.Pubkey,
+// 		e.CreatedAt,
+// 		e.Kind,
+// 		e.Tags,
+// 		e.Content,
+// 		e.Sig,
+// 	}
+// }
 
-}
+// func CandidToEvent(e Event)(event.T){
+// 	return event.T{
+// 		ID: e.ID,
+// 		PubKey: e.Pubkey,
+// 		CreatedAt: e.CreatedAt,
+// 		Kind: e.Kind,
+// 		Tags: e.Tags,
+// 		Content: e.Content,
+// 		Sig: e.Sig,
+// 	}
+// }
 
-func LocalSaveEvent(e event.T ) (string, error) {
-	ag, canisterID := LocalConfigHelper()
-	event := EventToCandid(e)
-	
+// func LocalGetEvents(f filter.T)([]event.T, error) {
+// 	ag, canisterID := LocalConfigHelper()
 
-	return SaveEvent(ag, canisterID, event)
-    
-}
+// 	filter := FilterToCandid(f)
+
+// 	candidEvents, err := GetEvents(ag, canisterID, filter)
+//     if err != nil {
+//         fmt.Println("Error getting events:", err)
+//         return nil, err
+//     }
+
+// 	 var events []event.T
+
+// 	 // Iterate through the slice of Person structs
+// 	 for _, e := range candidEvents {
+// 		 // Add the Name field of each Person to the names slice
+// 		events = append(events, CandidToEvent(e))
+// 	 }
+
+// 	 return events,err
+
+// }
+
+// func LocalSaveEvent(e event.T ) (string, error) {
+// 	ag, canisterID := LocalConfigHelper()
+// 	event := EventToCandid(e)
+
+// 	return SaveEvent(ag, canisterID, event)
+
+// }
