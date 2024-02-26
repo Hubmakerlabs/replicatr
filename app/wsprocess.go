@@ -8,6 +8,7 @@ import (
 
 	"github.com/fasthttp/websocket"
 	"github.com/minio/sha256-simd"
+	"mleku.dev/git/nostr/auth"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/envelopes"
 	"mleku.dev/git/nostr/envelopes/authenvelope"
@@ -21,7 +22,6 @@ import (
 	"mleku.dev/git/nostr/hex"
 	"mleku.dev/git/nostr/interfaces/enveloper"
 	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/nip42"
 	"mleku.dev/git/nostr/relayws"
 )
 
@@ -63,15 +63,15 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	if deny {
 		log.E.F("denying access to '%s' %s: dropping message", ws.RealRemote(),
 			ws.AuthPubKey())
-		kill()
+		// kill()
 		return
 	}
 	var en enveloper.I
 	if en, _, err = envelopes.ProcessEnvelope(msg); log.E.Chk(err) {
 		if en == nil {
 			log.E.Ln("nil envelope label: ignoring message\n%s", string(msg))
-			kill()
-			chk.E(ws.Conn.Close())
+			// kill()
+			// chk.E(ws.Conn.Close())
 			return
 		}
 		// kill()
@@ -140,7 +140,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		var reason string
 		if ok = !chk.E(err); !ok {
 			reason = err.Error()
-			if strings.HasPrefix(reason, nip42.AuthRequired) {
+			if strings.HasPrefix(reason, auth.Required) {
 				RequestAuth(c)
 			}
 			if strings.HasPrefix(reason, "duplicate") {
@@ -182,11 +182,6 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		// handle each filter separately -- dispatching events as they're loaded
 		// from databases
 		for _, f := range env.Filters {
-			// // if we are not given a limit we will be stingy and only return 5
-			// // results
-			// if f.Limit != nil && *f.Limit == 0 {
-			// 	*f.Limit = 5
-			// }
 			err = rl.handleFilter(handleFilterParams{
 				reqCtx,
 				env.SubscriptionID,
@@ -197,11 +192,10 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			if log.T.Chk(err) {
 				// fail everything if any filter is rejected
 				reason := err.Error()
-				if strings.HasPrefix(reason, nip42.AuthRequired) {
+				if strings.HasPrefix(reason, auth.Required) {
 					RequestAuth(c)
 				}
 				if strings.HasPrefix(reason, "blocked") {
-					// kill()
 					return
 				}
 				chk.E(ws.WriteEnvelope(&closedenvelope.T{
@@ -225,13 +219,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			ws.AuthPubKey(), en.ToArray().String())
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
-		log.T.Ln("received auth response envelope from",
+		log.I.Ln("received auth response envelope from",
 			ws.RealRemote(), en.ToArray().String())
 		// log.D.Ln("received auth response")
 		wsBaseUrl := strings.Replace(rl.ServiceURL.Load(), "http", "ws", 1)
 		var ok bool
 		var pubkey string
-		if pubkey, ok, err = nip42.ValidateAuthEvent(env.Event, ws.Challenge(), wsBaseUrl); ok {
+		if pubkey, ok, err = auth.Validate(env.Event, ws.Challenge(), wsBaseUrl); ok {
 			if ws.AuthPubKey() == env.Event.PubKey {
 				log.D.Ln("user already authed")
 				break
@@ -243,6 +237,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 				ID: env.Event.ID,
 				OK: true,
 			}))
+			return
 		} else {
 			log.E.Ln("user sent bogus auth response")
 			chk.E(ws.WriteMessage(

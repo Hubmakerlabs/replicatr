@@ -52,6 +52,6 @@ func (rl *Relay) Export(db *badger.Backend, filename string) {
 	}))
 	sort.Sort(evs)
 	for i := range evs {
-		fmt.Fprintln(fh, evs[i].ToObject().String())
+		_, _ = fmt.Fprintln(fh, evs[i].ToObject().String())
 	}
 }

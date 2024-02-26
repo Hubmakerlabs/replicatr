@@ -43,35 +43,35 @@ func (cfg *C) PrintEvents(evs []*event.T, f Follows, asJson, extra bool) {
 	fgBlue := color.New(color.Blue)
 	for _, ev := range evs {
 		if profile, ok := f[ev.PubKey]; ok {
-			fmt.Fprintln(buffer, fgRed.Sprint(profile.Name))
-			fmt.Fprintln(buffer, ev.Content)
+			_, _ = fmt.Fprintln(buffer, fgRed.Sprint(profile.Name))
+			_, _ = fmt.Fprintln(buffer, ev.Content)
 			var rls []string
 			if rls, ok = cfg.FollowsRelays[ev.PubKey]; ok {
 				if nevent, err := bech32encoding.EncodeEvent(ev.ID, rls, ev.PubKey); !chk.D(err) {
-					fmt.Fprint(buffer, fgBlue.Sprint(cfg.EventURLPrefix, nevent))
+					_, _ = fmt.Fprint(buffer, fgBlue.Sprint(cfg.EventURLPrefix, nevent))
 				}
 			} else {
 				note, err := bech32encoding.EncodeNote(ev.ID.String())
 				if err != nil {
 					note = ev.ID.String()
 				}
-				fmt.Fprint(buffer, fgBlue.Sprint(note))
+				_, _ = fmt.Fprint(buffer, fgBlue.Sprint(note))
 			}
-			fmt.Fprintln(buffer, " ", fgBlue.Sprint(ev.CreatedAt.Time()))
+			_, _ = fmt.Fprintln(buffer, " ", fgBlue.Sprint(ev.CreatedAt.Time()))
 		} else {
-			fmt.Fprint(buffer, fgRed.Sprint("pubkey "))
-			fmt.Fprint(buffer, fgRed.Sprint(ev.PubKey))
+			_, _ = fmt.Fprint(buffer, fgRed.Sprint("pubkey "))
+			_, _ = fmt.Fprint(buffer, fgRed.Sprint(ev.PubKey))
 			// fgHiBlue.Fprint(buffer, " note ID: ")
 			note, err := bech32encoding.EncodeNote(ev.ID.String())
 			if err != nil {
 				note = ev.ID.String()
 			}
-			fmt.Fprint(buffer, " ", fgBlue.Sprint(cfg.EventURLPrefix, note))
-			fmt.Fprint(buffer, " ", fgBlue.Sprint(ev.CreatedAt.Time()))
-			fmt.Fprintln(buffer)
-			fmt.Fprintln(buffer, ev.Content)
+			_, _ = fmt.Fprint(buffer, " ", fgBlue.Sprint(cfg.EventURLPrefix, note))
+			_, _ = fmt.Fprint(buffer, " ", fgBlue.Sprint(ev.CreatedAt.Time()))
+			_, _ = fmt.Fprintln(buffer)
+			_, _ = fmt.Fprintln(buffer, ev.Content)
 		}
-		fmt.Fprintln(buffer)
+		_, _ = fmt.Fprintln(buffer)
 	}
-	fmt.Print(buffer.String())
+	_, _ = fmt.Print(buffer.String())
 }

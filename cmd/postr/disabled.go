@@ -206,10 +206,10 @@ package main
 // 	ev.CreatedAt = timestamp.Now()
 // 	ev.Kind = kind.EncryptedDirectMessage
 // 	var secret []byte
-// 	if secret, err = nip4.ComputeSharedSecret(secHex, ev.PubKey); chk.D(err) {
+// 	if secret, err = crypto.ComputeSharedSecret(secHex, ev.PubKey); chk.D(err) {
 // 		return
 // 	}
-// 	if ev.Content, err = nip4.Encrypt(ev.Content, secret); chk.D(err) {
+// 	if ev.Content, err = crypto.Encrypt(ev.Content, secret); chk.D(err) {
 // 		return
 // 	}
 // 	if err = ev.Sign(secHex); chk.D(err) {

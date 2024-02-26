@@ -13,7 +13,7 @@ import (
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/keys"
-	"mleku.dev/git/nostr/nip11"
+	"mleku.dev/git/nostr/relayinfo"
 	"mleku.dev/git/nostr/subscriptionid"
 )
 
@@ -38,7 +38,7 @@ type (
 	OverwriteResponseEvent    func(c context.T, ev *event.T)
 	Events                    func(c context.T, ev *event.T) error
 	Hook                      func(c context.T)
-	OverwriteRelayInformation func(c context.T, r *http.Request, info *nip11.Info) *nip11.Info
+	OverwriteRelayInformation func(c context.T, r *http.Request, info *relayinfo.T) *relayinfo.T
 	QueryEvents               func(c context.T, f *filter.T) (C chan *event.T, err error)
 	CountEvents               func(c context.T, f *filter.T) (cnt int64, err error)
 	OnEventSaved              func(c context.T, ev *event.T)
@@ -62,7 +62,7 @@ type Relay struct {
 	OnDisconnect           []Hook
 	OnEventSaved           []OnEventSaved
 	Config                 *Config
-	Info                   *nip11.Info
+	Info                   *relayinfo.T
 	// for establishing websockets
 	upgrader websocket.Upgrader
 	// keep a connection reference to all connected clients for Server.Shutdown
@@ -93,7 +93,7 @@ func (rl *Relay) AuthCheck(c context.T) {
 	}
 }
 
-func NewRelay(inf *nip11.Info,
+func NewRelay(inf *relayinfo.T,
 	conf *Config) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
@@ -107,7 +107,7 @@ func NewRelay(inf *nip11.Info,
 	chk.E(err)
 	r = &Relay{
 		Config: conf,
-		Info:   nip11.NewInfo(inf),
+		Info:   relayinfo.NewInfo(inf),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  ReadBufferSize,
 			WriteBufferSize: WriteBufferSize,

@@ -19,7 +19,6 @@ import (
 	"mleku.dev/git/nostr/keys"
 	"mleku.dev/git/nostr/kind"
 	"mleku.dev/git/nostr/kinds"
-	"mleku.dev/git/nostr/nip4"
 	"mleku.dev/git/nostr/pointers"
 	"mleku.dev/git/nostr/tag"
 	"mleku.dev/git/nostr/tags"
@@ -83,7 +82,7 @@ func pay(cfg *C, invoice string) (err error) {
 	}
 	defer chk.D(rl.Close())
 
-	ss, err := nip4.ComputeSharedSecret(secret, wallet)
+	ss, err := crypto.ComputeSharedSecret(secret, wallet)
 	if chk.D(err) {
 		return err
 	}
@@ -94,7 +93,7 @@ func pay(cfg *C, invoice string) (err error) {
 	if chk.D(err) {
 		return err
 	}
-	content, err := nip4.Encrypt(string(b), ss)
+	content, err := crypto.Encrypt(string(b), ss)
 	if chk.D(err) {
 		return err
 	}
@@ -132,7 +131,7 @@ func pay(cfg *C, invoice string) (err error) {
 
 	er := <-sub.Events
 	var c []byte
-	c, err = nip4.Decrypt(er.Content, ss)
+	c, err = crypto.Decrypt(er.Content, ss)
 	content = string(c)
 	if chk.D(err) {
 		return err

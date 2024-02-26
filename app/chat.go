@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/crypt"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/nip4"
 	"mleku.dev/git/nostr/tags"
 	"mleku.dev/git/nostr/timestamp"
 )
@@ -18,10 +18,10 @@ func DecryptDM(ev *event.T, meSec, youPub string) (decryptedStr string, err erro
 	switch ev.Kind {
 	case kind.EncryptedDirectMessage:
 		var secret, decrypted []byte
-		if secret, err = nip4.ComputeSharedSecret(meSec, youPub); chk.E(err) {
+		if secret, err = crypt.ComputeSharedSecret(meSec, youPub); chk.E(err) {
 			return
 		}
-		if decrypted, err = nip4.Decrypt(ev.Content, secret); chk.E(err) {
+		if decrypted, err = crypt.Decrypt(ev.Content, secret); chk.E(err) {
 			return
 		}
 		decryptedStr = string(decrypted)
@@ -36,10 +36,10 @@ func EncryptDM(ev *event.T, meSec, youPub string) (evo *event.T, err error) {
 	var secret []byte
 	switch ev.Kind {
 	case kind.EncryptedDirectMessage:
-		if secret, err = nip4.ComputeSharedSecret(meSec, youPub); chk.E(err) {
+		if secret, err = crypt.ComputeSharedSecret(meSec, youPub); chk.E(err) {
 			return
 		}
-		if ev.Content, err = nip4.Encrypt(ev.Content, secret); chk.E(err) {
+		if ev.Content, err = crypt.Encrypt(ev.Content, secret); chk.E(err) {
 			return
 		}
 		if err = ev.Sign(meSec); chk.E(err) {

@@ -30,7 +30,7 @@ func GetListeningFilters() (respFilters filters.T) {
 				for _, respFilter := range respFilters {
 					// check if this filter specifically is already added to
 					// respFilters
-					if filter.FilterEqual(listenerFilter, respFilter) {
+					if filter.Equal(listenerFilter, respFilter) {
 						goto next
 					}
 				}

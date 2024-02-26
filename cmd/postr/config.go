@@ -16,7 +16,6 @@ import (
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/kind"
 	"mleku.dev/git/nostr/kinds"
-	"mleku.dev/git/nostr/nip4"
 )
 
 // RelayPerms is
@@ -158,11 +157,11 @@ func (cfg *C) Decode(ev *event.T) (err error) {
 	} else {
 		sp = ev.PubKey
 	}
-	ss, err := nip4.ComputeSharedSecret(sk, sp)
+	ss, err := crypto.ComputeSharedSecret(sk, sp)
 	if chk.D(err) {
 		return err
 	}
-	content, err := nip4.Decrypt(ev.Content, ss)
+	content, err := crypto.Decrypt(ev.Content, ss)
 	if chk.D(err) {
 		return err
 	}
@@ -250,7 +249,7 @@ func (cfg *C) ZapInfo(pub string) (*Lnurlp, error) {
 	if rl == nil {
 		return nil, errors.New("cannot connect relays")
 	}
-	defer rl.Close()
+	defer chk.E(rl.Close())
 	// get set-metadata
 
 	f := filter.T{

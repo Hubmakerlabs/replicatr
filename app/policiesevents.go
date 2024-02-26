@@ -67,12 +67,12 @@ func PreventLargeTags(maxTagValueLen int) RejectEvent {
 // specified ones.
 func RestrictToSpecifiedKinds(kinds ...kind.T) RejectEvent {
 	var kMax, kMin kind.T
-	for _, kind := range kinds {
-		if kind > kMax {
-			kMax = kind
+	for _, k := range kinds {
+		if k > kMax {
+			kMax = k
 		}
-		if kind < kMin {
-			kMin = kind
+		if k < kMin {
+			kMin = k
 		}
 	}
 	return func(c context.T, ev *event.T) (rej bool, msg string) {

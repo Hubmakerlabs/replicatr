@@ -36,8 +36,8 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 				deny = false
 			}
 			if deny {
-				// log.T.F("denying access to '%s': dropping message",
-				// 	p.ws.RealRemote.Load())
+				log.T.F("denying access to '%s': dropping message",
+					p.ws.RealRemote())
 				return
 			}
 			if err = p.ws.WriteMessage(websocket.PingMessage, nil); log.T.Chk(err) {

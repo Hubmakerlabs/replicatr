@@ -45,7 +45,7 @@ func Ingest(args *Config) int {
 	oldest := args.Since
 	now := time.Now().Unix()
 	var downAuthed, upAuthed bool
-	var increment int64 = 60 * 60 * args.Interval
+	var increment = 60 * 60 * args.Interval
 	for i := oldest; i < now; i += increment {
 		// create the subscription to the download relay
 		var sub *subscription.T

@@ -1,13 +1,14 @@
 package app
 
 import (
+	"fmt"
 	"time"
 
+	"mleku.dev/git/nostr/auth"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/envelopes/closedenvelope"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/kinds"
-	"mleku.dev/git/nostr/nip42"
 	"mleku.dev/git/nostr/normalize"
 	"mleku.dev/git/nostr/subscriptionid"
 	"mleku.dev/git/nostr/tag"
@@ -39,24 +40,26 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 		}
 		chk.E(ws.WriteEnvelope(&closedenvelope.T{
 			ID:     id,
-			Reason: normalize.Reason(reason, nip42.AuthRequired),
+			Reason: normalize.Reason(reason, auth.Required),
 		}))
 		// send out authorization request
 		RequestAuth(c)
 		select {
 		case <-ws.Authed:
-			// log.D.Ln("user authed", GetAuthed(c))
+			log.I.Ln("user authed", GetAuthed(c))
 		case <-c.Done():
 			log.D.Ln("context canceled while waiting for auth")
 		case <-time.After(10 * time.Second):
 			if ws.AuthPubKey() == "" {
-				return true, "Authorization timeout"
+				return true,
+				fmt.Sprint("Authorization timeout from ", ws.RealRemote())
 			}
 		}
 	}
 	// if the user has now authed we can check if they have privileges
 	if authRequired && ws.AuthPubKey() == "" {
 		// acl enabled but no pubkey, unauthorized
+		log.I.Ln("waited for auth but none came")
 		return true, "Unauthorized"
 	}
 	if !privileged {

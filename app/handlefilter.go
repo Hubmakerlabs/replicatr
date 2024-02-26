@@ -43,7 +43,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(h.c, h.id, h.f); rej {
-			return errors.New(normalize.Reason(msg, "blocked"))
+			return log.D.Err(normalize.Reason(msg, "blocked"))
 		}
 	}
 	// run the functions to query events (generally just one, but we might be
@@ -82,7 +82,8 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					// log.D.Ln(h.ws.RealRemote, "parties", parties)
 					if !parties.Contains(h.ws.AuthPubKey()) {
 						log.D.Ln("not sending privileged event to user "+
-							"without matching auth", parties, h.ws.AuthPubKey())
+							"without matching auth", parties,
+							h.ws.RealRemote(), h.ws.AuthPubKey())
 						continue
 					}
 					// then check the event
