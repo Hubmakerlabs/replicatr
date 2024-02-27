@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/alexflint/go-arg"
-	"mleku.dev/git/interrupt"
 	"mleku.dev/git/nostr/eventstore/badger"
 	"mleku.dev/git/nostr/keys"
 	"mleku.dev/git/nostr/relayinfo"
@@ -190,16 +188,8 @@ func main() {
 		Addr:    args.Listen,
 		Handler: rl,
 	}
-	interrupt.AddHandler(func() {
-		chk.E(srvr.Close())
-		chk.E(exec.Command("stty", "-F", "/dev/tty", "echo").Run())
-		chk.E(exec.Command("stty", "-F", "/dev/tty", "-cbreak", "min", "1").Run())
-	})
-	// disable input buffering
-	chk.E(exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run())
-	// do not display entered characters on the screen
-	chk.E(exec.Command("stty", "-F", "/dev/tty", "-echo").Run())
 	go func() {
+		log.I.Ln("type 1-7 <enter> to change log levels, type q <enter> to quit")
 		var b = make([]byte, 1)
 		for {
 			_, err = os.Stdin.Read(b)
@@ -226,8 +216,8 @@ func main() {
 				case '7':
 					fmt.Println("logging trace")
 					slog.SetLogLevel(slog.Trace)
-				case 27:
-					interrupt.Request()
+				case 'q':
+					chk.E(srvr.Close())
 				}
 			}
 		}
@@ -239,6 +229,6 @@ func main() {
 		rl.Export(db.Badger, args.ExportCmd.ToFile)
 	default:
 		log.I.Ln("listening on", args.Listen)
-		go chk.E(srvr.ListenAndServe())
+		chk.E(srvr.ListenAndServe())
 	}
 }
