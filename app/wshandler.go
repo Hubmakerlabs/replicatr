@@ -62,14 +62,14 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		log.T.Ln("inbound connection from", rr)
 	}
 	kill := func() {
-		log.D.Ln("disconnecting websocket", rr)
+		log.T.Ln("disconnecting websocket", rr)
 		for _, onDisconnect := range rl.OnDisconnect {
 			onDisconnect(c)
 		}
 		ticker.Stop()
 		cancel()
 		if _, ok := rl.clients.Load(conn); ok {
-			chk.D(conn.Close())
+			chk.T(conn.Close())
 			rl.clients.Delete(conn)
 			RemoveListener(ws)
 		}

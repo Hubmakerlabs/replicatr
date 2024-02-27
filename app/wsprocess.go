@@ -34,6 +34,10 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		err = log.E.Err("empty message, probably dropped connection")
 		return
 	}
+	if ws.OffenseCount.Load() > IgnoreAfter {
+		err = log.E.Err("client keeps sending wrong req envelopes")
+		return
+	}
 	strMsg := string(msg)
 	if ws.OffenseCount.Load() > IgnoreAfter {
 		if len(strMsg) > 256 {
@@ -77,7 +81,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	var en enveloper.I
 	if en, _, err = envelopes.ProcessEnvelope(msg); log.E.Chk(err) {
 		if en == nil {
-			log.E.Ln("nil envelope label: ignoring message\n%s", string(msg))
+			log.E.F("nil envelope label: ignoring message\n%s", string(msg))
+			ws.OffenseCount.Inc()
 			// kill()
 			// chk.E(ws.Conn.Close())
 			return

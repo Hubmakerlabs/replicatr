@@ -80,20 +80,14 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					copy(parties[:len(h.f.Authors)], h.f.Authors)
 					copy(parties[len(h.f.Authors):], receivers)
 					copy(parties[len(h.f.Authors)+len(receivers):], receivers2)
-					// log.D.Ln(h.ws.RealRemote, "parties", parties)
-					if !parties.Contains(h.ws.AuthPubKey()) {
-						log.D.Ln("not sending privileged event to user "+
-							"without matching auth", parties,
-							h.ws.RealRemote(), h.ws.AuthPubKey())
-						continue
-					}
 					// then check the event
 					parties = tag.T{ev.PubKey}
 					pTags := ev.Tags.GetAll("p")
 					for i := range pTags {
 						parties = append(parties, pTags[i][1])
 					}
-					if !parties.Contains(h.ws.AuthPubKey()) {
+					if !parties.Contains(h.ws.AuthPubKey()) &&
+						rl.Info.Limitation.AuthRequired {
 						log.D.Ln("not broadcasting privileged event to",
 							h.ws.RealRemote(), h.ws.AuthPubKey(),
 							"not party to event")
