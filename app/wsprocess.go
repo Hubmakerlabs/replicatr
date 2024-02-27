@@ -25,6 +25,8 @@ import (
 	"mleku.dev/git/nostr/relayws"
 )
 
+const IgnoreAfter = 16
+
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	kill func(), ws *relayws.WebSocket) (err error) {
 
@@ -33,8 +35,14 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		return
 	}
 	strMsg := string(msg)
-	if len(strMsg) > 256 {
-		strMsg = strMsg[:256]
+	if ws.OffenseCount.Load() > IgnoreAfter {
+		if len(strMsg) > 256 {
+			strMsg = strMsg[:256]
+		}
+		log.T.Ln("dropping message due to over", IgnoreAfter,
+			"errors from this client on this connection",
+			ws.RealRemote(), ws.AuthPubKey(), strMsg)
+		return
 	}
 	log.T.Ln("processing message", ws.RealRemote(),
 		ws.AuthPubKey(), strMsg)

@@ -52,6 +52,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	for _, query := range rl.QueryEvents {
 		ch := make(chan *event.T)
 		if ch, err = query(h.c, h.f); chk.E(err) {
+			h.ws.OffenseCount.Inc()
 			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
 			h.eose.Done()
 			continue
@@ -67,7 +68,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					ovw(h.c, ev)
 				}
 				if kinds.IsPrivileged(ev.Kind) {
-					if h.ws.AuthPubKey() == "" {
+					if h.ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
 						log.D.Ln("not broadcasting privileged event to",
 							h.ws.RealRemote(), "not authenticated")
 						continue
