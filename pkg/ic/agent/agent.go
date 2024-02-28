@@ -1,14 +1,17 @@
-package main
+package agent
 
 import (
 	"fmt"
 
-	agent "github.com/aviate-labs/agent-go"
+	agent_go "github.com/aviate-labs/agent-go"
 	"github.com/aviate-labs/agent-go/candid/idl"
 	"github.com/aviate-labs/agent-go/principal"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filter"
 )
+
+const DefaultHost = "http://localhost:46847"
+const DefaultCanister = "avqkn-guaaa-aaaaa-qaaea-cai"
 
 type KeyValuePair struct {
 	Key   string   `ic:"key"`
@@ -44,7 +47,7 @@ type F struct {
 	Filter filter.T
 }
 
-func SaveEvent(ag *agent.Agent, canisterID principal.Principal, event Event) (string, error) {
+func SaveEvent(ag *agent_go.Agent, canisterID principal.Principal, event Event) (string, error) {
 	methodName := "save_event"
 	args := []any{event}
 	var result string
@@ -60,7 +63,7 @@ func SaveEvent(ag *agent.Agent, canisterID principal.Principal, event Event) (st
 	return "", fmt.Errorf("unexpected result format")
 }
 
-func GetEvents(ag *agent.Agent, canisterID principal.Principal, filter Filter) ([]Event, error) {
+func GetEvents(ag *agent_go.Agent, canisterID principal.Principal, filter Filter) ([]Event, error) {
 	methodName := "get_events"
 	args := []any{filter}
 	var result []Event
@@ -82,23 +85,23 @@ func mapToEvent(item map[string]interface{}) (Event, error) {
 	return event, nil
 }
 
-// func LocalConfigHelper() (*agent.Agent, principal.Principal) {
+// func LocalConfigHelper() (*agent_go.Agent, principal.Principal) {
 // 	identity := new(identity.AnonymousIdentity)
 
 // 	// Parse the local replica URL
 // 	localReplicaURL, _ := url.Parse("http://localhost:46847/")
 
 // 	// Create a new agent configuration
-// 	cfg := agent.Config{
+// 	cfg := agent_go.Config{
 // 		Identity:      identity,
 // 		IngressExpiry: 5 * time.Minute,
-// 		ClientConfig: &agent.ClientConfig{
+// 		ClientConfig: &agent_go.ClientConfig{
 // 			Host: localReplicaURL,
 // 		},
 // 	}
 
 // 	// Initialize the agent with the configuration
-// 	ag, err := agent.New(cfg)
+// 	ag, err := agent_go.New(cfg)
 // 	if err != nil {
 // 		panic(err)
 // 	}

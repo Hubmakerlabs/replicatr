@@ -31,9 +31,9 @@
 # ...even if they are in subdirectories
 !*/
 
-app/testnet/*
-!app/testnet/src/
-!app/testnet/src/**/*
+cmd/testnet/*
+!cmd/testnet/src/
+!cmd/testnet/src/**/*
 
 
 

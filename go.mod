@@ -4,6 +4,7 @@ go 1.22
 
 require (
 	github.com/alexflint/go-arg v1.4.3
+	github.com/aviate-labs/agent-go v0.3.3
 	github.com/dgraph-io/badger/v4 v4.2.0
 	github.com/fasthttp/websocket v1.5.7
 	github.com/fatih/color v1.16.0
@@ -27,7 +28,6 @@ require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/alexflint/go-scalar v1.1.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
-	github.com/aviate-labs/agent-go v0.3.3 // indirect
 	github.com/aviate-labs/leb128 v0.3.0 // indirect
 	github.com/aviate-labs/secp256k1 v0.0.0-5e6736a // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect

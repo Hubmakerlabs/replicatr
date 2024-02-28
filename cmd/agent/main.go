@@ -6,13 +6,14 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/aviate-labs/agent-go"
+	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
+	agent_go "github.com/aviate-labs/agent-go"
 	"github.com/aviate-labs/agent-go/candid/idl"
 	"github.com/aviate-labs/agent-go/principal"
 )
 
-func createRandomEvent(i int) Event {
-	return Event{
+func createRandomEvent(i int) agent.Event {
+	return agent.Event{
 		ID:        fmt.Sprintf("eventID-%d", i),
 		Pubkey:    fmt.Sprintf("pubkey-%d", i),
 		CreatedAt: idl.NewInt(time.Now().Unix()),
@@ -24,22 +25,19 @@ func createRandomEvent(i int) Event {
 }
 
 func main() {
-	// Setup randomness
-
-	rand.Seed(time.Now().UnixNano())
 	// Initialize the agent with the configuration for a local replica
-	localReplicaURL, _ := url.Parse("http://localhost:46847")
-	cfg := agent.Config{
+	localReplicaURL, _ := url.Parse(agent.DefaultHost)
+	cfg := agent_go.Config{
 		FetchRootKey: true,
-		ClientConfig: &agent.ClientConfig{Host: localReplicaURL},
+		ClientConfig: &agent_go.ClientConfig{Host: localReplicaURL},
 	}
-	ag, err := agent.New(cfg)
+	ag, err := agent_go.New(cfg)
 	if err != nil {
 		fmt.Println("Failed to create agent:", err)
 		return
 	}
 
-	canisterID, err := principal.Decode("avqkn-guaaa-aaaaa-qaaea-cai")
+	canisterID, err := principal.Decode(agent.DefaultCanister)
 	if err != nil {
 		fmt.Printf("Unable to parse canisterID: %v\n", err)
 	}
@@ -47,7 +45,7 @@ func main() {
 	// Create and save random events
 	for i := 0; i < 5; i++ {
 		event := createRandomEvent(i)
-		_, err := SaveEvent(ag, canisterID, event)
+		_, err := agent.SaveEvent(ag, canisterID, event)
 		if err != nil {
 			fmt.Printf("Failed to save event %d: %v\n", i, err)
 			continue
@@ -56,7 +54,7 @@ func main() {
 	}
 
 	// Create a filter to query events
-	filter := Filter{
+	filter := agent.Filter{
 		Since:  idl.NewInt(time.Now().Add(-24 * time.Hour).Unix()),
 		Until:  idl.NewInt(time.Now().Unix()),
 		Limit:  idl.NewInt(10),
@@ -64,7 +62,7 @@ func main() {
 	}
 
 	// Query events based on the filter
-	events, err := GetEvents(ag, canisterID, filter)
+	events, err := agent.GetEvents(ag, canisterID, filter)
 	if err != nil {
 		fmt.Println("Failed to query events:", err)
 		return
