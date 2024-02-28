@@ -7,7 +7,7 @@ import (
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/eventstore/badger"
 	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/nip11"
+	"mleku.dev/git/nostr/relayinfo"
 	"mleku.dev/git/slog"
 )
 
@@ -21,7 +21,7 @@ type Backend struct {
 // for now this is just a stub that calls all of the badger.Backend methods,
 // later this will include the ICP storage driver functionality.
 
-func (b *Backend) Init(inf *nip11.Info) (err error) {
+func (b *Backend) Init(inf *relayinfo.T) (err error) {
 	if err = b.Badger.Init(inf); chk.D(err) {
 		return
 	}

@@ -14,6 +14,7 @@ import (
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/keys"
 	"mleku.dev/git/nostr/nip11"
+	"mleku.dev/git/nostr/relayinfo"
 	"mleku.dev/git/nostr/subscriptionid"
 )
 
@@ -62,7 +63,7 @@ type Relay struct {
 	OnDisconnect           []Hook
 	OnEventSaved           []OnEventSaved
 	Config                 *Config
-	Info                   *nip11.Info
+	Info                   *relayinfo.T
 	// for establishing websockets
 	upgrader websocket.Upgrader
 	// keep a connection reference to all connected clients for Server.Shutdown
@@ -93,7 +94,7 @@ func (rl *Relay) AuthCheck(c context.T) {
 	}
 }
 
-func NewRelay(inf *nip11.Info,
+func NewRelay(inf *relayinfo.T,
 	conf *Config) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
@@ -107,7 +108,7 @@ func NewRelay(inf *nip11.Info,
 	chk.E(err)
 	r = &Relay{
 		Config: conf,
-		Info:   nip11.NewInfo(inf),
+		Info:   relayinfo.NewInfo(inf),
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  ReadBufferSize,
 			WriteBufferSize: WriteBufferSize,

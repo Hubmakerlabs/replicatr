@@ -14,7 +14,7 @@ import (
 	"mleku.dev/git/interrupt"
 	"mleku.dev/git/nostr/eventstore/badger"
 	"mleku.dev/git/nostr/keys"
-	"mleku.dev/git/nostr/nip11"
+	"mleku.dev/git/nostr/relayinfo"
 	"mleku.dev/git/nostr/tag"
 	"mleku.dev/git/nostr/wire/object"
 	"mleku.dev/git/slog"
@@ -41,21 +41,21 @@ func main() {
 	log.D.F("using profile directory: %s", args.Profile)
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
-	inf := *nip11.NewInfo(nil)
+	inf := *relayinfo.NewInfo(nil)
 	// initialize configuration with whatever has been read from the CLI.
 	if args.InitCfgCmd != nil {
 		// generate a relay identity key if one wasn't given
 		if args.SecKey == "" {
 			args.SecKey = keys.GeneratePrivateKey()
 		}
-		inf = nip11.Info{
+		inf = relayinfo.T{
 			Name:        args.Name,
 			Description: args.Description,
 			PubKey:      args.Pubkey,
 			Contact:     args.Contact,
 			Software:    AppName,
 			Version:     Version,
-			Limitation: nip11.Limits{
+			Limitation: relayinfo.Limits{
 				MaxMessageLength: app.MaxMessageSize,
 				Oldest:           1640305963,
 				// AuthRequired:     args.AuthRequired,
@@ -66,7 +66,7 @@ func main() {
 			Tags:           tag.T{},
 			PostingPolicy:  "",
 			PaymentsURL:    "",
-			Fees:           nip11.Fees{},
+			Fees:           relayinfo.Fees{},
 			Icon:           args.Icon,
 		}
 		if err = args.Save(configPath); chk.E(err) {
@@ -120,14 +120,14 @@ func main() {
 		}
 		log.D.S(conf)
 		if err = inf.Load(infoPath); chk.E(err) {
-			inf = nip11.Info{
+			inf = relayinfo.T{
 				Name:        args.Name,
 				Description: args.Description,
 				PubKey:      args.Pubkey,
 				Contact:     args.Contact,
 				Software:    AppName,
 				Version:     Version,
-				Limitation: nip11.Limits{
+				Limitation: relayinfo.Limits{
 					MaxMessageLength: app.MaxMessageSize,
 					Oldest:           1640305963,
 					AuthRequired:     args.AuthRequired,
@@ -138,7 +138,7 @@ func main() {
 				Tags:           tag.T{},
 				PostingPolicy:  "",
 				PaymentsURL:    "",
-				Fees:           nip11.Fees{},
+				Fees:           relayinfo.Fees{},
 				Icon:           args.Icon,
 			}
 			log.D.F("failed to load relay information document: '%s' "+
@@ -151,20 +151,20 @@ func main() {
 	log.D.S(&inf)
 	rl := app.NewRelay(&inf, &args)
 	rl.Info.AddNIPs(
-		nip11.BasicProtocol.Number,            // events, envelopes and filters
-		nip11.FollowList.Number,               // follow lists
-		nip11.EncryptedDirectMessage.Number,   // encrypted DM
-		nip11.MappingNostrKeysToDNS.Number,    // DNS
-		nip11.EventDeletion.Number,            // event delete
-		nip11.RelayInformationDocument.Number, // relay information document
-		nip11.NostrMarketplace.Number,         // marketplace
-		nip11.Reposts.Number,                  // reposts
-		nip11.Bech32EncodedEntities.Number,    // bech32 encodings
-		nip11.LongFormContent.Number,          // long form
-		nip11.PublicChat.Number,               // public chat
-		nip11.UserStatuses.Number,             // user statuses
-		nip11.Authentication.Number,           // auth
-		nip11.CountingResults.Number,          // count requests
+		relayinfo.BasicProtocol.Number,            // events, envelopes and filters
+		relayinfo.FollowList.Number,               // follow lists
+		relayinfo.EncryptedDirectMessage.Number,   // encrypted DM
+		relayinfo.MappingNostrKeysToDNS.Number,    // DNS
+		relayinfo.EventDeletion.Number,            // event delete
+		relayinfo.RelayInformationDocument.Number, // relay information document
+		relayinfo.NostrMarketplace.Number,         // marketplace
+		relayinfo.Reposts.Number,                  // reposts
+		relayinfo.Bech32EncodedEntities.Number,    // bech32 encodings
+		relayinfo.LongFormContent.Number,          // long form
+		relayinfo.PublicChat.Number,               // public chat
+		relayinfo.UserStatuses.Number,             // user statuses
+		relayinfo.Authentication.Number,           // auth
+		relayinfo.CountingResults.Number,          // count requests
 	)
 	db := &IC.Backend{
 		Badger: &badger.Backend{
