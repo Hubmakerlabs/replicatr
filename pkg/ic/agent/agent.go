@@ -48,7 +48,7 @@ type Agent struct {
 	CanisterID principal.Principal
 }
 
-func (a *Agent) SaveEvent(event Event) (string, error) {
+func (a *Agent) SaveCandidEvent(event Event) (string, error) {
 	methodName := "save_event"
 	args := []any{event}
 	var result string
@@ -64,7 +64,7 @@ func (a *Agent) SaveEvent(event Event) (string, error) {
 	return "", fmt.Errorf("unexpected result format")
 }
 
-func (a *Agent) GetEvents(filter Filter) ([]Event, error) {
+func (a *Agent) GetCandidEvent(filter Filter) ([]Event, error) {
 	methodName := "get_events"
 	args := []any{filter}
 	var result []Event
@@ -86,8 +86,8 @@ func mapToEvent(item map[string]interface{}) (Event, error) {
 	return event, nil
 }
 
-func NewAgent(cid, u string) (a *Agent, err error) {
-	localReplicaURL, _ := url.Parse(u)
+func NewAgent(cid, portNum string) (a *Agent, err error) {
+	localReplicaURL, _ := url.Parse("http://localhost:" + portNum)
 	cfg := agent_go.Config{
 		FetchRootKey: true,
 		ClientConfig: &agent_go.ClientConfig{Host: localReplicaURL},
@@ -165,11 +165,11 @@ func CandidToEvent(e Event) event.T {
 	}
 }
 
-func (a *Agent) TGetEvents(f filter.T) ([]event.T, error) {
+func (a *Agent) GetEvents(f filter.T) ([]event.T, error) {
 
 	filter := FilterToCandid(f)
 
-	candidEvents, err := a.GetEvents(filter)
+	candidEvents, err := a.GetCandidEvent(filter)
 	if err != nil {
 		fmt.Println("Error getting events:", err)
 		return nil, err
@@ -187,10 +187,10 @@ func (a *Agent) TGetEvents(f filter.T) ([]event.T, error) {
 
 }
 
-func (a *Agent) TSaveEvent(e event.T) (string, error) {
+func (a *Agent) SaveEvent(e event.T) (string, error) {
 
 	event := EventToCandid(e)
 
-	return a.SaveEvent(event)
+	return a.SaveCandidEvent(event)
 
 }
