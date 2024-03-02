@@ -44,7 +44,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
-	github.com/herumi/bls-go-binary v1.32.0 // indirect
+	github.com/herumi/bls-go-binary v1.33.0 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
