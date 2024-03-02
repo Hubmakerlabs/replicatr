@@ -47,6 +47,8 @@ github.com/fiatjaf/generic-ristretto v0.0.1 h1:LUJSU87X/QWFsBXTwnH3moFe4N8AjUxT+
 github.com/fiatjaf/generic-ristretto v0.0.1/go.mod h1:cvV6ANHDA/GrfzVrig7N7i6l8CWnkVZvtQ2/wk9DPVE=
 github.com/fxamacker/cbor/v2 v2.5.0 h1:oHsG0V/Q6E/wqTS2O1Cozzsy69nqCiguo5Q1a1ADivE=
 github.com/fxamacker/cbor/v2 v2.5.0/go.mod h1:TA1xS00nchWmaBnEIxPSE5oHLuJBAVvqrtAnWBwBCVo=
+github.com/fxamacker/cbor/v2 v2.6.0 h1:sU6J2usfADwWlYDAFhZBQ6TnLFBHxgesMrQfQgk1tWA=
+github.com/fxamacker/cbor/v2 v2.6.0/go.mod h1:pxXPTn3joSm21Gbwsv0w9OSA2y1HFR9qXEeXQVeNoDQ=
 github.com/gobwas/httphead v0.1.0 h1:exrUm0f4YX0L7EBwZHuCF4GDp8aJfVeBrlLQrs6NqWU=
 github.com/gobwas/httphead v0.1.0/go.mod h1:O/RXo79gxV8G+RqlR/otEwx4Q36zl9rqC5u12GKvMCM=
 github.com/gobwas/pool v0.2.1 h1:xfeeEhW7pwmX8nuLVlqbzVc7udMDrwetjEv+TZIz1og=
@@ -175,6 +177,7 @@ golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sys v0.0.0-20180830151530-49385e6e1522/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20190626221950-04f50cda93cb/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20221010170243-090e33056c14/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
@@ -235,8 +238,8 @@ mleku.dev/git/bech32 v1.0.6 h1:OZwYDn6Dd1sat9WNwOqO27C5QHWiKs4EPZQX6wCc/lc=
 mleku.dev/git/bech32 v1.0.6/go.mod h1:0q80SXEx1rtPKmPYF/lg0lHfYxWjXdiOPAmEzKLt/y0=
 mleku.dev/git/ec v1.0.8 h1:qjIEkWLIZvvHQ7T+XChvrk5ZioVxK1n8ecI6zXZt00g=
 mleku.dev/git/ec v1.0.8/go.mod h1:uom77z793UJ88WWYuCBO3mdyFZdyyyo3Px2hU0aFrNY=
-mleku.dev/git/nostr v1.0.11 h1:/04bAHOsPPMCBG4Xxs5A6pizh9Ap/Bxp/ivm4Gwd6ws=
-mleku.dev/git/nostr v1.0.11/go.mod h1:6JBVL8bnIi+VMKtcl1vU4HmP4+poNAOzjzsRwlZQW4E=
+mleku.dev/git/nostr v1.0.13 h1:5N2yNFmfRWYPBDVzfVH1yVLVapfZSvSneJHdRXGcvFE=
+mleku.dev/git/nostr v1.0.13/go.mod h1:6JBVL8bnIi+VMKtcl1vU4HmP4+poNAOzjzsRwlZQW4E=
 mleku.dev/git/slog v1.0.16 h1:ibfAo21AstzrKdc9b58S8QxhNXPsSgYeGOCbNGmv60M=
 mleku.dev/git/slog v1.0.16/go.mod h1:CGgIPTsp964hs3yzPw3SsRAooTncOuEdWfWxqZDGqxk=
 rsc.io/qr v0.2.0 h1:6vBLea5/NRMVTz8V66gipeLycZMl/+UlFmk8DvqQ6WY=

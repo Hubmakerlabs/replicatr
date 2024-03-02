@@ -15,13 +15,15 @@ require (
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/urfave/cli/v2 v2.27.1
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
+	lukechampine.com/frand v1.4.2
 	mleku.dev/git/atomic v1.11.5
 	mleku.dev/git/ec v1.0.8
-	mleku.dev/git/nostr v1.0.11
+	mleku.dev/git/nostr v1.0.13
 	mleku.dev/git/slog v1.0.16
 )
 
 require (
+	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/alexflint/go-scalar v1.2.0 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/aviate-labs/leb128 v0.3.0 // indirect
@@ -32,7 +34,7 @@ require (
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fiatjaf/generic-ristretto v0.0.1 // indirect
-	github.com/fxamacker/cbor/v2 v2.5.0 // indirect
+	github.com/fxamacker/cbor/v2 v2.6.0 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.3.2 // indirect
