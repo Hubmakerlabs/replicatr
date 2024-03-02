@@ -1,6 +1,6 @@
 module github.com/Hubmakerlabs/replicatr
 
-go 1.20
+go 1.22
 
 require (
 	github.com/alexflint/go-arg v1.4.3
@@ -17,7 +17,6 @@ require (
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	mleku.dev/git/atomic v1.11.5
 	mleku.dev/git/ec v1.0.8
-	mleku.dev/git/interrupt v1.0.10
 	mleku.dev/git/nostr v1.0.11
 	mleku.dev/git/slog v1.0.16
 )
@@ -44,7 +43,6 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/herumi/bls-go-binary v1.32.0 // indirect
-	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -61,6 +59,5 @@ require (
 	golang.org/x/term v0.17.0 // indirect
 	google.golang.org/protobuf v1.32.0 // indirect
 	mleku.dev/git/bech32 v1.0.6 // indirect
-	mleku.dev/git/qu v1.0.8 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )

@@ -8,6 +8,7 @@ import (
 	"runtime"
 
 	"github.com/Hubmakerlabs/replicatr/app"
+	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/alexflint/go-arg"
 	"mleku.dev/git/nostr/eventstore/badger"
@@ -67,6 +68,7 @@ func main() {
 			Fees:           relayinfo.Fees{},
 			Icon:           args.Icon,
 		}
+		apputil.EnsureDir(configPath)
 		if err = args.Save(configPath); chk.E(err) {
 			log.E.F("failed to write relay configuration: '%s'", err)
 			os.Exit(1)
