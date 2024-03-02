@@ -7,6 +7,7 @@ import (
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/eventstore/badger"
 	"mleku.dev/git/nostr/filter"
+	"mleku.dev/git/nostr/kinds"
 	"mleku.dev/git/nostr/relayinfo"
 	"mleku.dev/git/slog"
 )
@@ -34,15 +35,54 @@ func (b *Backend) Close() {
 func (b *Backend) Serial() []byte {
 	return b.Badger.Serial()
 }
-func (b *Backend) CountEvents(c context.T, f *filter.T) (int64, error) {
-	return b.Badger.CountEvents(c, f)
+func (b *Backend) CountEvents(c context.T, f *filter.T) (count int64, err error) {
+	var forBadger, forIC kinds.T
+	for i := range f.Kinds {
+		if kinds.IsPrivileged(f.Kinds[i]) {
+			forBadger = append(forBadger, f.Kinds[i])
+		} else {
+			forIC = append(forIC, f.Kinds[i])
+		}
+	}
+	icFilter := f.Duplicate()
+	f.Kinds = forBadger
+	icFilter.Kinds = forIC
+	if count, err = b.Badger.CountEvents(c, f); chk.E(err) {
+		return
+	}
+	// todo: this will be changed to call the IC count events implementation
+	return b.Badger.CountEvents(c, icFilter)
 }
 func (b *Backend) DeleteEvent(c context.T, evt *event.T) (err error) {
+	if kinds.IsPrivileged(evt.Kind) {
+		return b.Badger.DeleteEvent(c, evt)
+	}
+	// todo: this will be the IC store
 	return b.Badger.DeleteEvent(c, evt)
 }
-func (b *Backend) QueryEvents(c context.T, f *filter.T) (chan *event.T, error) {
-	return b.Badger.QueryEvents(c, f)
+func (b *Backend) QueryEvents(c context.T, C chan *event.T, f *filter.T) (err error) {
+	var forBadger, forIC kinds.T
+	for i := range f.Kinds {
+		if kinds.IsPrivileged(f.Kinds[i]) {
+			forBadger = append(forBadger, f.Kinds[i])
+		} else {
+			forIC = append(forIC, f.Kinds[i])
+		}
+	}
+	icFilter := f.Duplicate()
+	f.Kinds = forBadger
+	icFilter.Kinds = forIC
+	ch := make(chan *event.T)
+	if err = b.Badger.QueryEvents(c, ch, icFilter); chk.E(err) {
+		return
+	}
+	// todo: this will be changed to the IC query events function
+	return b.Badger.QueryEvents(c, ch, f)
 }
 func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
+	if kinds.IsPrivileged(evt.Kind) {
+		return b.Badger.DeleteEvent(c, evt)
+	}
+	// todo: this will be the IC store
 	return b.Badger.SaveEvent(c, evt)
 }

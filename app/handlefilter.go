@@ -51,7 +51,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	h.eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
 		ch := make(chan *event.T)
-		if ch, err = query(h.c, h.f); chk.E(err) {
+		if err = query(h.c, ch, h.f); chk.E(err) {
 			h.ws.OffenseCount.Inc()
 			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
 			h.eose.Done()
