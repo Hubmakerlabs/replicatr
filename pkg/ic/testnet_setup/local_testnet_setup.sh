@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 export NVM_DIR=${HOME}/.nvm
 export NVM_VERSION=v0.39.1
-export NODE_VERSION=18.1.0
+export NODE_VERSION=20.11.1
 # need to change ownership of /opt to the user you normally work with for this
 export RUSTUP_HOME=/opt/rustup
 export CARGO_HOME=/opt/cargo
