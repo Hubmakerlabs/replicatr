@@ -86,8 +86,8 @@ func mapToEvent(item map[string]interface{}) (Event, error) {
 	return event, nil
 }
 
-func NewAgent(cid, portNum string) (a *Agent, err error) {
-	localReplicaURL, _ := url.Parse("http://localhost:" + portNum)
+func NewAgent(cid, canAddr string) (a *Agent, err error) {
+	localReplicaURL, _ := url.Parse("http://" + canAddr)
 	cfg := agent_go.Config{
 		FetchRootKey: true,
 		ClientConfig: &agent_go.ClientConfig{Host: localReplicaURL},
