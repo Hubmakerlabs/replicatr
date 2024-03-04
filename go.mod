@@ -6,8 +6,7 @@ require (
 	github.com/alexflint/go-arg v1.4.3
 	github.com/aviate-labs/agent-go v0.3.3
 	github.com/dgraph-io/badger/v4 v4.2.0
-	github.com/fasthttp/websocket v1.5.7
-	github.com/fatih/color v1.16.0
+	github.com/fasthttp/websocket v1.5.8
 	github.com/gookit/color v1.5.4
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/minio/sha256-simd v1.0.1
@@ -19,7 +18,6 @@ require (
 	lukechampine.com/frand v1.4.2
 	mleku.dev/git/atomic v1.11.5
 	mleku.dev/git/ec v1.0.8
-	mleku.dev/git/interrupt v1.0.10
 	mleku.dev/git/nostr v1.0.14
 	mleku.dev/git/slog v1.0.16
 )
@@ -27,7 +25,7 @@ require (
 require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
 	github.com/alexflint/go-scalar v1.1.0 // indirect
-	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/aviate-labs/leb128 v0.3.0 // indirect
 	github.com/aviate-labs/secp256k1 v0.0.0-5e6736a // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -47,16 +45,13 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/herumi/bls-go-binary v1.33.0 // indirect
-	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
-	github.com/klauspost/compress v1.17.3 // indirect
+	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.6 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
+	github.com/savsgio/gotils v0.0.0-20240303185622-093b76447511 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.51.0 // indirect
+	github.com/valyala/fasthttp v1.52.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
@@ -66,6 +61,5 @@ require (
 	golang.org/x/term v0.17.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	mleku.dev/git/bech32 v1.0.6 // indirect
-	mleku.dev/git/qu v1.0.8 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
