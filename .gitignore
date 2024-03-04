@@ -34,3 +34,13 @@
 pkg/ic/testnet*/*
 !pkg/ic/testnet/src/
 !pkg/ic/testnet/src/**/*
+!cmd/testnet/*
+# !cmd/testnet/src/
+# !cmd/testnet/src/**/*
+
+
+
+
+
+
+
