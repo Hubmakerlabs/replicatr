@@ -5,6 +5,7 @@ use serde::{Serialize, Deserialize as SerdeDeserialize};
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::collections::HashSet;
+use std::convert::TryInto;
 
 
 #[derive(CandidType,CandidDeserialize, Serialize, Debug, Clone)]
@@ -38,7 +39,6 @@ struct Filter {
 }
 
 thread_local! {
-    // This will store the events. Adjust the type if your storage pattern differs.
     static EVENTS: RefCell<Vec<Event>> = RefCell::new(Vec::new());
 }
 
@@ -52,10 +52,21 @@ fn save_event(event: Event) -> String {
     "success".to_string()
 }
 
+fn convert_int_to_usize(int_val: &Int) -> usize{
+    match int_val.0.to_usize(){
+        Some(val) => val,
+        None => 500usize,
+    }
+}
+
 
 #[query]
 fn get_events(filter: Filter) -> Vec<Event> {
     EVENTS.with(|events| {
+        let limit = convert_int_to_usize(&filter.limit)
+        let zero = Int::from(0);
+
+        
         events.borrow().iter().filter(|event| {
             // ID filter
             if !filter.ids.is_empty() && !filter.ids.contains(&event.id) {
@@ -72,7 +83,7 @@ fn get_events(filter: Filter) -> Vec<Event> {
                 return false;
             }
 
-            // Tag filter (simplified for demonstration)
+            // Tag filter
             if !filter.tags.is_empty() && filter.tags.iter().any(|tag_pair| {
                 !event.tags.iter().any(|event_tag_vec| event_tag_vec.contains(&tag_pair.key))
             }) {
@@ -80,17 +91,18 @@ fn get_events(filter: Filter) -> Vec<Event> {
             }
 
             // Since filter
-            if event.created_at < filter.since {
-                return false;
+            if filter.since >= zero && event.created_at < filter.since {
+                return false; 
             }
 
             // Until filter
-            if event.created_at > filter.until {
+            if filter.until >= zero && event.created_at > filter.until {
                 return false;
             }
 
             true
         })
+        .take(limit)
         .cloned()
         .collect()
     })

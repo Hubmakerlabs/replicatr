@@ -45,24 +45,24 @@ func main() { //arg1 = portnum, arg2 = canisterID
 	// Create and save random events
 	for i := 0; i < 5; i++ {
 		wg.Add(1)
-		go func(i int){
+		go func(i int) {
 			event := createRandomEvent(i)
-					_, err := a.SaveEvent(event)
-					if err != nil {
-						fmt.Printf("Failed to save event %d: %v\n", i, err)
-						wg.Done()
-						return
-					}
-					fmt.Printf("Event %d saved successfully\n", i)
-					wg.Done()
+			_, err := a.SaveEvent(event)
+			if err != nil {
+				fmt.Printf("Failed to save event %d: %v\n", i, err)
+				wg.Done()
+				return
+			}
+			fmt.Printf("Event %d saved successfully\n", i)
+			wg.Done()
 		}(i)
-		
+
 	}
 
 	wg.Wait()
 	// Create a filter to query events
-	s := timestamp.Tp(time.Now().Add(-24 * time.Hour).Unix())
-	since := &s
+	// s := timestamp.Tp(time.Now().Add(-24 * time.Hour).Unix())
+	// since := &s
 
 	u := timestamp.Tp(time.Now().Unix())
 	until := &u
@@ -71,7 +71,6 @@ func main() { //arg1 = portnum, arg2 = canisterID
 	limit := &l
 
 	filter := filter.T{
-		Since:  since,
 		Until:  until,
 		Limit:  limit,
 		Search: "random",
