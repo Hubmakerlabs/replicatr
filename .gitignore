@@ -37,3 +37,4 @@ pkg/ic/testnet/*
 cmd/testnet/*
 !cmd/testnet/src/
 !cmd/testnet/src/**/*
+cmd/testnet/.env

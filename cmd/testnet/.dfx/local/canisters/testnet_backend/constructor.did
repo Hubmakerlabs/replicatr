@@ -18,9 +18,9 @@ type Filter = record{
     kinds: vec nat16;
     authors: vec text;
     tags: vec KeyValuePair;
-    since: int; //must be converted to idl.Int
-    until: int; //must be converted to idl.Int
-    limit: int; //must be converted to idl.Int
+    since: opt int; //must be converted to idl.Int
+    until: opt int; //must be converted to idl.Int
+    limit: opt int; //must be converted to idl.Int
     search: text;
 };
 

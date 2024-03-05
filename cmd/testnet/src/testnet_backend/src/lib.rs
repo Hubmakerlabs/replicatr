@@ -57,6 +57,7 @@ fn save_event(event: Event) -> String {
 fn get_events(filter: Filter) -> Vec<Event> {
     EVENTS.with(|events| {
         events.borrow().iter().filter(|event| {
+
             // ID filter
             if !filter.ids.is_empty() && !filter.ids.contains(&event.id) {
                 return false;
@@ -80,16 +81,15 @@ fn get_events(filter: Filter) -> Vec<Event> {
             }
 
             // Since filter
-            if event.created_at < filter.since {
+            if filter.since >= 0 && event.created_at < filter.since {
                 return false;
             }
 
             // Until filter
-            if event.created_at > filter.until {
+            if filter.until >= 0 && event.created_at > filter.until {
                 return false;
             }
-
-            true
+             true
         })
         .cloned()
         .collect()

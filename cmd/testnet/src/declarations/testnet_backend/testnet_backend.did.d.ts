@@ -15,10 +15,10 @@ export interface Filter {
   'ids' : Array<string>,
   'tags' : Array<KeyValuePair>,
   'search' : string,
-  'limit' : bigint,
-  'since' : bigint,
+  'limit' : [] | [bigint],
+  'since' : [] | [bigint],
   'authors' : Array<string>,
-  'until' : bigint,
+  'until' : [] | [bigint],
   'kinds' : Uint16Array | number[],
 }
 export interface KeyValuePair { 'key' : string, 'value' : Array<string> }

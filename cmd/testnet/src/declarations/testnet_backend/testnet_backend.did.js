@@ -7,10 +7,10 @@ export const idlFactory = ({ IDL }) => {
     'ids' : IDL.Vec(IDL.Text),
     'tags' : IDL.Vec(KeyValuePair),
     'search' : IDL.Text,
-    'limit' : IDL.Int,
-    'since' : IDL.Int,
+    'limit' : IDL.Opt(IDL.Int),
+    'since' : IDL.Opt(IDL.Int),
     'authors' : IDL.Vec(IDL.Text),
-    'until' : IDL.Int,
+    'until' : IDL.Opt(IDL.Int),
     'kinds' : IDL.Vec(IDL.Nat16),
   });
   const Event = IDL.Record({
