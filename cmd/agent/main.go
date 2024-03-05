@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
@@ -39,17 +40,26 @@ func main() { //arg1 = portnum, arg2 = canisterID
 		fmt.Printf("failed to initialize agent: %v\n", err)
 	}
 
+	var wg sync.WaitGroup
+
 	// Create and save random events
 	for i := 0; i < 5; i++ {
-		event := createRandomEvent(i)
-		_, err := a.SaveEvent(event)
-		if err != nil {
-			fmt.Printf("Failed to save event %d: %v\n", i, err)
-			continue
-		}
-		fmt.Printf("Event %d saved successfully\n", i)
+		wg.Add(1)
+		go func(i int){
+			event := createRandomEvent(i)
+					_, err := a.SaveEvent(event)
+					if err != nil {
+						fmt.Printf("Failed to save event %d: %v\n", i, err)
+						wg.Done()
+						return
+					}
+					fmt.Printf("Event %d saved successfully\n", i)
+					wg.Done()
+		}(i)
+		
 	}
 
+	wg.Wait()
 	// Create a filter to query events
 	s := timestamp.Tp(time.Now().Add(-24 * time.Hour).Unix())
 	since := &s
