@@ -20,7 +20,7 @@ require (
 	mleku.dev/git/atomic v1.11.5
 	mleku.dev/git/ec v1.0.8
 	mleku.dev/git/interrupt v1.0.10
-	mleku.dev/git/nostr v1.0.13
+	mleku.dev/git/nostr v1.0.14
 	mleku.dev/git/slog v1.0.16
 )
 

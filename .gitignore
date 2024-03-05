@@ -31,7 +31,7 @@
 # ...even if they are in subdirectories
 !*/
 
-!cmd/testnet/*
+cmd/testnet/*
 !cmd/testnet/src/
 !cmd/testnet/src/**/*
 

@@ -27,12 +27,20 @@ func FilterToCandid(f filter.T) (result Filter) {
 	}
 	if f.Since != nil {
 		result.Since = idl.NewInt(f.Since.T().Int())
+	} else {
+		result.Since = idl.NewInt(-1)
 	}
+
 	if f.Until != nil {
 		result.Until = idl.NewInt(f.Until.T().Int())
+	} else {
+		result.Until = idl.NewInt(-1)
 	}
+
 	if f.Limit != nil {
 		result.Limit = idl.NewInt(*f.Limit)
+	} else {
+		result.Limit = idl.NewInt(500)
 	}
 
 	return

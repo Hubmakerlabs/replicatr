@@ -13,7 +13,6 @@ import (
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/keys"
-	"mleku.dev/git/nostr/nip11"
 	"mleku.dev/git/nostr/relayinfo"
 	"mleku.dev/git/nostr/subscriptionid"
 )
@@ -39,7 +38,7 @@ type (
 	OverwriteResponseEvent    func(c context.T, ev *event.T)
 	Events                    func(c context.T, ev *event.T) error
 	Hook                      func(c context.T)
-	OverwriteRelayInformation func(c context.T, r *http.Request, info *nip11.Info) *nip11.Info
+	OverwriteRelayInformation func(c context.T, r *http.Request, info *relayinfo.T) *relayinfo.T
 	QueryEvents               func(c context.T, f *filter.T) (C chan *event.T, err error)
 	CountEvents               func(c context.T, f *filter.T) (cnt int64, err error)
 	OnEventSaved              func(c context.T, ev *event.T)
