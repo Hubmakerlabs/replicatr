@@ -28,13 +28,18 @@
 !*.mediawiki
 !*.did
 !*.rs
+!*.toml
 # ...even if they are in subdirectories
 !*/
 
 cmd/testnet/*
 !cmd/testnet/src/
+!cmd/testnet/scripts/
+!cmd/testnet/candid/
+!cmd/testnet/canister_ids.json
 !cmd/testnet/src/**/*
 
+cmd/testnet/target
 
 
 

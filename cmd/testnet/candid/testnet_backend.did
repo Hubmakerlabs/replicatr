@@ -1,0 +1,28 @@
+type Event = record {
+  id : text;
+  sig : text;
+  content : text;
+  kind : nat64;
+  tags : vec vec text;
+  pubkey : text;
+  created_at : nat64;
+};
+type Filter = record {
+  ids : vec text;
+  tags : vec KeyValuePair;
+  search : text;
+  limit : nat64;
+  since : nat64;
+  authors : vec text;
+  until : nat64;
+  kinds : vec nat64;
+};
+type KeyValuePair = record { key : text; value : vec text };
+service : {
+  __get_candid_interface_tmp_hack : () -> (text) query;
+  delete_event : (text) -> (text);
+  get_events : (Filter) -> (vec Event) query;
+  get_events_count : (Filter) -> (nat64) query;
+  save_event : (Event) -> (text);
+  save_events : (vec Event) -> (text);
+}
