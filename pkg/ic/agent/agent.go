@@ -49,7 +49,7 @@ type Backend struct {
 func New(cid, canAddr string) (a *Backend, err error) {
 	log.D.Ln("setting up IC backend to", canAddr, cid)
 	a = &Backend{}
-	localReplicaURL, _ := url.Parse("http://" + canAddr)
+	localReplicaURL, _ := url.Parse(canAddr)
 	cfg := agent_go.Config{
 		FetchRootKey: true,
 		ClientConfig: &agent_go.ClientConfig{Host: localReplicaURL},
