@@ -548,6 +548,8 @@ dependencies = [
  "ic-cdk",
  "ic-cdk-macros",
  "ic-cdk-timers",
+ "num-bigint",
+ "num-traits",
  "serde",
  "serde_derive",
 ]

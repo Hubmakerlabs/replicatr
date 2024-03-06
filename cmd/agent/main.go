@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"mleku.dev/git/nostr/context"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filter"
@@ -33,9 +35,11 @@ func createRandomEvent(i int) (e event.T) {
 }
 
 func main() { //arg1 = portnum, arg2 = canisterID
-
+	if len(os.Args) < 3 {
+		fmt.Println("not enough args: 2 args required <canisterURL> <canisterID>")
+	}
 	// Initialize the agent with the configuration for a local replica
-	a, err := agent.NewAgent(os.Args[2], os.Args[1])
+	a, err := agent.New(os.Args[2], os.Args[1])
 	if err != nil {
 		fmt.Printf("failed to initialize agent: %v\n", err)
 	}
@@ -47,7 +51,7 @@ func main() { //arg1 = portnum, arg2 = canisterID
 		wg.Add(1)
 		go func(i int) {
 			event := createRandomEvent(i)
-			_, err := a.SaveEvent(event)
+			err := a.SaveEvent(context.Bg(), &event)
 			if err != nil {
 				fmt.Printf("Failed to save event %d: %v\n", i, err)
 				wg.Done()
@@ -70,22 +74,26 @@ func main() { //arg1 = portnum, arg2 = canisterID
 	l := 10
 	limit := &l
 
-	filter := filter.T{
+	f := &filter.T{
 		Until:  until,
 		Limit:  limit,
 		Search: "random",
 	}
 
 	// Query events based on the filter
-	events, err := a.GetEvents(filter)
-	if err != nil {
-		fmt.Println("Failed to query events:", err)
-		return
-	}
+	ch := make(chan *event.T)
+	go func() {
+		err = a.QueryEvents(context.Bg(), ch, f)
+		if err != nil {
+			fmt.Println("Failed to query events:", err)
+			return
+		}
+		close(ch)
+	}()
 
 	// Display queried events
 	fmt.Println("Queried Events:")
-	for _, event := range events {
-		fmt.Printf("ID: %s, Content: %s\n", event.ID, event.Content)
+	for ev := range ch {
+		fmt.Printf("ID: %s, Content: %s\n", ev.ID, ev.Content)
 	}
 }

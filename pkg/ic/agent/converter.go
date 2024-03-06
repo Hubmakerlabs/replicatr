@@ -10,19 +10,20 @@ import (
 	"mleku.dev/git/nostr/timestamp"
 )
 
-func TagMaptoKV(t filter.TagMap) (keys []KeyValuePair) {
+func TagMapToKV(t filter.TagMap) (keys []KeyValuePair) {
 	keys = make([]KeyValuePair, 0, len(t))
 	for k := range t {
 		keys = append(keys, KeyValuePair{k, t[k]})
 	}
 	return
 }
-func FilterToCandid(f filter.T) (result Filter) {
-	result = Filter{
+
+func FilterToCandid(f *filter.T) (result *Filter) {
+	result = &Filter{
 		IDs:     f.IDs,
 		Kinds:   f.Kinds.ToUint16(),
 		Authors: f.Authors,
-		Tags:    TagMaptoKV(f.Tags),
+		Tags:    TagMapToKV(f.Tags),
 		Search:  f.Search,
 	}
 	if f.Since != nil {
@@ -44,11 +45,9 @@ func FilterToCandid(f filter.T) (result Filter) {
 	}
 
 	return
-
 }
 
-func EventToCandid(e event.T) Event {
-
+func EventToCandid(e *event.T) Event {
 	return Event{
 		e.ID.String(),
 		e.PubKey,
@@ -60,12 +59,12 @@ func EventToCandid(e event.T) Event {
 	}
 }
 
-func CandidToEvent(e Event) event.T {
+func CandidToEvent(e *Event) *event.T {
 	var t tags.T
 	for _, v := range e.Tags {
 		t = append(t, v)
 	}
-	return event.T{
+	return &event.T{
 		ID:        eventid.T(e.ID),
 		PubKey:    e.Pubkey,
 		CreatedAt: timestamp.T(e.CreatedAt.BigInt().Int64()),

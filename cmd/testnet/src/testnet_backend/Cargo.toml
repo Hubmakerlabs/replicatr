@@ -13,6 +13,8 @@ ic-cdk = "0.12.1"
 ic-cdk-timers = "0.6" # Feel free to remove this dependency if you don't need timers
 ic-cdk-macros = "0.8.4" 
 candid = "0.10.3" 
+num-bigint = "0.4.4"
+num-traits = "0.2.18"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_derive = "1.0.197"
 

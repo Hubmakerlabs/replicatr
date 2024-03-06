@@ -1,11 +1,9 @@
-use candid::{CandidType, Deserialize as CandidDeserialize, Int, Nat};
-use ic_cdk::api;
+use candid::{CandidType, Deserialize as CandidDeserialize, Int};
 use ic_cdk_macros::{query, update};
-use serde::{Serialize, Deserialize as SerdeDeserialize};
+use serde::Serialize;
 use std::cell::RefCell;
 use std::fmt::Debug;
-use std::collections::HashSet;
-use std::convert::TryInto;
+use num_traits::ToPrimitive;
 
 
 #[derive(CandidType,CandidDeserialize, Serialize, Debug, Clone)]
@@ -53,7 +51,8 @@ fn save_event(event: Event) -> String {
 }
 
 fn convert_int_to_usize(int_val: &Int) -> usize{
-    match int_val.0.to_usize(){
+    let big_int: &num_bigint::BigInt = &int_val.0;
+    match big_int.to_usize(){
         Some(val) => val,
         None => 500usize,
     }
@@ -63,7 +62,7 @@ fn convert_int_to_usize(int_val: &Int) -> usize{
 #[query]
 fn get_events(filter: Filter) -> Vec<Event> {
     EVENTS.with(|events| {
-        let limit = convert_int_to_usize(&filter.limit)
+        let limit = convert_int_to_usize(&filter.limit);
         let zero = Int::from(0);
 
         

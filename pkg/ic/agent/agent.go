@@ -1,17 +1,19 @@
 package agent
 
 import (
-	"fmt"
 	"net/url"
+	"os"
 
 	agent_go "github.com/aviate-labs/agent-go"
 	"github.com/aviate-labs/agent-go/candid/idl"
 	"github.com/aviate-labs/agent-go/principal"
+	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filter"
+	"mleku.dev/git/slog"
 )
 
-const DefaultHost = "http://localhost:46847"
+var log, chk = slog.New(os.Stderr)
 
 type KeyValuePair struct {
 	Key   string   `ic:"key"`
@@ -39,96 +41,79 @@ type Filter struct {
 	Search  string         `ic:"search"`
 }
 
-type Agent struct {
-	Ag         *agent_go.Agent
+type Backend struct {
+	*agent_go.Agent
 	CanisterID principal.Principal
 }
 
-func (a *Agent) SaveCandidEvent(event Event) (string, error) {
-	methodName := "save_event"
-	args := []any{event}
-	var result string
-	err := a.Ag.Call(a.CanisterID, methodName, args, []any{&result})
-	if err != nil {
-		return "", err
-	}
-
-	if len(result) > 0 {
-		return result, nil
-	}
-
-	return "", fmt.Errorf("unexpected result format")
-}
-
-func (a *Agent) GetCandidEvent(filter Filter) ([]Event, error) {
-	methodName := "get_events"
-	args := []any{filter}
-	var result []Event
-
-	err := a.Ag.Query(a.CanisterID, methodName, args, []any{&result})
-	if err != nil {
-		return nil, err
-	}
-
-	return result, err
-}
-
-func mapToEvent(item map[string]interface{}) (Event, error) {
-
-	event := Event{
-		ID: item["id"].(string),
-	}
-
-	return event, nil
-}
-
-func NewAgent(cid, portNum string) (a *Agent, err error) {
-	localReplicaURL, _ := url.Parse("http://localhost:" + portNum)
+func New(cid, canAddr string) (a *Backend, err error) {
+	log.D.Ln("setting up IC backend to", canAddr, cid)
+	a = &Backend{}
+	localReplicaURL, _ := url.Parse("http://" + canAddr)
 	cfg := agent_go.Config{
 		FetchRootKey: true,
 		ClientConfig: &agent_go.ClientConfig{Host: localReplicaURL},
 	}
-	ag, err := agent_go.New(cfg)
-	if err != nil {
-		fmt.Println("Failed to create agent:", err)
-		return nil, err
+	if a.Agent, err = agent_go.New(cfg); chk.E(err) {
+		return
 	}
-
-	canisterId, _ := principal.Decode(cid)
-
-	if err != nil {
-		fmt.Printf("Unable to parse canisterID: %v\n", err)
+	if a.CanisterID, err = principal.Decode(cid); chk.E(err) {
+		return
 	}
-
-	return &Agent{ag, canisterId}, nil
+	log.D.Ln("successfully connected to IC backend")
+	return
 }
 
-func (a *Agent) GetEvents(f filter.T) ([]event.T, error) {
+func (a *Backend) SaveCandidEvent(event Event) (result string, err error) {
+	methodName := "save_event"
+	args := []any{event}
+	if err = a.Call(a.CanisterID, methodName, args, []any{&result}); chk.E(err) {
+		return
+	}
+	if len(result) > 0 {
+		return
+	}
+	err = log.E.Err("unexpected result format")
+	return
+}
 
-	filter := FilterToCandid(f)
-
-	candidEvents, err := a.GetCandidEvent(filter)
+func (a *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
+	methodName := "get_events"
+	args := []any{*filter}
+	log.I.S(filter)
+	var result []Event
+	err := a.Query(a.CanisterID, methodName, args, []any{&result})
 	if err != nil {
-		fmt.Println("Error getting events:", err)
 		return nil, err
 	}
+	return result, err
+}
 
-	var events []event.T
-
-	// Iterate through the slice of Person structs
+func (a *Backend) QueryEvents(c context.T, ch chan *event.T, f *filter.T) (err error) {
+	if f == nil {
+		return log.E.Err("nil filter for query")
+	}
+	var candidEvents []Event
+	if candidEvents, err = a.GetCandidEvent(FilterToCandid(f)); chk.E(err) {
+		return
+	}
+	log.I.Ln("got", len(candidEvents), "events")
 	for _, e := range candidEvents {
-		// Add the Name field of each Person to the names slice
-		events = append(events, CandidToEvent(e))
+		// log.I.Ln("sending event", i)
+		ch <- CandidToEvent(&e)
 	}
-
-	return events, err
-
+	// log.I.Ln("done sending events")
+	return
 }
 
-func (a *Agent) SaveEvent(e event.T) (string, error) {
-
-	event := EventToCandid(e)
-
-	return a.SaveCandidEvent(event)
-
+func (a *Backend) SaveEvent(c context.T, e *event.T) (err error) {
+	var res string
+	if res, err = a.SaveCandidEvent(EventToCandid(e)); chk.E(err) {
+		return
+	}
+	if res != "success" {
+		// this is unlikely to happen but since it could.
+		err = log.E.Err("failed to store event", e.ToObject().String())
+	}
+	return
 }
