@@ -11,6 +11,7 @@ import (
 
 	"mleku.dev/git/nostr/client"
 	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/crypt"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/eventid"
 	"mleku.dev/git/nostr/filter"
@@ -157,11 +158,11 @@ func (cfg *C) Decode(ev *event.T) (err error) {
 	} else {
 		sp = ev.PubKey
 	}
-	ss, err := crypto.ComputeSharedSecret(sk, sp)
+	ss, err := crypt.ComputeSharedSecret(sk, sp)
 	if chk.D(err) {
 		return err
 	}
-	content, err := crypto.Decrypt(ev.Content, ss)
+	content, err := crypt.Decrypt(ev.Content, ss)
 	if chk.D(err) {
 		return err
 	}
