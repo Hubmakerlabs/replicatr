@@ -51,12 +51,6 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	h.eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
 		ch := make(chan *event.T)
-		if err = query(h.c, ch, h.f); chk.E(err) {
-			h.ws.OffenseCount.Inc()
-			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
-			h.eose.Done()
-			continue
-		}
 		go func(ch chan *event.T) {
 			for ev := range ch {
 				// if the event is nil the rest of this loop will panic
@@ -67,8 +61,8 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 				for _, ovw := range rl.OverwriteResponseEvent {
 					ovw(h.c, ev)
 				}
-				if kinds.IsPrivileged(ev.Kind) {
-					if h.ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
+				if kinds.IsPrivileged(ev.Kind) && rl.Info.Limitation.AuthRequired {
+					if h.ws.AuthPubKey() == "" {
 						log.D.Ln("not broadcasting privileged event to",
 							h.ws.RealRemote(), "not authenticated")
 						continue
@@ -101,6 +95,12 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 			}
 			h.eose.Done()
 		}(ch)
+		if err = query(h.c, ch, h.f); chk.E(err) {
+			h.ws.OffenseCount.Inc()
+			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
+			h.eose.Done()
+			continue
+		}
 	}
 	return nil
 }

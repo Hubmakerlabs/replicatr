@@ -80,7 +80,7 @@ func (a *Backend) SaveCandidEvent(event Event) (result string, err error) {
 func (a *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
 	methodName := "get_events"
 	args := []any{*filter}
-	log.I.S(filter)
+	// log.T.S(filter)
 	var result []Event
 	err := a.Query(a.CanisterID, methodName, args, []any{&result})
 	if err != nil {
@@ -98,11 +98,18 @@ func (a *Backend) QueryEvents(c context.T, ch chan *event.T, f *filter.T) (err e
 		return
 	}
 	log.I.Ln("got", len(candidEvents), "events")
-	for _, e := range candidEvents {
-		// log.I.Ln("sending event", i)
+	for i, e := range candidEvents {
+		select {
+		case <-c.Done():
+			// if we get shut down mid way this makes sure we don't get stuck
+			// waiting on a closed channel
+			return
+		default:
+		}
+		log.I.Ln("sending event", i)
 		ch <- CandidToEvent(&e)
 	}
-	// log.I.Ln("done sending events")
+	log.I.Ln("done sending events")
 	return
 }
 

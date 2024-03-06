@@ -84,17 +84,25 @@ func (b *Backend) QueryEvents(c context.T, C chan *event.T,
 	icFilter := f.Duplicate()
 	f.Kinds = forBadger
 	icFilter.Kinds = forIC
-	if err = b.Badger.QueryEvents(c, C, icFilter); chk.E(err) {
-		return
+	if len(forBadger) > 0 {
+		log.I.Ln("querying relay store with filter", f.ToObject().String())
+		if err = b.Badger.QueryEvents(c, C, icFilter); chk.E(err) {
+		}
 	}
-	// todo: this will be changed to the IC query events function
-	return b.IC.QueryEvents(c, C, f)
+	if len(forIC) > 0 {
+		log.I.Ln("querying IC with filter", icFilter.ToObject().String())
+		if err = b.IC.QueryEvents(c, C, f); chk.E(err) {
+		}
+	}
+	return
 }
 
 // SaveEvent writes an event to the event store.
-func (b *Backend) SaveEvent(c context.T, evt *event.T) (err error) {
-	if kinds.IsPrivileged(evt.Kind) {
-		return b.Badger.SaveEvent(c, evt)
+func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
+	if kinds.IsPrivileged(ev.Kind) {
+		log.I.Ln("saving event to relay store", ev.ToObject().String())
+		return b.Badger.SaveEvent(c, ev)
 	}
-	return b.IC.SaveEvent(c, evt)
+	log.I.Ln("saving event to IC", ev.ToObject().String())
+	return b.IC.SaveEvent(c, ev)
 }
