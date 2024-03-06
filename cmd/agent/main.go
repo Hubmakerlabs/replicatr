@@ -18,6 +18,8 @@ import (
 	"mleku.dev/git/slog"
 )
 
+var log, chk = slog.New(os.Stderr)
+
 func createRandomEvent(i int) (e *event.T) {
 	e = &event.T{
 		CreatedAt: timestamp.T(time.Now().Unix()),
@@ -34,7 +36,7 @@ func createRandomEvent(i int) (e *event.T) {
 	return
 }
 
-func main() { //arg1 = portnum, arg2 = canisterID
+func main() { // arg1 = portnum, arg2 = canisterID
 	if len(os.Args) < 3 {
 		fmt.Println("not enough args: 2 args required <canisterURL> <canisterID>")
 	}
@@ -66,10 +68,11 @@ func main() { //arg1 = portnum, arg2 = canisterID
 	s := timestamp.Now() - 24*60*60 // for one day before now
 	since := s.Ptr()
 	until := timestamp.Now().Ptr()
-	l := 10
+	l := 100
 	limit := &l
 
 	f := &filter.T{
+		Since:  since,
 		Until:  until,
 		Limit:  limit,
 		Search: "random",
