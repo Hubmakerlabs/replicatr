@@ -34,12 +34,9 @@ func createRandomEvent(i int) (e *event.T) {
 	return
 }
 
-var log, chk = slog.New(os.Stderr)
-
-func main() { // arg1 = canister address, arg2 = canisterID
+func main() { //arg1 = portnum, arg2 = canisterID
 	if len(os.Args) < 3 {
-		log.E.Ln("minimum 2 args required: <canister address> <canister ID>")
-		return
+		fmt.Println("not enough args: 2 args required <canisterURL> <canisterID>")
 	}
 	// Initialize the agent with the configuration for a local replica
 	a, err := agent.New(os.Args[2], os.Args[1])
@@ -71,24 +68,26 @@ func main() { // arg1 = canister address, arg2 = canisterID
 	until := timestamp.Now().Ptr()
 	l := 10
 	limit := &l
-	f := filter.T{
-		Since:  since,
+
+	f := &filter.T{
 		Until:  until,
 		Limit:  limit,
 		Search: "random",
 	}
 	// Query events based on the filter
-	events := make(chan *event.T, 1)
+	ch := make(chan *event.T)
 	go func() {
-		err = a.QueryEvents(context.Bg(), events, &f)
+		err = a.QueryEvents(context.Bg(), ch, f)
 		if err != nil {
-			log.E.Ln("Failed to query events:", err)
+			fmt.Println("Failed to query events:", err)
 			return
 		}
-		close(events)
+		close(ch)
 	}()
+
+	// Display queried events
 	log.I.Ln("receiving events")
-	for ev := range events {
-		log.I.F("ID: %s, Content: %s", ev.ID, ev.Content)
+	for ev := range ch {
+		fmt.Printf("ID: %s, Content: %s\n", ev.ID, ev.Content)
 	}
 }

@@ -171,8 +171,7 @@ func main() {
 			Path: dataDir,
 		},
 	}
-	ra, rc := rl.Config.CanisterAddr, rl.Config.CanisterID
-	if err = db.Init(rl.Info, ra, rc); chk.E(err) {
+	if err = db.Init(rl.Info, rl.Config.CanisterAddr, rl.Config.CanisterID); chk.E(err) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
