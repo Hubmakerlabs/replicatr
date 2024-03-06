@@ -4,6 +4,8 @@ use serde::Serialize;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use num_traits::ToPrimitive;
+use ic_cdk::println;
+
 
 
 #[derive(CandidType,CandidDeserialize, Serialize, Debug, Clone)]
@@ -42,12 +44,12 @@ thread_local! {
 
 #[update]
 fn save_event(event: Event) -> String {
+    let event_for_logging = event.clone();
     EVENTS.with(|events| {
         events.borrow_mut().push(event);
-        // Depending on your use case, you might want to log this operation,
-        // validate the event, or send a confirmation.
+    
     });
-    println!("Saving record: {:?}", record);
+    ic_cdk::println!("Saving record: {:?}", event_for_logging);
     "success".to_string()
 }
 
@@ -107,7 +109,7 @@ fn get_events(filter: Filter) -> Vec<Event> {
         .collect()
     });
 
-    println!("Query Results: {:#?}",result);
+    ic_cdk::println!("Query Results: {:#?}",result);
     result
 }
 
