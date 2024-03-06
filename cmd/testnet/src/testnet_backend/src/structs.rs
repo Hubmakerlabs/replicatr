@@ -7,8 +7,8 @@ use std::{borrow::Cow, fmt::Debug};
 pub struct Event {
     pub id: String,
     pub pubkey: String,
-    pub created_at: i64,
-    pub kind: u16,
+    pub created_at: i64, // Candid `int64` 
+    pub kind: u16, // Candid nat16 
     pub tags: Vec<Vec<String>>,
     pub content: String,
     pub sig: String,
@@ -30,8 +30,8 @@ impl Event {
     pub fn new(
         id: String,
         pubkey: String,
-        created_at: i64,
-        kind: u16,
+        created_at: i64, 
+        kind: u16, 
         tags: Vec<Vec<String>>,
         content: String,
         sig: String,
@@ -99,11 +99,11 @@ pub struct KeyValuePair {
 #[derive(CandidType, Deserialize, Serialize, Debug)]
 pub struct Filter {
     pub ids: Vec<String>,
-    pub kinds: Vec<u64>, // `nat16` in Candid
+    pub kinds: Vec<u16>, // vec nat16
     pub authors: Vec<String>,
     pub tags: Vec<KeyValuePair>, // Corrected to match the new KeyValuePair definition
-    pub since: i64,              // Candid `int`
-    pub until: i64,              // Candid `int`
-    pub limit: i64,              // Candid `int`
+    pub since: i64,              // Candid `int64` 
+    pub until: i64,              // Candid `int64` 
+    pub limit: i64,              // Candid `int64` 
     pub search: String,
 }

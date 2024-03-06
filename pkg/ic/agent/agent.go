@@ -5,7 +5,6 @@ import (
 	"os"
 
 	agent_go "github.com/aviate-labs/agent-go"
-	"github.com/aviate-labs/agent-go/candid/idl"
 	"github.com/aviate-labs/agent-go/principal"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
@@ -23,7 +22,7 @@ type KeyValuePair struct {
 type Event struct {
 	ID        string     `ic:"id"`
 	Pubkey    string     `ic:"pubkey"`
-	CreatedAt idl.Int    `ic:"created_at"`
+	CreatedAt int64      `ic:"created_at"`
 	Kind      uint16     `ic:"kind"`
 	Tags      [][]string `ic:"tags"`
 	Content   string     `ic:"content"`
@@ -35,9 +34,9 @@ type Filter struct {
 	Kinds   []uint16       `ic:"kinds"`
 	Authors []string       `ic:"authors"`
 	Tags    []KeyValuePair `ic:"tags"`
-	Since   idl.Int        `ic:"since"`
-	Until   idl.Int        `ic:"until"`
-	Limit   idl.Int        `ic:"limit"`
+	Since   int64          `ic:"since"`
+	Until   int64          `ic:"until"`
+	Limit   int64          `ic:"limit"`
 	Search  string         `ic:"search"`
 }
 

@@ -1,7 +1,6 @@
 package agent
 
 import (
-	"github.com/aviate-labs/agent-go/candid/idl"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/eventid"
 	"mleku.dev/git/nostr/filter"
@@ -27,21 +26,21 @@ func FilterToCandid(f *filter.T) (result *Filter) {
 		Search:  f.Search,
 	}
 	if f.Since != nil {
-		result.Since = idl.NewInt(f.Since.T().Int())
+		result.Since = int64(f.Since.T())
 	} else {
-		result.Since = idl.NewInt(-1)
+		result.Since = -1
 	}
 
 	if f.Until != nil {
-		result.Until = idl.NewInt(f.Until.T().Int())
+		result.Until = int64(f.Until.T())
 	} else {
-		result.Until = idl.NewInt(-1)
+		result.Until = -1
 	}
 
 	if f.Limit != nil {
-		result.Limit = idl.NewInt(*f.Limit)
+		result.Limit = int64(*f.Limit)
 	} else {
-		result.Limit = idl.NewInt(500)
+		result.Limit = 500
 	}
 
 	return
@@ -51,7 +50,7 @@ func EventToCandid(e *event.T) Event {
 	return Event{
 		e.ID.String(),
 		e.PubKey,
-		idl.NewInt(int(e.CreatedAt)),
+		int64(e.CreatedAt),
 		uint16(e.Kind),
 		e.Tags.Slice(),
 		e.Content,
@@ -67,7 +66,7 @@ func CandidToEvent(e *Event) *event.T {
 	return &event.T{
 		ID:        eventid.T(e.ID),
 		PubKey:    e.Pubkey,
-		CreatedAt: timestamp.T(e.CreatedAt.BigInt().Int64()),
+		CreatedAt: timestamp.T(e.CreatedAt),
 		Kind:      kind.T(e.Kind),
 		Tags:      t,
 		Content:   e.Content,

@@ -13,6 +13,7 @@ import (
 	"mleku.dev/git/nostr/bech32encoding"
 	"mleku.dev/git/nostr/client"
 	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/crypt"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/filters"
@@ -82,7 +83,7 @@ func pay(cfg *C, invoice string) (err error) {
 	}
 	defer chk.D(rl.Close())
 
-	ss, err := crypto.ComputeSharedSecret(secret, wallet)
+	ss, err := crypt.ComputeSharedSecret(secret, wallet)
 	if chk.D(err) {
 		return err
 	}
@@ -93,7 +94,7 @@ func pay(cfg *C, invoice string) (err error) {
 	if chk.D(err) {
 		return err
 	}
-	content, err := crypto.Encrypt(string(b), ss)
+	content, err := crypt.Encrypt(string(b), ss)
 	if chk.D(err) {
 		return err
 	}
@@ -131,7 +132,7 @@ func pay(cfg *C, invoice string) (err error) {
 
 	er := <-sub.Events
 	var c []byte
-	c, err = crypto.Decrypt(er.Content, ss)
+	c, err = crypt.Decrypt(er.Content, ss)
 	content = string(c)
 	if chk.D(err) {
 		return err
