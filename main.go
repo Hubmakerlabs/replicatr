@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/Hubmakerlabs/replicatr/app"
+	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/alexflint/go-arg"
 	"mleku.dev/git/interrupt"
@@ -69,6 +70,7 @@ func main() {
 			Fees:           relayinfo.Fees{},
 			Icon:           args.Icon,
 		}
+		apputil.EnsureDir(configPath)
 		if err = args.Save(configPath); chk.E(err) {
 			log.E.F("failed to write relay configuration: '%s'", err)
 			os.Exit(1)
@@ -175,6 +177,7 @@ func main() {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
+
 	rl.StoreEvent = append(rl.StoreEvent, rl.Chat)
 	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
 	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)

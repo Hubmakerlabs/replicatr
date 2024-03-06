@@ -47,6 +47,7 @@ fn save_event(event: Event) -> String {
         // Depending on your use case, you might want to log this operation,
         // validate the event, or send a confirmation.
     });
+    println!("Saving record: {:?}", record);
     "success".to_string()
 }
 
@@ -61,7 +62,7 @@ fn convert_int_to_usize(int_val: &Int) -> usize{
 
 #[query]
 fn get_events(filter: Filter) -> Vec<Event> {
-    EVENTS.with(|events| {
+    let result = EVENTS.with(|events| {
         let limit = convert_int_to_usize(&filter.limit);
         let zero = Int::from(0);
 
@@ -104,7 +105,10 @@ fn get_events(filter: Filter) -> Vec<Event> {
         .take(limit)
         .cloned()
         .collect()
-    })
+    });
+
+    println!("Query Results: {:#?}",result);
+    result
 }
 
 
