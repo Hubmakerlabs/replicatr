@@ -33,6 +33,10 @@
 !*/
 
 !cmd/testnet/*
+.dfx
+target
+node_modules
+
 # !cmd/testnet/src/
 # !cmd/testnet/src/**/*
 

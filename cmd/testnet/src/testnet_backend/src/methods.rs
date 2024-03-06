@@ -5,6 +5,27 @@ use crate::{
 use candid::export_service;
 use ic_cdk_macros::{query, update};
 
+#[query]
+fn test() -> String {
+    "Hello, world!".to_string()
+}
+
+#[query]
+fn _get_events() -> Vec<(String, Event)> {
+    EVENTS.with(|events| {
+        events
+            .borrow()
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
+    })
+}
+
+#[query]
+fn _get_events_count() -> u64 {
+    EVENTS.with(|events| events.borrow().len() as u64)
+}
+
 #[update]
 fn save_event(event: Event) -> String {
     let event_for_logging = event.clone();
@@ -46,9 +67,9 @@ fn get_events(filter: Filter) -> Vec<Event> {
     let result = EVENTS.with(|events| {
         events
             .borrow()
-            .values()
-            .filter(|event| event.is_match(&filter))
-            .cloned()
+            .iter()
+            .filter(|(_, event)| event.is_match(&filter))
+            .map(|(_, event)| event.clone())
             .collect()
     });
 
@@ -59,17 +80,9 @@ fn get_events(filter: Filter) -> Vec<Event> {
 
 #[query]
 fn get_events_count(filter: Filter) -> u64 {
-    let result = EVENTS.with(|events| {
-        events
-            .borrow()
-            .values()
-            .filter(|event| event.is_match(&filter))
-            .count() as u64
-    });
+    get_events(filter).len() as u64
 
-    // this only works on the local replica
-    ic_cdk::println!("Query Results: {:#?}", result);
-    result
+    // ic_cdk::println!("Query Results: {:#?}", result);
 }
 
 #[query(name = "__get_candid_interface_tmp_hack")]

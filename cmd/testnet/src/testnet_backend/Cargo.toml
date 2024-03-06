@@ -13,4 +13,5 @@ ic-cdk = "0.12.1"
 ic-cdk-macros = "0.8.4" 
 candid = "0.10.3" 
 serde = "1.0.197"
+ic-stable-structures = "0.6.1"
 

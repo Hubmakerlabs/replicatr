@@ -1,5 +1,5 @@
 {
-  "canister": {
-    "ic": "aaaaa-aa"
+  "testnet_backend": {
+    "ic": "rpfa6-ryaaa-aaaap-qccvq-cai"
   }
 }
