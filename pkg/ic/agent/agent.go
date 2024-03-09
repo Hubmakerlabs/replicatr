@@ -100,8 +100,6 @@ func (a *Backend) QueryEvents(c context.T, ch chan *event.T, f *filter.T) (err e
 	for i, e := range candidEvents {
 		select {
 		case <-c.Done():
-			// if we get shut down mid way this makes sure we don't get stuck
-			// waiting on a closed channel
 			return
 		default:
 		}

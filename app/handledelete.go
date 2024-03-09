@@ -37,7 +37,7 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 					acceptDeletion = acceptDeletion && override
 				}
 				// at this point only if the pubkey matches AND the overrides
-				// all accept will the delete be performed.
+				// all accept will the deletion be performed.
 				if acceptDeletion {
 					// delete it
 					for _, del := range rl.DeleteEvent {
@@ -61,7 +61,8 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 //
 // Temporarily removing delete functionality until a proper tombstone/indexing
 // strategy is devised to filter out these events from database results.
-func (rl *Relay) OverrideDelete(c context.T, tgt, del *event.T) (ok bool, msg string) {
+func (rl *Relay) OverrideDelete(c context.T, tgt, del *event.T) (ok bool,
+	msg string) {
 	ok = false
 	return
 }

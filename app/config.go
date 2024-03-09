@@ -30,12 +30,18 @@ type Config struct {
 	Pubkey       string     `arg:"--pubkey" json:"pubkey" help:"public key of relay operator"`
 	Contact      string     `arg:"-c,--contact" json:"contact,omitempty" help:"non-nostr relay operator contact details"`
 	Icon         string     `arg:"-i,--icon" json:"icon" default:"https://i.nostr.build/n8vM.png" help:"icon to show on relay information pages"`
-	Whitelist    []string   `arg:"-w,--whitelist,separate" json:"ip_whitelist" help:"IP addresses that are allowed to access"`
-	AuthRequired bool       `arg:"-a,--auth" json:"auth_required" default:"false" help:"NIP-42 authentication required for all access"`
-	Public       bool       `arg:"--public" json:"public" default:"true" help:"allow public read access to users not on ACL"`
-	Owners       []string   `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
-	SecKey       string     `arg:"-s" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
-	MaxProcs     int        `args:"-m" json:"max_procs" default:"128" help:"maximum number of goroutines to use"`
+	// Whitelist permits ONLY inbound connections from specified IP addresses.
+	Whitelist []string `arg:"-w,--whitelist,separate" json:"ip_whitelist" help:"IP addresses that are only allowed to access"`
+	// AllowIPs is for bypassing authentication required for clients based on IP
+	// addresses... primarily for testing with wireguard VPN clients run by the
+	// developer, as these are stable, non-routeable addresses, this skips the
+	// requirement enforced by AuthRequired.
+	AllowIPs     []string `arg:"-A,--allow,separate" json:"allow_ip" help:"IP addresses that are always allowed to access"`
+	AuthRequired bool     `arg:"-a,--auth" json:"auth_required" default:"false" help:"NIP-42 authentication required for all access"`
+	Public       bool     `arg:"--public" json:"public" default:"true" help:"allow public read access to users not on ACL"`
+	Owners       []string `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
+	SecKey       string   `arg:"-s" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
+	MaxProcs     int      `args:"-m" json:"max_procs" default:"128" help:"maximum number of goroutines to use"`
 }
 
 func (c *Config) Save(filename string) (err error) {

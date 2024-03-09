@@ -62,30 +62,41 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					ovw(h.c, ev)
 				}
 				if kinds.IsPrivileged(ev.Kind) && rl.Info.Limitation.AuthRequired {
-					if h.ws.AuthPubKey() == "" {
+					var allow bool
+					for _, v := range rl.Config.AllowIPs {
+						if h.ws.RealRemote() == v {
+							allow = true
+							break
+						}
+					}
+					if h.ws.AuthPubKey() == "" && !allow {
 						log.D.Ln("not broadcasting privileged event to",
 							h.ws.RealRemote(), "not authenticated")
 						continue
 					}
-					// check the filter first
-					receivers, _ := h.f.Tags["p"]
-					receivers2, _ := h.f.Tags["#p"]
-					parties := make(tag.T, len(receivers)+len(receivers2)+len(h.f.Authors))
-					copy(parties[:len(h.f.Authors)], h.f.Authors)
-					copy(parties[len(h.f.Authors):], receivers)
-					copy(parties[len(h.f.Authors)+len(receivers):], receivers2)
-					// then check the event
-					parties = tag.T{ev.PubKey}
-					pTags := ev.Tags.GetAll("p")
-					for i := range pTags {
-						parties = append(parties, pTags[i][1])
-					}
-					if !parties.Contains(h.ws.AuthPubKey()) &&
-						rl.Info.Limitation.AuthRequired {
-						log.D.Ln("not broadcasting privileged event to",
-							h.ws.RealRemote(), h.ws.AuthPubKey(),
-							"not party to event")
-						return
+					if !allow {
+						// check the filter first
+						receivers, _ := h.f.Tags["p"]
+						receivers2, _ := h.f.Tags["#p"]
+						parties := make(tag.T,
+							len(receivers)+len(receivers2)+len(h.f.Authors))
+						copy(parties[:len(h.f.Authors)], h.f.Authors)
+						copy(parties[len(h.f.Authors):], receivers)
+						copy(parties[len(h.f.Authors)+len(receivers):],
+							receivers2)
+						// then check the event
+						parties = tag.T{ev.PubKey}
+						pTags := ev.Tags.GetAll("p")
+						for i := range pTags {
+							parties = append(parties, pTags[i][1])
+						}
+						if !parties.Contains(h.ws.AuthPubKey()) &&
+							rl.Info.Limitation.AuthRequired {
+							log.D.Ln("not broadcasting privileged event to",
+								h.ws.RealRemote(), h.ws.AuthPubKey(),
+								"not party to event")
+							return
+						}
 					}
 				}
 				chk.E(h.ws.WriteEnvelope(&eventenvelope.T{

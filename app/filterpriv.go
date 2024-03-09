@@ -31,6 +31,16 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 	if !authRequired {
 		return
 	}
+	var allow bool
+	for _, v := range rl.Config.AllowIPs {
+		if ws.RealRemote() == v {
+			allow = true
+			break
+		}
+	}
+	if allow {
+		return
+	}
 	log.I.Ln("checking privilege", ws.RealRemote(), ws.AuthPubKey())
 	// check if the request filter kinds are privileged
 	privileged := kinds.IsPrivileged(f.Kinds...)
@@ -48,7 +58,7 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 		}))
 		// send out authorization request
 		RequestAuth(c)
- 	out:
+	out:
 		for {
 			select {
 			case <-ws.Authed:
@@ -57,10 +67,11 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 			case <-c.Done():
 				log.D.Ln("context canceled while waiting for auth")
 				break out
- 			case <-time.After(30 * time.Second):
+			case <-time.After(30 * time.Second):
 				if ws.AuthPubKey() == "" {
 					return true,
-						fmt.Sprint("Authorization timeout from ", ws.RealRemote())
+						fmt.Sprint("Authorization timeout from ",
+							ws.RealRemote())
 				}
 			}
 
