@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"mleku.dev/git/nostr/eventstore"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -166,12 +167,24 @@ func main() {
 		relayinfo.Authentication.Number,           // auth
 		relayinfo.CountingResults.Number,          // count requests
 	)
-	db := &IC.Backend{
-		Badger: &badger.Backend{
-			Path: dataDir,
-		},
+	var db eventstore.Store
+	badgerDB := &badger.Backend{
+		Path: dataDir,
 	}
-	if err = db.Init(rl.Info, rl.Config.CanisterAddr, rl.Config.CanisterID); chk.E(err) {
+	var parameters []string
+	switch rl.Config.EventStore {
+	case "ic":
+		db = &IC.Backend{
+			Badger: badgerDB,
+		}
+		parameters = []string{
+			rl.Config.CanisterAddr,
+			rl.Config.CanisterID,
+		}
+	case "badger":
+		db = badgerDB
+	}
+	if err = db.Init(rl.Info, parameters...); chk.E(err) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
@@ -226,9 +239,11 @@ func main() {
 	}()
 	switch {
 	case args.ImportCmd != nil:
-		rl.Import(db.Badger, args.ImportCmd.FromFile)
+		if rl.Config.EventStore == "badger" {
+			rl.Import(badgerDB, args.ImportCmd.FromFile)
+		}
 	case args.ExportCmd != nil:
-		rl.Export(db.Badger, args.ExportCmd.ToFile)
+		rl.Export(badgerDB, args.ExportCmd.ToFile)
 	default:
 		log.I.Ln("listening on", args.Listen)
 		chk.E(srvr.ListenAndServe())

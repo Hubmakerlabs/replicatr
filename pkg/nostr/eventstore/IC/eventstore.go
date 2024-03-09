@@ -23,7 +23,12 @@ type Backend struct {
 
 // Init sets up the badger event store and connects to the configured IC
 // canister.
-func (b *Backend) Init(inf *relayinfo.T, addr, canisterId string) (err error) {
+func (b *Backend) Init(inf *relayinfo.T, params ...string) (err error) {
+	if len(params) < 2 {
+		return log.E.Err("not enough parameters for eventstore Init, got %d, "+
+			"require %d: %v", len(params), 2, params)
+	}
+	canisterId, addr := params[0], params[1]
 	if err = b.Badger.Init(inf); chk.D(err) {
 		return
 	}
@@ -40,7 +45,7 @@ func (b *Backend) Close() { b.Badger.Close() }
 func (b *Backend) Serial() []byte { return b.Badger.Serial() }
 
 // CountEvents returns the number of events found matching the filter.
-func (b *Backend) CountEvents(c context.T, f *filter.T) (count int64, err error) {
+func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 	var forBadger, forIC kinds.T
 	for i := range f.Kinds {
 		if kinds.IsPrivileged(f.Kinds[i]) {

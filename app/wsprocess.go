@@ -177,13 +177,13 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			}))
 			return
 		}
-		var total int64
+		var total int
 		for _, f := range env.Filters {
 			total += rl.handleCountRequest(c, env.ID, ws, f)
 		}
 		chk.E(ws.WriteEnvelope(&countenvelope.Response{
 			ID:    env.ID,
-			Count: total,
+			Count: int64(total),
 		}))
 	case *reqenvelope.T:
 		wg := sync.WaitGroup{}
@@ -238,7 +238,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		wsBaseUrl := strings.Replace(rl.ServiceURL.Load(), "http", "ws", 1)
 		var ok bool
 		var pubkey string
-		if pubkey, ok, err = auth.Validate(env.Event, ws.Challenge(), wsBaseUrl); ok {
+		if pubkey, ok, err = auth.Validate(env.Event, ws.Challenge(),
+			wsBaseUrl); ok {
 			if ws.AuthPubKey() == env.Event.PubKey {
 				log.D.Ln("user already authed")
 				break

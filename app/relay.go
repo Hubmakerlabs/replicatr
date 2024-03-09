@@ -31,17 +31,22 @@ const (
 
 // function types used in the relay state
 type (
-	RejectEvent               func(c context.T, ev *event.T) (rej bool, msg string)
-	RejectFilter              func(c context.T, id subscriptionid.T, f *filter.T) (reject bool, msg string)
-	OverwriteFilter           func(c context.T, f *filter.T)
-	OverrideDeletionOutcome   func(c context.T, tgt, del *event.T) (ok bool, msg string)
+	RejectEvent func(c context.T, ev *event.T) (rej bool,
+		msg string)
+	RejectFilter func(c context.T, id subscriptionid.T,
+		f *filter.T) (reject bool, msg string)
+	OverwriteFilter         func(c context.T, f *filter.T)
+	OverrideDeletionOutcome func(c context.T, tgt, del *event.T) (ok bool,
+		msg string)
 	OverwriteResponseEvent    func(c context.T, ev *event.T)
 	Events                    func(c context.T, ev *event.T) error
 	Hook                      func(c context.T)
-	OverwriteRelayInformation func(c context.T, r *http.Request, info *relayinfo.T) *relayinfo.T
-	QueryEvents               func(c context.T, C chan *event.T, f *filter.T) (err error)
-	CountEvents               func(c context.T, f *filter.T) (cnt int64, err error)
-	OnEventSaved              func(c context.T, ev *event.T)
+	OverwriteRelayInformation func(c context.T, r *http.Request,
+		info *relayinfo.T) *relayinfo.T
+	QueryEvents func(c context.T, C chan *event.T,
+		f *filter.T) (err error)
+	CountEvents  func(c context.T, f *filter.T) (cnt int, err error)
+	OnEventSaved func(c context.T, ev *event.T)
 )
 
 type Relay struct {

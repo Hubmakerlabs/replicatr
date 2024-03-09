@@ -9,7 +9,7 @@ import (
 )
 
 func (rl *Relay) handleCountRequest(c context.T, id subscriptionid.T,
-	ws *relayws.WebSocket, f *filter.T) (subtotal int64) {
+	ws *relayws.WebSocket, f *filter.T) (subtotal int) {
 
 	// overwrite the filter (for example, to eliminate some kinds or tags that
 	// we know we don't support)
@@ -25,7 +25,7 @@ func (rl *Relay) handleCountRequest(c context.T, id subscriptionid.T,
 	}
 	// run the functions to count (generally it will be just one)
 	var err error
-	var res int64
+	var res int
 	for _, count := range rl.CountEvents {
 		if res, err = count(c, f); chk.E(err) {
 			chk.E(ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))

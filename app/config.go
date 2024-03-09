@@ -22,6 +22,7 @@ type Config struct {
 	ImportCmd    *ImportCmd `arg:"subcommand:import" json:"-" help:"import data from line structured JSON"`
 	InitCfgCmd   *InitCfg   `arg:"subcommand:initcfg" json:"-" help:"initialize relay configuration files"`
 	Listen       string     `arg:"-l,--listen" default:"0.0.0.0:3334" json:"listen" help:"network address to listen on"`
+	EventStore   string     `arg:"-e,--eventstore" default:"ic" json:"eventstore" help:"select event store backend [ic,badger]"`
 	CanisterAddr string     `arg:"-C,--canisteraddr" default:"127.0.0.1:46847" json:"canister_addr" help:"IC canister address to use"`
 	CanisterID   string     `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
 	Profile      string     `arg:"-p,--profile" json:"-" default:"replicatr" help:"profile name to use for storage"`
