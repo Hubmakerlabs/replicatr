@@ -43,7 +43,7 @@ type (
 	Hook                      func(c context.T)
 	OverwriteRelayInformation func(c context.T, r *http.Request,
 		info *relayinfo.T) *relayinfo.T
-	QueryEvents func(c context.T, C chan *event.T,
+	QueryEvents func(c context.T, C event.C,
 		f *filter.T) (err error)
 	CountEvents  func(c context.T, f *filter.T) (cnt int, err error)
 	OnEventSaved func(c context.T, ev *event.T)

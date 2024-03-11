@@ -91,7 +91,7 @@ func (b *Backend) DeleteEvent(c context.T, evt *event.T) (err error) {
 
 // QueryEvents searches for events that match a filter and returns them
 // asynchronously over a provided channel.
-func (b *Backend) QueryEvents(c context.T, C chan *event.T,
+func (b *Backend) QueryEvents(c context.T, C event.C,
 	f *filter.T) (err error) {
 
 	var forBadger, forIC kinds.T
