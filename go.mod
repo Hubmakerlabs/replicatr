@@ -18,7 +18,7 @@ require (
 	lukechampine.com/frand v1.4.2
 	mleku.dev/git/atomic v1.11.6
 	mleku.dev/git/ec v1.0.9
-	mleku.dev/git/nostr v1.1.2
+	mleku.dev/git/nostr v1.1.3
 	mleku.dev/git/slog v1.0.16
 )
 
