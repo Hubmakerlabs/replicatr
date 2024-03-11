@@ -28,7 +28,7 @@ func (b *Backend) Init(inf *relayinfo.T, params ...string) (err error) {
 		return log.E.Err("not enough parameters for eventstore Init, got %d, "+
 			"require %d: %v", len(params), 2, params)
 	}
-	canisterId, addr := params[0], params[1]
+	addr, canisterId := params[0], params[1]
 	if err = b.Badger.Init(inf); chk.D(err) {
 		return
 	}
@@ -60,17 +60,33 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 	if count, err = b.Badger.CountEvents(c, f); chk.E(err) {
 		return
 	}
-	// todo: this will be changed to call the IC count events implementation
-	return b.Badger.CountEvents(c, icFilter)
+	var bcounter int
+	if bcounter, err = b.Badger.CountEvents(c, icFilter); chk.E(err) {
+		return
+	}
+	var counter int
+	counter, err = b.IC.CountEvents(c, icFilter)
+	// add the result of the bigger of local vs ic so the effective count is
+	// closer to correct
+	if counter > bcounter {
+		count += counter
+	} else {
+		count += bcounter
+	}
+	return
 }
 
 // DeleteEvent removes an event from the event store.
 func (b *Backend) DeleteEvent(c context.T, evt *event.T) (err error) {
 	if kinds.IsPrivileged(evt.Kind) {
+		log.D.Ln("deleting privileged event in relay store")
 		return b.Badger.DeleteEvent(c, evt)
 	}
-	// todo: this will be the IC store
-	return b.Badger.DeleteEvent(c, evt)
+	log.D.Ln("deleting event on relay store")
+	if err = b.Badger.DeleteEvent(c, evt); chk.E(err) {
+	}
+	log.D.Ln("deleting event on IC")
+	return b.IC.DeleteEvent(c, evt)
 }
 
 // QueryEvents searches for events that match a filter and returns them
@@ -90,12 +106,16 @@ func (b *Backend) QueryEvents(c context.T, C chan *event.T,
 	f.Kinds = forBadger
 	icFilter.Kinds = forIC
 	if len(forBadger) > 0 {
-		log.I.Ln("querying relay store with filter", f.ToObject().String())
-		if err = b.Badger.QueryEvents(c, C, icFilter); chk.E(err) {
+		log.D.Ln("querying relay store with filter", f.ToObject().String())
+		if err = b.Badger.QueryEvents(c, C, f); chk.E(err) {
 		}
 	}
 	if len(forIC) > 0 {
-		log.I.Ln("querying IC with filter", icFilter.ToObject().String())
+		// todo: merge results of these two to reduce bandwidth
+		log.D.Ln("querying relay store for events first")
+		if err = b.Badger.QueryEvents(c, C, icFilter); chk.E(err) {
+		}
+		log.D.Ln("querying IC with filter", icFilter.ToObject().String())
 		if err = b.IC.QueryEvents(c, C, f); chk.E(err) {
 		}
 	}
@@ -105,8 +125,13 @@ func (b *Backend) QueryEvents(c context.T, C chan *event.T,
 // SaveEvent writes an event to the event store.
 func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 	if kinds.IsPrivileged(ev.Kind) {
-		log.I.Ln("saving event to relay store", ev.ToObject().String())
+		log.I.Ln("saving privileged event to relay store",
+			ev.ToObject().String())
 		return b.Badger.SaveEvent(c, ev)
+	}
+	log.I.Ln("saving event to relay store first",
+		ev.ToObject().String())
+	if err = b.Badger.SaveEvent(c, ev); chk.E(err) {
 	}
 	log.I.Ln("saving event to IC", ev.ToObject().String())
 	return b.IC.SaveEvent(c, ev)

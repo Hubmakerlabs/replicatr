@@ -3,9 +3,11 @@ package agent
 import (
 	"net/url"
 	"os"
+	"time"
 
 	agent_go "github.com/aviate-labs/agent-go"
 	"github.com/aviate-labs/agent-go/principal"
+	"mleku.dev/git/atomic"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/filter"
@@ -66,7 +68,8 @@ func New(cid, canAddr string) (a *Backend, err error) {
 func (a *Backend) SaveCandidEvent(event Event) (result string, err error) {
 	methodName := "save_event"
 	args := []any{event}
-	if err = a.Call(a.CanisterID, methodName, args, []any{&result}); chk.E(err) {
+	if err = a.Call(a.CanisterID, methodName, args,
+		[]any{&result}); chk.E(err) {
 		return
 	}
 	if len(result) > 0 {
@@ -88,7 +91,9 @@ func (a *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
 	return result, err
 }
 
-func (a *Backend) QueryEvents(c context.T, ch chan *event.T, f *filter.T) (err error) {
+func (a *Backend) QueryEvents(c context.T, ch chan *event.T,
+	f *filter.T) (err error) {
+
 	if f == nil {
 		return log.E.Err("nil filter for query")
 	}
@@ -119,5 +124,42 @@ func (a *Backend) SaveEvent(c context.T, e *event.T) (err error) {
 		// this is unlikely to happen but since it could.
 		err = log.E.Err("failed to store event", e.ToObject().String())
 	}
+	return
+}
+
+// DeleteEvent deletes an event matching the given event.
+// todo: not yet implemented, but there is already a backend function for this
+func (a *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
+	log.W.Ln("delete events on IC not yet implemented")
+	return
+}
+
+// CountEvents counts how many events match the filter in the IC.
+// todo: use the proper count events API call in the canister
+func (a *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
+	ch := make(chan *event.T)
+	done := make(chan struct{})
+	var counter atomic.Int32
+	go func(ch chan *event.T) {
+		// receive events and increment counter
+		for _ = range ch {
+			counter.Add(1)
+		}
+		close(done)
+	}(ch)
+	if err = a.QueryEvents(c, ch, f); chk.E(err) {
+		return
+	}
+out:
+	for {
+		select {
+		// todo: there should be some place to set this timeout more centrally
+		case <-time.After(time.Second * 5):
+			break out
+		case <-done:
+			break out
+		}
+	}
+	count = int(counter.Load())
 	return
 }
