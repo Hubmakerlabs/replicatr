@@ -17,7 +17,7 @@ type watcherParams struct {
 }
 
 func (rl *Relay) websocketWatcher(p watcherParams) {
-
+	log.T.Ln("running relay method")
 	var err error
 	defer p.kill()
 	for {
@@ -40,8 +40,10 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 					p.ws.RealRemote())
 				return
 			}
-			if err = p.ws.WriteMessage(websocket.PingMessage, nil); log.T.Chk(err) {
-				if !strings.HasSuffix(err.Error(), "use of closed network connection") {
+			if err = p.ws.WriteMessage(websocket.PingMessage,
+				nil); log.T.Chk(err) {
+				if !strings.HasSuffix(err.Error(),
+					"use of closed network connection") {
 					log.T.F("error writing ping: %v; closing websocket", err)
 				}
 				return

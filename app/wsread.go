@@ -19,6 +19,7 @@ type readParams struct {
 
 func (rl *Relay) websocketReadMessages(p readParams) {
 
+	log.T.Ln("running relay method")
 	if p.ws.OffenseCount.Load() > IgnoreAfter {
 		log.T.Ln("dropping message due to over", IgnoreAfter,
 			"errors from this client on this connection",

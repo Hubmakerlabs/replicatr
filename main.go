@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
-	"mleku.dev/git/nostr/eventstore"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/eventstore"
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
@@ -29,11 +31,14 @@ var args, conf app.Config
 
 func main() {
 	var log, chk = slog.New(os.Stderr)
-	arg.MustParse(&args)
+	err := arg.Parse(&args)
+	if err != nil {
+		log.E.Ln(err)
+		os.Exit(1)
+	}
 	log.D.S(args)
 	runtime.GOMAXPROCS(args.MaxProcs)
 	var dataDirBase string
-	var err error
 	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {
 		os.Exit(1)
 	}
@@ -83,41 +88,51 @@ func main() {
 			log.D.F("failed to load relay configuration: '%s'", err)
 			os.Exit(1)
 		}
+		log.T.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
 		if args.Listen != "" {
-			args.Listen = conf.Listen
+			conf.Listen = args.Listen
 		}
 		if args.Profile != "" {
-			args.Profile = conf.Profile
+			conf.Profile = args.Profile
 		}
 		if args.AuthRequired {
 			conf.AuthRequired = true
 		}
 		if args.Name != "" {
-			args.Name = conf.Name
+			conf.Name = args.Name
 		}
 		if args.Description != "" {
-			args.Description = conf.Description
+			conf.Description = args.Description
 		}
 		if args.Pubkey != "" {
-			args.Description = conf.Description
+			conf.Description = args.Description
 		}
 		if args.Contact != "" {
-			args.Contact = conf.Contact
+			conf.Contact = args.Contact
 		}
 		if args.Icon == "" {
-			args.Icon = conf.Icon
+			conf.Icon = args.Icon
 		}
 		// CLI args on "separate" items add to the ones in the config
 		if len(args.Whitelist) == 0 {
-			args.Whitelist = append(args.Whitelist, conf.Whitelist...)
+			conf.Whitelist = append(conf.Whitelist, args.Whitelist...)
 		}
 		if len(args.Owners) == 0 {
-			args.Owners = append(args.Owners, conf.Owners...)
+			conf.Owners = append(conf.Owners, args.Owners...)
 		}
 		if args.SecKey == "" {
-			args.SecKey = conf.SecKey
+			conf.SecKey = args.SecKey
+		}
+		if args.DBSizeLimit != 0 {
+			conf.DBSizeLimit = args.DBSizeLimit
+		}
+		if args.DBLowWater != 0 {
+			conf.DBLowWater = args.DBLowWater
+		}
+		if args.GCFrequency != 0 {
+			conf.GCFrequency = args.GCFrequency
 		}
 		log.D.S(conf)
 		if err = inf.Load(infoPath); chk.E(err) {
@@ -145,12 +160,11 @@ func main() {
 			log.D.F("failed to load relay information document: '%s' "+
 				"deriving from config", err)
 		}
-		if args.AuthRequired {
-			inf.Limitation.AuthRequired = true
-		}
+		inf.Limitation.AuthRequired = args.AuthRequired
 	}
 	log.D.S(&inf)
-	rl := app.NewRelay(&inf, &args)
+	c, cancel := context.Cancel(context.Bg())
+	rl := app.NewRelay(c, cancel, &inf, &args)
 	rl.Info.AddNIPs(
 		relayinfo.BasicProtocol.Number,            // events, envelopes and filters
 		relayinfo.FollowList.Number,               // follow lists
@@ -172,19 +186,26 @@ func main() {
 		Path: dataDir,
 	}
 	var parameters []string
+	parameters = []string{
+		fmt.Sprint(conf.DBSizeLimit),
+		fmt.Sprint(conf.DBLowWater),
+		fmt.Sprint(conf.DBHighWater),
+		fmt.Sprint(conf.GCFrequency),
+	}
 	switch rl.Config.EventStore {
 	case "ic":
 		db = &IC.Backend{
+			Ctx:    c,
 			Badger: badgerDB,
 		}
-		parameters = []string{
+		parameters = append([]string{
 			rl.Config.CanisterAddr,
 			rl.Config.CanisterID,
-		}
+		}, parameters...)
 	case "badger":
 		db = badgerDB
 	}
-	if err = db.Init(rl.Info, parameters...); chk.E(err) {
+	if err = db.Init(c, rl.Info, parameters...); chk.E(err) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
@@ -196,7 +217,8 @@ func main() {
 	rl.OnConnect = append(rl.OnConnect, rl.AuthCheck)
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
-	rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
+	// commenting out the override so GC will work
+	// rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	// run the chat ACL initialization
 	rl.Init()
 	srvr := http.Server{

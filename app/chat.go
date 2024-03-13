@@ -14,7 +14,8 @@ import (
 )
 
 // DecryptDM decrypts a DM, kind 4, 1059 or 1060
-func DecryptDM(ev *event.T, meSec, youPub string) (decryptedStr string, err error) {
+func DecryptDM(ev *event.T, meSec, youPub string) (decryptedStr string,
+	err error) {
 	switch ev.Kind {
 	case kind.EncryptedDirectMessage:
 		var secret, decrypted []byte
@@ -81,7 +82,8 @@ func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
 		log.T.Ln("not chat event", ev.Kind, kind.GetString(ev.Kind))
 		return
 	}
-	if !ev.Tags.ContainsAny("p", rl.RelayPubHex) && ev.PubKey != rl.RelayPubHex {
+	if !ev.Tags.ContainsAny("p",
+		rl.RelayPubHex) && ev.PubKey != rl.RelayPubHex {
 		log.T.Ln("direct message not for relay chat", ev.PubKey, rl.RelayPubHex)
 		return
 	}
@@ -166,10 +168,12 @@ note that if you have NIP-42 enabled in the client and you are already authorise
 type Command struct {
 	Name string
 	Help string
-	Func func(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error)
+	Func func(rl *Relay, prefix string, ev *event.T, cmd *Command,
+		args ...string) (reply *event.T, err error)
 }
 
 func (rl *Relay) command(ev *event.T, cmd string) (err error) {
+	log.T.Ln("running relay method")
 	args := strings.Split(cmd, " ")
 	if len(args) < 1 {
 		err = log.E.Err("no command received")
@@ -178,7 +182,8 @@ func (rl *Relay) command(ev *event.T, cmd string) (err error) {
 	var reply *event.T
 	for i := range Commands {
 		if Commands[i].Name == args[0] {
-			if reply, err = Commands[i].Func(rl, "", ev, Commands[i], args...); chk.E(err) {
+			if reply, err = Commands[i].Func(rl, "", ev, Commands[i],
+				args...); chk.E(err) {
 				return
 			}
 			break

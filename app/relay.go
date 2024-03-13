@@ -50,6 +50,8 @@ type (
 )
 
 type Relay struct {
+	Ctx                    context.T
+	Cancel                 context.F
 	ServiceURL             atomic.String
 	RejectEvent            []RejectEvent
 	RejectFilter           []RejectFilter
@@ -100,7 +102,7 @@ func (rl *Relay) AuthCheck(c context.T) {
 	}
 }
 
-func NewRelay(inf *relayinfo.T,
+func NewRelay(c context.T, cancel context.F, inf *relayinfo.T,
 	conf *Config) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
@@ -113,6 +115,8 @@ func NewRelay(inf *relayinfo.T,
 	npub, err = bech32encoding.EncodePublicKey(pubKey)
 	chk.E(err)
 	r = &Relay{
+		Ctx:    c,
+		Cancel: cancel,
 		Config: conf,
 		Info:   relayinfo.NewInfo(inf),
 		upgrader: websocket.Upgrader{

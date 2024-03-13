@@ -43,13 +43,14 @@ type Filter struct {
 }
 
 type Backend struct {
-	*agent_go.Agent
+	Ctx        context.T
+	Agent      *agent_go.Agent
 	CanisterID principal.Principal
 }
 
-func New(cid, canAddr string) (a *Backend, err error) {
+func New(c context.T, cid, canAddr string) (a *Backend, err error) {
 	log.D.Ln("setting up IC backend to", canAddr, cid)
-	a = &Backend{}
+	a = &Backend{Ctx: c}
 	localReplicaURL, _ := url.Parse(canAddr)
 	cfg := agent_go.Config{
 		FetchRootKey: true,
@@ -65,10 +66,10 @@ func New(cid, canAddr string) (a *Backend, err error) {
 	return
 }
 
-func (a *Backend) SaveCandidEvent(event Event) (result string, err error) {
+func (b *Backend) SaveCandidEvent(event Event) (result string, err error) {
 	methodName := "save_event"
 	args := []any{event}
-	if err = a.Call(a.CanisterID, methodName, args,
+	if err = b.Agent.Call(b.CanisterID, methodName, args,
 		[]any{&result}); chk.E(err) {
 		return
 	}
@@ -79,32 +80,32 @@ func (a *Backend) SaveCandidEvent(event Event) (result string, err error) {
 	return
 }
 
-func (a *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
+func (b *Backend) GetCandidEvent(c context.T, filter *Filter) ([]Event, error) {
 	methodName := "get_events"
 	args := []any{*filter}
 	// log.T.S(filter)
 	var result []Event
-	err := a.Query(a.CanisterID, methodName, args, []any{&result})
+	err := b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
 		return nil, err
 	}
 	return result, err
 }
 
-func (a *Backend) QueryEvents(c context.T, ch chan *event.T,
+func (b *Backend) QueryEvents(c context.T, ch chan *event.T,
 	f *filter.T) (err error) {
 
 	if f == nil {
 		return log.E.Err("nil filter for query")
 	}
 	var candidEvents []Event
-	if candidEvents, err = a.GetCandidEvent(FilterToCandid(f)); chk.E(err) {
+	if candidEvents, err = b.GetCandidEvent(c, FilterToCandid(f)); chk.E(err) {
 		return
 	}
 	log.I.Ln("got", len(candidEvents), "events")
 	for i, e := range candidEvents {
 		select {
-		case <-c.Done():
+		case <-b.Ctx.Done():
 			return
 		default:
 		}
@@ -115,9 +116,9 @@ func (a *Backend) QueryEvents(c context.T, ch chan *event.T,
 	return
 }
 
-func (a *Backend) SaveEvent(c context.T, e *event.T) (err error) {
+func (b *Backend) SaveEvent(c context.T, e *event.T) (err error) {
 	var res string
-	if res, err = a.SaveCandidEvent(EventToCandid(e)); chk.E(err) {
+	if res, err = b.SaveCandidEvent(EventToCandid(e)); chk.E(err) {
 		return
 	}
 	if res != "success" {
@@ -129,14 +130,14 @@ func (a *Backend) SaveEvent(c context.T, e *event.T) (err error) {
 
 // DeleteEvent deletes an event matching the given event.
 // todo: not yet implemented, but there is already a backend function for this
-func (a *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
+func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 	log.W.Ln("delete events on IC not yet implemented")
 	return
 }
 
 // CountEvents counts how many events match the filter in the IC.
 // todo: use the proper count events API call in the canister
-func (a *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
+func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 	ch := make(chan *event.T)
 	done := make(chan struct{})
 	var counter atomic.Int32
@@ -147,7 +148,7 @@ func (a *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 		}
 		close(done)
 	}(ch)
-	if err = a.QueryEvents(c, ch, f); chk.E(err) {
+	if err = b.QueryEvents(c, ch, f); chk.E(err) {
 		return
 	}
 out:

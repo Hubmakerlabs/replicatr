@@ -26,6 +26,7 @@ type handleFilterParams struct {
 
 func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 
+	log.T.Ln("running relay method")
 	defer h.eose.Done()
 	// overwrite the filter (for example, to eliminate some kinds or that we
 	// know we don't support)
