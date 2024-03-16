@@ -1,4 +1,4 @@
-package main
+package digestr
 
 import (
 	"crypto/rand"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"path/filepath"
+	"runtime"
 	"time"
 
 	"mleku.dev/git/slog"
@@ -33,13 +35,19 @@ var kinds = []int{
 	31990, 32123, 34550, 39998, 40000,
 }
 
-func main() {
+func generateEvents() {
 	numEvents := 1000 // Number of events to generate
-	outputFile := "generated_events.jsonl"
+	_, currentFile, _, ok := runtime.Caller(0)
+	if !ok {
+		log.E.F("Failed to get current file path")
+		return
+	}
+	currentDir := filepath.Dir(currentFile)
+	outputFile := filepath.Join(currentDir, "generated_events.jsonl")
 
 	file, err := os.Create(outputFile)
 	if err != nil {
-		fmt.Printf("Could not create file '%s': %v\n", outputFile, err)
+		log.E.F("Could not create file '%s': %v", outputFile, err)
 		return
 	}
 	defer file.Close()

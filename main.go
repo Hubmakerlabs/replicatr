@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"mleku.dev/git/nostr/eventstore"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+
+	"mleku.dev/git/nostr/eventstore"
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
@@ -248,4 +249,30 @@ func main() {
 		log.I.Ln("listening on", args.Listen)
 		chk.E(srvr.ListenAndServe())
 	}
+
+	relativePath := "cmd/digestr/canisterInfo.txt"
+
+	// Ensure the directory exists
+	err = os.MkdirAll(filepath.Dir(relativePath), os.ModePerm)
+	if err != nil {
+		fmt.Printf("Error creating directories: %v\n", err)
+		return
+	}
+
+	// Create or overwrite the file
+	file, err := os.Create(relativePath)
+	if err != nil {
+		fmt.Printf("Error creating file: %v\n", err)
+		return
+	}
+	defer file.Close()
+
+	// Write the strings to the file, separated by a newline
+	_, err = file.WriteString(fmt.Sprintf("%s\n%s", rl.Config.CanisterAddr,
+		rl.Config.CanisterID))
+	if err != nil {
+		fmt.Printf("Error writing to file: %v\n", err)
+		return
+	}
+
 }
