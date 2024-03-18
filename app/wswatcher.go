@@ -10,7 +10,7 @@ import (
 )
 
 type watcherParams struct {
-	c    context.T
+	ctx  context.T
 	kill func()
 	t    *time.Ticker
 	ws   *relayws.WebSocket
@@ -24,7 +24,7 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 		select {
 		case <-rl.Ctx.Done():
 			return
-		case <-p.c.Done():
+		case <-p.ctx.Done():
 			return
 		case <-p.t.C:
 			deny := true

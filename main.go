@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/eventstore"
@@ -165,7 +166,8 @@ func main() {
 	}
 	log.D.S(&inf)
 	c, cancel := context.Cancel(context.Bg())
-	rl := app.NewRelay(c, cancel, &inf, &args)
+	var wg sync.WaitGroup
+	rl := app.NewRelay(c, cancel, &wg, &inf, &args)
 	rl.Info.AddNIPs(
 		relayinfo.BasicProtocol.Number,            // events, envelopes and filters
 		relayinfo.FollowList.Number,               // follow lists
@@ -206,7 +208,7 @@ func main() {
 	case "badger":
 		db = badgerDB
 	}
-	if err = db.Init(c, rl.Info, parameters...); chk.E(err) {
+	if err = db.Init(c, &wg, rl.Info, parameters...); chk.E(err) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
@@ -228,48 +230,20 @@ func main() {
 	}
 	interrupt.AddHandler(func() {
 		cancel()
-		chk.E(serv.Close())
+		_, err := os.Stdin.Write([]byte{'q'})
+		chk.E(err)
+		wg.Done()
 	})
 	go func() {
-		log.I.Ln("type 1-7 <enter> to change log levels, type q <enter> to quit")
-		var b = make([]byte, 1)
 		for {
 			select {
 			case <-rl.Ctx.Done():
-				log.W.Ln("shutting down")
-
 				chk.E(serv.Close())
 				return
 			default:
 			}
-			_, err = os.Stdin.Read(b)
-			if !chk.E(err) {
-				switch b[0] {
-				case '1':
-					fmt.Println("logging off")
-					slog.SetLogLevel(slog.Off)
-				case '2':
-					fmt.Println("logging fatal")
-					slog.SetLogLevel(slog.Fatal)
-				case '3':
-					fmt.Println("logging error")
-					slog.SetLogLevel(slog.Error)
-				case '4':
-					fmt.Println("logging warn")
-					slog.SetLogLevel(slog.Warn)
-				case '5':
-					fmt.Println("logging info")
-					slog.SetLogLevel(slog.Info)
-				case '6':
-					fmt.Println("logging debug")
-					slog.SetLogLevel(slog.Debug)
-				case '7':
-					fmt.Println("logging trace")
-					slog.SetLogLevel(slog.Trace)
-				case 'q':
-					chk.E(serv.Close())
-				}
-			}
+			wg.Wait()
+			log.I.Ln("relay now cleanly shut down")
 		}
 	}()
 	switch {
@@ -281,6 +255,7 @@ func main() {
 		rl.Export(badgerDB, args.ExportCmd.ToFile)
 	default:
 		log.I.Ln("listening on", args.Listen)
+		wg.Add(1)
 		chk.E(serv.ListenAndServe())
 	}
 }

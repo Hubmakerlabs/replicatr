@@ -117,6 +117,11 @@ func (b *Backend) QueryEvents(c context.T, ch chan *event.T,
 }
 
 func (b *Backend) SaveEvent(c context.T, e *event.T) (err error) {
+	select {
+	case <-c.Done():
+		return
+	default:
+	}
 	var res string
 	if res, err = b.SaveCandidEvent(EventToCandid(e)); chk.E(err) {
 		return
@@ -154,6 +159,8 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 out:
 	for {
 		select {
+		case <-c.Done():
+			break out
 		// todo: there should be some place to set this timeout more centrally
 		case <-time.After(time.Second * 5):
 			break out

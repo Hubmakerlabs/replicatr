@@ -41,7 +41,7 @@ func main() { // arg1 = portnum, arg2 = canisterID
 		fmt.Println("not enough args: 2 args required <canisterURL> <canisterID>")
 	}
 	// Initialize the agent with the configuration for a local replica
-	a, err := agent.New(os.Args[2], os.Args[1])
+	a, err := agent.New(context.Bg(), os.Args[2], os.Args[1])
 	if err != nil {
 		log.E.F("failed to initialize agent: %v\n", err)
 		return

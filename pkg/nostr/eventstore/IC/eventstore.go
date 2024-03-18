@@ -2,10 +2,12 @@ package IC
 
 import (
 	"os"
+	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
+	"mleku.dev/git/nostr/eventstore"
 	"mleku.dev/git/nostr/eventstore/badger"
 	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/kinds"
@@ -22,19 +24,22 @@ type Backend struct {
 	Ctx    context.T
 }
 
+var _ eventstore.Store = (*Backend)(nil)
+
 // Init sets up the badger event store and connects to the configured IC
 // canister.
 //
 // required params are address, canister ID and the badger event store size
 // limit (which can be 0)
-func (b *Backend) Init(c context.T, inf *relayinfo.T,
+func (b *Backend) Init(c context.T, wg *sync.WaitGroup, inf *relayinfo.T,
 	params ...string) (err error) {
+
 	if len(params) < 3 {
 		return log.E.Err("not enough parameters for IC event store Init, "+
 			"got %d, require %d: %v", len(params), 3, params)
 	}
 	addr, canisterId := params[0], params[1]
-	if err = b.Badger.Init(c, inf, params[2:]...); chk.D(err) {
+	if err = b.Badger.Init(c, wg, inf, params[2:]...); chk.D(err) {
 		return
 	}
 	if b.IC, err = agent.New(c, canisterId, addr); chk.E(err) {
