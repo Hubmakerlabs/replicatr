@@ -18,6 +18,7 @@ require (
 	lukechampine.com/frand v1.4.2
 	mleku.dev/git/atomic v1.11.6
 	mleku.dev/git/ec v1.0.9
+	mleku.dev/git/interrupt v1.0.12
 	mleku.dev/git/nostr v1.1.4
 	mleku.dev/git/slog v1.0.16
 )
@@ -45,6 +46,7 @@ require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/herumi/bls-go-binary v1.33.0 // indirect
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -61,5 +63,6 @@ require (
 	golang.org/x/term v0.17.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	mleku.dev/git/bech32 v1.0.7 // indirect
+	mleku.dev/git/qu v1.0.8 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )

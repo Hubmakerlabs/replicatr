@@ -14,6 +14,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/alexflint/go-arg"
+	"mleku.dev/git/interrupt"
 	"mleku.dev/git/nostr/eventstore/badger"
 	"mleku.dev/git/nostr/keys"
 	"mleku.dev/git/nostr/relayinfo"
@@ -221,14 +222,26 @@ func main() {
 	// rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	// run the chat ACL initialization
 	rl.Init()
-	srvr := http.Server{
+	serv := http.Server{
 		Addr:    args.Listen,
 		Handler: rl,
 	}
+	interrupt.AddHandler(func() {
+		cancel()
+		chk.E(serv.Close())
+	})
 	go func() {
 		log.I.Ln("type 1-7 <enter> to change log levels, type q <enter> to quit")
 		var b = make([]byte, 1)
 		for {
+			select {
+			case <-rl.Ctx.Done():
+				log.W.Ln("shutting down")
+
+				chk.E(serv.Close())
+				return
+			default:
+			}
 			_, err = os.Stdin.Read(b)
 			if !chk.E(err) {
 				switch b[0] {
@@ -254,7 +267,7 @@ func main() {
 					fmt.Println("logging trace")
 					slog.SetLogLevel(slog.Trace)
 				case 'q':
-					chk.E(srvr.Close())
+					chk.E(serv.Close())
 				}
 			}
 		}
@@ -268,6 +281,6 @@ func main() {
 		rl.Export(badgerDB, args.ExportCmd.ToFile)
 	default:
 		log.I.Ln("listening on", args.Listen)
-		chk.E(srvr.ListenAndServe())
+		chk.E(serv.ListenAndServe())
 	}
 }

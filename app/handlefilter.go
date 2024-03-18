@@ -25,8 +25,6 @@ type handleFilterParams struct {
 }
 
 func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
-
-	log.T.Ln("running relay method")
 	defer h.eose.Done()
 	// overwrite the filter (for example, to eliminate some kinds or that we
 	// know we don't support)
@@ -52,6 +50,13 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	h.eose.Add(len(rl.QueryEvents))
 	for _, query := range rl.QueryEvents {
 		ch := make(chan *event.T)
+		select {
+		case <-rl.Ctx.Done():
+			log.T.Ln("shutting down")
+			return
+		default:
+		}
+		// start up event receiver before running query on this channel
 		go func(ch chan *event.T) {
 			for ev := range ch {
 				// if the event is nil the rest of this loop will panic

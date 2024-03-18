@@ -22,6 +22,8 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 	defer p.kill()
 	for {
 		select {
+		case <-rl.Ctx.Done():
+			return
 		case <-p.c.Done():
 			return
 		case <-p.t.C:
