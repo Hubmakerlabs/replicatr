@@ -65,7 +65,7 @@ func main() {
 			Limitation: relayinfo.Limits{
 				MaxMessageLength: app.MaxMessageSize,
 				Oldest:           1640305963,
-				// AuthRequired:     args.AuthRequired,
+				AuthRequired:     args.AuthRequired,
 			},
 			Retention:      object.T{},
 			RelayCountries: tag.T{},
@@ -90,7 +90,7 @@ func main() {
 			log.D.F("failed to load relay configuration: '%s'", err)
 			os.Exit(1)
 		}
-		// log.T.S(conf)
+		log.T.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
 		if args.Listen != "" {
@@ -101,6 +101,7 @@ func main() {
 		}
 		if args.AuthRequired {
 			conf.AuthRequired = true
+			inf.Limitation.AuthRequired = true
 		}
 		if args.Name != "" {
 			conf.Name = args.Name
@@ -127,6 +128,7 @@ func main() {
 		if args.SecKey == "" {
 			conf.SecKey = args.SecKey
 		}
+		log.I.Ln(args.DBSizeLimit)
 		if args.DBSizeLimit != 0 {
 			conf.DBSizeLimit = args.DBSizeLimit
 		}
@@ -136,7 +138,7 @@ func main() {
 		if args.GCFrequency != 0 {
 			conf.GCFrequency = args.GCFrequency
 		}
-		// log.D.S(conf)
+		log.D.S(conf)
 		if err = inf.Load(infoPath); chk.E(err) {
 			inf = relayinfo.T{
 				Name:        args.Name,
