@@ -167,7 +167,7 @@ func main() {
 	log.D.S(&inf)
 	c, cancel := context.Cancel(context.Bg())
 	var wg sync.WaitGroup
-	rl := app.NewRelay(c, cancel, &wg, &inf, &args)
+	rl := app.NewRelay(c, cancel, &inf, &args)
 	rl.Info.AddNIPs(
 		relayinfo.BasicProtocol.Number,            // events, envelopes and filters
 		relayinfo.FollowList.Number,               // follow lists
@@ -230,8 +230,6 @@ func main() {
 	}
 	interrupt.AddHandler(func() {
 		cancel()
-		_, err := os.Stdin.Write([]byte{'q'})
-		chk.E(err)
 		wg.Done()
 	})
 	go func() {

@@ -31,8 +31,8 @@ var _ eventstore.Store = (*Backend)(nil)
 //
 // required params are address, canister ID and the badger event store size
 // limit (which can be 0)
-func (b *Backend) Init(c context.T, wg *sync.WaitGroup, inf *relayinfo.T,
-	params ...string) (err error) {
+func (b *Backend) Init(c context.T, wg *sync.WaitGroup,
+	inf *relayinfo.T, params ...string) (err error) {
 
 	if len(params) < 3 {
 		return log.E.Err("not enough parameters for IC event store Init, "+

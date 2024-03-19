@@ -104,7 +104,7 @@ func (rl *Relay) AuthCheck(c context.T) {
 	}
 }
 
-func NewRelay(c context.T, cancel context.F, wg *sync.WaitGroup,
+func NewRelay(c context.T, cancel context.F,
 	inf *relayinfo.T, conf *Config) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
@@ -118,7 +118,6 @@ func NewRelay(c context.T, cancel context.F, wg *sync.WaitGroup,
 	chk.E(err)
 	r = &Relay{
 		Ctx:    c,
-		WG:     wg,
 		Cancel: cancel,
 		Config: conf,
 		Info:   relayinfo.NewInfo(inf),
