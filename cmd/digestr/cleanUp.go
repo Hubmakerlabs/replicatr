@@ -1,44 +1,30 @@
 package digestr
 
 import (
-	"bufio"
-	"fmt"
 	"os"
+	"path/filepath"
+
+	"mleku.dev/git/slog"
+
+	"github.com/Hubmakerlabs/replicatr/app"
+	"github.com/alexflint/go-arg"
 )
 
+var args app.Config
+
 func cleanUp() {
-	// Define the relative path to the file
-	relativePath := "canisterInfo.txt"
-
-	// Open the file
-	file, err := os.Open(relativePath)
-	if err != nil {
-		fmt.Printf("Error opening file: %v\n", err)
-		return
+	var log, chk = slog.New(os.Stderr)
+	arg.MustParse(&args)
+	var dataDirBase string
+	var err error
+	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {
+		os.Exit(1)
 	}
-	defer file.Close()
+	dataDir := filepath.Join(dataDirBase, args.Profile)
+	log.D.F("using profile directory: %s", args.Profile)
+	configPath := filepath.Join(dataDir, "config.json")
+	args.Load(configPath)
 
-	// Use a scanner to read the file line by line
-	scanner := bufio.NewScanner(file)
+	//use args.CannisterAddr and args.CannisterId to wipe database
 
-	// Initialize variables to hold the strings
-	var cannisterAddr, cannisterId string
-
-	// Assuming the file has at least two lines
-	if scanner.Scan() {
-		cannisterAddr = scanner.Text()
-	}
-	if scanner.Scan() {
-		cannisterId = scanner.Text()
-	}
-
-	// Check for errors in scanning
-	if err := scanner.Err(); err != nil {
-		fmt.Printf("Error reading from file: %v\n", err)
-		return
-	}
-
-	// Use the strings as needed
-	fmt.Printf("String 1: %s\nString 2: %s\n", cannisterAddr, cannisterId)
-	// Instead of printing, you can use str1 and str2 as variables here
 }
