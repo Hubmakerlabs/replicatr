@@ -14,13 +14,14 @@ type ImportCmd struct {
 	FromFile []string `arg:"-f,--fromfile,separate" help:"read from files instead of stdin (can use flag repeatedly for multiple files)"`
 }
 
-type InitCfg struct {
-}
+type InitCfg struct{}
+type WipeBDB struct{}
 
 type Config struct {
 	ExportCmd    *ExportCmd `arg:"subcommand:export" json:"-" help:"export database as line structured JSON"`
 	ImportCmd    *ImportCmd `arg:"subcommand:import" json:"-" help:"import data from line structured JSON"`
 	InitCfgCmd   *InitCfg   `arg:"subcommand:initcfg" json:"-" help:"initialize relay configuration files"`
+	Wipe         *WipeBDB   `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
 	Listen       string     `arg:"-l,--listen" default:"0.0.0.0:3334" json:"listen" help:"network address to listen on"`
 	EventStore   string     `arg:"-e,--eventstore" default:"ic" json:"eventstore" help:"select event store backend [ic,badger]"`
 	CanisterAddr string     `arg:"-C,--canisteraddr" default:"127.0.0.1:46847" json:"canister_addr" help:"IC canister address to use"`
@@ -84,7 +85,7 @@ func (c *Config) Load(filename string) (err error) {
 	if b, err = os.ReadFile(filename); chk.E(err) {
 		return
 	}
-	log.D.F("configuration\n%s", string(b))
+	// log.D.F("configuration\n%s", string(b))
 	if err = json.Unmarshal(b, c); chk.E(err) {
 		return
 	}

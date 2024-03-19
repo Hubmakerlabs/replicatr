@@ -38,7 +38,7 @@ func main() {
 		log.E.Ln(err)
 		os.Exit(1)
 	}
-	log.D.S(args)
+	// log.D.S(args)
 	runtime.GOMAXPROCS(args.MaxProcs)
 	var dataDirBase string
 	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {
@@ -90,7 +90,7 @@ func main() {
 			log.D.F("failed to load relay configuration: '%s'", err)
 			os.Exit(1)
 		}
-		log.T.S(conf)
+		// log.T.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
 		if args.Listen != "" {
@@ -136,7 +136,7 @@ func main() {
 		if args.GCFrequency != 0 {
 			conf.GCFrequency = args.GCFrequency
 		}
-		log.D.S(conf)
+		// log.D.S(conf)
 		if err = inf.Load(infoPath); chk.E(err) {
 			inf = relayinfo.T{
 				Name:        args.Name,
@@ -164,7 +164,7 @@ func main() {
 		}
 		inf.Limitation.AuthRequired = args.AuthRequired
 	}
-	log.D.S(&inf)
+	// log.D.S(&inf)
 	c, cancel := context.Cancel(context.Bg())
 	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, &inf, &args)
@@ -244,7 +244,12 @@ func main() {
 			log.I.Ln("relay now cleanly shut down")
 		}
 	}()
+	wg.Add(1)
 	switch {
+	case args.Wipe != nil:
+		log.D.Ln("wiping database")
+		chk.E(rl.Wipe(badgerDB))
+		os.Exit(0)
 	case args.ImportCmd != nil:
 		if rl.Config.EventStore == "badger" {
 			rl.Import(badgerDB, args.ImportCmd.FromFile)
@@ -253,7 +258,6 @@ func main() {
 		rl.Export(badgerDB, args.ExportCmd.ToFile)
 	default:
 		log.I.Ln("listening on", args.Listen)
-		wg.Add(1)
 		chk.E(serv.ListenAndServe())
 	}
 }
