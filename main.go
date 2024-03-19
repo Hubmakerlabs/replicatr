@@ -6,6 +6,10 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
+
+	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/eventstore"
 
 	"mleku.dev/git/nostr/eventstore"
 
@@ -13,6 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/alexflint/go-arg"
+	"mleku.dev/git/interrupt"
 	"mleku.dev/git/nostr/eventstore/badger"
 	"mleku.dev/git/nostr/keys"
 	"mleku.dev/git/nostr/relayinfo"
@@ -30,11 +35,14 @@ var args, conf app.Config
 
 func main() {
 	var log, chk = slog.New(os.Stderr)
-	arg.MustParse(&args)
-	log.D.S(args)
+	err := arg.Parse(&args)
+	if err != nil {
+		log.E.Ln(err)
+		os.Exit(1)
+	}
+	// log.D.S(args)
 	runtime.GOMAXPROCS(args.MaxProcs)
 	var dataDirBase string
-	var err error
 	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {
 		os.Exit(1)
 	}
@@ -59,7 +67,7 @@ func main() {
 			Limitation: relayinfo.Limits{
 				MaxMessageLength: app.MaxMessageSize,
 				Oldest:           1640305963,
-				// AuthRequired:     args.AuthRequired,
+				AuthRequired:     args.AuthRequired,
 			},
 			Retention:      object.T{},
 			RelayCountries: tag.T{},
@@ -84,41 +92,53 @@ func main() {
 			log.D.F("failed to load relay configuration: '%s'", err)
 			os.Exit(1)
 		}
+		log.T.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
 		if args.Listen != "" {
-			args.Listen = conf.Listen
+			conf.Listen = args.Listen
 		}
 		if args.Profile != "" {
-			args.Profile = conf.Profile
+			conf.Profile = args.Profile
 		}
 		if args.AuthRequired {
 			conf.AuthRequired = true
+			inf.Limitation.AuthRequired = true
 		}
 		if args.Name != "" {
-			args.Name = conf.Name
+			conf.Name = args.Name
 		}
 		if args.Description != "" {
-			args.Description = conf.Description
+			conf.Description = args.Description
 		}
 		if args.Pubkey != "" {
-			args.Description = conf.Description
+			conf.Description = args.Description
 		}
 		if args.Contact != "" {
-			args.Contact = conf.Contact
+			conf.Contact = args.Contact
 		}
 		if args.Icon == "" {
-			args.Icon = conf.Icon
+			conf.Icon = args.Icon
 		}
 		// CLI args on "separate" items add to the ones in the config
 		if len(args.Whitelist) == 0 {
-			args.Whitelist = append(args.Whitelist, conf.Whitelist...)
+			conf.Whitelist = append(conf.Whitelist, args.Whitelist...)
 		}
 		if len(args.Owners) == 0 {
-			args.Owners = append(args.Owners, conf.Owners...)
+			conf.Owners = append(conf.Owners, args.Owners...)
 		}
 		if args.SecKey == "" {
-			args.SecKey = conf.SecKey
+			conf.SecKey = args.SecKey
+		}
+		log.I.Ln(args.DBSizeLimit)
+		if args.DBSizeLimit != 0 {
+			conf.DBSizeLimit = args.DBSizeLimit
+		}
+		if args.DBLowWater != 0 {
+			conf.DBLowWater = args.DBLowWater
+		}
+		if args.GCFrequency != 0 {
+			conf.GCFrequency = args.GCFrequency
 		}
 		log.D.S(conf)
 		if err = inf.Load(infoPath); chk.E(err) {
@@ -146,12 +166,12 @@ func main() {
 			log.D.F("failed to load relay information document: '%s' "+
 				"deriving from config", err)
 		}
-		if args.AuthRequired {
-			inf.Limitation.AuthRequired = true
-		}
+		inf.Limitation.AuthRequired = args.AuthRequired
 	}
-	log.D.S(&inf)
-	rl := app.NewRelay(&inf, &args)
+	// log.D.S(&inf)
+	c, cancel := context.Cancel(context.Bg())
+	var wg sync.WaitGroup
+	rl := app.NewRelay(c, cancel, &inf, &args)
 	rl.Info.AddNIPs(
 		relayinfo.BasicProtocol.Number,            // events, envelopes and filters
 		relayinfo.FollowList.Number,               // follow lists
@@ -173,19 +193,26 @@ func main() {
 		Path: dataDir,
 	}
 	var parameters []string
+	parameters = []string{
+		fmt.Sprint(conf.DBSizeLimit),
+		fmt.Sprint(conf.DBLowWater),
+		fmt.Sprint(conf.DBHighWater),
+		fmt.Sprint(conf.GCFrequency),
+	}
 	switch rl.Config.EventStore {
 	case "ic":
 		db = &IC.Backend{
+			Ctx:    c,
 			Badger: badgerDB,
 		}
-		parameters = []string{
+		parameters = append([]string{
 			rl.Config.CanisterAddr,
 			rl.Config.CanisterID,
-		}
+		}, parameters...)
 	case "badger":
 		db = badgerDB
 	}
-	if err = db.Init(rl.Info, parameters...); chk.E(err) {
+	if err = db.Init(c, &wg, rl.Info, parameters...); chk.E(err) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
@@ -197,48 +224,36 @@ func main() {
 	rl.OnConnect = append(rl.OnConnect, rl.AuthCheck)
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
-	rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
+	// commenting out the override so GC will work
+	// rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	// run the chat ACL initialization
 	rl.Init()
-	srvr := http.Server{
+	serv := http.Server{
 		Addr:    args.Listen,
 		Handler: rl,
 	}
+	interrupt.AddHandler(func() {
+		cancel()
+		wg.Done()
+	})
 	go func() {
-		log.I.Ln("type 1-7 <enter> to change log levels, type q <enter> to quit")
-		var b = make([]byte, 1)
 		for {
-			_, err = os.Stdin.Read(b)
-			if !chk.E(err) {
-				switch b[0] {
-				case '1':
-					fmt.Println("logging off")
-					slog.SetLogLevel(slog.Off)
-				case '2':
-					fmt.Println("logging fatal")
-					slog.SetLogLevel(slog.Fatal)
-				case '3':
-					fmt.Println("logging error")
-					slog.SetLogLevel(slog.Error)
-				case '4':
-					fmt.Println("logging warn")
-					slog.SetLogLevel(slog.Warn)
-				case '5':
-					fmt.Println("logging info")
-					slog.SetLogLevel(slog.Info)
-				case '6':
-					fmt.Println("logging debug")
-					slog.SetLogLevel(slog.Debug)
-				case '7':
-					fmt.Println("logging trace")
-					slog.SetLogLevel(slog.Trace)
-				case 'q':
-					chk.E(srvr.Close())
-				}
+			select {
+			case <-rl.Ctx.Done():
+				chk.E(serv.Close())
+				return
+			default:
 			}
+			wg.Wait()
+			log.I.Ln("relay now cleanly shut down")
 		}
 	}()
+	wg.Add(1)
 	switch {
+	case args.Wipe != nil:
+		log.D.Ln("wiping database")
+		chk.E(rl.Wipe(badgerDB))
+		os.Exit(0)
 	case args.ImportCmd != nil:
 		if rl.Config.EventStore == "badger" {
 			rl.Import(badgerDB, args.ImportCmd.FromFile)
@@ -247,7 +262,7 @@ func main() {
 		rl.Export(badgerDB, args.ExportCmd.ToFile)
 	default:
 		log.I.Ln("listening on", args.Listen)
-		chk.E(srvr.ListenAndServe())
+		chk.E(serv.ListenAndServe())
 	}
 
 }

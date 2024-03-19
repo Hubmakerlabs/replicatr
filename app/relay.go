@@ -2,6 +2,7 @@ package app
 
 import (
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/fasthttp/websocket"
@@ -50,6 +51,9 @@ type (
 )
 
 type Relay struct {
+	Ctx                    context.T
+	WG                     *sync.WaitGroup
+	Cancel                 context.F
 	ServiceURL             atomic.String
 	RejectEvent            []RejectEvent
 	RejectFilter           []RejectFilter
@@ -100,8 +104,8 @@ func (rl *Relay) AuthCheck(c context.T) {
 	}
 }
 
-func NewRelay(inf *relayinfo.T,
-	conf *Config) (r *Relay) {
+func NewRelay(c context.T, cancel context.F,
+	inf *relayinfo.T, conf *Config) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
 	if inf.Limitation.MaxMessageLength > 0 {
@@ -113,6 +117,8 @@ func NewRelay(inf *relayinfo.T,
 	npub, err = bech32encoding.EncodePublicKey(pubKey)
 	chk.E(err)
 	r = &Relay{
+		Ctx:    c,
+		Cancel: cancel,
 		Config: conf,
 		Info:   relayinfo.NewInfo(inf),
 		upgrader: websocket.Upgrader{

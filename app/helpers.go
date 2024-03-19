@@ -82,7 +82,8 @@ func getServiceBaseURL(r *http.Request) string {
 		} else if strings.Index(host, ":") != -1 {
 			// has a port number
 			proto = "http"
-		} else if _, err := strconv.Atoi(strings.ReplaceAll(host, ".", "")); chk.E(err) {
+		} else if _, err := strconv.Atoi(strings.ReplaceAll(host, ".",
+			"")); chk.E(err) {
 			// it's a naked IP
 			proto = "http"
 		} else {

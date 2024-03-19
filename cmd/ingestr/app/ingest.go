@@ -75,7 +75,8 @@ func Ingest(args *Config) int {
 		if !downAuthed {
 			select {
 			case <-downRelay.AuthRequired:
-				if err = downRelay.Auth(c, func(evt *event.T) error { return evt.Sign(args.SeckeyHex) }); chk.D(err) {
+				if err = downRelay.Auth(c,
+					func(evt *event.T) error { return evt.Sign(args.SeckeyHex) }); chk.D(err) {
 					return 1
 				}
 				downAuthed = true
@@ -111,7 +112,8 @@ func Ingest(args *Config) int {
 				if err = upRelay.Publish(uc, ev); chk.D(err) {
 					log.D.Ln(upAuthed)
 					if strings.Contains(err.Error(), "connection closed") {
-						if upRelay, err = client.Connect(c, args.UploadRelay); chk.E(err) {
+						if upRelay, err = client.Connect(c,
+							args.UploadRelay); chk.E(err) {
 							return 1
 						}
 					}
@@ -126,9 +128,9 @@ func Ingest(args *Config) int {
 								return 1
 							}
 							upAuthed = true
-							// if err = upRelay.Publish(uc, ev); chk.D(err) {
-							// 	return 1
-							// }
+							if err = upRelay.Publish(uc, ev); chk.D(err) {
+								return 1
+							}
 						case <-time.After(5 * time.Second):
 							log.E.Ln("timed out waiting to auth")
 							return 1
@@ -144,6 +146,7 @@ func Ingest(args *Config) int {
 		}
 		time.Sleep(time.Duration(args.Pause) * time.Second)
 	}
-	log.I.Ln("ingested", count, "events from", args.DownloadRelay, "and sent to", args.UploadRelay)
+	log.I.Ln("ingested", count, "events from", args.DownloadRelay,
+		"and sent to", args.UploadRelay)
 	return 0
 }

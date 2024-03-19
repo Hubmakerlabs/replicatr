@@ -6,6 +6,7 @@ import (
 )
 
 func (rl *Relay) HandleNIP11(w http.ResponseWriter, r *http.Request) {
+	log.T.Ln("running relay method")
 	w.Header().Set("Content-Type", "application/nostr+json")
 	info := rl.Info
 	for _, ovw := range rl.OverwriteRelayInfo {

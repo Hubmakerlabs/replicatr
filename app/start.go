@@ -13,11 +13,15 @@ import (
 )
 
 func (rl *Relay) Router() *http.ServeMux {
+	log.T.Ln("running relay method")
 	return rl.serveMux
 }
 
 // Start creates an http server and starts listening on given host and port.
-func (rl *Relay) Start(host string, port int, started ...chan bool) (err error) {
+func (rl *Relay) Start(host string, port int,
+	started ...chan bool) (err error) {
+
+	log.T.Ln("running relay method")
 	addr := net.JoinHostPort(host, strconv.Itoa(port))
 	var ln net.Listener
 	if ln, err = net.Listen("tcp", addr); chk.E(err) {
@@ -45,9 +49,11 @@ func (rl *Relay) Start(host string, port int, started ...chan bool) (err error) 
 
 // Shutdown sends a websocket close control message to all connected clients.
 func (rl *Relay) Shutdown(c context.T) {
+	log.T.Ln("running relay method")
 	chk.E(rl.httpServer.Shutdown(c))
 	rl.clients.Range(func(conn *websocket.Conn, _ struct{}) bool {
-		chk.E(conn.WriteControl(websocket.CloseMessage, nil, time.Now().Add(time.Second)))
+		chk.E(conn.WriteControl(websocket.CloseMessage, nil,
+			time.Now().Add(time.Second)))
 		chk.E(conn.Close())
 		rl.clients.Delete(conn)
 		return true

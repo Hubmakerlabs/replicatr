@@ -10,19 +10,21 @@ import (
 )
 
 type watcherParams struct {
-	c    context.T
+	ctx  context.T
 	kill func()
 	t    *time.Ticker
 	ws   *relayws.WebSocket
 }
 
 func (rl *Relay) websocketWatcher(p watcherParams) {
-
+	log.T.Ln("running relay method")
 	var err error
 	defer p.kill()
 	for {
 		select {
-		case <-p.c.Done():
+		case <-rl.Ctx.Done():
+			return
+		case <-p.ctx.Done():
 			return
 		case <-p.t.C:
 			deny := true
@@ -40,8 +42,10 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 					p.ws.RealRemote())
 				return
 			}
-			if err = p.ws.WriteMessage(websocket.PingMessage, nil); log.T.Chk(err) {
-				if !strings.HasSuffix(err.Error(), "use of closed network connection") {
+			if err = p.ws.WriteMessage(websocket.PingMessage,
+				nil); log.T.Chk(err) {
+				if !strings.HasSuffix(err.Error(),
+					"use of closed network connection") {
 					log.T.F("error writing ping: %v; closing websocket", err)
 				}
 				return
