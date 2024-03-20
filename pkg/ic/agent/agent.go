@@ -171,3 +171,17 @@ out:
 	count = int(counter.Load())
 	return
 }
+
+func (b *Backend) ClearEvents(c context.T) (result string, err error) {
+	methodName := "clear_events"
+	args := []any{}
+	if err = b.Agent.Call(b.CanisterID, methodName, args, []any{&result}); chk.E(err) {
+		return "", err
+	}
+
+	if len(result) == 0 {
+		return "", log.E.Err("unexpected result format from clear_events")
+	}
+
+	return result, nil
+}

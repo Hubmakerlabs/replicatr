@@ -1,25 +1,21 @@
 type Event = record {
   id : text;
-  pubkey : text;
-  created_at : int64;
+  sig : text;
+  content : text;
   kind : nat16;
   tags : vec vec text;
-  content : text;
-  sig : text;
- 
+  pubkey : text;
+  created_at : int64;
 };
 type Filter = record {
   ids : vec text;
-  kinds : vec nat16;
-  authors : vec text;
   tags : vec KeyValuePair;
-  since : int64;
-  until : int64;
-  limit : int64;
   search : text;
-  
-  
-  
+  limit : int64;
+  since : int64;
+  authors : vec text;
+  until : int64;
+  kinds : vec nat16;
 };
 type KeyValuePair = record { key : text; value : vec text };
 service : {
@@ -32,4 +28,5 @@ service : {
   save_event : (Event) -> (text);
   save_events : (vec Event) -> (text);
   test : () -> (text) query;
+  clear_events: () -> (text);
 }

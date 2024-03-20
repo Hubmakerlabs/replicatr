@@ -11,8 +11,6 @@ import (
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/eventstore"
 
-	"mleku.dev/git/nostr/eventstore"
-
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"

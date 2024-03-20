@@ -89,6 +89,8 @@ github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeN
 github.com/google/uuid v1.1.2/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gookit/color v1.5.4 h1:FZmqs7XOyGgCAxmWyPslpiok1k05wmY3SJTytgvYFs0=
 github.com/gookit/color v1.5.4/go.mod h1:pZJOeOS8DM43rXbp4AZo1n9zCU2qjpcRko0b6/QJi9w=
+github.com/gorilla/websocket v1.5.1 h1:gmztn0JnHVt9JZquRuzLw3g4wouNVzKL15iLr/zn/QY=
+github.com/gorilla/websocket v1.5.1/go.mod h1:x3kM2JMyaluk02fnUJpQuwD2dCS5NDG2ZHL0uE0tcaY=
 github.com/herumi/bls-go-binary v1.33.0 h1:OJwWkXTsxF7SLHT8cBLJfb6i97KHfrG4DkgejLcDm78=
 github.com/herumi/bls-go-binary v1.33.0/go.mod h1:O4Vp1AfR4raRGwFeQpr9X/PQtncEicMoOe6BQt1oX0Y=
 github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 h1:iQTw/8FWTuc7uiaSepXwyf3o52HaUYcV+Tu66S3F5GA=
@@ -241,6 +243,8 @@ mleku.dev/git/interrupt v1.0.12 h1:oL1CJx/QJ2BqgpxT4veJXjH5tfofE3liWQcvNmyhowI=
 mleku.dev/git/interrupt v1.0.12/go.mod h1:Ln/7alqQIJ6Xr9ySrgipIyvx2Ba+m86pPrVZ2R29XkM=
 mleku.dev/git/nostr v1.1.4 h1:WHXmlnCh6tjYlubBDF3VKfY+5PXmvKI0Ksh6IzAagiU=
 mleku.dev/git/nostr v1.1.4/go.mod h1:6JBVL8bnIi+VMKtcl1vU4HmP4+poNAOzjzsRwlZQW4E=
+mleku.dev/git/nostr v1.1.12 h1:LEWAvoaraz9p6QR9DHlvJOBGrlWBvVl31/+q/+EkgAI=
+mleku.dev/git/nostr v1.1.12/go.mod h1:6JBVL8bnIi+VMKtcl1vU4HmP4+poNAOzjzsRwlZQW4E=
 mleku.dev/git/qu v1.0.8 h1:1gzazoon4RqOyYGW8W2Evv+YsKiS+p1DelggBia/oX8=
 mleku.dev/git/qu v1.0.8/go.mod h1:IfzooSEVuzPHf1Pes5tJfNhbVvbCu89rtWxeRltj4IA=
 mleku.dev/git/slog v1.0.16 h1:ibfAo21AstzrKdc9b58S8QxhNXPsSgYeGOCbNGmv60M=
