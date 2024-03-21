@@ -19,7 +19,7 @@ type readParams struct {
 
 func (rl *Relay) websocketReadMessages(p readParams) {
 
-	log.T.Ln("running relay method")
+	// log.T.Ln("running relay method")
 	if p.ws.OffenseCount.Load() > IgnoreAfter {
 		log.T.Ln("dropping message due to over", IgnoreAfter,
 			"errors from this client on this connection",
@@ -83,7 +83,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 			p.ws.RealRemote(), p.ws.AuthPubKey(), strMsg)
 		if err = rl.wsProcessMessages(message, p.c, p.kill, p.ws); chk.D(err) {
 			// p.kill()
-			return
+			// return
 		}
 	}
 }

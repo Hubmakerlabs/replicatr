@@ -100,6 +100,7 @@ type Relay struct {
 // method).
 func (rl *Relay) AuthCheck(c context.T) {
 	if rl.Info.Limitation.AuthRequired {
+		log.I.Ln("requesting auth")
 		RequestAuth(c)
 	}
 }
@@ -116,11 +117,14 @@ func NewRelay(c context.T, cancel context.F,
 	var npub string
 	npub, err = bech32encoding.EncodePublicKey(pubKey)
 	chk.E(err)
+	inf.Software = Software
+	inf.Version = Version
+	inf.PubKey = pubKey
 	r = &Relay{
 		Ctx:    c,
 		Cancel: cancel,
 		Config: conf,
-		Info:   relayinfo.NewInfo(inf),
+		Info:   inf,
 		upgrader: websocket.Upgrader{
 			ReadBufferSize:  ReadBufferSize,
 			WriteBufferSize: WriteBufferSize,
@@ -139,8 +143,6 @@ func NewRelay(c context.T, cancel context.F,
 		ACL:            &acl.T{},
 	}
 	log.I.F("relay chat pubkey: %s %s", pubKey, npub)
-	r.Info.Software = Software
-	r.Info.Version = Version
 	// populate ACL with owners to start
 	for _, owner := range r.Config.Owners {
 		if err = r.ACL.AddEntry(&acl.Entry{

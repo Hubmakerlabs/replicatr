@@ -154,7 +154,9 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		if ok = !chk.E(err); !ok {
 			reason = err.Error()
 			if strings.HasPrefix(reason, auth.Required) {
+				log.I.Ln("requesting auth")
 				RequestAuth(c)
+				ok = true
 			}
 			if strings.HasPrefix(reason, "duplicate") {
 				ok = true
@@ -162,7 +164,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		} else {
 			ok = true
 		}
-		log.T.Ln("sending back ok envelope", ws.AuthPubKey(),
+		log.T.Ln("sending back ok envelope", ok, ws.AuthPubKey(),
 			ws.RealRemote())
 		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,

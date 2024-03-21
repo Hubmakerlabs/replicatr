@@ -52,11 +52,13 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 		} else if authRequired {
 			reason = "this relay requires authentication for all access"
 		}
+		log.I.Ln(reason)
 		chk.E(ws.WriteEnvelope(&closedenvelope.T{
 			ID:     id,
 			Reason: normalize.Reason(reason, auth.Required),
 		}))
 		// send out authorization request
+		log.I.Ln("requesting auth")
 		RequestAuth(c)
 	out:
 		for {
@@ -67,7 +69,7 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 			case <-c.Done():
 				log.D.Ln("context canceled while waiting for auth")
 				break out
-			case <-time.After(30 * time.Second):
+			case <-time.After(5 * time.Second):
 				if ws.AuthPubKey() == "" {
 					return true,
 						fmt.Sprint("Authorization timeout from ",

@@ -62,7 +62,15 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		log.T.Ln("inbound connection from", rr)
 	}
 	kill := func() {
-		log.T.Ln("disconnecting websocket", rr)
+		if len(rl.Whitelist) > 0 {
+			for i := range rl.Whitelist {
+				if rr == rl.Whitelist[i] {
+					log.T.Ln("disconnecting from", rr)
+				}
+			}
+		} else {
+			log.T.Ln("disconnecting from", rr)
+		}
 		for _, onDisconnect := range rl.OnDisconnect {
 			onDisconnect(c)
 		}

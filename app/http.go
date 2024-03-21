@@ -11,7 +11,7 @@ import (
 // This is the main starting function of the relay. This launches
 // HandleWebsocket which runs the message handling main loop.
 func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.T.Ln("ServeHTTP")
+	// log.T.Ln("ServeHTTP")
 	select {
 	case <-rl.Ctx.Done():
 		log.W.Ln("shutting down")

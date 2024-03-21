@@ -1,8 +1,6 @@
 package app
 
 import (
-	"errors"
-
 	"github.com/dgraph-io/badger/v4"
 	bdb "mleku.dev/git/nostr/eventstore/badger"
 )
@@ -22,9 +20,7 @@ func (rl *Relay) Wipe(store *bdb.Backend) (err error) {
 		log.I.Ln("deleted", count, "records")
 		return
 	})
-	if err = store.DB.RunValueLogGC(0.8); err != nil &&
-		!errors.Is(err, badger.ErrNoRewrite) {
-		log.D.Ln("badger gc error:" + err.Error())
+	if err = store.DB.RunValueLogGC(0.8); chk.E(err) {
 	}
 	return
 }

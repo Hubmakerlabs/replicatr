@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -8,18 +9,16 @@ import (
 	"runtime"
 	"sync"
 
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/eventstore"
-
-	"mleku.dev/git/nostr/eventstore"
-
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/alexflint/go-arg"
 	"mleku.dev/git/interrupt"
+	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/eventstore"
 	"mleku.dev/git/nostr/eventstore/badger"
 	"mleku.dev/git/nostr/keys"
+	"mleku.dev/git/nostr/number"
 	"mleku.dev/git/nostr/relayinfo"
 	"mleku.dev/git/nostr/tag"
 	"mleku.dev/git/nostr/wire/object"
@@ -32,6 +31,29 @@ var (
 )
 
 var args, conf app.Config
+
+var nips = number.List{
+	relayinfo.BasicProtocol.Number,                  // NIP1 events, envelopes and filters
+	relayinfo.FollowList.Number,                     // NIP2 contact list and pet names
+	relayinfo.EncryptedDirectMessage.Number,         // NIP4 encrypted DM
+	relayinfo.MappingNostrKeysToDNS.Number,          // NIP5 DNS
+	relayinfo.EventDeletion.Number,                  // NIP9 event delete
+	relayinfo.RelayInformationDocument.Number,       // NIP11 relay information document
+	relayinfo.GenericTagQueries.Number,              // NIP12 generic tag queries
+	relayinfo.NostrMarketplace.Number,               // NIP15 marketplace
+	relayinfo.EventTreatment.Number,                 // NIP16
+	relayinfo.Reposts.Number,                        // NIP18 reposts
+	relayinfo.Bech32EncodedEntities.Number,          // NIP19 bech32 encodings
+	relayinfo.CommandResults.Number,                 // NIP20
+	relayinfo.SomethingSomething.Number,             // NIP22
+	relayinfo.LongFormContent.Number,                // NIP23 long form
+	relayinfo.PublicChat.Number,                     // NIP28 public chat
+	relayinfo.ParameterizedReplaceableEvents.Number, // NIP33
+	relayinfo.ExpirationTimestamp.Number,            // NIP40
+	relayinfo.UserStatuses.Number,                   // NIP38 user statuses
+	relayinfo.Authentication.Number,                 // NIP42 auth
+	relayinfo.CountingResults.Number,                // NIP45 count requests
+}
 
 func main() {
 	var log, chk = slog.New(os.Stderr)
@@ -62,21 +84,29 @@ func main() {
 			Description: args.Description,
 			PubKey:      args.Pubkey,
 			Contact:     args.Contact,
+			Nips:        nips,
 			Software:    AppName,
 			Version:     Version,
 			Limitation: relayinfo.Limits{
 				MaxMessageLength: app.MaxMessageSize,
 				Oldest:           1640305963,
 				AuthRequired:     args.AuthRequired,
+				PaymentRequired:  args.AuthRequired,
+				RestrictedWrites: args.AuthRequired,
+				MaxSubscriptions: 50,
 			},
 			Retention:      object.T{},
 			RelayCountries: tag.T{},
 			LanguageTags:   tag.T{},
 			Tags:           tag.T{},
 			PostingPolicy:  "",
-			PaymentsURL:    "",
-			Fees:           relayinfo.Fees{},
-			Icon:           args.Icon,
+			PaymentsURL:    "https://gfy.mleku.dev",
+			Fees: relayinfo.Fees{
+				Admission: []relayinfo.Admission{
+					{Amount: 100000000, Unit: "satoshi"},
+				},
+			},
+			Icon: args.Icon,
 		}
 		apputil.EnsureDir(configPath)
 		if err = args.Save(configPath); chk.E(err) {
@@ -92,7 +122,7 @@ func main() {
 			log.D.F("failed to load relay configuration: '%s'", err)
 			os.Exit(1)
 		}
-		log.T.S(conf)
+		// log.T.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
 		if args.Listen != "" {
@@ -100,10 +130,6 @@ func main() {
 		}
 		if args.Profile != "" {
 			conf.Profile = args.Profile
-		}
-		if args.AuthRequired {
-			conf.AuthRequired = true
-			inf.Limitation.AuthRequired = true
 		}
 		if args.Name != "" {
 			conf.Name = args.Name
@@ -140,54 +166,52 @@ func main() {
 		if args.GCFrequency != 0 {
 			conf.GCFrequency = args.GCFrequency
 		}
-		log.D.S(conf)
+		if conf.Pubkey, err = keys.GetPublicKey(conf.SecKey); chk.E(err) {
+		}
+		// log.D.S(conf)
 		if err = inf.Load(infoPath); chk.E(err) {
 			inf = relayinfo.T{
 				Name:        args.Name,
 				Description: args.Description,
 				PubKey:      args.Pubkey,
 				Contact:     args.Contact,
+				Nips:        nips,
 				Software:    AppName,
 				Version:     Version,
 				Limitation: relayinfo.Limits{
 					MaxMessageLength: app.MaxMessageSize,
 					Oldest:           1640305963,
 					AuthRequired:     args.AuthRequired,
+					PaymentRequired:  args.AuthRequired,
+					RestrictedWrites: args.AuthRequired,
+					MaxSubscriptions: 50,
 				},
 				Retention:      object.T{},
 				RelayCountries: tag.T{},
 				LanguageTags:   tag.T{},
 				Tags:           tag.T{},
 				PostingPolicy:  "",
-				PaymentsURL:    "",
-				Fees:           relayinfo.Fees{},
-				Icon:           args.Icon,
+				PaymentsURL:    "https://gfy.mleku.dev",
+				Fees: relayinfo.Fees{
+					Admission: []relayinfo.Admission{
+						{21000000, "bitcoin"},
+					},
+				},
+				Icon: args.Icon,
 			}
 			log.D.F("failed to load relay information document: '%s' "+
 				"deriving from config", err)
 		}
-		inf.Limitation.AuthRequired = args.AuthRequired
 	}
-	// log.D.S(&inf)
+	if args.AuthRequired {
+		conf.AuthRequired = true
+		inf.Limitation.AuthRequired = true
+	}
+	log.D.S(&inf)
+	json.NewEncoder(os.Stderr).Encode(&inf)
 	c, cancel := context.Cancel(context.Bg())
 	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, &inf, &args)
-	rl.Info.AddNIPs(
-		relayinfo.BasicProtocol.Number,            // events, envelopes and filters
-		relayinfo.FollowList.Number,               // follow lists
-		relayinfo.EncryptedDirectMessage.Number,   // encrypted DM
-		relayinfo.MappingNostrKeysToDNS.Number,    // DNS
-		relayinfo.EventDeletion.Number,            // event delete
-		relayinfo.RelayInformationDocument.Number, // relay information document
-		relayinfo.NostrMarketplace.Number,         // marketplace
-		relayinfo.Reposts.Number,                  // reposts
-		relayinfo.Bech32EncodedEntities.Number,    // bech32 encodings
-		relayinfo.LongFormContent.Number,          // long form
-		relayinfo.PublicChat.Number,               // public chat
-		relayinfo.UserStatuses.Number,             // user statuses
-		relayinfo.Authentication.Number,           // auth
-		relayinfo.CountingResults.Number,          // count requests
-	)
 	var db eventstore.Store
 	badgerDB := &badger.Backend{
 		Path: dataDir,
