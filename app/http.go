@@ -24,8 +24,8 @@ func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Upgrade") == "websocket" {
 		rl.HandleWebsocket(w, r)
 	} else if r.Header.Get("Accept") == "application/nostr+json" {
-		cors.AllowAll().Handler(http.HandlerFunc(rl.HandleNIP11)).ServeHTTP(w,
-			r)
+		cors.AllowAll().Handler(http.HandlerFunc(rl.HandleNIP11)).
+			ServeHTTP(w, r)
 	} else {
 		rl.serveMux.ServeHTTP(w, r)
 	}

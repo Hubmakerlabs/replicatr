@@ -67,3 +67,4 @@ require (
 	mleku.dev/git/qu v1.0.8 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
+replace mleku.dev/git/nostr => /n

@@ -37,10 +37,11 @@ func Ingest(args *Config) int {
 	if downRelay, err = client.Connect(c, args.DownloadRelay); chk.E(err) {
 		return 1
 	}
+	log.I.Ln("connected to download relay")
 	if upRelay, err = client.Connect(c, args.UploadRelay); chk.E(err) {
 		return 1
 	}
-	_, _ = downRelay, upRelay
+	log.I.Ln("connected to upload relay")
 	var count int
 	oldest := args.Since
 	now := time.Now().Unix()
@@ -75,6 +76,7 @@ func Ingest(args *Config) int {
 		if !downAuthed {
 			select {
 			case <-downRelay.AuthRequired:
+				log.T.Ln("authing to down relay")
 				if err = downRelay.Auth(c,
 					func(evt *event.T) error { return evt.Sign(args.SeckeyHex) }); chk.D(err) {
 					return 1
@@ -121,6 +123,7 @@ func Ingest(args *Config) int {
 						// this can fail once
 						select {
 						case <-upRelay.AuthRequired:
+							log.T.Ln("authing to up relay")
 							if err = upRelay.Auth(c,
 								func(evt *event.T) error {
 									return evt.Sign(args.SeckeyHex)
