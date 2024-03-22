@@ -8,6 +8,7 @@ require (
 	github.com/dgraph-io/badger/v4 v4.2.0
 	github.com/fasthttp/websocket v1.5.8
 	github.com/gookit/color v1.5.4
+	github.com/gorilla/websocket v1.5.1
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/minio/sha256-simd v1.0.1
 	github.com/puzpuzpuz/xsync/v2 v2.5.1
@@ -18,7 +19,7 @@ require (
 	lukechampine.com/frand v1.4.2
 	mleku.dev/git/atomic v1.11.6
 	mleku.dev/git/ec v1.0.9
-	mleku.dev/git/interrupt v1.0.12
+	mleku.dev/git/interrupt v1.0.13
 	mleku.dev/git/nostr v1.1.14
 	mleku.dev/git/slog v1.0.16
 )
@@ -45,7 +46,6 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
-	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/herumi/bls-go-binary v1.33.0 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/klauspost/compress v1.17.7 // indirect
