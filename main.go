@@ -57,13 +57,10 @@ var nips = number.List{
 
 func main() {
 	var log, chk = slog.New(os.Stderr)
-	err := arg.Parse(&args)
-	if err != nil {
-		log.E.Ln(err)
-		os.Exit(1)
-	}
-	// log.D.S(args)
+	arg.MustParse(&args)
+	log.D.S(args)
 	runtime.GOMAXPROCS(args.MaxProcs)
+	var err error
 	var dataDirBase string
 	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {
 		os.Exit(1)
