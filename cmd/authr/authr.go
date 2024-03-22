@@ -3,6 +3,7 @@ package main
 import (
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"mleku.dev/git/ec/secp256k1"
@@ -25,13 +26,15 @@ func main() {
 		os.Exit(1)
 	}
 	var sec *secp256k1.SecretKey
-	if sec, err = bech32encoding.NsecToSecretKey(os.Args[2]); chk.E(err) {
-		os.Exit(1)
+	var secKeyHex string
+	if strings.HasPrefix(os.Args[2], bech32encoding.NsecHRP) {
+		if sec, err = bech32encoding.NsecToSecretKey(os.Args[2]); chk.E(err) {
+			os.Exit(1)
+		}
+		secKeyHex = bech32encoding.SecretKeyToHex(sec)
+	} else {
+		secKeyHex = os.Args[2]
 	}
-	secKeyHex := bech32encoding.SecretKeyToHex(sec)
-	var pub string
-	pub, err = bech32encoding.PublicKeyToNpub(sec.PubKey())
-	log.I.Ln("testing auth flow on relay", u, "with key", pub)
 	c := context.Bg()
 	var rl *client.T
 	if rl, err = client.Connect(c, u.String()); chk.E(err) {
