@@ -66,15 +66,21 @@ func main() {
 		os.Exit(1)
 	}
 	dataDir := filepath.Join(dataDirBase, args.Profile)
-	log.D.F("using profile directory: %s", args.Profile)
+	log.D.F("using profile directory: %s", dataDir)
+	if !apputil.FileExists(dataDir) {
+		args.InitCfgCmd = &app.InitCfg{}
+	}
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
-	inf := *relayinfo.NewInfo(nil)
+	// inf := *relayinfo.NewInfo(&relayinfo.T{Nips: nips})
+	var inf relayinfo.T
+	// generate a relay identity key if one wasn't given
+	if args.SecKey == "" {
+		args.SecKey = keys.GeneratePrivateKey()
+	}
 	// initialize configuration with whatever has been read from the CLI.
 	if args.InitCfgCmd != nil {
-		// generate a relay identity key if one wasn't given
-		if args.SecKey == "" {
-			args.SecKey = keys.GeneratePrivateKey()
+		if args.Pubkey, err = keys.GetPublicKey(args.SecKey); chk.E(err) {
 		}
 		inf = relayinfo.T{
 			Name:        args.Name,
@@ -135,7 +141,7 @@ func main() {
 			conf.Description = args.Description
 		}
 		if args.Pubkey != "" {
-			conf.Description = args.Description
+			conf.Pubkey = args.Pubkey
 		}
 		if args.Contact != "" {
 			conf.Contact = args.Contact
