@@ -1,12 +1,12 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/app"
@@ -58,6 +58,16 @@ var nips = number.List{
 func main() {
 	var log, chk = slog.New(os.Stderr)
 	arg.MustParse(&args)
+	// set logging level if non-default was set in args
+	if args.LogLevel != "info" {
+		for i := range slog.LevelSpecs {
+			if slog.LevelSpecs[i].Name[:1] == strings.
+				ToLower(args.LogLevel[:1]) {
+
+				slog.SetLogLevel(i)
+			}
+		}
+	}
 	log.D.S(args)
 	runtime.GOMAXPROCS(args.MaxProcs)
 	var err error
@@ -211,7 +221,6 @@ func main() {
 		inf.Limitation.AuthRequired = true
 	}
 	log.D.S(&inf)
-	json.NewEncoder(os.Stderr).Encode(&inf)
 	c, cancel := context.Cancel(context.Bg())
 	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, &inf, &args)

@@ -3,7 +3,6 @@ package app
 import (
 	"encoding/json"
 	"net/http"
-	"os"
 )
 
 func (rl *Relay) HandleNIP11(w http.ResponseWriter, r *http.Request) {
@@ -13,6 +12,5 @@ func (rl *Relay) HandleNIP11(w http.ResponseWriter, r *http.Request) {
 	for _, ovw := range rl.OverwriteRelayInfo {
 		info = ovw(r.Context(), r, info)
 	}
-	json.NewEncoder(os.Stderr).Encode(info)
 	chk.E(json.NewEncoder(w).Encode(info))
 }
