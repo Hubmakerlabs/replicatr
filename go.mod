@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/alexflint/go-arg v1.4.3
-	github.com/aviate-labs/agent-go v0.3.3
+	github.com/aviate-labs/agent-go v0.3.4
 	github.com/dgraph-io/badger/v4 v4.2.0
 	github.com/fasthttp/websocket v1.5.8
 	github.com/gookit/color v1.5.4
@@ -15,12 +15,12 @@ require (
 	github.com/rs/cors v1.10.1
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/urfave/cli/v2 v2.27.1
-	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
+	golang.org/x/exp v0.0.0-20240318143956-a85f2c67cd81
 	lukechampine.com/frand v1.4.2
 	mleku.dev/git/atomic v1.11.6
 	mleku.dev/git/ec v1.0.9
 	mleku.dev/git/interrupt v1.0.13
-	mleku.dev/git/nostr v1.1.14
+	mleku.dev/git/nostr v1.1.16
 	mleku.dev/git/slog v1.0.16
 )
 
