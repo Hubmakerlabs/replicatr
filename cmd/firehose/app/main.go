@@ -12,10 +12,10 @@ import (
 	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/nostr/eventid"
+	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/nostr/filters"
 	"mleku.dev/git/nostr/kind"
 	"mleku.dev/git/nostr/nostrbinary"
-	"mleku.dev/git/nostr/subscription"
 	"mleku.dev/git/nostr/tag"
 	"mleku.dev/git/nostr/timestamp"
 	"mleku.dev/git/qu"
@@ -27,7 +27,7 @@ var log, chk = slog.New(os.Stderr)
 type Config struct {
 	MaxContentSize int    `arg:"-m,--maxsize" default:"1024" help:"maximum size of event content field to generate"`
 	TotalSize      int    `arg:"-t,--totalsize" help:"total amount of events data (binary) in bytes to generate"`
-	MaxDelay       int    `arg:"-d,--maxdelay" default:"3" help:"max delay between dispatching events (seconds)"`
+	MaxDelay       int    `arg:"-d,--maxdelay" default:"30" help:"max delay between dispatching events (milliseconds)"`
 	Nsec           string `arg:"-n,--nsec" help:"secret key in hex or bech32 nsec format to use for signing events and auth"`
 	Relay          string `arg:"-r,--relay" default:"ws://127.0.0.1:3334" help:"relay to dispatch to, eg ws://127.0.0.1:3334"`
 }
@@ -69,13 +69,14 @@ func (cfg *Config) Main() (err error) {
 				mx.Lock()
 				for i := range counter {
 					rn := frand.Intn(256)
-					log.I.Ln("counter", counter[i].requested, "*", rn, "=",
-						counter[i].requested*rn)
 					// multiply this number by the number of accesses the event
 					// has and request every event that gets over 50% so that we
 					// create a bias towards already requested.
-					if counter[i].requested*rn > 192 {
-						log.T.Ln("adding to fetchIDs")
+					if counter[i].requested+rn > 192 {
+						log.I.Ln("counter", counter[i].requested, "+", rn, "=",
+							counter[i].requested+rn)
+						// log.T.Ln("adding to fetchIDs")
+						counter[i].requested++
 						fetchIDs = append(fetchIDs, counter[i].id)
 					}
 				}
@@ -85,66 +86,34 @@ func (cfg *Config) Main() (err error) {
 				// copy out current list of events to request
 				mx.Lock()
 				log.W.Ln("ticker", len(fetchIDs))
-				f := make([]*eventid.T, len(fetchIDs))
-				copy(f, fetchIDs)
+				ids := make(tag.T, len(fetchIDs))
+				for i := range fetchIDs {
+					ids[i] = fetchIDs[i].String()
+				}
 				fetchIDs = fetchIDs[:0]
 				mx.Unlock()
-				// because we copied it and purged the original so it can
-				// refill, we can now run the actual fetch in the background as
-				// it is only to poke the database.
-				if len(f) > 0 {
-					// go func(f []*eventid.T) {
-					// limit := len(f)
-					// increment access counts
-					mx.Lock()
-					for i := range counter {
-						for j := range f {
-							if counter[i].id.String() == f[j].String() {
-								counter[i].requested++
+				if len(ids) > 0 {
+					for i := range ids {
+						go func(i int) {
+							sc, _ := context.Timeout(c, 2*time.Second)
+							sub := rl.PrepareSubscription(sc, filters.T{&filter.T{
+								IDs: tag.T{ids[i]},
+							}})
+							if err = sub.Fire(); chk.E(err) {
+								return
 							}
-						}
-					}
-					mx.Unlock()
-					one := 1
-					var subs []*subscription.T
-					for i := range f {
-						filt := filters.T{
-							{IDs: tag.T{f[i].String()}, Limit: &one},
-						}
-						var sub *subscription.T
-						log.T.Ln("sending filter", filt.ToArray().String())
-						if sub, err = rl.Subscribe(c, filt); chk.E(err) {
-							// not sure what to do here
-						}
-						subs = append(subs, sub)
-					}
-					// log.W.Ln("unsubscribing")
-					// sub.Unsub()
-					// receive and discard, we are only doing this to make the
-					// relay increment the access counters.
-					for _, sub := range subs {
-						go func() {
-						out:
-							for {
+							go func() {
+								// receive the results
 								select {
-								case <-c.Done():
-									log.I.Ln("done")
-									return
+								case <-sub.Events:
+									log.I.Ln("received event")
 								case <-sub.EndOfStoredEvents:
 									log.I.Ln("EOSE")
-									break out
-								case _, more := <-sub.Events:
-									if !more {
-										break out
-									}
-								case <-time.After(2 * time.Second):
-									log.W.Ln("timeout sub")
-									break out
+								case <-sc.Done():
+									log.I.Ln("subscription done")
 								}
-							}
-							log.W.Ln("unsubscribing")
-							sub.Unsub()
-						}()
+							}()
+						}(i)
 					}
 				}
 			case <-c.Done():
@@ -176,17 +145,18 @@ out:
 		}
 		mx.Unlock()
 		newEvent.Signal()
-		if err = rl.Publish(c, ev); chk.E(err) {
+		sc, _ := context.Timeout(c, 2*time.Second)
+		if err = rl.Publish(sc, ev); chk.E(err) {
 		}
 		delay := frand.Intn(cfg.MaxDelay)
-		log.I.Ln("waiting between", delay)
+		log.I.Ln("waiting between", delay, "ms")
 		if delay == 0 {
 			continue
 		}
 		select {
 		case <-c.Done():
 			return
-		case <-time.After(time.Duration(delay) * time.Second):
+		case <-time.After(time.Duration(delay) * time.Millisecond):
 		}
 	}
 	select {
