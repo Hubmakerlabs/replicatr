@@ -55,7 +55,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	if len(rl.Whitelist) > 0 {
 		for i := range rl.Whitelist {
 			if rr == rl.Whitelist[i] {
-				log.T.Ln("inbound connection from", rr)
+				// log.T.Ln("inbound connection from", rr)
 			}
 		}
 	} else {

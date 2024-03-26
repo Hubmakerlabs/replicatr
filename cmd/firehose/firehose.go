@@ -51,6 +51,5 @@ func main() {
 		}
 	}
 	if err = cfg.Main(); chk.E(err) {
-		panic(err)
 	}
 }

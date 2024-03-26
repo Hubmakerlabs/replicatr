@@ -49,6 +49,7 @@ func (cfg *Config) Main() (err error) {
 	c, cancel := context.Cancel(context.Bg())
 	interrupt.AddHandler(func() {
 		cancel()
+		os.Exit(0)
 	})
 	// connect to a relay
 	var rl *client.T
@@ -58,9 +59,9 @@ func (cfg *Config) Main() (err error) {
 	newEvent := qu.T()
 	go func() {
 		ticker := time.NewTicker(time.Second)
+		var fetchIDs []*eventid.T
 		// start fetching loop
 		for {
-			var fetchIDs []*eventid.T
 			select {
 			case <-newEvent:
 				// make new request, not necessarily from existing... bias rng
@@ -68,53 +69,84 @@ func (cfg *Config) Main() (err error) {
 				mx.Lock()
 				for i := range counter {
 					rn := frand.Intn(256)
+					log.I.Ln("counter", counter[i].requested, "*", rn, "=",
+						counter[i].requested*rn)
 					// multiply this number by the number of accesses the event
 					// has and request every event that gets over 50% so that we
 					// create a bias towards already requested.
 					if counter[i].requested*rn > 192 {
+						log.T.Ln("adding to fetchIDs")
 						fetchIDs = append(fetchIDs, counter[i].id)
 					}
 				}
+				log.W.Ln("fetchIDs", len(fetchIDs), fetchIDs)
 				mx.Unlock()
 			case <-ticker.C:
-				// copy out current list of events to request (this is a single
-				// thread we don't need to mutex)
+				// copy out current list of events to request
+				mx.Lock()
+				log.W.Ln("ticker", len(fetchIDs))
 				f := make([]*eventid.T, len(fetchIDs))
 				copy(f, fetchIDs)
 				fetchIDs = fetchIDs[:0]
+				mx.Unlock()
 				// because we copied it and purged the original so it can
 				// refill, we can now run the actual fetch in the background as
 				// it is only to poke the database.
-				go func(f []*eventid.T) {
-					limit := len(f)
-					ids := make(tag.T, limit)
-					for i := range f {
-						ids[i] = f[i].String()
-					}
-					filt := filters.T{
-						{IDs: ids, Limit: &limit},
-					}
-					var sub *subscription.T
-					if sub, err = rl.Subscribe(c, filt); chk.E(err) {
-						// not sure what to do here
-					}
-					// receive and discard, we are only doing this to make the
-					// relay increment the access counters.
-				out:
-					for {
-						select {
-						case <-c.Done():
-							break out
-						case <-sub.EndOfStoredEvents:
-							sub.Unsub()
-							break out
-						case _, more := <-sub.Events:
-							if !more {
-								break out
+				if len(f) > 0 {
+					// go func(f []*eventid.T) {
+					// limit := len(f)
+					// increment access counts
+					mx.Lock()
+					for i := range counter {
+						for j := range f {
+							if counter[i].id.String() == f[j].String() {
+								counter[i].requested++
 							}
 						}
 					}
-				}(f)
+					mx.Unlock()
+					one := 1
+					var subs []*subscription.T
+					for i := range f {
+						filt := filters.T{
+							{IDs: tag.T{f[i].String()}, Limit: &one},
+						}
+						var sub *subscription.T
+						log.T.Ln("sending filter", filt.ToArray().String())
+						if sub, err = rl.Subscribe(c, filt); chk.E(err) {
+							// not sure what to do here
+						}
+						subs = append(subs, sub)
+					}
+					// log.W.Ln("unsubscribing")
+					// sub.Unsub()
+					// receive and discard, we are only doing this to make the
+					// relay increment the access counters.
+					for _, sub := range subs {
+						go func() {
+						out:
+							for {
+								select {
+								case <-c.Done():
+									log.I.Ln("done")
+									return
+								case <-sub.EndOfStoredEvents:
+									log.I.Ln("EOSE")
+									break out
+								case _, more := <-sub.Events:
+									if !more {
+										break out
+									}
+								case <-time.After(2 * time.Second):
+									log.W.Ln("timeout sub")
+									break out
+								}
+							}
+							log.W.Ln("unsubscribing")
+							sub.Unsub()
+						}()
+					}
+				}
 			case <-c.Done():
 				return
 			}
@@ -126,7 +158,7 @@ out:
 	for {
 		select {
 		case <-c.Done():
-			break out
+			return
 		default:
 		}
 		if total > cfg.TotalSize {
@@ -143,16 +175,17 @@ out:
 			break out
 		}
 		mx.Unlock()
+		newEvent.Signal()
 		if err = rl.Publish(c, ev); chk.E(err) {
 		}
-		log.I.Ln("waiting between")
 		delay := frand.Intn(cfg.MaxDelay)
+		log.I.Ln("waiting between", delay)
 		if delay == 0 {
 			continue
 		}
 		select {
 		case <-c.Done():
-			break out
+			return
 		case <-time.After(time.Duration(delay) * time.Second):
 		}
 	}

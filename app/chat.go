@@ -77,9 +77,9 @@ func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
 	if ws == nil {
 		return
 	}
-	log.D.Ln("running chat checker")
+	// log.T.Ln("running chat checker")
 	if ev.Kind != kind.EncryptedDirectMessage {
-		log.T.Ln("not chat event", ev.Kind, kind.GetString(ev.Kind))
+		// log.T.Ln("not chat event", ev.Kind, kind.GetString(ev.Kind))
 		return
 	}
 	if !ev.Tags.ContainsAny("p",

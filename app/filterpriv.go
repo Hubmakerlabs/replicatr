@@ -41,7 +41,7 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 	if allow {
 		return
 	}
-	log.I.Ln("checking privilege", ws.RealRemote(), ws.AuthPubKey())
+	// log.I.Ln("checking privilege", ws.RealRemote(), ws.AuthPubKey())
 	// check if the request filter kinds are privileged
 	privileged := kinds.IsPrivileged(f.Kinds...)
 	// if access requires auth, check that auth is present.
