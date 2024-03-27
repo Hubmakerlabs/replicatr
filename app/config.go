@@ -50,10 +50,10 @@ type Config struct {
 	DBSizeLimit int `arg:"-S,--sizelimit" json:"db_size_limit" default:"0" help:"set the maximum size of the badger event store in megabytes"`
 	// DBLowWater is the proportion of the DBSizeLimit to prune the database
 	// down to when performing a garbage collection run.
-	DBLowWater int `arg:"-L,--lowwater" json:"db_low_water" default:"75" help:"set target percentage for database size during garbage collection"`
+	DBLowWater int `arg:"-L,--lowwater" json:"db_low_water" default:"86" help:"set target percentage for database size during garbage collection"`
 	// DBHighWater is the proportion of the DBSizeLimit at which a garbage
 	// collection run is triggered.
-	DBHighWater int `arg:"-H,--highwater" json:"db_high_water" default:"90" help:"set garbage collection trigger percentage for database size during garbage collection"`
+	DBHighWater int `arg:"-H,--highwater" json:"db_high_water" default:"92" help:"set garbage collection trigger percentage for database size during garbage collection"`
 	// GCFrequency is the frequency to run a check on the database size and
 	// if it breaches DBHighWater to prune it back to DBLowWater percentage
 	// of DBSizeLimit in minutes.

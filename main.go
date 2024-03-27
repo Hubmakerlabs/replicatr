@@ -176,6 +176,9 @@ func main() {
 		if args.DBLowWater != 0 {
 			conf.DBLowWater = args.DBLowWater
 		}
+		if args.DBHighWater != 0 {
+			conf.DBHighWater = args.DBHighWater
+		}
 		if args.GCFrequency != 0 {
 			conf.GCFrequency = args.GCFrequency
 		}
