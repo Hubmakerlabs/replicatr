@@ -228,6 +228,10 @@ func main() {
 	badgerDB := &badger.Backend{
 		Path: dataDir,
 	}
+	// if we are wiping we don't want to init db normally
+	if args.Wipe != nil {
+		conf.DBSizeLimit = 0
+	}
 	var parameters []string
 	parameters = []string{
 		fmt.Sprint(conf.DBSizeLimit),
