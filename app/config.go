@@ -16,12 +16,14 @@ type ImportCmd struct {
 
 type InitCfg struct{}
 type WipeBDB struct{}
+type RescanAC struct{}
 
 type Config struct {
 	ExportCmd    *ExportCmd `arg:"subcommand:export" json:"-" help:"export database as line structured JSON"`
 	ImportCmd    *ImportCmd `arg:"subcommand:import" json:"-" help:"import data from line structured JSON"`
 	InitCfgCmd   *InitCfg   `arg:"subcommand:initcfg" json:"-" help:"initialize relay configuration files"`
 	Wipe         *WipeBDB   `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
+	Rescan       *RescanAC  `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
 	Listen       string     `arg:"-l,--listen" default:"0.0.0.0:3334" json:"listen" help:"network address to listen on"`
 	EventStore   string     `arg:"-e,--eventstore" default:"ic" json:"eventstore" help:"select event store backend [ic,badger]"`
 	CanisterAddr string     `arg:"-C,--canisteraddr" default:"127.0.0.1:46847" json:"canister_addr" help:"IC canister address to use"`
@@ -48,15 +50,16 @@ type Config struct {
 	DBSizeLimit int `arg:"-S,--sizelimit" json:"db_size_limit" default:"0" help:"set the maximum size of the badger event store in megabytes"`
 	// DBLowWater is the proportion of the DBSizeLimit to prune the database
 	// down to when performing a garbage collection run.
-	DBLowWater int `arg:"-L,--lowwater" json:"db_low_water" default:"75" help:"set target percentage for database size during garbage collection"`
+	DBLowWater int `arg:"-L,--lowwater" json:"db_low_water" default:"86" help:"set target percentage for database size during garbage collection"`
 	// DBHighWater is the proportion of the DBSizeLimit at which a garbage
 	// collection run is triggered.
-	DBHighWater int `arg:"-H,--highwater" json:"db_high_water" default:"90" help:"set garbage collection trigger percentage for database size during garbage collection"`
+	DBHighWater int `arg:"-H,--highwater" json:"db_high_water" default:"92" help:"set garbage collection trigger percentage for database size during garbage collection"`
 	// GCFrequency is the frequency to run a check on the database size and
 	// if it breaches DBHighWater to prune it back to DBLowWater percentage
 	// of DBSizeLimit in minutes.
-	GCFrequency int `arg:"-G,--gcfreq" json:"gc_frequency" default:"60" help:"frequency in minutes to check if database needs garbage collection"`
-	MaxProcs    int `arg:"-m" json:"max_procs" default:"128" help:"maximum number of goroutines to use"`
+	GCFrequency int    `arg:"-G,--gcfreq" json:"gc_frequency" default:"60" help:"frequency in seconds to check if database needs garbage collection"`
+	MaxProcs    int    `arg:"-m" json:"max_procs" default:"128" help:"maximum number of goroutines to use"`
+	LogLevel    string `arg:"--loglevel" default:"info" help:"set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)"`
 }
 
 func (c *Config) Save(filename string) (err error) {

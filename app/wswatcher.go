@@ -17,7 +17,7 @@ type watcherParams struct {
 }
 
 func (rl *Relay) websocketWatcher(p watcherParams) {
-	log.T.Ln("running relay method")
+	// log.T.Ln("running relay method")
 	var err error
 	defer p.kill()
 	for {
