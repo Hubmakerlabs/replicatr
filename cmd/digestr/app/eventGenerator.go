@@ -1,4 +1,4 @@
-package digestr
+package app
 
 import (
 	"crypto/rand"
@@ -19,7 +19,7 @@ import (
 	"mleku.dev/git/nostr/timestamp"
 )
 
-var log, _ = slog.New(os.Stderr)
+var log, chk = slog.New(os.Stderr)
 
 // Define kinds based on the provided Perl code.
 var kinds = []int{
@@ -35,7 +35,7 @@ var kinds = []int{
 	31990, 32123, 34550, 39998, 40000,
 }
 
-func generateEvents() {
+func GenerateEvents() {
 	numEvents := 1000 // Number of events to generate
 	_, currentFile, _, ok := runtime.Caller(0)
 	if !ok {

@@ -1,6 +1,8 @@
-package digestr
+package app
 
 import (
+	"context"
+	"encoding/gob"
 	"os"
 	"path/filepath"
 
@@ -13,7 +15,8 @@ import (
 
 var args app.Config
 
-func cleanUp() error {
+func CleanUp() error {
+	//load canisterID and canisterAddress from config.json
 	var log, chk = slog.New(os.Stderr)
 	arg.MustParse(&args)
 	var dataDirBase string
@@ -26,12 +29,26 @@ func cleanUp() error {
 	configPath := filepath.Join(dataDir, "config.json")
 	args.Load(configPath)
 
+	//load context from context.gob
+	contextPath := "context.gob"
+	file, err := os.Open(contextPath)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	decoder := gob.NewDecoder(file)
+	var c context.Context
+	if err := decoder.Decode(&c); err != nil {
+		panic(err)
+	}
+
 	//use args.CannisterAddr and args.CannisterId to wipe database
 	var b *agent.Backend
-	if b, err = agent.New(nil, args.CanisterID, args.CanisterAddr); chk.E(err) {
+	if b, err = agent.New(c, args.CanisterID, args.CanisterAddr); chk.E(err) {
 		return err
 	}
 
+	//clear all events from canister
 	b.ClearEvents(nil)
 
 	return nil

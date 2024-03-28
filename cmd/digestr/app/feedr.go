@@ -1,4 +1,4 @@
-package digestr
+package app
 
 import (
 	"bufio"
@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func feedEvents() {
+func FeedEvents() {
 	eventsFilePath := "generated_events.jsonl"
 	file, err := os.Open(eventsFilePath)
 	if err != nil {

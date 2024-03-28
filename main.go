@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"net/http"
 	"os"
@@ -261,6 +262,30 @@ func main() {
 	default:
 		log.I.Ln("listening on", args.Listen)
 		chk.E(serv.ListenAndServe())
+	}
+
+	//serialize context and badger for testing purposes
+	contextPath := "./cmd/digestr/app/context.gob"
+	file, err := os.Create(contextPath)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	encoder := gob.NewEncoder(file)
+	if err := encoder.Encode(c); err != nil {
+		panic(err)
+	}
+
+	badgerPath := "./cmd/digestr/app/badger.gob"
+
+	file, err = os.Create(badgerPath)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+	encoder = gob.NewEncoder(file)
+	if err := encoder.Encode(badgerDB); err != nil {
+		panic(err)
 	}
 
 }
