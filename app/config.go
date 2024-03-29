@@ -36,6 +36,7 @@ type Config struct {
 	Icon         string     `arg:"-i,--icon" json:"icon" default:"https://i.nostr.build/n8vM.png" help:"icon to show on relay information pages"`
 	AuthRequired bool       `arg:"-a,--auth" json:"auth_required" default:"false" help:"NIP-42 authentication required for all access"`
 	Public       bool       `arg:"--public" json:"public" default:"true" help:"allow public read access to users not on ACL"`
+	Testing      bool       `arg:"-t,--testing" json:"testing" default:"false" help:"mark true when running from test suite"`
 	Owners       []string   `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
 	SecKey       string     `arg:"-s,--seckey" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
 	// Whitelist permits ONLY inbound connections from specified IP addresses.

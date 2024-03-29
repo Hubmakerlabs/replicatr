@@ -1,6 +1,7 @@
 package replicatr
 
 import (
+	// "encoding/gob"
 	"fmt"
 	"net/http"
 	"os"
@@ -232,6 +233,27 @@ func Main(osArgs []string) {
 	badgerDB := &badger.Backend{
 		Path: dataDir,
 	}
+
+	// wipe database and serialize context for testing purposes
+	if args.Testing {
+
+		log.D.Ln("wiping database for testing")
+		// chk.E(rl.Wipe(badgerDB))
+		fmt.Println("Inside testing clause")
+
+		//serialize context and badger for testing purposes
+		// contextPath := "./cmd/digestr/app/context.gob"
+		// file, err := os.Create(contextPath)
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// defer file.Close()
+		// encoder := gob.NewEncoder(file)
+		// if err := encoder.Encode(c); err != nil {
+		// 	panic(err)
+		// }
+	}
+
 	// if we are wiping we don't want to init db normally
 	if args.Wipe != nil {
 		conf.DBSizeLimit = 0

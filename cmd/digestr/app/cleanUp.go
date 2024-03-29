@@ -1,8 +1,7 @@
 package app
 
 import (
-	"context"
-	"encoding/gob"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -29,27 +28,29 @@ func CleanUp() error {
 	configPath := filepath.Join(dataDir, "config.json")
 	args.Load(configPath)
 
-	//load context from context.gob
-	contextPath := "context.gob"
-	file, err := os.Open(contextPath)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-	decoder := gob.NewDecoder(file)
-	var c context.Context
-	if err := decoder.Decode(&c); err != nil {
-		panic(err)
-	}
+	// //load context from context.gob
+	// contextPath := "context.gob"
+	// file, err := os.Open(contextPath)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer file.Close()
+	// decoder := gob.NewDecoder(file)
+	// var c context.Context
+	// if err := decoder.Decode(&c); err != nil {
+	// 	panic(err)
+	// }
 
 	//use args.CannisterAddr and args.CannisterId to wipe database
 	var b *agent.Backend
-	if b, err = agent.New(c, args.CanisterID, args.CanisterAddr); chk.E(err) {
+	if b, err = agent.New(nil, args.CanisterID, args.CanisterAddr); chk.E(err) {
 		return err
 	}
 
 	//clear all events from canister
+
 	b.ClearEvents(nil)
+	fmt.Printf("All events from canisterID %v have been wiped\n\n", args.CanisterID)
 
 	return nil
 

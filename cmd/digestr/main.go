@@ -13,8 +13,14 @@ var log, chk = slog.New(os.Stderr)
 
 func main() {
 	arg.MustParse(&args)
-	app.CleanUp()
-	app.GenerateEvents()
-	app.FeedEvents()
-	app.CleanUp()
+	if !args.SkipSetup {
+		app.CleanUp()
+	}
+
+	if err := app.EventsTest(args.EventAmount, args.Seed); err != nil {
+		log.F.F("event test failed: %v", err)
+	}
+	if !args.SkipSetup {
+		app.CleanUp()
+	}
 }
