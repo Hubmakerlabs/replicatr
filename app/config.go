@@ -26,7 +26,7 @@ type Config struct {
 	Rescan       *RescanAC  `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
 	Listen       string     `arg:"-l,--listen" default:"0.0.0.0:3334" json:"listen" help:"network address to listen on"`
 	EventStore   string     `arg:"-e,--eventstore" default:"ic" json:"eventstore" help:"select event store backend [ic,badger]"`
-	CanisterAddr string     `arg:"-C,--canisteraddr" default:"127.0.0.1:46847" json:"canister_addr" help:"IC canister address to use"`
+	CanisterAddr string     `arg:"-C,--canisteraddr" default:"https://icp0.io/" json:"canister_addr" help:"IC canister address to use (for local, use 127.0.0.1:46847)"`
 	CanisterID   string     `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
 	Profile      string     `arg:"-p,--profile" json:"-" default:"replicatr" help:"profile name to use for storage"`
 	Name         string     `arg:"-n,--name" json:"name" default:"replicatr relay" help:"name of relay for NIP-11"`
@@ -36,7 +36,6 @@ type Config struct {
 	Icon         string     `arg:"-i,--icon" json:"icon" default:"https://i.nostr.build/n8vM.png" help:"icon to show on relay information pages"`
 	AuthRequired bool       `arg:"-a,--auth" json:"auth_required" default:"false" help:"NIP-42 authentication required for all access"`
 	Public       bool       `arg:"--public" json:"public" default:"true" help:"allow public read access to users not on ACL"`
-	Testing      bool       `arg:"-t,--testing" json:"testing" default:"false" help:"mark true when running from test suite"`
 	Owners       []string   `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
 	SecKey       string     `arg:"-s,--seckey" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
 	// Whitelist permits ONLY inbound connections from specified IP addresses.

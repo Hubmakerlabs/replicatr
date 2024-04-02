@@ -63,7 +63,7 @@ func EventsTest(numEvents int, seed *int) error {
 		}
 		err := e.Sign(keys.GeneratePrivateKey())
 		if err != nil {
-			log.E.F("unable to create random event number %d out of %d: %v", i, numEvents, err)
+			log.E.F("unable to create random event number %d out of %d: %v", i+1, numEvents, err)
 			continue
 		}
 
@@ -77,7 +77,7 @@ func EventsTest(numEvents int, seed *int) error {
 
 		err = c.WriteMessage(websocket.TextMessage, jsonData)
 		if err != nil {
-			log.E.F("Failed to send event %d out of %d through WebSocket: %v", i, numEvents, err)
+			log.E.F("Failed to send event %d out of %d through WebSocket: %v", i+1, numEvents, err)
 		}
 
 		c.SetReadDeadline(time.Now().Add(10 * time.Second)) // Set a 10-second read deadline
@@ -88,7 +88,7 @@ func EventsTest(numEvents int, seed *int) error {
 				fmt.Printf("Connection closed normally.\n")
 				break // Exit the loop if the connection is closed normally
 			} else {
-				return fmt.Errorf("Failed to read relay response from event %d out of %d from WebSocket or read timeout occurred: %v\n", i, numEvents, err)
+				return fmt.Errorf("Failed to read relay response from event %d out of %d from WebSocket or read timeout occurred: %v\n", i+1, numEvents, err)
 			}
 		}
 
@@ -101,26 +101,27 @@ func EventsTest(numEvents int, seed *int) error {
 		// Parse the JSON array
 		err = json.Unmarshal([]byte(jsonStr), &result)
 		if err != nil {
-			return fmt.Errorf("Error parsing JSON response from event %d out of %d:%v", i, numEvents, err)
+			return fmt.Errorf("Error parsing JSON response from event %d out of %d:%v", i+1, numEvents, err)
 		}
 
 		// Check if the slice is not empty and then confirm its first element
 		if len(result) > 0 {
 			firstElement, ok := result[0].(string)
 			if !ok {
-				return fmt.Errorf("Type Assertion for first element of JSON response for event number %d out of %d failed", i, numEvents)
+				return fmt.Errorf("Type Assertion for first element of JSON response for event number %d out of %d failed", i+1, numEvents)
 			} else {
 				if firstElement == "OK" {
-					fmt.Printf("Received OK %d out of %d\n", i, numEvents)
+					fmt.Printf("Received OK for Event %d out of %d\n", i+1, numEvents)
 				} else {
-					return fmt.Errorf("relay response message for event number %d out of %d was: %s", i, numEvents, firstElement)
+					return fmt.Errorf("relay response message for event number %d out of %d was: %s", i+1, numEvents, firstElement)
 				}
 			}
 		} else {
-			fmt.Errorf("The JSON array response from event %d out of %d is empty.", i, numEvents)
+			fmt.Errorf("The JSON array response from event %d out of %d is empty.", i+1, numEvents)
 		}
 	}
 
-	fmt.Printf("Event Test Successful! %d out of %d OK's received\n\n", numEvents, numEvents)
+	fmt.Printf("Event Test Successful! %d out of %d OK's received\n", numEvents, numEvents)
+	fmt.Printf("meaning all %d randomly generated events were successfully saved and the relay responded appropriately\n\n", numEvents)
 	return nil
 }

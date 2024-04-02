@@ -6,52 +6,45 @@ import (
 	"path/filepath"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
-	"mleku.dev/git/slog"
-
-	"github.com/Hubmakerlabs/replicatr/app"
-	"github.com/alexflint/go-arg"
 )
 
-var args app.Config
+func CanisterCleanUp(id string, addr string) error {
+	var b *agent.Backend
+	var err error
+	if b, err = agent.New(nil, id, addr); chk.E(err) {
+		return err
+	}
 
-func CleanUp() error {
+	//clear all events from canister
+	var result string
+	if result, err = b.ClearEvents(nil); chk.E(err) {
+		return err
+	} else {
+		fmt.Printf("from canister %v: \"%v\"\n", id, result)
+	}
+
+	if addr != "https://icp0.io/" {
+		fmt.Println("local canister being used")
+	}
+
+	fmt.Print("\n")
+
+	return nil
+
+}
+
+func BadgerCleanUp() error {
 	//load canisterID and canisterAddress from config.json
-	var log, chk = slog.New(os.Stderr)
-	arg.MustParse(&args)
 	var dataDirBase string
 	var err error
 	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {
 		return err
 	}
-	dataDir := filepath.Join(dataDirBase, args.Profile)
-	log.D.F("using profile directory: %s", args.Profile)
-	configPath := filepath.Join(dataDir, "config.json")
-	args.Load(configPath)
-
-	// //load context from context.gob
-	// contextPath := "context.gob"
-	// file, err := os.Open(contextPath)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer file.Close()
-	// decoder := gob.NewDecoder(file)
-	// var c context.Context
-	// if err := decoder.Decode(&c); err != nil {
-	// 	panic(err)
-	// }
-
-	//use args.CannisterAddr and args.CannisterId to wipe database
-	var b *agent.Backend
-	if b, err = agent.New(nil, args.CanisterID, args.CanisterAddr); chk.E(err) {
+	dataDir := filepath.Join(dataDirBase, "testDB")
+	if err = os.RemoveAll(dataDir); chk.E(err) {
 		return err
+	} else {
+		fmt.Println("testDB Badger Database Deleted")
 	}
-
-	//clear all events from canister
-
-	b.ClearEvents(nil)
-	fmt.Printf("All events from canisterID %v have been wiped\n\n", args.CanisterID)
-
 	return nil
-
 }

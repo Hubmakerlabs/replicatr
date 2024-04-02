@@ -56,7 +56,7 @@ var nips = number.List{
 	relayinfo.CountingResults.Number,                // NIP45 count requests
 }
 
-func Main(osArgs []string) {
+func Main(osArgs []string, c context.T, cancel context.F) {
 	os.Args = osArgs
 	var log, chk = slog.New(os.Stderr)
 	arg.MustParse(&args)
@@ -226,32 +226,11 @@ func Main(osArgs []string) {
 		inf.Limitation.AuthRequired = true
 	}
 	log.D.S(&inf)
-	c, cancel := context.Cancel(context.Bg())
 	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, &inf, &args)
 	var db eventstore.Store
 	badgerDB := &badger.Backend{
 		Path: dataDir,
-	}
-
-	// wipe database and serialize context for testing purposes
-	if args.Testing {
-
-		log.D.Ln("wiping database for testing")
-		// chk.E(rl.Wipe(badgerDB))
-		fmt.Println("Inside testing clause")
-
-		//serialize context and badger for testing purposes
-		// contextPath := "./cmd/digestr/app/context.gob"
-		// file, err := os.Create(contextPath)
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// defer file.Close()
-		// encoder := gob.NewEncoder(file)
-		// if err := encoder.Encode(c); err != nil {
-		// 	panic(err)
-		// }
 	}
 
 	// if we are wiping we don't want to init db normally
@@ -300,6 +279,7 @@ func Main(osArgs []string) {
 	}
 	interrupt.AddHandler(func() {
 		cancel()
+
 		wg.Done()
 	})
 	go func() {
@@ -307,6 +287,7 @@ func Main(osArgs []string) {
 			select {
 			case <-rl.Ctx.Done():
 				chk.E(serv.Close())
+
 				return
 			default:
 			}
@@ -326,6 +307,7 @@ func Main(osArgs []string) {
 		}
 	case args.ExportCmd != nil:
 		rl.Export(badgerDB, args.ExportCmd.ToFile)
+
 	default:
 		log.I.Ln("listening on", args.Listen)
 		chk.E(serv.ListenAndServe())
