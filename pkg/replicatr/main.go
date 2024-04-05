@@ -56,9 +56,11 @@ var nips = number.List{
 }
 
 func Main(osArgs []string) {
+	tmp := os.Args
 	os.Args = osArgs
-	var log, chk = slog.New(os.Stderr)
 	arg.MustParse(&args)
+	os.Args = tmp
+	var log, chk = slog.New(os.Stderr)
 	// set logging level if non-default was set in args
 	if args.LogLevel != "info" {
 		for i := range slog.LevelSpecs {
