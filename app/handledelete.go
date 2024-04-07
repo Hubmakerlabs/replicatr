@@ -16,7 +16,7 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 			// first we fetch the event
 			for _, query := range rl.QueryEvents {
 				var ch = make(chan *event.T)
-				if err = query(c, ch, &filter.T{IDs: tag.T{t[1]}}); chk.E(err) {
+				if ch, err = query(c, &filter.T{IDs: tag.T{t[1]}}); chk.E(err) {
 					continue
 				}
 				target := <-ch

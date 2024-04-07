@@ -22,6 +22,9 @@ type Backend struct {
 	Badger *badger.Backend
 	IC     *agent.Backend
 	Ctx    context.T
+	WG     *sync.WaitGroup
+	Inf    *relayinfo.T
+	Params []string
 }
 
 var _ eventstore.Store = (*Backend)(nil)
@@ -31,18 +34,17 @@ var _ eventstore.Store = (*Backend)(nil)
 //
 // required params are address, canister ID and the badger event store size
 // limit (which can be 0)
-func (b *Backend) Init(c context.T, wg *sync.WaitGroup,
-	inf *relayinfo.T, params ...string) (err error) {
+func (b *Backend) Init() (err error) {
 
-	if len(params) < 3 {
+	if len(b.Params) < 3 {
 		return log.E.Err("not enough parameters for IC event store Init, "+
-			"got %d, require %d: %v", len(params), 3, params)
+			"got %d, require %d: %v", len(b.Params), 3, b.Params)
 	}
-	addr, canisterId := params[0], params[1]
-	if err = b.Badger.Init(c, wg, inf, params[2:]...); chk.D(err) {
+	addr, canisterId := b.Params[0], b.Params[1]
+	if err = b.Badger.Init(); chk.D(err) {
 		return
 	}
-	if b.IC, err = agent.New(c, canisterId, addr); chk.E(err) {
+	if b.IC, err = agent.New(b.Ctx, canisterId, addr); chk.E(err) {
 		return
 	}
 	return
@@ -52,7 +54,11 @@ func (b *Backend) Init(c context.T, wg *sync.WaitGroup,
 func (b *Backend) Close() { b.Badger.Close() }
 
 // Serial returns the serial code for the database.
-func (b *Backend) Serial() []byte { return b.Badger.Serial() }
+func (b *Backend) Serial() []byte {
+	by, err := b.Badger.SerialBytes()
+	chk.E(err)
+	return by
+}
 
 // CountEvents returns the number of events found matching the filter.
 func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
@@ -101,7 +107,8 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 
 // QueryEvents searches for events that match a filter and returns them
 // asynchronously over a provided channel.
-func (b *Backend) QueryEvents(c context.T, C event.C, f *filter.T) (err error) {
+func (b *Backend) QueryEvents(c context.T, f *filter.T) (C event.C, err error) {
+	C = make(event.C)
 	var forBadger, forIC kinds.T
 	for i := range f.Kinds {
 		if kinds.IsPrivileged(f.Kinds[i]) {
@@ -115,16 +122,16 @@ func (b *Backend) QueryEvents(c context.T, C event.C, f *filter.T) (err error) {
 	icFilter.Kinds = forIC
 	if len(forBadger) > 0 {
 		log.D.Ln("querying relay store with filter", f.ToObject().String())
-		if err = b.Badger.QueryEvents(c, C, f); chk.E(err) {
+		if C, err = b.Badger.QueryEvents(c, f); chk.E(err) {
 		}
 	}
 	if len(forIC) > 0 {
 		// todo: merge results of these two to reduce bandwidth
 		log.D.Ln("querying relay store for events first")
-		if err = b.Badger.QueryEvents(c, C, icFilter); chk.E(err) {
+		if C, err = b.Badger.QueryEvents(c, icFilter); chk.E(err) {
 		}
 		log.D.Ln("querying IC with filter", icFilter.ToObject().String())
-		if err = b.IC.QueryEvents(c, C, f); chk.E(err) {
+		if C, err = b.IC.QueryEvents(c, f); chk.E(err) {
 		}
 	}
 	return

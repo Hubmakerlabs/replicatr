@@ -30,12 +30,12 @@ func PreventExcessTags(max int, ign kinds.T, only kinds.T) RejectEvent {
 			return !isApplicable
 		}
 	}
-	return func(c context.T, event *event.T) (reject bool, msg string) {
-		if ignore(event.Kind) {
+	return func(c context.T, ev *event.T) (reject bool, msg string) {
+		if ignore(ev.Kind) {
 			return false, ""
 		}
 		ntags := 0
-		for _, tag := range event.Tags {
+		for _, tag := range ev.Tags {
 			if len(tag) > 0 && len(tag[0]) == 1 {
 				ntags++
 			}
@@ -94,8 +94,8 @@ func RestrictToSpecifiedKinds(kinds ...kind.T) RejectEvent {
 }
 
 func PreventTimestampsInThePast(thresholdSeconds timestamp.T) RejectEvent {
-	return func(c context.T, event *event.T) (reject bool, msg string) {
-		if timestamp.Now()-event.CreatedAt > thresholdSeconds {
+	return func(c context.T, ev *event.T) (reject bool, msg string) {
+		if timestamp.Now()-ev.CreatedAt > thresholdSeconds {
 			return true, "event too old"
 		}
 		return false, ""
@@ -103,8 +103,8 @@ func PreventTimestampsInThePast(thresholdSeconds timestamp.T) RejectEvent {
 }
 
 func PreventTimestampsInTheFuture(thresholdSeconds timestamp.T) RejectEvent {
-	return func(c context.T, event *event.T) (reject bool, msg string) {
-		if event.CreatedAt-timestamp.Now() > thresholdSeconds {
+	return func(c context.T, ev *event.T) (reject bool, msg string) {
+		if ev.CreatedAt-timestamp.Now() > thresholdSeconds {
 			return true, "event too much in the future"
 		}
 		return false, ""

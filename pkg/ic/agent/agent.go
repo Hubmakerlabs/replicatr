@@ -92,11 +92,11 @@ func (b *Backend) GetCandidEvent(c context.T, filter *Filter) ([]Event, error) {
 	return result, err
 }
 
-func (b *Backend) QueryEvents(c context.T, ch chan *event.T,
-	f *filter.T) (err error) {
+func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
 
 	if f == nil {
-		return log.E.Err("nil filter for query")
+		err = log.E.Err("nil filter for query")
+		return
 	}
 	var candidEvents []Event
 	if candidEvents, err = b.GetCandidEvent(c, FilterToCandid(f)); chk.E(err) {
@@ -153,7 +153,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 		}
 		close(done)
 	}(ch)
-	if err = b.QueryEvents(c, ch, f); chk.E(err) {
+	if ch, err = b.QueryEvents(c, f); chk.E(err) {
 		return
 	}
 out:

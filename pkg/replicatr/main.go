@@ -231,13 +231,6 @@ func Main(osArgs []string) {
 	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, &inf, &args)
 	var db eventstore.Store
-	badgerDB := &badger.Backend{
-		Path: dataDir,
-	}
-	// if we are wiping we don't want to init db normally
-	if args.Wipe != nil {
-		conf.DBSizeLimit = 0
-	}
 	var parameters []string
 	parameters = []string{
 		fmt.Sprint(conf.DBSizeLimit),
@@ -245,20 +238,35 @@ func Main(osArgs []string) {
 		fmt.Sprint(conf.DBHighWater),
 		fmt.Sprint(conf.GCFrequency),
 	}
+	badgerDB := &badger.Backend{
+		Path:   dataDir,
+		Ctx:    c,
+		WG:     &wg,
+		Info:   rl.Info,
+		Params: parameters,
+	}
+	// if we are wiping we don't want to init db normally
+	if args.Wipe != nil {
+		conf.DBSizeLimit = 0
+	}
 	switch rl.Config.EventStore {
 	case "ic":
-		db = &IC.Backend{
-			Ctx:    c,
-			Badger: badgerDB,
-		}
 		parameters = append([]string{
 			rl.Config.CanisterAddr,
 			rl.Config.CanisterID,
 		}, parameters...)
+		db = &IC.Backend{
+			Badger: badgerDB,
+			Ctx:    c,
+			WG:     &wg,
+			Inf:    rl.Info,
+			Params: parameters,
+		}
 	case "badger":
 		db = badgerDB
 	}
-	if err = db.Init(c, &wg, rl.Info, parameters...); chk.E(err) {
+
+	if err = db.Init(); chk.E(err) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}

@@ -185,7 +185,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}
 		chk.E(ws.WriteEnvelope(&countenvelope.Response{
 			ID:    env.ID,
-			Count: int64(total),
+			Count: total,
 		}))
 	case *reqenvelope.T:
 		wg := sync.WaitGroup{}
