@@ -78,14 +78,14 @@ func main() { // arg1 = portnum, arg2 = canisterID
 		Search: "random",
 	}
 	// Query events based on the filter
-	ch := make(chan *event.T)
+	var ch event.C
 	go func() {
-		err = a.QueryEvents(context.Bg(), ch, f)
+		ch, err = a.QueryEvents(context.Bg(), f)
 		if err != nil {
 			fmt.Println("Failed to query events:", err)
 			return
 		}
-		close(ch)
+		// close(ch)
 	}()
 
 	// Display queried events

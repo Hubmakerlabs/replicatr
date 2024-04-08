@@ -48,17 +48,22 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// run the functions to query events (generally just one, but we might be
 	// fetching stuff from multiple places)
 	h.eose.Add(len(rl.QueryEvents))
-	for _, query := range rl.QueryEvents {
-		ch := make(chan *event.T)
-		select {
-		case <-rl.Ctx.Done():
-			log.T.Ln("shutting down")
-			return
-		default:
-		}
+	for i, query := range rl.QueryEvents {
+		var ch event.C
 		// start up event receiver before running query on this channel
-		go func(ch chan *event.T) {
+		// go func(ch chan *event.T) {
+		log.I.Ln("query", i, h.f.ToObject().String())
+		if ch, err = query(h.c, h.f); chk.E(err) {
+			h.ws.OffenseCount.Inc()
+			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
+			h.eose.Done()
+			continue
+		}
+		log.I.Ln("preparing to receive results", h.f.ToObject().String())
+		go func(ch event.C) {
+			log.I.Ln("waiting for result", h.f.ToObject().String())
 			for ev := range ch {
+				log.I.Ln("ev", ev.ToObject().String())
 				// if the event is nil the rest of this loop will panic
 				// accessing the nonexistent event's fields
 				if ev == nil {
@@ -110,14 +115,18 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					Event:          ev,
 				}))
 			}
-			h.eose.Done()
 		}(ch)
-		if ch, err = query(h.c, h.f); chk.E(err) {
-			h.ws.OffenseCount.Inc()
-			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
-			h.eose.Done()
-			continue
+		log.I.Ln("query", i, "done", h.f.ToObject().String())
+		select {
+		case <-rl.Ctx.Done():
+			log.T.Ln("shutting down")
+			return
+		default:
 		}
+
+		// h.eose.Done()
+		// }(ch)
+		// log.I.Ln("running query")
 	}
 	return nil
 }

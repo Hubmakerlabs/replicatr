@@ -239,11 +239,11 @@ func Main(osArgs []string) {
 		fmt.Sprint(conf.GCFrequency),
 	}
 	badgerDB := &badger.Backend{
-		Path:   dataDir,
-		Ctx:    c,
-		WG:     &wg,
-		Info:   rl.Info,
-		Params: parameters,
+		Path: dataDir,
+		// Ctx:    c,
+		// WG:     &wg,
+		// Info:   rl.Info,
+		// Params: parameters,
 	}
 	// if we are wiping we don't want to init db normally
 	if args.Wipe != nil {
