@@ -55,12 +55,12 @@ var nips = number.List{
 	relayinfo.CountingResults.Number,                // NIP45 count requests
 }
 
-func Main(osArgs []string) {
+func Main(osArgs []string, c context.T, cancel context.F) {
 	tmp := os.Args
 	os.Args = osArgs
+	var log, chk = slog.New(os.Stderr)
 	arg.MustParse(&args)
 	os.Args = tmp
-	var log, chk = slog.New(os.Stderr)
 	// set logging level if non-default was set in args
 	if args.LogLevel != "info" {
 		for i := range slog.LevelSpecs {
@@ -227,7 +227,7 @@ func Main(osArgs []string) {
 		inf.Limitation.AuthRequired = true
 	}
 	log.D.S(&inf)
-	c, cancel := context.Cancel(context.Bg())
+	// c, cancel := context.Cancel(context.Bg())
 	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, &inf, &args)
 	var db eventstore.Store

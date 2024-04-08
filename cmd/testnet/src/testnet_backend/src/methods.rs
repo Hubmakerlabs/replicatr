@@ -1,9 +1,13 @@
 use crate::{
     structs::{Event, Filter},
     EVENTS,
+    MEMORY_MANAGER
 };
 use candid::export_service;
 use ic_cdk_macros::{query, update};
+use ic_stable_structures::StableBTreeMap;
+use ic_stable_structures::memory_manager::MemoryId;
+
 
 #[query]
 fn test() -> String {
@@ -90,6 +94,19 @@ pub fn __export_did_tmp_() -> String {
     export_service!();
     __export_service()
 }
+
+#[update]
+fn clear_events() -> String {
+    EVENTS.with(|events| {
+        // Replace the contents of `events` with a new, empty `StableBTreeMap`.
+        *events.borrow_mut() = StableBTreeMap::init(MEMORY_MANAGER.with(|p| p.borrow().get(MemoryId::new(0))));
+    });
+
+    ic_cdk::println!("All events have been cleared.");
+    "All events have been cleared".to_string()
+}
+
+
 
 // Method used to save the candid interface to a file
 #[test]
