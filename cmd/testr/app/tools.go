@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"mleku.dev/git/nostr/tag"
+	"github.com/nbd-wtf/go-nostr"
 )
 
 func generateRandomContent() string {
@@ -19,15 +19,15 @@ func generateRandomContent() string {
 	return string(content)
 }
 
-func generateTagsForKind(kind int) []tag.T {
+func generateTagsForKind(kind int) []nostr.Tag {
 	switch kind {
 	case 1:
-		return []tag.T{{"e", "reply-to-event-id"}, {"#hashtag", "exampleHashtag"}}
+		return []nostr.Tag{{"e", "reply-to-event-id"}, {"#hashtag", "exampleHashtag"}}
 	case 4:
-		return []tag.T{{"p", "recipient-public-key"}, {"dm", "1"}}
+		return []nostr.Tag{{"p", "recipient-public-key"}, {"dm", "1"}}
 	// will add more cases later
 	default:
-		return []tag.T{{"e", "5c83da77af1dec6d7289834998ad7aafbd9e2191396d75ec3cc27f5a77226f36", "wss://nostr.example.com"}}
+		return []nostr.Tag{{"e", "5c83da77af1dec6d7289834998ad7aafbd9e2191396d75ec3cc27f5a77226f36", "wss://nostr.example.com"}}
 	}
 }
 

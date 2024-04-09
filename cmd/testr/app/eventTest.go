@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/fiatjaf/eventstore/badger"
 	"github.com/gorilla/websocket"
-	"mleku.dev/git/nostr/event"
+	"github.com/nbd-wtf/go-nostr"
+	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/keys"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/timestamp"
 	"mleku.dev/git/slog"
 )
 
@@ -37,7 +37,7 @@ var kinds = []int{
 	31990, 32123, 34550, 39998, 40000,
 }
 
-func EventsTest(numEvents int, seed *int) error {
+func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T) error {
 	if seed != nil {
 		src := seededRand.NewSource(int64(*seed))
 		seedr = Seedr{seededRand.New(src), true}
@@ -54,17 +54,24 @@ func EventsTest(numEvents int, seed *int) error {
 	for i := 0; i < numEvents; i++ {
 		k := kinds[randomInt(len(kinds))]
 		tags := generateTagsForKind(k)
-		e := event.T{
-			CreatedAt: timestamp.T(time.Now().Unix()),
-			Kind:      kind.T(k),
+		e := nostr.Event{
+			CreatedAt: nostr.Now(),
+			Kind:      k,
 			Tags:      tags,
 			Content:   generateRandomContent(),
 			Sig:       fmt.Sprintf("sig_placeholder_%d", i),
 		}
 		err := e.Sign(keys.GeneratePrivateKey())
 		if err != nil {
-			log.E.F("unable to create random event number %d out of %d: %v", i+1, numEvents, err)
+			fmt.Printf("unable to create random event number %d out of %d: %v", i+1, numEvents, err)
 			continue
+		}
+
+		err = b.SaveEvent(ctx, &e)
+		if err != nil {
+			fmt.Printf("failed to save event %d to filterCheckerDB: %v", numEvents, err)
+			continue
+
 		}
 
 		wrappedEvent := []interface{}{"EVENT", e}
@@ -77,7 +84,7 @@ func EventsTest(numEvents int, seed *int) error {
 
 		err = c.WriteMessage(websocket.TextMessage, jsonData)
 		if err != nil {
-			log.E.F("Failed to send event %d out of %d through WebSocket: %v", i+1, numEvents, err)
+			fmt.Printf("Failed to send event %d out of %d through WebSocket: %v", i+1, numEvents, err)
 		}
 
 		c.SetReadDeadline(time.Now().Add(10 * time.Second)) // Set a 10-second read deadline
@@ -122,6 +129,6 @@ func EventsTest(numEvents int, seed *int) error {
 	}
 
 	fmt.Printf("Event Test Successful! %d out of %d OK's received\n", numEvents, numEvents)
-	fmt.Printf("meaning all %d randomly generated events were successfully saved and the relay responded appropriately\n\n", numEvents)
+	fmt.Printf("all %d events were randomly generated and successfully saved to the relay with the relay responding with an appropriate 'OK'\n\n", numEvents)
 	return nil
 }
