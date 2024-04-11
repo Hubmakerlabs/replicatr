@@ -15,9 +15,9 @@ func main() {
 
 import (
 	"fmt"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/tag"
-	"mleku.dev/git/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 type UnmarshalingFilter struct {

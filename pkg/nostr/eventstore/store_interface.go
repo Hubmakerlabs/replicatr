@@ -1,9 +1,9 @@
 package eventstore
 
 import (
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 )
 
 // Store is a persistence layer for nostr events handled by a relay.

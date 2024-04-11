@@ -6,11 +6,11 @@ import (
 	"os"
 	"sync"
 
-	"mleku.dev/git/nostr/kinds"
-	"mleku.dev/git/nostr/number"
-	"mleku.dev/git/nostr/tag"
-	"mleku.dev/git/nostr/timestamp"
-	"mleku.dev/git/nostr/wire/object"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/number"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 )
 
 type NIP struct {

@@ -8,6 +8,9 @@ require (
 	github.com/dgraph-io/badger/v4 v4.2.0
 	github.com/fasthttp/websocket v1.5.8
 	github.com/fiatjaf/eventstore v0.3.13
+	github.com/fiatjaf/generic-ristretto v0.0.1
+	github.com/gobwas/httphead v0.1.0
+	github.com/gobwas/ws v1.3.1
 	github.com/gookit/color v1.5.4
 	github.com/gorilla/websocket v1.5.1
 	github.com/mdp/qrterminal/v3 v3.2.0
@@ -18,11 +21,12 @@ require (
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a
 	github.com/urfave/cli/v2 v2.27.1
 	golang.org/x/exp v0.0.0-20240318143956-a85f2c67cd81
+	golang.org/x/net v0.21.0
 	lukechampine.com/frand v1.4.2
 	mleku.dev/git/atomic v1.11.6
+	mleku.dev/git/bech32 v1.0.7
 	mleku.dev/git/ec v1.0.9
 	mleku.dev/git/interrupt v1.0.13
-	mleku.dev/git/nostr v1.1.22
 	mleku.dev/git/qu v1.0.8
 	mleku.dev/git/slog v1.0.16
 )
@@ -42,11 +46,8 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/fiatjaf/generic-ristretto v0.0.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.5.0 // indirect
-	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
-	github.com/gobwas/ws v1.3.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/glog v1.1.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -72,12 +73,8 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/term v0.17.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
-	mleku.dev/git/bech32 v1.0.7 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
-
-replace mleku.dev/git/nostr => ./pkg/nostr

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"mleku.dev/git/nostr/eventstore/badger/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
 	"mleku.dev/git/slog"
 )
 

@@ -5,14 +5,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
 	"github.com/urfave/cli/v2"
-	"mleku.dev/git/nostr/bech32encoding"
-	"mleku.dev/git/nostr/client"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/kinds"
-	"mleku.dev/git/nostr/sdk"
 )
 
 func Profile(cCtx *cli.Context) (err error) {

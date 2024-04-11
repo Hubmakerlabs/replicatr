@@ -3,13 +3,13 @@ package sdk
 import (
 	"encoding/json"
 
-	"mleku.dev/git/nostr/bech32encoding"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/filters"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/kinds"
-	"mleku.dev/git/nostr/pool"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pool"
 )
 
 type ProfileMetadata struct {

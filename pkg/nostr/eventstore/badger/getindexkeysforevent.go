@@ -1,17 +1,17 @@
 package badger
 
 import (
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/arb"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/createdat"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/id"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/kinder"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/pubkey"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"golang.org/x/exp/slices"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/eventstore/badger/keys"
-	"mleku.dev/git/nostr/eventstore/badger/keys/arb"
-	"mleku.dev/git/nostr/eventstore/badger/keys/createdat"
-	"mleku.dev/git/nostr/eventstore/badger/keys/id"
-	"mleku.dev/git/nostr/eventstore/badger/keys/index"
-	"mleku.dev/git/nostr/eventstore/badger/keys/kinder"
-	"mleku.dev/git/nostr/eventstore/badger/keys/pubkey"
-	"mleku.dev/git/nostr/eventstore/badger/keys/serial"
-	"mleku.dev/git/nostr/tag"
 )
 
 // GetIndexKeysForEvent generates all the index keys required to filter for

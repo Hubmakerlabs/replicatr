@@ -1,12 +1,12 @@
 package agent
 
 import (
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/eventid"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/tags"
-	"mleku.dev/git/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 func TagMapToKV(t filter.TagMap) (keys []KeyValuePair) {

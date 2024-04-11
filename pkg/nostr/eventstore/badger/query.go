@@ -6,15 +6,15 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/priority"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/dgraph-io/badger/v4"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/eventstore/badger/keys/index"
-	"mleku.dev/git/nostr/eventstore/badger/keys/serial"
-	"mleku.dev/git/nostr/eventstore/badger/priority"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/nostrbinary"
 )
 
 type query struct {

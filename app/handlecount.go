@@ -1,11 +1,11 @@
 package app
 
 import (
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/envelopes/noticeenvelope"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/relayws"
-	"mleku.dev/git/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 )
 
 func (rl *Relay) handleCountRequest(c context.T, id subscriptionid.T,

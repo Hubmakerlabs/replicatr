@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/fiatjaf/eventstore/badger"
 	"github.com/gorilla/websocket"
 	"github.com/nbd-wtf/go-nostr"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/keys"
 	"mleku.dev/git/slog"
 )
 
@@ -37,7 +37,8 @@ var kinds = []int{
 	31990, 32123, 34550, 39998, 40000,
 }
 
-func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T, c *websocket.Conn) (authors []string, ids []string, err error) {
+func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T, c *websocket.Conn) (authors []string,
+	ids []string, err error) {
 	if seed != nil {
 		src := seededRand.NewSource(int64(*seed))
 		seedr = Seedr{seededRand.New(src), true}
@@ -91,7 +92,8 @@ func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T
 				fmt.Printf("Connection closed normally.\n")
 				break // Exit the loop if the connection is closed normally
 			} else {
-				err = fmt.Errorf("Failed to read relay response from event %d out of %d from WebSocket or read timeout occurred: %v\n", i+1, numEvents, err)
+				err = fmt.Errorf("Failed to read relay response from event %d out of %d from WebSocket or read timeout occurred: %v\n",
+					i+1, numEvents, err)
 				return
 			}
 		}
@@ -113,13 +115,15 @@ func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T
 		if len(result) > 0 {
 			firstElement, ok := result[2].(bool)
 			if !ok {
-				err = fmt.Errorf("Type Assertion for first element of JSON response for event number %d out of %d failed", i+1, numEvents)
+				err = fmt.Errorf("Type Assertion for first element of JSON response for event number %d out of %d failed",
+					i+1, numEvents)
 				return
 			} else {
 				if firstElement == true {
 					fmt.Printf("Received relay confirmation for Event %d out of %d\n", i+1, numEvents)
 				} else {
-					err = fmt.Errorf("relay response message for event number %d out of %d was: %s", i+1, numEvents, result[3].(string))
+					err = fmt.Errorf("relay response message for event number %d out of %d was: %s", i+1, numEvents,
+						result[3].(string))
 					return
 				}
 			}
@@ -129,6 +133,7 @@ func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T
 	}
 
 	fmt.Printf("Event Test Successful! %d out of %d OK's received\n", numEvents, numEvents)
-	fmt.Printf("all %d events were randomly generated and successfully saved to the relay with relay confirmation\n\n", numEvents)
+	fmt.Printf("all %d events were randomly generated and successfully saved to the relay with relay confirmation\n\n",
+		numEvents)
 	return
 }

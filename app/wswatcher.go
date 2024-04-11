@@ -4,9 +4,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/fasthttp/websocket"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/relayws"
 )
 
 type watcherParams struct {

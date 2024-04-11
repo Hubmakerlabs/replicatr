@@ -8,12 +8,12 @@ import (
 	"strings"
 	"unsafe"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/authenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/sebest/xff"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/envelopes/authenvelope"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/filters"
-	"mleku.dev/git/nostr/relayws"
 	"mleku.dev/git/slog"
 )
 

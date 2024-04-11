@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/dgraph-io/badger/v4"
-	"mleku.dev/git/nostr/eventid"
-	"mleku.dev/git/nostr/eventstore/badger/keys/index"
-	"mleku.dev/git/nostr/eventstore/badger/keys/serial"
-	"mleku.dev/git/nostr/timestamp"
 )
 
 type AccessEvent struct {

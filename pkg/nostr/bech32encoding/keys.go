@@ -3,11 +3,11 @@ package bech32encoding
 import (
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"mleku.dev/git/bech32"
 	"mleku.dev/git/ec"
 	"mleku.dev/git/ec/schnorr"
 	"mleku.dev/git/ec/secp256k1"
-	"mleku.dev/git/nostr/hex"
 	"mleku.dev/git/slog"
 )
 

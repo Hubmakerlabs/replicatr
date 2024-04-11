@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/fiatjaf/eventstore/badger"
 	"github.com/gorilla/websocket"
 	"github.com/nbd-wtf/go-nostr"
-	"mleku.dev/git/nostr/context"
-	// "mleku.dev/git/nostr/keys"
+	// "github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 )
 
-func FiltersTest(authors []string, ids []string, b *badger.BadgerBackend, numQueries int, seed *int, ctx context.T, c *websocket.Conn) error {
+func FiltersTest(authors []string, ids []string, b *badger.BadgerBackend, numQueries int, seed *int, ctx context.T,
+	c *websocket.Conn) error {
 
 	// Construct query
 	query := nostr.Filter{

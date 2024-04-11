@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"mleku.dev/git/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 )
 
 var Commands []*Command
@@ -133,7 +133,8 @@ func set(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (r
 }
 
 func list(rl *Relay, prefix string, ev *event.T, cmd *Command, args ...string) (reply *event.T, err error) {
-	replyString := fmt.Sprintf("list not implemented yet\n args: %v\nevent: %s\nprefix: %s", args, ev.ToObject().String(), prefix)
+	replyString := fmt.Sprintf("list not implemented yet\n args: %v\nevent: %s\nprefix: %s", args,
+		ev.ToObject().String(), prefix)
 	log.I.F("sending message to user\n%s", replyString)
 	reply = MakeReply(ev, replyString)
 	return

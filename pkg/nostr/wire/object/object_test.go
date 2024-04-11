@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"mleku.dev/git/nostr/tags"
-	"mleku.dev/git/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 var literal = T{

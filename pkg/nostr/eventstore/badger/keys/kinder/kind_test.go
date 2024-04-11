@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"mleku.dev/git/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 )
 
 func TestT(t *testing.T) {

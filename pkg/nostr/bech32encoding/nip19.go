@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 	"mleku.dev/git/bech32"
-	"mleku.dev/git/nostr/eventid"
-	"mleku.dev/git/nostr/hex"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/pointers"
 )
 
 const (

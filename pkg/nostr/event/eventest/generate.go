@@ -4,11 +4,11 @@ import (
 	"encoding/base64"
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"lukechampine.com/frand"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/nostrbinary"
-	"mleku.dev/git/nostr/timestamp"
 	"mleku.dev/git/slog"
 )
 

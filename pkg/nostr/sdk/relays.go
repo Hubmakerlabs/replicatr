@@ -5,13 +5,13 @@ import (
 	"net/url"
 	"strings"
 
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/filters"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/kinds"
-	"mleku.dev/git/nostr/normalize"
-	"mleku.dev/git/nostr/pool"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pool"
 )
 
 type Relay struct {

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"sync"
 
-	"mleku.dev/git/nostr/client"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 )
 
 func (s *System) ExpandQueriesByAuthorAndRelays(

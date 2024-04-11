@@ -1,11 +1,11 @@
 package app
 
 import (
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"golang.org/x/exp/slices"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/kinds"
 )
 
 // NoComplexFilters disallows filters with more than 2 tags.

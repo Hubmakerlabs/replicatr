@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"mleku.dev/git/nostr/hex"
-	"mleku.dev/git/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
 
 func GetAddrTagElements(tagValue string) (k uint16, pkb []byte, d string) {

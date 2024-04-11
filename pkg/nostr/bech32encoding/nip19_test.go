@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 )
 
 func TestEncodeNpub(t *testing.T) {

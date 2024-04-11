@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"os"
 
-	"mleku.dev/git/nostr/envelopes/labels"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/interfaces/enveloper"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/tags"
-	"mleku.dev/git/nostr/wire/array"
-	"mleku.dev/git/nostr/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"mleku.dev/git/slog"
 )
 

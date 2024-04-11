@@ -6,9 +6,9 @@ import (
 	"sort"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/dgraph-io/badger/v4"
-	"mleku.dev/git/nostr/eventstore/badger/keys/index"
-	"mleku.dev/git/nostr/timestamp"
 )
 
 func (b *Backend) GarbageCollector() {

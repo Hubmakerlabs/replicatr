@@ -4,14 +4,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/arb"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/kinder"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/pubkey"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"mleku.dev/git/ec/schnorr"
-	"mleku.dev/git/nostr/eventstore"
-	"mleku.dev/git/nostr/eventstore/badger/keys"
-	"mleku.dev/git/nostr/eventstore/badger/keys/arb"
-	"mleku.dev/git/nostr/eventstore/badger/keys/index"
-	"mleku.dev/git/nostr/eventstore/badger/keys/kinder"
-	"mleku.dev/git/nostr/eventstore/badger/keys/pubkey"
-	"mleku.dev/git/nostr/hex"
 )
 
 // GetTagKeyPrefix returns tag index prefixes based on the initial field of a

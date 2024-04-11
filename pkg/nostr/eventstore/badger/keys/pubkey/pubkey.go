@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"mleku.dev/git/ec/schnorr"
-	"mleku.dev/git/nostr/eventstore/badger/keys"
-	"mleku.dev/git/nostr/hex"
 	"mleku.dev/git/slog"
 )
 

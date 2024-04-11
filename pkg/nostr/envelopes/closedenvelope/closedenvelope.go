@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"mleku.dev/git/nostr/envelopes/labels"
-	"mleku.dev/git/nostr/interfaces/enveloper"
-	"mleku.dev/git/nostr/subscriptionid"
-	"mleku.dev/git/nostr/wire/array"
-	"mleku.dev/git/nostr/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"mleku.dev/git/slog"
 )
 

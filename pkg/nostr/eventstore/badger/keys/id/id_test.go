@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/minio/sha256-simd"
 	"lukechampine.com/frand"
-	"mleku.dev/git/nostr/eventid"
-	"mleku.dev/git/nostr/hex"
 )
 
 func TestT(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/dgraph-io/badger/v4"
-	"mleku.dev/git/nostr/eventstore/badger/keys/index"
 )
 
 func (b *Backend) runMigrations() error {

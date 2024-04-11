@@ -7,15 +7,15 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event/eventest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/quotes"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"mleku.dev/git/ec/secp256k1"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/event/eventest"
-	"mleku.dev/git/nostr/hex"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/quotes"
-	"mleku.dev/git/nostr/tag"
-	"mleku.dev/git/nostr/tags"
-	"mleku.dev/git/nostr/timestamp"
 	"mleku.dev/git/slog"
 )
 

@@ -5,13 +5,13 @@ import (
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/eventstore"
-	"mleku.dev/git/nostr/eventstore/badger"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/kinds"
-	"mleku.dev/git/nostr/relayinfo"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"mleku.dev/git/slog"
 )
 

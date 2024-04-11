@@ -5,12 +5,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	agent_go "github.com/aviate-labs/agent-go"
 	"github.com/aviate-labs/agent-go/principal"
 	"mleku.dev/git/atomic"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/filter"
 	"mleku.dev/git/slog"
 )
 

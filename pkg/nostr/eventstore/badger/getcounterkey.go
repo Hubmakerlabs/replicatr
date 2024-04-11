@@ -1,10 +1,10 @@
 package badger
 
 import (
-	"mleku.dev/git/nostr/eventid"
-	"mleku.dev/git/nostr/eventstore/badger/keys/id"
-	"mleku.dev/git/nostr/eventstore/badger/keys/index"
-	"mleku.dev/git/nostr/eventstore/badger/keys/serial"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/id"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 )
 
 // GetCounterKey returns the proper counter key for a given event ID.

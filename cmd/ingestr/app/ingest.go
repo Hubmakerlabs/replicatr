@@ -5,14 +5,14 @@ import (
 	"strings"
 	"time"
 
-	"mleku.dev/git/nostr/client"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/filters"
-	"mleku.dev/git/nostr/subscription"
-	"mleku.dev/git/nostr/tag"
-	"mleku.dev/git/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscription"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 func Ingest(args *Config) int {

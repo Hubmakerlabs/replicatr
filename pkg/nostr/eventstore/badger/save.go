@@ -1,17 +1,17 @@
 package badger
 
 import (
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/createdat"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/id"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/sizer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/dgraph-io/badger/v4"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/eventstore"
-	"mleku.dev/git/nostr/eventstore/badger/keys"
-	"mleku.dev/git/nostr/eventstore/badger/keys/createdat"
-	"mleku.dev/git/nostr/eventstore/badger/keys/id"
-	"mleku.dev/git/nostr/eventstore/badger/keys/index"
-	"mleku.dev/git/nostr/eventstore/badger/keys/sizer"
-	"mleku.dev/git/nostr/nostrbinary"
-	"mleku.dev/git/nostr/timestamp"
 )
 
 func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {

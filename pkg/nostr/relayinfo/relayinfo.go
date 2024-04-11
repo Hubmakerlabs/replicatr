@@ -1,7 +1,7 @@
 package relayinfo
 
 import (
-	"mleku.dev/git/nostr/wire/object"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 )
 
 func (ri *T) ToObject() (o object.T) {

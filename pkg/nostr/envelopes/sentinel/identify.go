@@ -3,8 +3,8 @@ package sentinel
 import (
 	"os"
 
-	"mleku.dev/git/nostr/envelopes/labels"
-	"mleku.dev/git/nostr/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"mleku.dev/git/slog"
 )
 

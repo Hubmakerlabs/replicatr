@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/gookit/color"
-	"mleku.dev/git/nostr/bech32encoding"
-	"mleku.dev/git/nostr/event"
 )
 
 const NostrProtocol = "nostr:"

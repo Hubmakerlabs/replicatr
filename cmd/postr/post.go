@@ -9,15 +9,15 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/sdk"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/urfave/cli/v2"
-	"mleku.dev/git/nostr/client"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/sdk"
-	"mleku.dev/git/nostr/tag"
-	"mleku.dev/git/nostr/tags"
-	"mleku.dev/git/nostr/timestamp"
 )
 
 func Post(cCtx *cli.Context) (err error) {

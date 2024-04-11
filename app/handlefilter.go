@@ -4,17 +4,17 @@ import (
 	"errors"
 	"sync"
 
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/envelopes/eventenvelope"
-	"mleku.dev/git/nostr/envelopes/noticeenvelope"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/kinds"
-	"mleku.dev/git/nostr/normalize"
-	"mleku.dev/git/nostr/relayws"
-	"mleku.dev/git/nostr/subscriptionid"
-	"mleku.dev/git/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
 
 type handleFilterParams struct {

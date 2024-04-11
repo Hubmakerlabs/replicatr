@@ -9,13 +9,13 @@ import (
 	"runtime"
 	"sync"
 
-	"mleku.dev/git/nostr/envelopes/eventenvelope"
-	"mleku.dev/git/nostr/envelopes/labels"
-	"mleku.dev/git/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/fasthttp/websocket"
 	"mleku.dev/git/atomic"
-	"mleku.dev/git/nostr/interfaces/enveloper"
 	"mleku.dev/git/slog"
 )
 

@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"mleku.dev/git/nostr/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"mleku.dev/git/slog"
 )
 

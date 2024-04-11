@@ -15,10 +15,10 @@ import (
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/cmd/firehose/app"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/alexflint/go-arg"
 	"mleku.dev/git/ec/secp256k1"
-	"mleku.dev/git/nostr/bech32encoding"
-	"mleku.dev/git/nostr/keys"
 	"mleku.dev/git/slog"
 )
 

@@ -3,16 +3,16 @@ package event
 import (
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 	"github.com/minio/sha256-simd"
 	"mleku.dev/git/ec/schnorr"
 	"mleku.dev/git/ec/secp256k1"
-	"mleku.dev/git/nostr/eventid"
-	"mleku.dev/git/nostr/hex"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/tags"
-	"mleku.dev/git/nostr/timestamp"
-	"mleku.dev/git/nostr/wire/array"
-	"mleku.dev/git/nostr/wire/object"
 	"mleku.dev/git/slog"
 )
 

@@ -3,7 +3,7 @@ package eventstore
 import (
 	"os"
 
-	"mleku.dev/git/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"mleku.dev/git/slog"
 )
 

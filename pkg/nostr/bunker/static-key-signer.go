@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/crypt"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"golang.org/x/exp/slices"
-	"mleku.dev/git/nostr/crypt"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/keys"
-	"mleku.dev/git/nostr/kind"
 )
 
 var _ Signer = (*StaticKeySigner)(nil)
 
 type StaticKeySigner struct {
-	secretKey string
+	secretKey   string
 	sessionKeys []string
 	sessions    []Session
 	sync.Mutex

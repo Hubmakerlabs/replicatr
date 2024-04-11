@@ -5,9 +5,9 @@ package filter
 import (
 	"fmt"
 
-	"mleku.dev/git/nostr/kinds"
-	"mleku.dev/git/nostr/tag"
-	"mleku.dev/git/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 type UnmarshalingFilter struct {

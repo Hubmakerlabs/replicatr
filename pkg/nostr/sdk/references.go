@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	"mleku.dev/git/nostr/bech32encoding"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/eventid"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 )
 
 type Reference struct {

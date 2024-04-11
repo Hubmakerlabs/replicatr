@@ -1,7 +1,7 @@
 package badger
 
 import (
-	"mleku.dev/git/nostr/eventstore/badger/keys/index"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 )
 
 func (b *Backend) Wipe() (err error) {

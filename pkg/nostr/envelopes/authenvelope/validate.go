@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 )
 
 // Validate checks whether event is a valid NIP-42 event for given challenge and

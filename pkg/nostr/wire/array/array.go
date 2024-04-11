@@ -13,8 +13,8 @@ import (
 	"reflect"
 	"time"
 
-	"mleku.dev/git/nostr/wire/object"
-	"mleku.dev/git/nostr/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"mleku.dev/git/slog"
 )
 

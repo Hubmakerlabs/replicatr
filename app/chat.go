@@ -5,12 +5,12 @@ import (
 	"strconv"
 	"strings"
 
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/crypt"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/tags"
-	"mleku.dev/git/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/crypt"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 // DecryptDM decrypts a DM, kind 4, 1059 or 1060

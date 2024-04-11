@@ -10,16 +10,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"golang.org/x/net/websocket"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/keys"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/normalize"
-	"mleku.dev/git/nostr/tag"
-	"mleku.dev/git/nostr/tags"
-	"mleku.dev/git/nostr/timestamp"
 )
 
 func TestPublish(t *testing.T) {

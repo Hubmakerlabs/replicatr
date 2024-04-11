@@ -10,8 +10,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"mleku.dev/git/ec/secp256k1"
-	"mleku.dev/git/nostr/bech32encoding"
 	"mleku.dev/git/slog"
 )
 

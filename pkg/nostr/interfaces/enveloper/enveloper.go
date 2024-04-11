@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"mleku.dev/git/nostr/interfaces/arrayer"
-	"mleku.dev/git/nostr/interfaces/buffer"
-	"mleku.dev/git/nostr/interfaces/byter"
-	"mleku.dev/git/nostr/interfaces/labeler"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/arrayer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/buffer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/byter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/labeler"
 )
 
 // I interface for envelopes

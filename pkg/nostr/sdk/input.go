@@ -1,12 +1,12 @@
 package sdk
 
 import (
-	"mleku.dev/git/nostr/bech32encoding"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/dns"
-	"mleku.dev/git/nostr/eventid"
-	"mleku.dev/git/nostr/hex"
-	"mleku.dev/git/nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/dns"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 )
 
 // InputToProfile turns any npub/nprofile/hex/nip5 input into a ProfilePointer

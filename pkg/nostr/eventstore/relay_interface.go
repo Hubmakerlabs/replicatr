@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"sort"
 
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/interfaces/subscriptionoption"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/subscriptionoption"
 )
 
 // RelayInterface is a wrapper thing that unifies Store and nostr.Relay under a

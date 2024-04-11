@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/minio/sha256-simd"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/eventstore/badger"
-	"mleku.dev/git/nostr/hex"
-	"mleku.dev/git/nostr/kind"
 )
 
 // Import a collection of JSON events from stdin or from one or more files, line

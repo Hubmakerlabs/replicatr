@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"lukechampine.com/frand"
-	"mleku.dev/git/nostr/eventstore/badger"
-	"mleku.dev/git/nostr/eventstore/badger/keys/serial"
 )
 
 func TestT(t *testing.T) {

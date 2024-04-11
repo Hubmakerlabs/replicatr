@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/cmd/testr/app"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/replicatr"
 	"github.com/alexflint/go-arg"
 	"github.com/fiatjaf/eventstore/badger"
 	"github.com/gorilla/websocket"
-	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/slog"
 )
 
@@ -28,7 +28,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	relayArgs := []string{"go run", "-I", args.CanisterID, "-C", args.CanisterAddr, "-p", "testDB", "--loglevel", args.LogLevel, "initcfg"}
+	relayArgs := []string{"go run", "-I", args.CanisterID, "-C", args.CanisterAddr, "-p", "testDB", "--loglevel",
+		args.LogLevel, "initcfg"}
 
 	var dataDirBase string
 	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {

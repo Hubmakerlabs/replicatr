@@ -1,6 +1,6 @@
 package kinds
 
-import "mleku.dev/git/nostr/kind"
+import "github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 
 var PrivilegedKinds = T{
 	kind.EncryptedDirectMessage,

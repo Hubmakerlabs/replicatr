@@ -1,7 +1,7 @@
 package client
 
 import (
-	"mleku.dev/git/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 )
 
 func MustConnect(url string) *T {

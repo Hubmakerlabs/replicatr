@@ -3,10 +3,10 @@ package app
 import (
 	"errors"
 
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/eventstore"
-	"mleku.dev/git/nostr/normalize"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 )
 
 // AddEvent sends an event through then normal add pipeline, as if it was

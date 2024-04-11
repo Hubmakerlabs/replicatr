@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"math"
 
-	"mleku.dev/git/nostr/eventstore/badger/keys/id"
-	"mleku.dev/git/nostr/eventstore/badger/keys/index"
-	"mleku.dev/git/nostr/eventstore/badger/keys/kinder"
-	"mleku.dev/git/nostr/eventstore/badger/keys/pubkey"
-	"mleku.dev/git/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/id"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/kinder"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/pubkey"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 )
 
 func prepareQueries(f *filter.T) (

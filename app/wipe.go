@@ -1,7 +1,7 @@
 package app
 
 import (
-	bdb "mleku.dev/git/nostr/eventstore/badger"
+	bdb "github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 )
 
 // Wipe clears the badgerDB local event store/cache.

@@ -1,8 +1,8 @@
 package kinds
 
 import (
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 )
 
 type T []kind.T

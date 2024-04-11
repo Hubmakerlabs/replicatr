@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"os"
 
-	"mleku.dev/git/nostr/eventstore/badger/keys"
-	"mleku.dev/git/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"mleku.dev/git/slog"
 )
 

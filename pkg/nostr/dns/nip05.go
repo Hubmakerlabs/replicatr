@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/hex"
-	"mleku.dev/git/nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
 	"mleku.dev/git/slog"
 )
 

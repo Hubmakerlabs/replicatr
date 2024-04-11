@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"mleku.dev/git/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
 func TestT(t *testing.T) {

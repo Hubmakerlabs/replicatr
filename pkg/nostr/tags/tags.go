@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"os"
 
-	"mleku.dev/git/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"mleku.dev/git/slog"
 )
 

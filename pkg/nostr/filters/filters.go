@@ -1,9 +1,9 @@
 package filters
 
 import (
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/wire/array"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 )
 
 type T []*filter.T

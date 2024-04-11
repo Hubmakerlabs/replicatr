@@ -3,9 +3,9 @@ package envelopes
 import (
 	"os"
 
-	"mleku.dev/git/nostr/envelopes/sentinel"
-	"mleku.dev/git/nostr/interfaces/enveloper"
-	"mleku.dev/git/nostr/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/sentinel"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"mleku.dev/git/slog"
 )
 

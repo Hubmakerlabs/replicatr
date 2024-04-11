@@ -1,6 +1,6 @@
 package priority
 
-import "mleku.dev/git/nostr/event"
+import "github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 
 type QueryEvent struct {
 	*event.T

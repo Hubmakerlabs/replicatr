@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"mleku.dev/git/nostr/hex"
-	"mleku.dev/git/nostr/wire/text"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"mleku.dev/git/slog"
 )
 

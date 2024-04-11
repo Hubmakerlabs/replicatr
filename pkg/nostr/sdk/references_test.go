@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"mleku.dev/git/nostr/event"
-	"mleku.dev/git/nostr/pointers"
-	"mleku.dev/git/nostr/tags"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 )
 
 func TestParseReferences(t *testing.T) {

@@ -1,8 +1,8 @@
 package pointers
 
 import (
-	"mleku.dev/git/nostr/eventid"
-	"mleku.dev/git/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 )
 
 type Profile struct {

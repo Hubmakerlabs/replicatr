@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/json"
 
-	"mleku.dev/git/nostr/client"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/filter"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 )
 
 func (cfg *C) PopulateFollows(f *[]string, start, end *int) RelayIter {

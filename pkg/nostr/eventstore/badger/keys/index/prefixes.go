@@ -1,7 +1,7 @@
 package index
 
 import (
-	"mleku.dev/git/nostr/eventstore/badger/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
 )
 
 type P byte

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"mleku.dev/git/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 )
 
 func TestBasicNsonParse(t *testing.T) {

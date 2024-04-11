@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"mleku.dev/git/nostr/filters"
-	"mleku.dev/git/nostr/filters/filtertest"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters/filtertest"
 )
 
 func TestFilterString(t *testing.T) {

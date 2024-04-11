@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	ristretto "github.com/fiatjaf/generic-ristretto"
-	"mleku.dev/git/nostr/hex"
 	"mleku.dev/git/slog"
 )
 

@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"mleku.dev/git/ec/secp256k1"
-	"mleku.dev/git/nostr/bech32encoding"
-	"mleku.dev/git/nostr/client"
-	"mleku.dev/git/nostr/context"
-	"mleku.dev/git/nostr/event"
 	"mleku.dev/git/slog"
 )
 

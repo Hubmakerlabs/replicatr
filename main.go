@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/replicatr"
-	"mleku.dev/git/nostr/context"
 )
 
 func main() {
