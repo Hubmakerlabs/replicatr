@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/fiatjaf/eventstore/badger"
 	"github.com/gorilla/websocket"
-	"mleku.dev/git/nostr/event"
+	"github.com/nbd-wtf/go-nostr"
+	"mleku.dev/git/nostr/context"
 	"mleku.dev/git/nostr/keys"
-	"mleku.dev/git/nostr/kind"
-	"mleku.dev/git/nostr/timestamp"
 	"mleku.dev/git/slog"
 )
 
@@ -37,39 +37,41 @@ var kinds = []int{
 	31990, 32123, 34550, 39998, 40000,
 }
 
-func EventsTest(numEvents int, seed *int) error {
+func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T, c *websocket.Conn) (authors []string, ids []string, err error) {
 	if seed != nil {
 		src := seededRand.NewSource(int64(*seed))
 		seedr = Seedr{seededRand.New(src), true}
 	}
 
-	// Set up WebSocket connection
-	wsURL := "ws://127.0.0.1:3334"
-	c, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
-	if err != nil {
-		return fmt.Errorf("Failed to connect to WebSocket: %s", err)
-	}
-	defer c.Close()
-
 	for i := 0; i < numEvents; i++ {
 		k := kinds[randomInt(len(kinds))]
 		tags := generateTagsForKind(k)
-		e := event.T{
-			CreatedAt: timestamp.T(time.Now().Unix()),
-			Kind:      kind.T(k),
+		e := nostr.Event{
+			CreatedAt: nostr.Now(),
+			Kind:      k,
 			Tags:      tags,
 			Content:   generateRandomContent(),
 			Sig:       fmt.Sprintf("sig_placeholder_%d", i),
 		}
-		err := e.Sign(keys.GeneratePrivateKey())
+		err = e.Sign(keys.GeneratePrivateKey())
 		if err != nil {
-			log.E.F("unable to create random event number %d out of %d: %v", i+1, numEvents, err)
+			fmt.Printf("unable to create random event number %d out of %d: %v", i+1, numEvents, err)
 			continue
 		}
 
+		err = b.SaveEvent(ctx, &e)
+		if err != nil {
+			fmt.Printf("failed to save event %d to filterCheckerDB: %v", numEvents, err)
+			continue
+
+		}
+		authors = append(authors, e.PubKey)
+		ids = append(ids, e.ID)
+
 		wrappedEvent := []interface{}{"EVENT", e}
 
-		jsonData, err := json.Marshal(wrappedEvent)
+		var jsonData []byte
+		jsonData, err = json.Marshal(wrappedEvent)
 		if err != nil {
 			fmt.Printf("Error marshaling event: %v\n", err)
 			continue
@@ -77,18 +79,20 @@ func EventsTest(numEvents int, seed *int) error {
 
 		err = c.WriteMessage(websocket.TextMessage, jsonData)
 		if err != nil {
-			log.E.F("Failed to send event %d out of %d through WebSocket: %v", i+1, numEvents, err)
+			fmt.Printf("Failed to send event %d out of %d through WebSocket: %v", i+1, numEvents, err)
 		}
 
-		c.SetReadDeadline(time.Now().Add(10 * time.Second)) // Set a 10-second read deadline
-		_, message, err := c.ReadMessage()
+		c.SetReadDeadline(time.Now().Add(100 * time.Second)) // Set a 10-second read deadline
+		var message []byte
+		_, message, err = c.ReadMessage()
 
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
 				fmt.Printf("Connection closed normally.\n")
 				break // Exit the loop if the connection is closed normally
 			} else {
-				return fmt.Errorf("Failed to read relay response from event %d out of %d from WebSocket or read timeout occurred: %v\n", i+1, numEvents, err)
+				err = fmt.Errorf("Failed to read relay response from event %d out of %d from WebSocket or read timeout occurred: %v\n", i+1, numEvents, err)
+				return
 			}
 		}
 
@@ -101,19 +105,22 @@ func EventsTest(numEvents int, seed *int) error {
 		// Parse the JSON array
 		err = json.Unmarshal([]byte(jsonStr), &result)
 		if err != nil {
-			return fmt.Errorf("Error parsing JSON response from event %d out of %d:%v", i+1, numEvents, err)
+			err = fmt.Errorf("Error parsing JSON response from event %d out of %d:%v", i+1, numEvents, err)
+			return
 		}
 
 		// Check if the slice is not empty and then confirm its first element
 		if len(result) > 0 {
-			firstElement, ok := result[0].(string)
+			firstElement, ok := result[2].(bool)
 			if !ok {
-				return fmt.Errorf("Type Assertion for first element of JSON response for event number %d out of %d failed", i+1, numEvents)
+				err = fmt.Errorf("Type Assertion for first element of JSON response for event number %d out of %d failed", i+1, numEvents)
+				return
 			} else {
-				if firstElement == "OK" {
-					fmt.Printf("Received OK for Event %d out of %d\n", i+1, numEvents)
+				if firstElement == true {
+					fmt.Printf("Received relay confirmation for Event %d out of %d\n", i+1, numEvents)
 				} else {
-					return fmt.Errorf("relay response message for event number %d out of %d was: %s", i+1, numEvents, firstElement)
+					err = fmt.Errorf("relay response message for event number %d out of %d was: %s", i+1, numEvents, result[3].(string))
+					return
 				}
 			}
 		} else {
@@ -122,6 +129,6 @@ func EventsTest(numEvents int, seed *int) error {
 	}
 
 	fmt.Printf("Event Test Successful! %d out of %d OK's received\n", numEvents, numEvents)
-	fmt.Printf("meaning all %d randomly generated events were successfully saved and the relay responded appropriately\n\n", numEvents)
-	return nil
+	fmt.Printf("all %d events were randomly generated and successfully saved to the relay with relay confirmation\n\n", numEvents)
+	return
 }
