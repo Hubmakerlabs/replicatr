@@ -11,7 +11,6 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/alexflint/go-arg"
 	"mleku.dev/git/interrupt"
 	"mleku.dev/git/nostr/context"

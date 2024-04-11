@@ -1,0 +1,123 @@
+package sdk
+
+import (
+	"encoding/json"
+	"net/url"
+	"strings"
+
+	"mleku.dev/git/nostr/context"
+	"mleku.dev/git/nostr/event"
+	"mleku.dev/git/nostr/filters"
+	"mleku.dev/git/nostr/kind"
+	"mleku.dev/git/nostr/kinds"
+	"mleku.dev/git/nostr/normalize"
+	"mleku.dev/git/nostr/pool"
+)
+
+type Relay struct {
+	URL    string
+	Inbox  bool
+	Outbox bool
+}
+
+var two = 2
+
+func FetchRelaysForPubkey(c context.T, pool *pool.Simple, pubkey string, relays ...string) (r []Relay) {
+	c, cancel := context.Cancel(c)
+	defer cancel()
+	ch := pool.SubManyEose(c, relays, filters.T{
+		{
+			Kinds: kinds.T{
+				kind.RelayListMetadata,
+				kind.FollowList,
+			},
+			Authors: []string{pubkey},
+			Limit:   &two,
+		},
+	}, true)
+	r = make([]Relay, 0, 20)
+	i := 0
+	for ie := range ch {
+		switch ie.Event.Kind {
+		case kind.RelayListMetadata:
+			r = append(r, ParseRelaysFromKind10002(ie.Event)...)
+		case kind.FollowList:
+			r = append(r, ParseRelaysFromKind3(ie.Event)...)
+		}
+		i++
+		if i >= 2 {
+			break
+		}
+	}
+	return
+}
+
+func ParseRelaysFromKind10002(evt *event.T) (r []Relay) {
+	r = make([]Relay, 0, len(evt.Tags))
+	for _, tag := range evt.Tags {
+		if u := tag.Value(); u != "" && tag[0] == "r" {
+			if !IsValidRelayURL(u) {
+				continue
+			}
+			rl := Relay{
+				URL: normalize.URL(u),
+			}
+			if len(tag) == 2 {
+				rl.Inbox = true
+				rl.Outbox = true
+			} else if tag[2] == "write" {
+				rl.Outbox = true
+			} else if tag[2] == "read" {
+				rl.Inbox = true
+			}
+			r = append(r, rl)
+		}
+	}
+	return
+}
+
+func ParseRelaysFromKind3(evt *event.T) (r []Relay) {
+	type Item struct {
+		Read  bool `json:"read"`
+		Write bool `json:"write"`
+	}
+	items := make(map[string]Item, 20)
+	var err error
+	if err = json.Unmarshal([]byte(evt.Content), &items); chk.D(err) {
+		log.D.Ln("failed to parse relays from kind 3", kind.GetString(3))
+		// shouldn't this be fatal?
+	}
+	r = make([]Relay, len(items))
+	i := 0
+	for u, item := range items {
+		if !IsValidRelayURL(u) {
+			continue
+		}
+		rl := Relay{
+			URL: normalize.URL(u),
+		}
+		if item.Read {
+			rl.Inbox = true
+		}
+		if item.Write {
+			rl.Outbox = true
+		}
+		r = append(r, rl)
+		i++
+	}
+	return r
+}
+
+func IsValidRelayURL(u string) bool {
+	parsed, err := url.Parse(u)
+	if chk.D(err) {
+		return false
+	}
+	if parsed.Scheme != "wss" && parsed.Scheme != "ws" {
+		return false
+	}
+	if len(strings.Split(parsed.Host, ".")) < 2 {
+		return false
+	}
+	return true
+}

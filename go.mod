@@ -79,3 +79,5 @@ require (
 	mleku.dev/git/bech32 v1.0.7 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
+
+replace mleku.dev/git/nostr => ./pkg/nostr
