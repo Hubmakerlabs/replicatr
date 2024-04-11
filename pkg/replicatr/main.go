@@ -50,15 +50,17 @@ var nips = number.List{
 	relayinfo.PublicChat.Number,                     // NIP28 public chat
 	relayinfo.ParameterizedReplaceableEvents.Number, // NIP33
 	relayinfo.ExpirationTimestamp.Number,            // NIP40
-	relayinfo.UserStatuses.Number,                   // NIP38 user statuses
-	relayinfo.Authentication.Number,                 // NIP42 auth
-	relayinfo.CountingResults.Number,                // NIP45 count requests
+	relayinfo.VersionedEncryption.Number,
+	relayinfo.UserStatuses.Number,    // NIP38 user statuses
+	relayinfo.Authentication.Number,  // NIP42 auth
+	relayinfo.CountingResults.Number, // NIP45 count requests
 }
+
+var log, chk = slog.New(os.Stderr)
 
 func Main(osArgs []string, c context.T, cancel context.F) {
 	tmp := os.Args
 	os.Args = osArgs
-	var log, chk = slog.New(os.Stderr)
 	arg.MustParse(&args)
 	os.Args = tmp
 	// set logging level if non-default was set in args
@@ -240,8 +242,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	}
 	badgerDB := &badger.Backend{
 		Path: dataDir,
-		// Ctx:    c,
-		// WG:     &wg,
+		Ctx:  c,
+		WG:   &wg,
 		// Info:   rl.Info,
 		// Params: parameters,
 	}
@@ -307,7 +309,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	case args.Wipe != nil:
 		log.D.Ln("wiping database")
 		chk.E(rl.Wipe(badgerDB))
-		os.Exit(0)
+		cancel()
 	case args.ImportCmd != nil:
 		if rl.Config.EventStore == "badger" {
 			rl.Import(badgerDB, args.ImportCmd.FromFile)

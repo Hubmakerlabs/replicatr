@@ -55,7 +55,7 @@ func (b *Backend) Close() { b.Badger.Close() }
 
 // Serial returns the serial code for the database.
 func (b *Backend) Serial() []byte {
-	by := b.Badger.Serial()
+	by, _ := b.Badger.SerialKey()
 	return by
 }
 
