@@ -39,7 +39,7 @@ func main() {
 	go replicatr.Main(relayArgs, ctx, cancel)
 	defer cancel()
 	db := &badger.BadgerBackend{Path: dataDir}
-	if err := db.Init(); err != nil {
+	if err = db.Init(); err != nil {
 		panic(err)
 	}
 	time.Sleep(time.Second)

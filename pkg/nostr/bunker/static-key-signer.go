@@ -91,7 +91,8 @@ func (p *StaticKeySigner) HandleRequest(ev *event.T) (
 		result = "ack"
 		harmless = true
 	case "get_public_key":
-		pubkey, err := keys.GetPublicKey(p.secretKey)
+		var pubkey string
+		pubkey, err = keys.GetPublicKey(p.secretKey)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to derive public key: %w", err)
 			break
@@ -132,12 +133,14 @@ func (p *StaticKeySigner) HandleRequest(ev *event.T) (
 			break
 		}
 		plaintext := req.Params[1]
-		sharedSecret, err := crypt.ComputeSharedSecret(p.secretKey, thirdPartyPubkey)
+		var sharedSecret []byte
+		sharedSecret, err = crypt.ComputeSharedSecret(p.secretKey, thirdPartyPubkey)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to compute shared secret: %w", err)
 			break
 		}
-		ciphertext, err := crypt.Encrypt(plaintext, sharedSecret)
+		var ciphertext string
+		ciphertext, err = crypt.Encrypt(plaintext, sharedSecret)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to encrypt: %w", err)
 			break
@@ -154,7 +157,8 @@ func (p *StaticKeySigner) HandleRequest(ev *event.T) (
 			break
 		}
 		ciphertext := req.Params[1]
-		sharedSecret, err := crypt.ComputeSharedSecret(p.secretKey, thirdPartyPubkey)
+		var sharedSecret []byte
+		sharedSecret, err = crypt.ComputeSharedSecret(p.secretKey, thirdPartyPubkey)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to compute shared secret: %w", err)
 			break

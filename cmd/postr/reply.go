@@ -91,7 +91,7 @@ func Reply(cCtx *cli.Context) (err error) {
 		} else {
 			ev.Tags = ev.Tags.AppendUnique(tag.T{"e", id, rl.URL(), "mention"})
 		}
-		if err := ev.Sign(sk); chk.D(err) {
+		if err = ev.Sign(sk); chk.D(err) {
 			return true
 		}
 		if err = rl.Publish(c, ev); chk.D(err) {

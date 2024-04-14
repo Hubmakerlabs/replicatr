@@ -19,7 +19,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 	var queries []query
 	var extraFilter *filter.T
 	var since uint64
-	queries, extraFilter, since, err = prepareQueries(f)
+	queries, extraFilter, since, err = PrepareQueries(f)
 	if err != nil {
 		return 0, err
 	}
@@ -27,7 +27,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 	var txMx sync.Mutex
 	// start up the access counter
 	go func() {
-		var accesses []AccessEvent
+		var accesses []*AccessEvent
 		b.WG.Add(1)
 		defer b.WG.Done()
 		for {
@@ -39,8 +39,8 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 				}
 				return
 			case acc := <-accessChan:
-				log.T.Ln("adding access to", acc.EvID)
-				accesses = append(accesses, AccessEvent{acc.EvID, acc.Ser})
+				log.T.F("adding access to %0x ser %0x", acc.EvID, acc.Ser)
+				accesses = append(accesses, MakeAccessEvent(acc.EvID, acc.Ser))
 			}
 		}
 	}()
@@ -61,7 +61,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 			it := txn.NewIterator(opts)
 			txMx.Unlock()
 			defer it.Close()
-			for it.Seek(q.start); it.ValidForPrefix(q.prefix); it.Next() {
+			for it.Seek(q.start); it.ValidForPrefix(q.searchPrefix); it.Next() {
 				item := it.Item()
 				key := item.Key()
 
@@ -75,14 +75,10 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 						break
 					}
 				}
-				// ser := serial.New(nil)
-				// keys.Read(key, prefix.New(prefixes.Event), ser)
-				// idx := make([]byte, 1+SerialLen)
-				// idx[0] = prefixes.Event.Byte()
-				// copy(idx[1:], key[idxOffset:])
 				ser := key[len(key)-serial.Len:]
 				idx := index.Event.Key(serial.New(ser))
 				if extraFilter == nil {
+					log.I.F("adding access for count (no extra filter) %0x %0x", key, ser)
 					count++
 				} else {
 					// fetch actual event
@@ -105,8 +101,9 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 						// part of the index
 						if extraFilter == nil || extraFilter.Matches(evt) {
 							count++
-							accessChan <- AccessEvent{EvID: &evt.ID, Ser: ser}
 						}
+						log.I.F("adding access for count %0x %0x", evt.ID, ser)
+						accessChan <- AccessEvent{EvID: evt.ID, Ser: string(ser)}
 						return nil
 					})
 					if chk.D(err) {

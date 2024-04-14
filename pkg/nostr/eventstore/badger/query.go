@@ -12,53 +12,27 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/priority"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/dgraph-io/badger/v4"
 )
-
-type query struct {
-	i       int
-	f       *filter.T
-	prefix  []byte
-	start   []byte
-	results chan Results
-	skipTS  bool
-}
-
-type Results struct {
-	Ev  *event.T
-	Ser []byte
-}
 
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
 	ch = make(event.C)
 
-	if f.Kinds != nil && len(f.Kinds) > 0 {
-		for i := range f.Kinds {
-			switch f.Kinds[i] {
-			case kind.EncryptedDirectMessage,
-				kind.GiftWrap,
-				kind.GiftWrapWithKind4,
-				kind.ApplicationSpecificData,
-				kind.Deletion:
-				log.T.Ln("privileged event kind in filter", f.String())
-			}
-		}
-	}
-
 	var queries []query
 	var extraFilter *filter.T
 	var since uint64
-	queries, extraFilter, since, err = prepareQueries(f)
+	queries, extraFilter, since, err = PrepareQueries(f)
 	if err != nil {
 		return nil, err
 	}
-	accessChan := make(chan AccessEvent)
+	log.I.S(queries, extraFilter, since)
+	accessChan := make(chan *AccessEvent)
 	var txMx sync.Mutex
 	// start up the access counter
 	go func() {
-		var accesses []AccessEvent
+		var accesses []*AccessEvent
 		b.WG.Add(1)
 		defer b.WG.Done()
 		for {
@@ -70,9 +44,8 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				}
 				return
 			case acc := <-accessChan:
-				log.T.F("adding access to %s %0x",
-					acc.EvID, acc.Ser)
-				accesses = append(accesses, AccessEvent{acc.EvID, acc.Ser})
+				log.T.F("adding access to %s %0x", acc.EvID, acc.Ser)
+				accesses = append(accesses, &AccessEvent{acc.EvID, acc.Ser})
 			}
 		}
 	}()
@@ -101,9 +74,10 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				txMx.Unlock()
 				defer it.Close()
 				defer close(q.results)
-				for it.Seek(q.start); it.ValidForPrefix(q.prefix); it.Next() {
+				for it.Seek(q.start); it.ValidForPrefix(q.searchPrefix); it.Next() {
 					item := it.Item()
 					key := item.Key()
+					log.I.F("key %d %0x", len(key), key)
 					idxOffset := len(key) - serial.Len
 					// idxOffset := len(key) - 8 // this is where the idx actually starts
 					// "id" indexes don't contain a timestamp
@@ -130,7 +104,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 						}
 						log.E.F("badger: failed to get %x based on prefix %x, "+
 							"index key %x from raw event store: %s\n",
-							idx, q.prefix, key, err)
+							idx, q.searchPrefix, key, err)
 						return err
 					}
 					item.Value(func(val []byte) error {
@@ -144,9 +118,12 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 						}
 						// check if this matches the other filters that were not part of the index
 						if extraFilter == nil || extraFilter.Matches(evt) {
-							log.I.F("ser result %0x", ser)
-							q.results <- Results{Ev: evt, Ser: ser}
-							// accessChan <- AccessEvent{EvID: &evt.ID, Ser: ser}
+							res := Results{Ev: evt, TS: timestamp.Now(), Ser: string(ser)}
+							log.I.F("ser result %s %d %0x", res.Ev.ID, res.TS, []byte(res.Ser))
+							q.results <- res
+							// ae := MakeAccessEvent(&evt.ID, ser)
+							// log.I.S("sending access event", ae)
+							// accessChan <- ae
 							// q.results <- evt
 						}
 						return nil
@@ -169,7 +146,13 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 		for _, q := range queries {
 			evt, ok := <-q.results
 			if ok {
-				emitQueue = append(emitQueue, &priority.QueryEvent{T: evt.Ev, Query: q.i, Ser: evt.Ser})
+				log.T.F("adding event to queue %d %0x %0x", evt.Ev.ID, evt.TS.U64(), []byte(evt.Ser))
+				emitQueue = append(emitQueue,
+					&priority.QueryEvent{
+						T:     evt.Ev,
+						Query: q.index,
+						Ser:   []byte(evt.Ser),
+					})
 			}
 		}
 		// queue may be empty here if we have literally nothing
@@ -192,9 +175,11 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			}
 			// emit latest event in queue
 			latest := emitQueue[0]
-			ch <- latest.T
 			// send ID to be incremented for access
-			accessChan <- AccessEvent{EvID: &latest.T.ID, Ser: latest.Ser}
+			ae := MakeAccessEvent(latest.T.ID, string(latest.Ser))
+			log.I.S("sending access event", ae)
+			accessChan <- ae
+			ch <- latest.T
 			// stop when reaching limit
 			emittedEvents++
 			if emittedEvents == limit {
@@ -203,8 +188,9 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			}
 			// fetch a new one from query results and replace the previous one with it
 			if evt, ok := <-queries[latest.Query].results; ok {
-				log.T.Ln("adding event to queue")
+				log.T.Ln("adding event to queue", evt.TS.U64())
 				emitQueue[0].T = evt.Ev
+				emitQueue[0].Ser = []byte(evt.Ser)
 				heap.Fix(&emitQueue, 0)
 			} else {
 				log.T.Ln("removing event from queue")

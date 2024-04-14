@@ -65,7 +65,8 @@ func queryRelay(c *websocket.Conn, filter nostr.Filter) ([]nostr.Event, error) {
 	for {
 		counter := 0
 		c.SetReadDeadline(time.Now().Add(10 * time.Second)) // Set a 10-second read deadline
-		_, message, err := c.ReadMessage()
+		var message []byte
+		_, message, err = c.ReadMessage()
 		if err != nil {
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
 				fmt.Printf("Connection closed normally.\n")

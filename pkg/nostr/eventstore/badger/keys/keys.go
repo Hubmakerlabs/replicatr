@@ -38,3 +38,6 @@ func Read(b []byte, elems ...Element) {
 		el.Read(buf)
 	}
 }
+
+// Make is a convenience method to wrap a list of Element into a slice.
+func Make(elems ...Element) []Element { return elems }

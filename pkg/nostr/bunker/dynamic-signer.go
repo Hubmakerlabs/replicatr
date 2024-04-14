@@ -156,7 +156,8 @@ func (p *DynamicSigner) HandleRequest(ev *event.T) (
 			resultErr = fmt.Errorf("failed to compute shared secret: %w", err)
 			break
 		}
-		ciphertext, err := crypt.Encrypt(plaintext, sharedSecret)
+		var ciphertext string
+		ciphertext, err = crypt.Encrypt(plaintext, sharedSecret)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to encrypt: %w", err)
 			break
@@ -177,12 +178,14 @@ func (p *DynamicSigner) HandleRequest(ev *event.T) (
 			break
 		}
 		ciphertext := req.Params[1]
-		sharedSecret, err := crypt.ComputeSharedSecret(privateKey, thirdPartyPubkey)
+		var sharedSecret []byte
+		sharedSecret, err = crypt.ComputeSharedSecret(privateKey, thirdPartyPubkey)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to compute shared secret: %w", err)
 			break
 		}
-		plaintext, err := crypt.Decrypt(ciphertext, sharedSecret)
+		var plaintext []byte
+		plaintext, err = crypt.Decrypt(ciphertext, sharedSecret)
 		if err != nil {
 			resultErr = fmt.Errorf("failed to encrypt: %w", err)
 			break

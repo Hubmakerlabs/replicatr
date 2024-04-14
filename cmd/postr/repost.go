@@ -44,7 +44,8 @@ func Repost(cCtx *cli.Context) (err error) {
 	var success atomic.Int64
 	cfg.Do(writePerms, func(c context.T, rl *client.T) bool {
 		if first.Load() {
-			evs, err := rl.QuerySync(c, &f)
+			var evs []*event.T
+			evs, err = rl.QuerySync(c, &f)
 			if chk.D(err) {
 				return true
 			}
