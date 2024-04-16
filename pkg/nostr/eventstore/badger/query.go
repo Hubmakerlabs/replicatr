@@ -27,7 +27,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	if err != nil {
 		return nil, err
 	}
-	log.I.S(queries, extraFilter, since)
+	log.T.S(queries, extraFilter, since)
 	accessChan := make(chan *AccessEvent)
 	var txMx sync.Mutex
 	// start up the access counter
@@ -39,7 +39,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			select {
 			case <-c.Done():
 				if len(accesses) > 0 {
-					log.D.Ln("accesses", accesses)
+					log.T.Ln("accesses", accesses)
 					chk.E(b.IncrementAccesses(&txMx, accesses))
 				}
 				return
@@ -77,7 +77,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				for it.Seek(q.start); it.ValidForPrefix(q.searchPrefix); it.Next() {
 					item := it.Item()
 					key := item.Key()
-					log.I.F("key %d %0x", len(key), key)
+					log.T.F("key %d %0x", len(key), key)
 					idxOffset := len(key) - serial.Len
 					// idxOffset := len(key) - 8 // this is where the idx actually starts
 					// "id" indexes don't contain a timestamp
@@ -87,15 +87,11 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 							break
 						}
 					}
-					// idx := make([]byte, 5)
-					// idx[0] = rawEventStorePrefix
-					log.I.F("found key %0x", key)
+					log.T.F("found key %0x", key)
 					ser := key[len(key)-serial.Len:]
-					log.I.F("ser %0x", ser)
+					log.T.F("ser %0x", ser)
 					idx := index.Event.Key(serial.New(ser))
-					log.I.F("idx %0x", idx)
-					// log.I.F("ser %0x idx %0x", ser, idx)
-					// copy(idx[1:], key[idxOffset:])
+					log.T.F("idx %0x", idx)
 					// fetch actual event
 					item, err = txn.Get(idx)
 					if err != nil {
@@ -119,12 +115,8 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 						// check if this matches the other filters that were not part of the index
 						if extraFilter == nil || extraFilter.Matches(evt) {
 							res := Results{Ev: evt, TS: timestamp.Now(), Ser: string(ser)}
-							log.I.F("ser result %s %d %0x", res.Ev.ID, res.TS, []byte(res.Ser))
+							log.T.F("ser result %s %d %0x", res.Ev.ID, res.TS, []byte(res.Ser))
 							q.results <- res
-							// ae := MakeAccessEvent(&evt.ID, ser)
-							// log.I.S("sending access event", ae)
-							// accessChan <- ae
-							// q.results <- evt
 						}
 						return nil
 					})
@@ -177,7 +169,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			latest := emitQueue[0]
 			// send ID to be incremented for access
 			ae := MakeAccessEvent(latest.T.ID, string(latest.Ser))
-			log.I.S("sending access event", ae)
+			log.T.S("sending access event", ae)
 			accessChan <- ae
 			ch <- latest.T
 			// stop when reaching limit

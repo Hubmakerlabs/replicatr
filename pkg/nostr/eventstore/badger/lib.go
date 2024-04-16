@@ -13,22 +13,11 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-const (
-	dbVersionKey          byte = 255
-	rawEventStorePrefix   byte = 0
-	indexCreatedAtPrefix  byte = 1
-	indexIdPrefix         byte = 2
-	indexKindPrefix       byte = 3
-	indexPubkeyPrefix     byte = 4
-	indexPubkeyKindPrefix byte = 5
-	indexTagPrefix        byte = 6
-	indexTag32Prefix      byte = 7
-	indexTagAddrPrefix    byte = 8
-)
-
 var _ eventstore.Store = (*Backend)(nil)
 
 type Backend struct {
+	Ctx  context.T
+	WG   *sync.WaitGroup
 	Path string
 	// MaxLimit is the largest a single event JSON can be, in bytes.
 	MaxLimit int
@@ -43,12 +32,37 @@ type Backend struct {
 	DBHighWater int
 	// GCFrequency is the frequency of checks of the current utilisation.
 	GCFrequency time.Duration
+	// Delete is a closure that implements the garbage collection prune operation.
+	//
+	// This is to enable multi-level caching as well as maintaining a limit of
+	// storage usage.
+	Delete func(serials DeleteItems) (err error)
 
 	*badger.DB
 	seq *badger.Sequence
+}
 
-	Ctx context.T
-	WG  *sync.WaitGroup
+const DefaultMaxLimit = 1024
+
+// GetDefaultBackend returns a reasonably configured badger.Backend.
+func GetDefaultBackend(
+	Ctx context.T,
+	WG *sync.WaitGroup,
+	path string,
+	mb int, // event size limit in Mb, 0 to disable.
+) (b *Backend) {
+	b = &Backend{
+		Ctx:         Ctx,
+		WG:          WG,
+		Path:        path,
+		MaxLimit:    DefaultMaxLimit,
+		DBSizeLimit: mb * Megabyte,
+		DBLowWater:  86,
+		DBHighWater: 92,
+		GCFrequency: 5 * time.Second,
+	}
+	b.Delete = b.BadgerDelete
+	return
 }
 
 func (b *Backend) Init() error {
@@ -61,32 +75,24 @@ func (b *Backend) Init() error {
 	if err != nil {
 		return err
 	}
-
 	if err := b.runMigrations(); err != nil {
 		return fmt.Errorf("error running migrations: %w", err)
 	}
-
 	if b.MaxLimit == 0 {
-		b.MaxLimit = 500
+		b.MaxLimit = DefaultMaxLimit
 	}
-
+	// set Delete function if it's empty
+	if b.Delete == nil {
+		b.Delete = b.BadgerDelete
+	}
 	return nil
 }
 
-func (b *Backend) Close() {
-	b.DB.Close()
-	b.seq.Release()
-}
+func (b *Backend) Close() { _, _ = b.DB.Close(), b.seq.Release() }
 
-// SerialKey gets a sequence number from the badger DB backend, prefixed with a key
-// type code 0 Event.
-//
-// This value is used as the key for a raw event record.
+// SerialKey returns a key used for storing events, and the raw serial counter
+// bytes to copy into index keys.
 func (b *Backend) SerialKey() (idx []byte, ser []byte) {
-	// v := b.Serial()
-	// vb := make([]byte, 9)
-	// vb[0]
-	// binary.BigEndian.PutUint64(vb[1:], v)
 	var err error
 	if ser, err = b.SerialBytes(); chk.E(err) {
 		panic(err)
@@ -101,6 +107,8 @@ func (b *Backend) Serial() (ser uint64, err error) {
 	return
 }
 
+// SerialBytes returns a new serial value, used to store an event record with a
+// conflict-free unique code (it is a monotonic, atomic, ascending counter).
 func (b *Backend) SerialBytes() (ser []byte, err error) {
 	var serU64 uint64
 	if serU64, err = b.Serial(); chk.E(err) {

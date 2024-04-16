@@ -41,7 +41,9 @@ func FromKey(k []byte) (p *T) {
 	if len(k) < Len {
 		panic("cannot get a serial without at least 8 bytes")
 	}
-	return &T{Val: k[len(k)-Len:]}
+	key := make([]byte, Len)
+	copy(key, k[len(k)-Len:])
+	return &T{Val: key}
 }
 
 func Make(s uint64) (ser []byte) {

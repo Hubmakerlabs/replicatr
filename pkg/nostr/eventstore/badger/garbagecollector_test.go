@@ -1,16 +1,19 @@
-package app
+package badger
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
+	"testing"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tests"
 	"lukechampine.com/frand"
@@ -19,56 +22,58 @@ import (
 	"mleku.dev/git/slog"
 )
 
-var log, chk = slog.New(os.Stderr)
-
-type Config struct {
-	MaxContentSize int    `arg:"-m,--maxsize" default:"1024" help:"maximum size of event content field to generate"`
-	TotalSize      int    `arg:"-t,--totalsize" help:"total amount of events data (binary) in bytes to generate"`
-	MaxDelay       int    `arg:"-d,--maxdelay" default:"30" help:"max delay between dispatching events (milliseconds)"`
-	Nsec           string `arg:"-n,--nsec" help:"secret key in hex or bech32 nsec format to use for signing events and auth"`
-	Relay          string `arg:"-r,--relay" default:"ws://127.0.0.1:3334" help:"relay to dispatch to, eg ws://127.0.0.1:3334"`
-}
-
 type Counter struct {
 	id        *eventid.T
 	requested int
 }
 
-var (
-	Sec     string
-	mx      sync.Mutex
-	counter []Counter
-	total   int
-)
-
-func (cfg *Config) Main() (err error) {
-	log.I.Ln("running firehose")
+func TestGarbageCollector(t *testing.T) {
+	var (
+		err            error
+		sec            string
+		mx             sync.Mutex
+		counter        []Counter
+		total          int
+		MaxContentSize = 4096
+		TotalSize      = 10000000
+		MaxDelay       = time.Second / 10
+	)
+	sec = keys.GeneratePrivateKey()
+	var nsec string
+	if nsec, err = bech32encoding.HexToNsec(sec); chk.E(err) {
+		panic(err)
+	}
+	slog.SetLogLevel(slog.Debug)
+	log.T.Ln("signing with", nsec)
 	c, cancel := context.Cancel(context.Bg())
+	var wg sync.WaitGroup
+	defer cancel()
+	path := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
+	be := GetDefaultBackend(c, &wg, path, 1)
+	if err = be.Init(); chk.E(err) {
+		t.Fatal(err)
+	}
+	go be.GarbageCollector()
 	interrupt.AddHandler(func() {
 		cancel()
-		// os.Exit(0)
+		chk.E(os.RemoveAll(path))
 	})
 end:
 	for {
 		select {
 		case <-c.Done():
+			log.I.Ln("context canceled")
 			return
 		default:
 		}
 		mx.Lock()
-		if total > cfg.TotalSize {
+		if total > TotalSize {
 			mx.Unlock()
 			cancel()
 			return
 		}
 		mx.Unlock()
-		// connect to a relay
-		var rl *client.T
-		if rl, err = client.ConnectWithAuth(c, cfg.Relay, Sec); chk.E(err) {
-			// keep trying unless context is canceled by interrupt handler
-			time.Sleep(time.Second)
-			continue end
-		}
+
 		newEvent := qu.T()
 		go func() {
 			ticker := time.NewTicker(time.Second)
@@ -86,19 +91,21 @@ end:
 						// has and request every event that gets over 50% so that we
 						// create a bias towards already requested.
 						if counter[i].requested+rn > 192 {
-							log.I.Ln("counter", counter[i].requested, "+", rn, "=",
+							log.T.Ln("counter", counter[i].requested, "+", rn, "=",
 								counter[i].requested+rn)
 							// log.T.Ln("adding to fetchIDs")
 							counter[i].requested++
 							fetchIDs = append(fetchIDs, counter[i].id)
 						}
 					}
-					log.W.Ln("fetchIDs", len(fetchIDs), fetchIDs)
+					if len(fetchIDs) > 0 {
+						log.T.Ln("fetchIDs", len(fetchIDs), fetchIDs)
+					}
 					mx.Unlock()
 				case <-ticker.C:
 					// copy out current list of events to request
 					mx.Lock()
-					log.W.Ln("ticker", len(fetchIDs))
+					log.T.Ln("ticker", len(fetchIDs))
 					ids := make(tag.T, len(fetchIDs))
 					for i := range fetchIDs {
 						ids[i] = fetchIDs[i].String()
@@ -109,21 +116,16 @@ end:
 						for i := range ids {
 							go func(i int) {
 								sc, _ := context.Timeout(c, 2*time.Second)
-								sub := rl.PrepareSubscription(sc, filters.T{&filter.T{
-									IDs: tag.T{ids[i]},
-								}})
-								if err = sub.Fire(); chk.E(err) {
-									return
-								}
+								var ch event.C
+								ch, err = be.QueryEvents(sc,
+									&filter.T{IDs: tag.T{ids[i]}})
 								go func() {
 									// receive the results
 									select {
-									case <-sub.Events:
-										log.I.Ln("received event")
-									case <-sub.EndOfStoredEvents:
-										log.I.Ln("EOSE")
+									case <-ch:
+										log.T.Ln("received event")
 									case <-sc.Done():
-										log.I.Ln("subscription done")
+										log.T.Ln("subscription done")
 									case <-c.Done():
 										log.I.Ln("context canceled")
 										return
@@ -147,13 +149,13 @@ end:
 				return
 			default:
 			}
-			if ev, bs, err = tests.GenerateEvent(Sec, cfg.MaxContentSize); chk.E(err) {
+			if ev, bs, err = tests.GenerateEvent(sec, MaxContentSize); chk.E(err) {
 				return
 			}
 			mx.Lock()
 			counter = append(counter, Counter{id: &ev.ID, requested: 1})
 			total += bs
-			if total > cfg.TotalSize {
+			if total > TotalSize {
 				mx.Unlock()
 				cancel()
 				break out
@@ -161,20 +163,18 @@ end:
 			mx.Unlock()
 			newEvent.Signal()
 			sc, _ := context.Timeout(c, 2*time.Second)
-			if err = rl.Publish(sc, ev); chk.E(err) {
-				// disconnected, try to reconnect, but first a short delay
-				time.Sleep(time.Second)
+			if err = be.SaveEvent(sc, ev); chk.E(err) {
 				continue end
 			}
-			delay := frand.Intn(cfg.MaxDelay)
-			log.I.Ln("waiting between", delay, "ms")
+			delay := frand.Intn(int(MaxDelay))
+			log.T.Ln("waiting between", delay, "ns")
 			if delay == 0 {
 				continue
 			}
 			select {
 			case <-c.Done():
 				return
-			case <-time.After(time.Duration(delay) * time.Millisecond):
+			case <-time.After(time.Duration(delay)):
 			}
 		}
 		select {

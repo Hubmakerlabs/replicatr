@@ -16,12 +16,11 @@ type AccessEvent struct {
 }
 
 func MakeAccessEvent(EvID eventid.T, Ser string) (ae *AccessEvent) {
-	return &AccessEvent{EvID, string(Ser)}
+	return &AccessEvent{EvID, Ser}
 }
 
 func (a AccessEvent) String() (s string) {
-	s = fmt.Sprintf("%s %16x", a.EvID.String(), a.Ser)
-	return
+	return fmt.Sprintf("%s %16x", a.EvID.String(), a.Ser)
 }
 
 // IncrementAccesses takes a list of event IDs of events that were accessed in a

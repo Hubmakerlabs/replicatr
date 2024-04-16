@@ -44,7 +44,7 @@ func PrepareQueries(f *filter.T) (
 		for i, idHex := range f.IDs {
 			ih := id.New(idHex)
 			prf := index.Id.Key(ih)
-			log.I.F("id prefix to search on %0x from key %0x", prf, ih.Val)
+			log.T.F("id prefix to search on %0x from key %0x", prf, ih.Val)
 			qs[i] = query{
 				index:        i,
 				queryFilter:  f,
@@ -52,7 +52,7 @@ func PrepareQueries(f *filter.T) (
 				skipTS:       true, // why are we not checking timestamps?
 			}
 		}
-		log.I.S("ids", qs)
+		log.T.S("ids", qs)
 		// second we make a set of queries based on author pubkeys, optionally with kinds
 	case len(f.Authors) > 0:
 		// if there is no kinds, we just make the queries based on the author pub keys
