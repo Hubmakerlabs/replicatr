@@ -49,6 +49,7 @@ func queryRelay(c *websocket.Conn, filter nostr.Filter) ([]nostr.Event, error) {
 
 	// Send the REQ message
 	query := []interface{}{"REQ", subscriptionID, filter}
+
 	jsonData, err := json.Marshal(query)
 	if err != nil {
 		return nil, err
@@ -58,12 +59,22 @@ func queryRelay(c *websocket.Conn, filter nostr.Filter) ([]nostr.Event, error) {
 		return nil, err
 	}
 
+	// closeQuery := []interface{}{"CLOSE", subscriptionID}
+	// jsonData, err = json.Marshal(closeQuery)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// err = c.WriteMessage(websocket.TextMessage, jsonData)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
 	// Event collection
 	var events []nostr.Event
 
 	// Read messages until EOSE is received
+	counter := 1
 	for {
-		counter := 0
 		c.SetReadDeadline(time.Now().Add(10 * time.Second)) // Set a 10-second read deadline
 		var message []byte
 		_, message, err = c.ReadMessage()
@@ -94,7 +105,8 @@ func queryRelay(c *websocket.Conn, filter nostr.Filter) ([]nostr.Event, error) {
 
 		switch msgType {
 		case "EVENT":
-			fmt.Printf("EVENT: counter at %d", counter)
+			counter += 1
+			fmt.Printf("EVENT: counter at %d \n", counter)
 			// Parse the event using EventEnvelope
 			var eventEnv nostr.EventEnvelope
 			err = eventEnv.UnmarshalJSON(message)
@@ -110,7 +122,8 @@ func queryRelay(c *websocket.Conn, filter nostr.Filter) ([]nostr.Event, error) {
 			events = append(events, event)
 
 		case "EOSE":
-			fmt.Printf("EOSE: counter at %d", counter)
+			counter += 1
+			fmt.Printf("EOSE: counter at %d\n", counter)
 			// Check if the subscription ID matches
 			if result[1].(string) != subscriptionID {
 				return nil, fmt.Errorf("mismatched subscription ID in EOSE")
@@ -122,7 +135,8 @@ func queryRelay(c *websocket.Conn, filter nostr.Filter) ([]nostr.Event, error) {
 			}
 			return events, nil
 		case "CLOSED":
-			fmt.Printf("CLOSED: counter at %d", counter)
+			counter += 1
+			fmt.Printf("CLOSED: counter at %d\n", counter)
 			// Check if the subscription ID matches
 			if result[1].(string) != subscriptionID {
 				return nil, fmt.Errorf("mismatched subscription ID in CLOSED")
