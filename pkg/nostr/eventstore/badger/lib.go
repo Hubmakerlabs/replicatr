@@ -2,7 +2,6 @@ package badger
 
 import (
 	"encoding/binary"
-	"fmt"
 	"sync"
 	"time"
 
@@ -59,7 +58,7 @@ func GetDefaultBackend(
 		DBSizeLimit: mb * Megabyte,
 		DBLowWater:  86,
 		DBHighWater: 92,
-		GCFrequency: 5 * time.Second,
+		GCFrequency: 2 * time.Second,
 	}
 	b.Delete = b.BadgerDelete
 	return
@@ -72,11 +71,11 @@ func (b *Backend) Init() error {
 	}
 	b.DB = db
 	b.seq, err = db.GetSequence([]byte("events"), 1000)
-	if err != nil {
+	if chk.E(err) {
 		return err
 	}
-	if err := b.runMigrations(); err != nil {
-		return fmt.Errorf("error running migrations: %w", err)
+	if err = b.runMigrations(); err != nil {
+		return log.E.Err("error running migrations: %w", err)
 	}
 	if b.MaxLimit == 0 {
 		b.MaxLimit = DefaultMaxLimit

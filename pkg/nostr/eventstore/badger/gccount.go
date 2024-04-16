@@ -84,7 +84,7 @@ func (b *Backend) GCCount() (deleteItems DeleteItems, err error) {
 	if total < b.DBHighWater*b.DBSizeLimit/100 {
 		return
 	}
-	log.W.Ln("GC needs to run")
+	// log.W.Ln("GC needs to run")
 	sort.Sort(countItems)
 	pruneOff := total - b.DBLowWater*b.DBSizeLimit/100
 	log.I.Ln("will delete nearest to", pruneOff,
@@ -98,29 +98,6 @@ func (b *Backend) GCCount() (deleteItems DeleteItems, err error) {
 		deleteItems = append(deleteItems, countItems[lastIndex].Serial)
 	}
 	sort.Sort(deleteItems)
-	// don't think dedup is needed
-	// 	var dupes []int
-	// 	for i := range deleteItems {
-	// 		if i == 0 {
-	// 			continue
-	// 		}
-	// 		if bytes.Compare(deleteItems[i], deleteItems[i-1]) == 0 {
-	// 			log.I.Ln("dupe")
-	// 			dupes = append(dupes, i)
-	// 		}
-	// 	}
-	// 	log.I.S(dupes)
-	// 	tmp := make(DeleteItems, 0, len(deleteItems)-len(dupes))
-	// skip:
-	// 	for i := range deleteItems {
-	// 		for j := range dupes {
-	// 			if dupes[j] == i {
-	// 				continue skip
-	// 			}
-	// 			tmp = append(tmp, deleteItems[i])
-	// 		}
-	// 	}
-	// 	deleteItems = tmp
 	log.I.Ln("found", lastIndex,
 		"events to prune, which will bring current utilization down to",
 		total-cumulative)

@@ -2,7 +2,6 @@ package badger
 
 import (
 	"bytes"
-	"errors"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
@@ -38,7 +37,7 @@ out:
 			log.W.Ln("backend context done")
 			break out
 		case <-gcTicker.C:
-			log.I.Ln("running GC check")
+			log.T.Ln("running GC check")
 			if err = b.GCRun(); chk.E(err) {
 
 			}
@@ -80,15 +79,6 @@ func (b *Backend) BadgerDelete(serials DeleteItems) (err error) {
 	err = b.Update(func(txn *badger.Txn) (err error) {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
-
-		// for i := range serials {
-		// 	if err = txn.Delete(serials[i]); chk.E(err) {
-		// 		log.I.Ln("delete failed", serials[i])
-		// 		return
-		// 	}
-		// 	log.D.Ln("deleted", serials[i])
-		// }
-
 		for it.Rewind(); it.Valid(); it.Next() {
 			k := it.Item().Key()
 			// check if key matches any of the serials
@@ -98,18 +88,14 @@ func (b *Backend) BadgerDelete(serials DeleteItems) (err error) {
 						log.I.Ln(k, serials[i])
 						return
 					}
-					// log.D.Ln("deleted", k, serials[i])
+					break
 				}
 			}
 		}
 		return
 	})
 	chk.E(err)
-	log.I.Ln("completed prune")
+	log.T.Ln("completed prune")
 	chk.E(b.DB.Sync())
-	if err := b.RunValueLogGC(0.8); err != nil &&
-		!errors.Is(err, badger.ErrNoRewrite) {
-		log.E.F("badger gc errored:" + err.Error())
-	}
 	return
 }

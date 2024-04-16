@@ -34,9 +34,9 @@ func TestGarbageCollector(t *testing.T) {
 		mx             sync.Mutex
 		counter        []Counter
 		total          int
-		MaxContentSize = 4096
+		MaxContentSize = 40960
 		TotalSize      = 10000000
-		MaxDelay       = time.Second / 10
+		MaxDelay       = time.Second / 5
 	)
 	sec = keys.GeneratePrivateKey()
 	var nsec string
