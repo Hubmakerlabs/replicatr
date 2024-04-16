@@ -76,6 +76,7 @@ end:
 
 		newEvent := qu.T()
 		go func() {
+
 			ticker := time.NewTicker(time.Second)
 			var fetchIDs []*eventid.T
 			// start fetching loop
@@ -115,19 +116,22 @@ end:
 					if len(ids) > 0 {
 						for i := range ids {
 							go func(i int) {
-								sc, _ := context.Timeout(c, 2*time.Second)
+								sc, scancel := context.Cancel(context.Bg())
 								var ch event.C
 								ch, err = be.QueryEvents(sc,
 									&filter.T{IDs: tag.T{ids[i]}})
 								go func() {
 									// receive the results
 									select {
+									case <-time.After(time.Second):
+										log.I.Ln("cancel")
+										scancel()
 									case <-ch:
 										log.T.Ln("received event")
 									case <-sc.Done():
-										log.T.Ln("subscription done")
+										log.I.Ln("subscription done")
 									case <-c.Done():
-										log.I.Ln("context canceled")
+										log.T.Ln("context canceled")
 										return
 									}
 								}()

@@ -98,7 +98,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 						if errors.Is(err, badger.ErrDiscardedTxn) {
 							return err
 						}
-						log.E.F("badger: failed to get %x based on prefix %x, "+
+						log.T.F("badger: failed to get %x based on prefix %x, "+
 							"index key %x from raw event store: %s\n",
 							idx, q.searchPrefix, key, err)
 						return err

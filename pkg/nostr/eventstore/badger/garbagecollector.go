@@ -2,6 +2,7 @@ package badger
 
 import (
 	"bytes"
+	"errors"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
@@ -52,7 +53,6 @@ func (b *Backend) GCRun() (err error) {
 	if deleteItems, err = b.GCCount(); chk.E(err) {
 		return
 	}
-	log.I.Ln(deleteItems)
 	if len(deleteItems) < 1 {
 		return
 	}
@@ -81,28 +81,35 @@ func (b *Backend) BadgerDelete(serials DeleteItems) (err error) {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 
-		for i := range serials {
-			if err = txn.Delete(serials[i]); chk.E(err) {
-				log.I.Ln("delete failed", serials[i])
-				return
+		// for i := range serials {
+		// 	if err = txn.Delete(serials[i]); chk.E(err) {
+		// 		log.I.Ln("delete failed", serials[i])
+		// 		return
+		// 	}
+		// 	log.D.Ln("deleted", serials[i])
+		// }
+
+		for it.Rewind(); it.Valid(); it.Next() {
+			k := it.Item().Key()
+			// check if key matches any of the serials
+			for i := range serials {
+				if MatchSerial(k, serials[i]) {
+					if err = txn.Delete(k); chk.E(err) {
+						log.I.Ln(k, serials[i])
+						return
+					}
+					// log.D.Ln("deleted", k, serials[i])
+				}
 			}
 		}
-
-		// for it.Rewind(); it.Valid(); it.Next() {
-		// 	k := it.Item().Key()
-		// 	// check if key matches any of the serials
-		// 	for i := range serials {
-		// 		if MatchSerial(k, serials[i]) {
-		// 			if err = txn.Delete(k); chk.E(err) {
-		// 				log.I.Ln(k, serials[i])
-		// 				return
-		// 			}
-		// 		}
-		// 	}
-		// }
 		return
 	})
 	chk.E(err)
 	log.I.Ln("completed prune")
+	chk.E(b.DB.Sync())
+	if err := b.RunValueLogGC(0.8); err != nil &&
+		!errors.Is(err, badger.ErrNoRewrite) {
+		log.E.F("badger gc errored:" + err.Error())
+	}
 	return
 }
