@@ -1,10 +1,10 @@
 package badger
 
 import (
-	"bytes"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
+	serial2 "github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/del"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -48,7 +48,7 @@ out:
 
 func (b *Backend) GCRun() (err error) {
 	log.T.Ln("running garbage collector check")
-	var deleteItems DeleteItems
+	var deleteItems del.Items
 	if deleteItems, err = b.GCCount(); chk.E(err) {
 		return
 	}
@@ -62,20 +62,9 @@ func (b *Backend) GCRun() (err error) {
 	return
 }
 
-// MatchSerial compares a key bytes to a serial, all indexes have the serial at
-// the end indicating the event record they refer to, and if they match returns
-// true.
-func MatchSerial(index, ser []byte) bool {
-	l := len(index)
-	if l < serial.Len {
-		return false
-	}
-	return bytes.Compare(index[l-serial.Len:], ser) == 0
-}
-
 // BadgerDelete implements the Delete function for the case of only using the
 // badger.Backend. This removes the event and all indexes.
-func (b *Backend) BadgerDelete(serials DeleteItems) (err error) {
+func (b *Backend) BadgerDelete(serials del.Items) (err error) {
 	err = b.Update(func(txn *badger.Txn) (err error) {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
@@ -83,7 +72,7 @@ func (b *Backend) BadgerDelete(serials DeleteItems) (err error) {
 			k := it.Item().Key()
 			// check if key matches any of the serials
 			for i := range serials {
-				if MatchSerial(k, serials[i]) {
+				if serial2.Match(k, serials[i]) {
 					if err = txn.Delete(k); chk.E(err) {
 						log.I.Ln(k, serials[i])
 						return

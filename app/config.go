@@ -27,7 +27,7 @@ type Config struct {
 	Listen       string     `arg:"-l,--listen" default:"0.0.0.0:3334" json:"listen" help:"network address to listen on"`
 	EventStore   string     `arg:"-e,--eventstore" default:"badger" json:"eventstore" help:"select event store backend [ic,badger]"`
 	CanisterAddr string     `arg:"-C,--canisteraddr" default:"https://icp0.io/" json:"canister_addr" help:"IC canister address to use (for local, use 127.0.0.1:46847)"`
-	CanisterID   string     `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
+	CanisterId   string     `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
 	Profile      string     `arg:"-p,--profile" json:"-" default:"replicatr" help:"profile name to use for storage"`
 	Name         string     `arg:"-n,--name" json:"name" default:"replicatr relay" help:"name of relay for NIP-11"`
 	Description  string     `arg:"-d,--description" json:"description" help:"description of relay for NIP-11"`

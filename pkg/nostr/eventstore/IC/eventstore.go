@@ -4,11 +4,16 @@ import (
 	"os"
 	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
+	bdb "github.com/dgraph-io/badger/v4"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/del"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
@@ -17,17 +22,67 @@ import (
 
 var log, chk = slog.New(os.Stderr)
 
+// Backend is a hybrid badger/Internet Computer based event store.
+//
+// All search indexes are retained even if event data is pruned to reduce
+// storage space for the relay, when events are pruned, their data is replaced
+// with the event ID to signify they must be fetched and restored to the raw
+// event key.
+//
+// An alternative data store could be created that purely relies on the IC, or
+// alternatively prunes search indexes to minimize storage used by pruned
+// events, but these would be slower at retrieval and require a more complex
+// cache algorithm.
+//
+// todo: keeping track of the actual disk space used versus event sizes will be necessary
 type Backend struct {
 	// Badger backend must be populated
-	Badger *badger.Backend
-	IC     *agent.Backend
-	Ctx    context.T
-	WG     *sync.WaitGroup
-	Inf    *relayinfo.T
-	Params []string
+	Badger          *badger.Backend
+	IC              *agent.Backend
+	Ctx             context.T
+	WG              *sync.WaitGroup
+	Inf             *relayinfo.T
+	CanisterAddr    string
+	CanisterId      string
+	PrivateCanister bool
 }
 
 var _ eventstore.Store = (*Backend)(nil)
+
+// ICDelete manages the specific way that records are deleted for the IC data
+// store.
+func (b *Backend) ICDelete(serials del.Items) (err error) {
+	err = b.Badger.Update(func(txn *bdb.Txn) (err error) {
+		it := txn.NewIterator(bdb.DefaultIteratorOptions)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			k := it.Item().Key()
+			// check if key matches any of the serials
+			for i := range serials {
+				if serial.Match(k, serials[i]) {
+					// decode the event, store the ID only in place of where the event was.
+					var v []byte
+					if v, err = it.Item().ValueCopy(nil); chk.E(err) {
+						continue
+					}
+					var evt *event.T
+					if evt, err = nostrbinary.Unmarshal(v); chk.E(err) {
+						continue
+					}
+					if err = txn.Set(k, evt.ID.Bytes()); chk.E(err) {
+						continue
+					}
+					break
+				}
+			}
+		}
+		return
+	})
+	chk.E(err)
+	log.T.Ln("completed prune")
+	chk.E(b.Badger.DB.Sync())
+	return
+}
 
 // Init sets up the badger event store and connects to the configured IC
 // canister.
@@ -35,58 +90,31 @@ var _ eventstore.Store = (*Backend)(nil)
 // required params are address, canister ID and the badger event store size
 // limit (which can be 0)
 func (b *Backend) Init() (err error) {
-
-	if len(b.Params) < 3 {
-		return log.E.Err("not enough parameters for IC event store Init, "+
-			"got %d, require %d: %v", len(b.Params), 3, b.Params)
+	if b.CanisterAddr == "" || b.CanisterId == "" {
+		return log.E.Err("missing required canister parameters, got addr: \"%s\" and id: \"%s\"",
+			b.CanisterAddr, b.CanisterId)
 	}
-	addr, canisterId := b.Params[0], b.Params[1]
 	if err = b.Badger.Init(); chk.D(err) {
 		return
 	}
-	if b.IC, err = agent.New(b.Ctx, canisterId, addr); chk.E(err) {
+	// start up the badger GC
+	go b.Badger.GarbageCollector()
+	if b.IC, err = agent.New(b.Ctx, b.CanisterId, b.CanisterAddr); chk.E(err) {
 		return
 	}
 	return
 }
 
 // Close the connection to the database.
-func (b *Backend) Close() { b.Badger.Close() }
-
-// Serial returns the serial code for the database.
-func (b *Backend) Serial() []byte {
-	by, _ := b.Badger.SerialKey()
-	return by
+// IC is a request/response API authing at each request.
+func (b *Backend) Close() {
+	b.Badger.Close()
 }
 
 // CountEvents returns the number of events found matching the filter.
 func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
-	var forBadger, forIC kinds.T
-	for i := range f.Kinds {
-		if kinds.IsPrivileged(f.Kinds[i]) {
-			forBadger = append(forBadger, f.Kinds[i])
-		} else {
-			forIC = append(forIC, f.Kinds[i])
-		}
-	}
-	icFilter := f.Duplicate()
-	f.Kinds = forBadger
-	icFilter.Kinds = forIC
 	if count, err = b.Badger.CountEvents(c, f); chk.E(err) {
 		return
-	}
-	var bcounter int
-	if bcounter, err = b.Badger.CountEvents(c, icFilter); chk.E(err) {
-		return
-	}
-	var counter int
-	counter, err = b.IC.CountEvents(c, icFilter)
-	// add the result of the bigger of local vs ic so the effective count is
-	// closer to correct
-	if counter > bcounter {
-		count += counter
-	} else {
-		count += bcounter
 	}
 	return
 }

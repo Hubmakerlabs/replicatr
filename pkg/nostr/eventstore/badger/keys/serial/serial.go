@@ -71,3 +71,14 @@ func (p *T) Read(buf *bytes.Buffer) (el keys.Element) {
 }
 
 func (p *T) Len() int { return Len }
+
+// Match compares a key bytes to a serial, all indexes have the serial at
+// the end indicating the event record they refer to, and if they match returns
+// true.
+func Match(index, ser []byte) bool {
+	l := len(index)
+	if l < Len {
+		return false
+	}
+	return bytes.Compare(index[l-Len:], ser) == 0
+}

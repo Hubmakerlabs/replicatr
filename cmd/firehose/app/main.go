@@ -109,9 +109,9 @@ end:
 						for i := range ids {
 							go func(i int) {
 								sc, _ := context.Timeout(c, 2*time.Second)
-								sub := rl.PrepareSubscription(sc, filters.T{&filter.T{
-									IDs: tag.T{ids[i]},
-								}})
+								sub := rl.PrepareSubscription(sc, filters.T{
+									&filter.T{IDs: tag.T{ids[i]}},
+								})
 								if err = sub.Fire(); chk.E(err) {
 									return
 								}
@@ -122,6 +122,7 @@ end:
 										log.I.Ln("received event")
 									case <-sub.EndOfStoredEvents:
 										log.I.Ln("EOSE")
+										return
 									case <-sc.Done():
 										log.I.Ln("subscription done")
 									case <-c.Done():

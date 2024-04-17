@@ -1,7 +1,6 @@
 package badger
 
 import (
-	"bytes"
 	"sort"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
@@ -10,57 +9,22 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/sizer"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/del"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/keys/count"
 	"github.com/dgraph-io/badger/v4"
 )
 
-var counterPrefix = []byte{byte(index.Counter)}
-
-type CountItem struct {
-	Serial    []byte
-	Size      uint32
-	Freshness timestamp.T
-}
-
-type CountItems []*CountItem
-
-func MakeCountItem(ser *serial.T, ts *createdat.T,
-	size *sizer.T) *CountItem {
-
-	return &CountItem{
-		Serial:    ser.Val,
-		Freshness: ts.Val,
-		Size:      size.Val,
-	}
-}
-
-func (c CountItems) Len() int           { return len(c) }
-func (c CountItems) Less(i, j int) bool { return c[i].Freshness < c[j].Freshness }
-func (c CountItems) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
-func (c CountItems) Total() (total int) {
-	for i := range c {
-		total += int(c[i].Size)
-	}
-	return
-}
-
-type DeleteItems [][]byte
-
-func (c DeleteItems) Len() int           { return len(c) }
-func (c DeleteItems) Less(i, j int) bool { return bytes.Compare(c[i], c[j]) < 0 }
-func (c DeleteItems) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
-
-// GCCount scans for counter entries and based on GC parameters returns a list
+// BadgerGCCount scans for counter entries and based on GC parameters returns a list
 // of the serials of the events that need to be pruned.
-func (b *Backend) GCCount() (deleteItems DeleteItems, err error) {
-	var countItems CountItems
+func (b *Backend) BadgerGCCount() (deleteItems del.Items, err error) {
+	var countItems count.Items
 	v := make([]byte, createdat.Len+sizer.Len)
 	key := make([]byte, index.Len+id.Len+serial.Len)
 	err = b.View(func(txn *badger.Txn) (err error) {
 		it := txn.NewIterator(badger.IteratorOptions{
-			Prefix: counterPrefix,
+			Prefix: count.Prefix,
 		})
-		for it.Rewind(); it.ValidForPrefix(counterPrefix); it.Next() {
+		for it.Rewind(); it.ValidForPrefix(count.Prefix); it.Next() {
 			item := it.Item()
 			item.KeyCopy(key)
 			ser := serial.FromKey(key)
@@ -69,7 +33,7 @@ func (b *Backend) GCCount() (deleteItems DeleteItems, err error) {
 			}
 			ts, size := createdat.New(0), sizer.New(0)
 			keys.Read(v, ts, size)
-			countItems = append(countItems, MakeCountItem(ser, ts, size))
+			countItems = append(countItems, count.MakeItem(ser, ts, size))
 		}
 		it.Close()
 		return

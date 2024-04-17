@@ -1,13 +1,13 @@
 package replicatr
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
@@ -233,19 +233,15 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, &inf, &args)
 	var db eventstore.Store
-	var parameters []string
-	parameters = []string{
-		fmt.Sprint(conf.DBSizeLimit),
-		fmt.Sprint(conf.DBLowWater),
-		fmt.Sprint(conf.DBHighWater),
-		fmt.Sprint(conf.GCFrequency),
-	}
 	badgerDB := &badger.Backend{
-		Path: dataDir,
-		Ctx:  c,
-		WG:   &wg,
-		// Info:   rl.Info,
-		// Params: parameters,
+		Ctx:         c,
+		WG:          &wg,
+		Path:        dataDir,
+		MaxLimit:    inf.Limitation.MaxLimit,
+		DBSizeLimit: args.DBSizeLimit,
+		DBLowWater:  args.DBLowWater,
+		DBHighWater: args.DBHighWater,
+		GCFrequency: time.Duration(args.GCFrequency) * time.Second,
 	}
 	// if we are wiping we don't want to init db normally
 	if args.Wipe != nil {
@@ -253,16 +249,13 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	}
 	switch rl.Config.EventStore {
 	case "ic":
-		parameters = append([]string{
-			rl.Config.CanisterAddr,
-			rl.Config.CanisterID,
-		}, parameters...)
 		db = &IC.Backend{
-			Badger: badgerDB,
-			Ctx:    c,
-			WG:     &wg,
-			Inf:    rl.Info,
-			Params: parameters,
+			Badger:       badgerDB,
+			Ctx:          c,
+			WG:           &wg,
+			Inf:          rl.Info,
+			CanisterAddr: rl.Config.CanisterAddr,
+			CanisterId:   rl.Config.CanisterId,
 		}
 	case "badger":
 		db = badgerDB
