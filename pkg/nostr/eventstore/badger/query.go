@@ -31,25 +31,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	accessChan := make(chan *AccessEvent)
 	var txMx sync.Mutex
 	// start up the access counter
-	go func() {
-		var accesses []*AccessEvent
-		b.WG.Add(1)
-		defer b.WG.Done()
-		for {
-			select {
-			case <-c.Done():
-				if len(accesses) > 0 {
-					log.T.Ln("accesses", accesses)
-					chk.E(b.IncrementAccesses(&txMx, accesses))
-				}
-				return
-			case acc := <-accessChan:
-				log.T.F("adding access to %s %0x", acc.EvID, acc.Ser)
-				accesses = append(accesses, &AccessEvent{acc.EvID, acc.Ser})
-			}
-		}
-	}()
-
+	go b.AccessLoop(c, &txMx, accessChan)
 	go func() {
 		defer close(ch)
 		// actually iterate
@@ -64,7 +46,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			default:
 			}
 			q := q
-			go b.View(func(txn *badger.Txn) error {
+			go chk.E(b.View(func(txn *badger.Txn) (err error) {
 				// iterate only through keys and in reverse order
 				opts := badger.IteratorOptions{
 					Reverse: true,
@@ -79,7 +61,6 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 					key := item.Key()
 					log.T.F("key %d %0x", len(key), key)
 					idxOffset := len(key) - serial.Len
-					// idxOffset := len(key) - 8 // this is where the idx actually starts
 					// "id" indexes don't contain a timestamp
 					if !q.skipTS {
 						createdAt := binary.BigEndian.Uint64(key[idxOffset-serial.Len : idxOffset])
@@ -103,10 +84,10 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 							idx, q.searchPrefix, key, err)
 						return err
 					}
-					item.Value(func(val []byte) error {
+					err = item.Value(func(val []byte) error {
 						evt := &event.T{}
-						if evt, err = nostrbinary.Unmarshal(val); err != nil {
-							log.E.F("badger: value read error (id %x): %s\n", val[0:32], err)
+						if evt, err = nostrbinary.Unmarshal(val); chk.E(err) {
+							// log.E.F("badger: value read error (id %x): %s\n", val[0:32], err)
 							return err
 						}
 						if evt == nil {
@@ -120,19 +101,18 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 						}
 						return nil
 					})
+					chk.E(err)
 				}
 				return nil
-			})
+			}))
 		}
 		// max number of events we'll return
 		limit := b.MaxLimit
 		if f.Limit != nil && *f.Limit > 0 && *f.Limit < limit {
 			limit = *f.Limit
 		}
-
 		// receive results and ensure we only return the most recent ones always
 		emittedEvents := 0
-
 		// first pass
 		emitQueue := make(priority.Queue, 0, len(queries)+limit)
 		for _, q := range queries {

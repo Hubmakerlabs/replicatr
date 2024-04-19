@@ -49,22 +49,27 @@ out:
 func (b *Backend) GCRun() (err error) {
 	log.T.Ln("running garbage collector check")
 	var deleteItems del.Items
-	if deleteItems, err = b.GCCount(); chk.E(err) {
+	if deleteItems, err = GcCount(b); chk.E(err) {
 		return
 	}
 	if len(deleteItems) < 1 {
 		return
 	}
 	log.I.Ln("deleting:", deleteItems)
-	if err = b.Delete(deleteItems); chk.E(err) {
+	if err = b.Prune(b, deleteItems); chk.E(err) {
 		return
 	}
 	return
 }
 
-// BadgerDelete implements the Delete function for the case of only using the
+// Prune implements the Prune function for the case of only using the
 // badger.Backend. This removes the event and all indexes.
-func (b *Backend) BadgerDelete(serials del.Items) (err error) {
+func Prune(bi any, serials del.Items) (err error) {
+	b, ok := bi.(*Backend)
+	if !ok {
+		err = log.E.Err("backend type does not match badger eventstore")
+		return
+	}
 	err = b.Update(func(txn *badger.Txn) (err error) {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()

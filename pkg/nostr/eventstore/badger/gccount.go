@@ -14,9 +14,14 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-// BadgerGCCount scans for counter entries and based on GC parameters returns a list
+// GcCount scans for counter entries and based on GC parameters returns a list
 // of the serials of the events that need to be pruned.
-func (b *Backend) BadgerGCCount() (deleteItems del.Items, err error) {
+func GcCount(bi any) (deleteItems del.Items, err error) {
+	b, ok := bi.(*Backend)
+	if !ok {
+		err = log.E.Err("backend type does not match badger eventstore")
+		return
+	}
 	var countItems count.Items
 	v := make([]byte, createdat.Len+sizer.Len)
 	key := make([]byte, index.Len+id.Len+serial.Len)

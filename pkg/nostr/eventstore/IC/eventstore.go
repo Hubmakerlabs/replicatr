@@ -33,8 +33,6 @@ var log, chk = slog.New(os.Stderr)
 // alternatively prunes search indexes to minimize storage used by pruned
 // events, but these would be slower at retrieval and require a more complex
 // cache algorithm.
-//
-// todo: keeping track of the actual disk space used versus event sizes will be necessary
 type Backend struct {
 	// Badger backend must be populated
 	Badger          *badger.Backend

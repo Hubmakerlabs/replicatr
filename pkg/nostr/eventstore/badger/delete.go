@@ -19,13 +19,6 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) error {
 
 	err := b.Update(func(txn *badger.Txn) error {
 		idx := make([]byte, 1, 1+serial.Len)
-		// idx[0] = rawEventStorePrefix
-
-		// query event by id to get its idx
-		// idPrefix8, _ := hex.DecodeString(ev.ID[0 : 8*2].String())
-		// prefix := make([]byte, 1+8)
-		// prefix[0] = indexIdPrefix
-		// copy(prefix[1:], idPrefix8)
 		idKey := index.Id.Key(id.New(ev.ID))
 		opts := badger.IteratorOptions{
 			PrefetchValues: false,
@@ -36,7 +29,6 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) error {
 			// we only need the serial to generate the event key
 			ser := serial.New(nil)
 			keys.Read(it.Item().Key(), index.Empty(), id.New(""), ser)
-			// idx = append(idx, it.Item().Key()[1+8:]...)
 			idx = index.Event.Key(ser)
 			log.D.Ln("added found item")
 		}

@@ -2,6 +2,7 @@ package badger
 
 import (
 	"encoding/binary"
+	"os"
 	"sync"
 	"time"
 
@@ -11,7 +12,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/del"
 	"github.com/dgraph-io/badger/v4"
+	"mleku.dev/git/slog"
 )
+
+var log, chk = slog.New(os.Stderr)
 
 var _ eventstore.Store = (*Backend)(nil)
 
@@ -36,7 +40,7 @@ type Backend struct {
 	//
 	// This is to enable multi-level caching as well as maintaining a limit of
 	// storage usage.
-	Delete func(serials del.Items) (err error)
+	Prune func(ifc any, deleteItems del.Items) (err error)
 	// GCCount is a function that iterates the access timestamp records to determine
 	// the most stale events and return the list of serials the Delete function
 	// should operate on.
@@ -44,8 +48,14 @@ type Backend struct {
 	// Note that this function needs to be able to access the DBSizeLimit,
 	// DBLowWater and DBHighWater values as this is the configuration for garbage
 	// collection.
-	GCCount func() (deleteItems del.Items, err error)
+	GCCount func(ifc any) (deleteItems del.Items, err error)
+	// L2 is a secondary event store, that, if used, should be loaded in combination
+	// with Delete and GCCount methods to enable second level database storage
+	// functionality.
+	L2 eventstore.Store
+	// DB is the badger db interface
 	*badger.DB
+	// seq is the monotonic collision free index for raw event storage.
 	seq *badger.Sequence
 }
 
@@ -62,6 +72,8 @@ func GetDefaultBackend(
 	Ctx context.T,
 	WG *sync.WaitGroup,
 	path string,
+	Prune func(bi any, serials del.Items) (err error),
+	GCCount func(bi any) (deleteItems del.Items, err error),
 	params ...int,
 ) (b *Backend) {
 	var mb, lw, hw, freq int
@@ -93,9 +105,9 @@ func GetDefaultBackend(
 		DBLowWater:  lw,
 		DBHighWater: hw,
 		GCFrequency: time.Duration(freq) * time.Second,
+		Prune:       Prune,
+		GCCount:     GCCount,
 	}
-	b.Delete = b.BadgerDelete
-	b.GCCount = b.BadgerGCCount
 	return
 }
 
@@ -116,8 +128,8 @@ func (b *Backend) Init() error {
 		b.MaxLimit = DefaultMaxLimit
 	}
 	// set Delete function if it's empty
-	if b.Delete == nil {
-		b.Delete = b.BadgerDelete
+	if b.Prune == nil {
+		b.Prune = Prune
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/dgraph-io/badger/v4"
@@ -57,4 +58,22 @@ out:
 		}
 	}
 	return
+}
+func (b *Backend) AccessLoop(c context.T, txMx *sync.Mutex, accessChan chan *AccessEvent) {
+	var accesses []*AccessEvent
+	b.WG.Add(1)
+	defer b.WG.Done()
+	for {
+		select {
+		case <-c.Done():
+			if len(accesses) > 0 {
+				log.T.Ln("accesses", accesses)
+				chk.E(b.IncrementAccesses(txMx, accesses))
+			}
+			return
+		case acc := <-accessChan:
+			log.T.F("adding access to %s %0x", acc.EvID, acc.Ser)
+			accesses = append(accesses, &AccessEvent{acc.EvID, acc.Ser})
+		}
+	}
 }

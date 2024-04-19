@@ -53,6 +53,10 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 			return err
 		}
 		log.T.F("event saved")
+		// if L2 is configured, write event out to it
+		if b.L2 != nil {
+
+		}
 		return nil
 	})
 }

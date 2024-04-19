@@ -23,27 +23,10 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	accessChan := make(chan AccessEvent)
+	accessChan := make(chan *AccessEvent)
 	var txMx sync.Mutex
 	// start up the access counter
-	go func() {
-		var accesses []*AccessEvent
-		b.WG.Add(1)
-		defer b.WG.Done()
-		for {
-			select {
-			case <-c.Done():
-				if len(accesses) > 0 {
-					log.D.Ln("accesses", accesses)
-					chk.E(b.IncrementAccesses(&txMx, accesses))
-				}
-				return
-			case acc := <-accessChan:
-				log.T.F("adding access to %0x ser %0x", acc.EvID, acc.Ser)
-				accesses = append(accesses, MakeAccessEvent(acc.EvID, acc.Ser))
-			}
-		}
-	}()
+	go b.AccessLoop(c, &txMx, accessChan)
 	err = b.View(func(txn *badger.Txn) (err error) {
 		// iterate only through keys and in reverse order
 		opts := badger.IteratorOptions{
@@ -103,7 +86,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 							count++
 						}
 						log.I.F("adding access for count %0x %0x", evt.ID, ser)
-						accessChan <- AccessEvent{EvID: evt.ID, Ser: string(ser)}
+						accessChan <- &AccessEvent{EvID: evt.ID, Ser: string(ser)}
 						return nil
 					})
 					if chk.D(err) {

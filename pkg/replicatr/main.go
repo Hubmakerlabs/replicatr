@@ -14,6 +14,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IConly"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/number"
@@ -248,6 +249,15 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		conf.DBSizeLimit = 0
 	}
 	switch rl.Config.EventStore {
+	case "iconly":
+		db = &IConly.Backend{
+			Ctx:             c,
+			WG:              &wg,
+			Inf:             rl.Info,
+			CanisterAddr:    rl.Config.CanisterAddr,
+			CanisterId:      rl.Config.CanisterId,
+			PrivateCanister: false, // for future implementation
+		}
 	case "ic":
 		db = &IC.Backend{
 			Badger:       badgerDB,

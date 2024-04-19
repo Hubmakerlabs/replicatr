@@ -23,7 +23,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 # This loads nvm bash_completion
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-# install rust and IC dependencies
+# install rust and IConly dependencies
 curl --fail https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain \
      ${RUST_VERSION}-x86_64-unknown-linux-gnu --no-modify-path
 rustup default ${RUST_VERSION}-x86_64-unknown-linux-gnu
