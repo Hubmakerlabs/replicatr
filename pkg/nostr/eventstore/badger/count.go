@@ -19,8 +19,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 	var queries []query
 	var extraFilter *filter.T
 	var since uint64
-	queries, extraFilter, since, err = PrepareQueries(f)
-	if err != nil {
+	if queries, extraFilter, since, err = PrepareQueries(f); chk.E(err) {
 		return 0, err
 	}
 	accessChan := make(chan *AccessEvent)
@@ -65,8 +64,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 					count++
 				} else {
 					// fetch actual event
-					item, err = txn.Get(idx)
-					if err != nil {
+					if item, err = txn.Get(idx); chk.E(err) {
 						if errors.Is(err, badger.ErrDiscardedTxn) {
 							return
 						}

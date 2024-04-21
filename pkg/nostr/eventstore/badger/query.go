@@ -24,8 +24,8 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	var extraFilter *filter.T
 	var since uint64
 	queries, extraFilter, since, err = PrepareQueries(f)
-	if err != nil {
-		return nil, err
+	if chk.E(err) {
+		return
 	}
 	log.T.S(queries, extraFilter, since)
 	accessChan := make(chan *AccessEvent)
@@ -46,7 +46,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			default:
 			}
 			q := q
-			go chk.E(b.View(func(txn *badger.Txn) (err error) {
+			go b.View(func(txn *badger.Txn) (err error) {
 				// iterate only through keys and in reverse order
 				opts := badger.IteratorOptions{
 					Reverse: true,
@@ -75,7 +75,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 					log.T.F("idx %0x", idx)
 					// fetch actual event
 					item, err = txn.Get(idx)
-					if err != nil {
+					if chk.T(err) {
 						if errors.Is(err, badger.ErrDiscardedTxn) {
 							return err
 						}
@@ -104,7 +104,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 					chk.E(err)
 				}
 				return nil
-			}))
+			})
 		}
 		// max number of events we'll return
 		limit := b.MaxLimit
@@ -175,7 +175,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				}
 			}
 		}
-		if err != nil {
+		if chk.E(err) {
 			log.D.F("badger: query txn error: %s", err)
 		}
 		log.T.Ln("completed query")

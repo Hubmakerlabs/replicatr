@@ -2,26 +2,27 @@ package badger
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/dgraph-io/badger/v4"
 )
 
-func (b *Backend) runMigrations() error {
-	return b.Update(func(txn *badger.Txn) error {
+func (b *Backend) runMigrations() (err error) {
+	return b.Update(func(txn *badger.Txn) (err error) {
 		var version uint16
-
-		item, err := txn.Get([]byte{index.Version.Byte()})
-		if err == badger.ErrKeyNotFound {
+		var item *badger.Item
+		item, err = txn.Get([]byte{index.Version.Byte()})
+		if errors.Is(err, badger.ErrKeyNotFound) {
 			version = 0
-		} else if err != nil {
+		} else if chk.E(err) {
 			return err
 		} else {
-			item.Value(func(val []byte) error {
+			chk.E(item.Value(func(val []byte) (err error) {
 				version = binary.BigEndian.Uint16(val)
-				return nil
-			})
+				return
+			}))
 		}
 
 		// do the migrations in increasing steps (there is no rollback)
@@ -52,7 +53,7 @@ func (b *Backend) runMigrations() error {
 					"import the data back it", version)
 			}
 
-			b.bumpVersion(txn, 3)
+			chk.E(b.bumpVersion(txn, 3))
 		}
 
 		if version < 4 {

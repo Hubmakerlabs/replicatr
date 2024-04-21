@@ -19,6 +19,10 @@ var log, chk = slog.New(os.Stderr)
 
 var _ eventstore.Store = (*Backend)(nil)
 
+type PruneFunc func(ifc any, deleteItems del.Items) (err error)
+
+type GCCountFunc func(ifc any) (deleteItems del.Items, err error)
+
 type Backend struct {
 	Ctx  context.T
 	WG   *sync.WaitGroup
@@ -40,7 +44,7 @@ type Backend struct {
 	//
 	// This is to enable multi-level caching as well as maintaining a limit of
 	// storage usage.
-	Prune func(ifc any, deleteItems del.Items) (err error)
+	PruneFunc func(ifc any, deleteItems del.Items) (err error)
 	// GCCount is a function that iterates the access timestamp records to determine
 	// the most stale events and return the list of serials the Delete function
 	// should operate on.
@@ -48,7 +52,7 @@ type Backend struct {
 	// Note that this function needs to be able to access the DBSizeLimit,
 	// DBLowWater and DBHighWater values as this is the configuration for garbage
 	// collection.
-	GCCount func(ifc any) (deleteItems del.Items, err error)
+	GCCountFunc func(ifc any) (deleteItems del.Items, err error)
 	// L2 is a secondary event store, that, if used, should be loaded in combination
 	// with Delete and GCCount methods to enable second level database storage
 	// functionality.
@@ -58,6 +62,12 @@ type Backend struct {
 	// seq is the monotonic collision free index for raw event storage.
 	seq *badger.Sequence
 }
+
+// GCCount calls the closure that was loaded for the back end second level cache.
+func (b *Backend) GCCount() (deleteItems del.Items, err error) { return b.GCCountFunc(b) }
+
+// Prune calls the closure that was loaded for the back end second level cache.
+func (b *Backend) Prune(deleteItems del.Items) (err error) { return b.PruneFunc(b, deleteItems) }
 
 const DefaultMaxLimit = 1024
 
@@ -72,17 +82,9 @@ func GetDefaultBackend(
 	Ctx context.T,
 	WG *sync.WaitGroup,
 	path string,
-	Prune func(bi any, serials del.Items) (err error),
-	GCCount func(bi any) (deleteItems del.Items, err error),
 	params ...int,
 ) (b *Backend) {
-	var mb, lw, hw, freq int
-	if len(params) < 1 {
-		mb = 0
-		lw = 86
-		hw = 92
-		freq = 60
-	}
+	var mb, lw, hw, freq = 0, 86, 92, 60
 	switch len(params) {
 	case 4:
 		freq = params[3]
@@ -105,31 +107,24 @@ func GetDefaultBackend(
 		DBLowWater:  lw,
 		DBHighWater: hw,
 		GCFrequency: time.Duration(freq) * time.Second,
-		Prune:       Prune,
-		GCCount:     GCCount,
+		PruneFunc:   Prune(),
+		GCCountFunc: GCCount(),
 	}
 	return
 }
 
-func (b *Backend) Init() error {
-	db, err := badger.Open(badger.DefaultOptions(b.Path))
-	if err != nil {
+func (b *Backend) Init() (err error) {
+	if b.DB, err = badger.Open(badger.DefaultOptions(b.Path)); chk.E(err) {
 		return err
 	}
-	b.DB = db
-	b.seq, err = db.GetSequence([]byte("events"), 1000)
-	if chk.E(err) {
+	if b.seq, err = b.DB.GetSequence([]byte("events"), 1000); chk.E(err) {
 		return err
 	}
-	if err = b.runMigrations(); err != nil {
+	if err = b.runMigrations(); chk.E(err) {
 		return log.E.Err("error running migrations: %w", err)
 	}
 	if b.MaxLimit == 0 {
 		b.MaxLimit = DefaultMaxLimit
-	}
-	// set Delete function if it's empty
-	if b.Prune == nil {
-		b.Prune = Prune
 	}
 	return nil
 }

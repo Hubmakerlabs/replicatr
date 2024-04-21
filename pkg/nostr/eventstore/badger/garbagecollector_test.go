@@ -49,7 +49,7 @@ func TestGarbageCollector(t *testing.T) {
 	var wg sync.WaitGroup
 	defer cancel()
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
-	be := GetDefaultBackend(c, &wg, path, Prune, GcCount, 1, 86, 92, 2)
+	be := GetDefaultBackend(c, &wg, path, 1, 86, 92, 2)
 	if err = be.Init(); chk.E(err) {
 		t.Fatal(err)
 	}

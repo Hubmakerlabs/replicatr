@@ -49,14 +49,14 @@ out:
 func (b *Backend) GCRun() (err error) {
 	log.T.Ln("running garbage collector check")
 	var deleteItems del.Items
-	if deleteItems, err = GcCount(b); chk.E(err) {
+	if deleteItems, err = b.GCCount(); chk.E(err) {
 		return
 	}
 	if len(deleteItems) < 1 {
 		return
 	}
 	log.I.Ln("deleting:", deleteItems)
-	if err = b.Prune(b, deleteItems); chk.E(err) {
+	if err = b.Prune(deleteItems); chk.E(err) {
 		return
 	}
 	return
@@ -64,32 +64,34 @@ func (b *Backend) GCRun() (err error) {
 
 // Prune implements the Prune function for the case of only using the
 // badger.Backend. This removes the event and all indexes.
-func Prune(bi any, serials del.Items) (err error) {
-	b, ok := bi.(*Backend)
-	if !ok {
-		err = log.E.Err("backend type does not match badger eventstore")
-		return
-	}
-	err = b.Update(func(txn *badger.Txn) (err error) {
-		it := txn.NewIterator(badger.DefaultIteratorOptions)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			k := it.Item().Key()
-			// check if key matches any of the serials
-			for i := range serials {
-				if serial2.Match(k, serials[i]) {
-					if err = txn.Delete(k); chk.E(err) {
-						log.I.Ln(k, serials[i])
-						return
+func Prune() func(bi any, serials del.Items) (err error) {
+	return func(bi any, serials del.Items) (err error) {
+		b, ok := bi.(*Backend)
+		if !ok {
+			err = log.E.Err("backend type does not match badger eventstore")
+			return
+		}
+		err = b.Update(func(txn *badger.Txn) (err error) {
+			it := txn.NewIterator(badger.DefaultIteratorOptions)
+			defer it.Close()
+			for it.Rewind(); it.Valid(); it.Next() {
+				k := it.Item().Key()
+				// check if key matches any of the serials
+				for i := range serials {
+					if serial2.Match(k, serials[i]) {
+						if err = txn.Delete(k); chk.E(err) {
+							log.I.Ln(k, serials[i])
+							return
+						}
+						break
 					}
-					break
 				}
 			}
-		}
+			return
+		})
+		chk.E(err)
+		log.T.Ln("completed prune")
+		chk.E(b.DB.Sync())
 		return
-	})
-	chk.E(err)
-	log.T.Ln("completed prune")
-	chk.E(b.DB.Sync())
-	return
+	}
 }
