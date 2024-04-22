@@ -11,6 +11,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
+	"github.com/Hubmakerlabs/replicatr/pkg/config/base"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
@@ -30,7 +31,7 @@ var (
 	Version = "v0.0.1"
 )
 
-var args, conf app.Config
+var args, conf base.Config
 
 var nips = number.List{
 	relayinfo.BasicProtocol.Number,                  // NIP1 events, envelopes and filters
@@ -83,7 +84,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	dataDir := filepath.Join(dataDirBase, args.Profile)
 	log.D.F("using profile directory: %s", dataDir)
 	if !apputil.FileExists(dataDir) {
-		args.InitCfgCmd = &app.InitCfg{}
+		args.InitCfgCmd = &base.InitCfg{}
 	}
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
