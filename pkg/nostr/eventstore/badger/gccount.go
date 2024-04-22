@@ -3,6 +3,7 @@ package badger
 import (
 	"sort"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/del"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/count"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/createdat"
@@ -10,7 +11,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/sizer"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/del"
 	"github.com/dgraph-io/badger/v4"
 )
 

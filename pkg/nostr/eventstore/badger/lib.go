@@ -8,9 +8,9 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/del"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/del"
 	"github.com/dgraph-io/badger/v4"
 	"mleku.dev/git/slog"
 )
@@ -53,10 +53,6 @@ type Backend struct {
 	// DBLowWater and DBHighWater values as this is the configuration for garbage
 	// collection.
 	GCCountFunc func(ifc any) (deleteItems del.Items, err error)
-	// L2 is a secondary event store, that, if used, should be loaded in combination
-	// with Delete and GCCount methods to enable second level database storage
-	// functionality.
-	L2 eventstore.Store
 	// DB is the badger db interface
 	*badger.DB
 	// seq is the monotonic collision free index for raw event storage.
@@ -107,7 +103,7 @@ func GetDefaultBackend(
 		DBLowWater:  lw,
 		DBHighWater: hw,
 		GCFrequency: time.Duration(freq) * time.Second,
-		PruneFunc:   Prune(),
+		PruneFunc:   Prune(false),
 		GCCountFunc: GCCount(),
 	}
 	return

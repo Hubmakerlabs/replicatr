@@ -18,9 +18,9 @@ var log, chk = slog.New(os.Stderr)
 // Backend is a pure Internet Computer Protocol based event store. All queries
 // are performed to a remote data store.
 type Backend struct {
-	IC              *agent.Backend
 	Ctx             context.T
 	WG              *sync.WaitGroup
+	IC              *agent.Backend
 	Inf             *relayinfo.T
 	CanisterAddr    string
 	CanisterId      string
@@ -60,11 +60,11 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 // asynchronously over a provided channel.
 //
 // This is asynchronous, it will never return an error.
-func (b *Backend) QueryEvents(c context.T, f *filter.T) (C event.C, err error) {
-	C = make(event.C)
+func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
+	ch = make(event.C)
 	go func() {
 		log.D.Ln("querying IC with filter", f.ToObject().String())
-		if C, err = b.IC.QueryEvents(c, f); chk.E(err) {
+		if ch, err = b.IC.QueryEvents(c, f); chk.E(err) {
 		}
 	}()
 	return

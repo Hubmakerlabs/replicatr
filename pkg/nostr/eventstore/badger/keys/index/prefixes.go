@@ -6,6 +6,8 @@ import (
 
 type P byte
 
+// Key writes a key with the P prefix byte and an arbitrary list of
+// keys.Element.
 func (p P) Key(element ...keys.Element) (b []byte) {
 	b = keys.Write(
 		append([]keys.Element{New(byte(p))}, element...)...)
@@ -13,8 +15,10 @@ func (p P) Key(element ...keys.Element) (b []byte) {
 	return
 }
 
+// Byte returns the index.P as a byte.
 func (p P) Byte() byte { return byte(p) }
 
+// GetAsBytes todo wat is dis?
 func GetAsBytes(prf ...P) (b [][]byte) {
 	b = make([][]byte, len(prf))
 	for i := range prf {

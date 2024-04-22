@@ -137,6 +137,7 @@ func (b *Backend) SaveEvent(c context.T, e *event.T) (err error) {
 // todo: not yet implemented, but there is already a backend function for this
 func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 	log.W.Ln("delete events on IC not yet implemented")
+	// todo: if event is not found, return eventstore.ErrEventNotExists
 	return
 }
 

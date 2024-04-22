@@ -3,7 +3,7 @@ package eventstore
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/del"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/del"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 )
 
@@ -32,9 +32,8 @@ type Store interface {
 	SaveEvent(c context.T, ev *event.T) (err error)
 }
 
-// Cache is a sketch of an expanded interface that might enable a two level
-// storage system for general implementation. For now this is just a functional
-// construct.
+// Cache is a sketch of an expanded interface that might be used for a
+// size-constrained event store.
 type Cache interface {
 	Store
 	GCCount() (deleteItems del.Items, err error)

@@ -2,9 +2,11 @@ package badger
 
 import (
 	"errors"
+	"sync/atomic"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/id"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
@@ -12,7 +14,7 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-var serialDelete uint32 = 0
+var counter atomic.Uint32
 
 func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 	deletionHappened := false
@@ -25,17 +27,20 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 		}
 		it := txn.NewIterator(opts)
 		it.Seek(idKey)
+		var ser *serial.T
+		var foundSerial []byte
 		if it.ValidForPrefix(idKey) {
 			// we only need the serial to generate the event key
-			ser := serial.New(nil)
+			ser = serial.New(nil)
 			keys.Read(it.Item().Key(), index.Empty(), id.New(""), ser)
+			foundSerial = ser.Val
 			idx = index.Event.Key(ser)
 			log.D.Ln("added found item")
 		}
 		it.Close()
 		// if no idx was found, end here, this event doesn't exist
 		if len(idx) == 1 {
-			return nil
+			return eventstore.ErrEventNotExists
 		}
 		// set this so we'll run the GC later
 		deletionHappened = true
@@ -45,16 +50,20 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 				return
 			}
 		}
+		// delete the counter key
+		if err = txn.Delete(GetCounterKey(&ev.ID, foundSerial)); chk.E(err) {
+			return
+		}
 		// delete the raw event
 		return txn.Delete(idx)
 	})
 	if chk.E(err) {
 		return
 	}
+
 	// after deleting, run garbage collector (sometimes)
 	if deletionHappened {
-		serialDelete = (serialDelete + 1) % 256
-		if serialDelete == 0 {
+		if counter.Add(1)%256 == 0 {
 			if err = b.RunValueLogGC(0.8); chk.E(err) &&
 				!errors.Is(err, badger.ErrNoRewrite) {
 				log.E.F("badger gc errored:" + err.Error())

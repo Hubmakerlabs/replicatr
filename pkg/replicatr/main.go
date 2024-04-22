@@ -59,6 +59,39 @@ var nips = number.List{
 
 var log, chk = slog.New(os.Stderr)
 
+// GetInfo returns a default relay info based on configurations
+func GetInfo(args *app.Config) *relayinfo.T {
+	return &relayinfo.T{
+		Name:        args.Name,
+		Description: args.Description,
+		PubKey:      args.Pubkey,
+		Contact:     args.Contact,
+		Nips:        nips,
+		Software:    AppName,
+		Version:     Version,
+		Limitation: relayinfo.Limits{
+			MaxMessageLength: app.MaxMessageSize,
+			Oldest:           1640305963,
+			AuthRequired:     args.AuthRequired,
+			PaymentRequired:  args.AuthRequired,
+			RestrictedWrites: args.AuthRequired,
+			MaxSubscriptions: 50,
+		},
+		Retention:      object.T{},
+		RelayCountries: tag.T{},
+		LanguageTags:   tag.T{},
+		Tags:           tag.T{},
+		PostingPolicy:  "",
+		PaymentsURL:    "https://gfy.mleku.dev",
+		Fees: relayinfo.Fees{
+			Admission: []relayinfo.Admission{
+				{Amount: 100000000, Unit: "satoshi"},
+			},
+		},
+		Icon: args.Icon,
+	}
+}
+
 func Main(osArgs []string, c context.T, cancel context.F) {
 	tmp := os.Args
 	os.Args = osArgs
@@ -89,7 +122,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
 	// inf := *relayinfo.NewInfo(&relayinfo.T{Nips: nips})
-	var inf relayinfo.T
+	var inf *relayinfo.T
 	// generate a relay identity key if one wasn't given
 	if args.SecKey == "" {
 		args.SecKey = keys.GeneratePrivateKey()
@@ -98,36 +131,9 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	if args.InitCfgCmd != nil {
 		if args.Pubkey, err = keys.GetPublicKey(args.SecKey); chk.E(err) {
 		}
-		inf = relayinfo.T{
-			Name:        args.Name,
-			Description: args.Description,
-			PubKey:      args.Pubkey,
-			Contact:     args.Contact,
-			Nips:        nips,
-			Software:    AppName,
-			Version:     Version,
-			Limitation: relayinfo.Limits{
-				MaxMessageLength: app.MaxMessageSize,
-				Oldest:           1640305963,
-				AuthRequired:     args.AuthRequired,
-				PaymentRequired:  args.AuthRequired,
-				RestrictedWrites: args.AuthRequired,
-				MaxSubscriptions: 50,
-			},
-			Retention:      object.T{},
-			RelayCountries: tag.T{},
-			LanguageTags:   tag.T{},
-			Tags:           tag.T{},
-			PostingPolicy:  "",
-			PaymentsURL:    "https://gfy.mleku.dev",
-			Fees: relayinfo.Fees{
-				Admission: []relayinfo.Admission{
-					{Amount: 100000000, Unit: "satoshi"},
-				},
-			},
-			Icon: args.Icon,
-		}
 		apputil.EnsureDir(configPath)
+		// get a default relayinfo.T
+		inf = GetInfo(&args)
 		if err = args.Save(configPath); chk.E(err) {
 			log.E.F("failed to write relay configuration: '%s'", err)
 			os.Exit(1)
@@ -141,7 +147,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			log.D.F("failed to load relay configuration: '%s'", err)
 			os.Exit(1)
 		}
-		// log.T.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
 		if args.Listen != "" {
@@ -190,37 +195,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 		if conf.Pubkey, err = keys.GetPublicKey(conf.SecKey); chk.E(err) {
 		}
-		// log.D.S(conf)
 		if err = inf.Load(infoPath); chk.E(err) {
-			inf = relayinfo.T{
-				Name:        args.Name,
-				Description: args.Description,
-				PubKey:      args.Pubkey,
-				Contact:     args.Contact,
-				Nips:        nips,
-				Software:    AppName,
-				Version:     Version,
-				Limitation: relayinfo.Limits{
-					MaxMessageLength: app.MaxMessageSize,
-					Oldest:           1640305963,
-					AuthRequired:     args.AuthRequired,
-					PaymentRequired:  args.AuthRequired,
-					RestrictedWrites: args.AuthRequired,
-					MaxSubscriptions: 50,
-				},
-				Retention:      object.T{},
-				RelayCountries: tag.T{},
-				LanguageTags:   tag.T{},
-				Tags:           tag.T{},
-				PostingPolicy:  "",
-				PaymentsURL:    "https://gfy.mleku.dev",
-				Fees: relayinfo.Fees{
-					Admission: []relayinfo.Admission{
-						{21000000, "bitcoin"},
-					},
-				},
-				Icon: args.Icon,
-			}
+			inf = GetInfo(&conf)
 			log.D.F("failed to load relay information document: '%s' "+
 				"deriving from config", err)
 		}
@@ -230,47 +206,46 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		inf.Limitation.AuthRequired = true
 	}
 	log.D.S(&inf)
-	// c, cancel := context.Cancel(context.Bg())
 	var wg sync.WaitGroup
-	rl := app.NewRelay(c, cancel, &inf, &args)
+	rl := app.NewRelay(c, cancel, inf, &args)
 	var db eventstore.Store
-	badgerDB := &badger.Backend{
-		Ctx:         c,
-		WG:          &wg,
-		Path:        dataDir,
-		MaxLimit:    inf.Limitation.MaxLimit,
-		DBSizeLimit: args.DBSizeLimit,
-		DBLowWater:  args.DBLowWater,
-		DBHighWater: args.DBHighWater,
-		GCFrequency: time.Duration(args.GCFrequency) * time.Second,
-	}
 	// if we are wiping we don't want to init db normally
 	if args.Wipe != nil {
 		conf.DBSizeLimit = 0
 	}
-	switch rl.Config.EventStore {
-	case "iconly":
-		db = &IConly.Backend{
+	// create both structures in any case
+	var badgerDB *badger.Backend
+	var icDB *IConly.Backend
+	eso := rl.Config.EventStore
+	if eso == "ic" || eso == "iconly" {
+		icDB = &IConly.Backend{
 			Ctx:             c,
 			WG:              &wg,
-			Inf:             rl.Info,
 			CanisterAddr:    rl.Config.CanisterAddr,
 			CanisterId:      rl.Config.CanisterId,
 			PrivateCanister: false, // for future implementation
 		}
-	case "ic":
-		db = &IC.Backend{
-			Badger:       badgerDB,
-			Ctx:          c,
-			WG:           &wg,
-			Inf:          rl.Info,
-			CanisterAddr: rl.Config.CanisterAddr,
-			CanisterId:   rl.Config.CanisterId,
+	}
+	if eso == "ic" || eso == "badger" {
+		badgerDB = &badger.Backend{
+			Ctx:         c,
+			WG:          &wg,
+			Path:        dataDir,
+			MaxLimit:    inf.Limitation.MaxLimit,
+			DBSizeLimit: args.DBSizeLimit,
+			DBLowWater:  args.DBLowWater,
+			DBHighWater: args.DBHighWater,
+			GCFrequency: time.Duration(args.GCFrequency) * time.Second,
 		}
+	}
+	switch rl.Config.EventStore {
+	case "iconly":
+		db = icDB
+	case "ic":
+		db = IC.GetBackend(c, &wg, badgerDB, icDB)
 	case "badger":
 		db = badgerDB
 	}
-
 	if err = db.Init(); chk.E(err) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)

@@ -1,4 +1,4 @@
-package IC
+package badgerbadger
 
 import (
 	"os"
@@ -7,7 +7,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IConly"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/l2"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -16,33 +15,20 @@ import (
 
 var log, chk = slog.New(os.Stderr)
 
-// Backend is a hybrid badger/Internet Computer based event store.
-//
-// All search indexes are retained even if event data is pruned to reduce
-// storage space for the relay, when events are pruned, their data is replaced
-// with the event ID to signify they must be fetched and restored to the raw
-// event key.
-//
-// An alternative data store could be created that purely relies on the IC, or
-// alternatively prunes search indexes to minimize storage used by pruned
-// events, but these would be slower at retrieval and require a more complex
-// cache algorithm.
+// Backend is a hybrid badger/badger eventstore where L1 will have GC enabled
+// and L2 will not. This is mainly for testing, as both are local.
 type Backend struct {
 	*l2.Backend
 }
 
 var _ eventstore.Store = (*Backend)(nil)
 
-// GetBackend returns a l2.Backend that combines the two provided backends. It
-// is assumed both were
+// GetBackend returns a l2.Backend that combines two differently configured
+// backends... the settings need to be configured in the badger.Backend data
+// structure before calling this.
 func GetBackend(c context.T, wg *sync.WaitGroup, L1 *badger.Backend,
-	L2 *IConly.Backend) (es eventstore.Store) {
-	es = &l2.Backend{
-		Ctx: c,
-		WG:  wg,
-		L1:  L1,
-		L2:  L2,
-	}
+	L2 *badger.Backend) (es eventstore.Store) {
+	es = &l2.Backend{Ctx: c, WG: wg, L1: L1, L2: L2}
 	return
 }
 

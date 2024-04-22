@@ -8,13 +8,16 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/priority"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/dgraph-io/badger/v4"
+	"github.com/minio/sha256-simd"
 )
 
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
@@ -35,7 +38,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	go func() {
 		defer close(ch)
 		// actually iterate
-		for _, q := range queries {
+		for _, q1 := range queries {
 			select {
 			case <-c.Done():
 				log.I.Ln("websocket closed")
@@ -45,7 +48,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				return
 			default:
 			}
-			q := q
+			q2 := q1
 			go b.View(func(txn *badger.Txn) (err error) {
 				// iterate only through keys and in reverse order
 				opts := badger.IteratorOptions{
@@ -55,14 +58,14 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				it := txn.NewIterator(opts)
 				txMx.Unlock()
 				defer it.Close()
-				defer close(q.results)
-				for it.Seek(q.start); it.ValidForPrefix(q.searchPrefix); it.Next() {
+				defer close(q2.results)
+				for it.Seek(q2.start); it.ValidForPrefix(q2.searchPrefix); it.Next() {
 					item := it.Item()
 					key := item.Key()
 					log.T.F("key %d %0x", len(key), key)
 					idxOffset := len(key) - serial.Len
 					// "id" indexes don't contain a timestamp
-					if !q.skipTS {
+					if !q2.skipTS {
 						createdAt := binary.BigEndian.Uint64(key[idxOffset-serial.Len : idxOffset])
 						if createdAt < since {
 							break
@@ -81,14 +84,23 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 						}
 						log.T.F("badger: failed to get %x based on prefix %x, "+
 							"index key %x from raw event store: %s\n",
-							idx, q.searchPrefix, key, err)
+							idx, q2.searchPrefix, key, err)
 						return err
 					}
-					err = item.Value(func(val []byte) error {
+					err = item.Value(func(val []byte) (err error) {
 						evt := &event.T{}
+						if len(val) == sha256.Size {
+							// this is a stub entry that indicates an L2 needs to be accessed for it, so we
+							// populate only the event.T.ID and return the result.
+							//
+							// We can ignore the error because we know for certain by the test above it is
+							// the right length.
+							evt.ID, _ = eventid.New(hex.Enc(val))
+							q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: string(ser)}
+							return
+						}
 						if evt, err = nostrbinary.Unmarshal(val); chk.E(err) {
-							// log.E.F("badger: value read error (id %x): %s\n", val[0:32], err)
-							return err
+							return
 						}
 						if evt == nil {
 							log.D.S("got nil event from", val)
@@ -97,9 +109,9 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 						if extraFilter == nil || extraFilter.Matches(evt) {
 							res := Results{Ev: evt, TS: timestamp.Now(), Ser: string(ser)}
 							log.T.F("ser result %s %d %0x", res.Ev.ID, res.TS, []byte(res.Ser))
-							q.results <- res
+							q2.results <- res
 						}
-						return nil
+						return
 					})
 					chk.E(err)
 				}

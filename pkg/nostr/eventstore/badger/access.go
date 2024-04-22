@@ -16,6 +16,7 @@ type AccessEvent struct {
 	Ser  string
 }
 
+// MakeAccessEvent generates an *AccessEvent from an event ID and serial.
 func MakeAccessEvent(EvID eventid.T, Ser string) (ae *AccessEvent) {
 	return &AccessEvent{EvID, Ser}
 }
@@ -59,7 +60,10 @@ out:
 	}
 	return
 }
-func (b *Backend) AccessLoop(c context.T, txMx *sync.Mutex, accessChan chan *AccessEvent) {
+
+// AccessLoop is meant to be run as a goroutine to gather access events in a
+// query and when it finishes, bump all the access records
+func (b *Backend) AccessLoop(c context.T, txMx *sync.Mutex, accCh chan *AccessEvent) {
 	var accesses []*AccessEvent
 	b.WG.Add(1)
 	defer b.WG.Done()
@@ -71,7 +75,7 @@ func (b *Backend) AccessLoop(c context.T, txMx *sync.Mutex, accessChan chan *Acc
 				chk.E(b.IncrementAccesses(txMx, accesses))
 			}
 			return
-		case acc := <-accessChan:
+		case acc := <-accCh:
 			log.T.F("adding access to %s %0x", acc.EvID, acc.Ser)
 			accesses = append(accesses, &AccessEvent{acc.EvID, acc.Ser})
 		}
