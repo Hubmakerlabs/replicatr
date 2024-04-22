@@ -1,10 +1,14 @@
-package app
+package base
 
 import (
 	"encoding/json"
 	"errors"
 	"os"
+
+	"mleku.dev/git/slog"
 )
+
+var log, chk = slog.New(os.Stderr)
 
 type ExportCmd struct {
 	ToFile string `arg:"-f,--tofile" help:"write to file instead of stdout"`

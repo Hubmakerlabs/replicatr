@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/config/base"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/acl"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
@@ -69,7 +70,7 @@ type Relay struct {
 	OnConnect              []Hook
 	OnDisconnect           []Hook
 	OnEventSaved           []OnEventSaved
-	Config                 *Config
+	Config                 *base.Config
 	Info                   *relayinfo.T
 	// for establishing websockets
 	upgrader websocket.Upgrader
@@ -105,7 +106,7 @@ func (rl *Relay) AuthCheck(c context.T) {
 }
 
 func NewRelay(c context.T, cancel context.F,
-	inf *relayinfo.T, conf *Config) (r *Relay) {
+	inf *relayinfo.T, conf *base.Config) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
 	if inf.Limitation.MaxMessageLength > 0 {
