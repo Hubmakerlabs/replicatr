@@ -19,7 +19,7 @@ func Prune(hasL2 bool) func(bi any, serials del.Items) (err error) {
 			err = log.E.Err("backend type does not match badger eventstore")
 			return
 		}
-		err = b.Update(func(txn *badger2.Txn) (err error) {
+		err = b.DB.Update(func(txn *badger2.Txn) (err error) {
 			if !hasL2 {
 				log.I.Ln("prune with no L2")
 				it := txn.NewIterator(badger2.DefaultIteratorOptions)

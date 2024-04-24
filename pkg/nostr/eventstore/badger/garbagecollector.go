@@ -31,6 +31,8 @@ func (b *Backend) GarbageCollector() {
 	if err = b.GCRun(); chk.E(err) {
 	}
 	gcTicker := time.NewTicker(b.GCFrequency)
+	// force sync to disk every so often, this might be normally about 10 minutes.
+	syncTicker := time.NewTicker(b.GCFrequency * 10)
 out:
 	for {
 		select {
@@ -40,8 +42,9 @@ out:
 		case <-gcTicker.C:
 			log.T.Ln("running GC check")
 			if err = b.GCRun(); chk.E(err) {
-
 			}
+		case <-syncTicker.C:
+			chk.E(b.DB.Sync())
 		}
 	}
 	log.I.Ln("closing badger event store garbage collector")
@@ -50,6 +53,8 @@ out:
 func (b *Backend) GCRun() (err error) {
 	log.T.Ln("running garbage collector check")
 	var deleteItems del.Items
+	b.bMx.Lock()
+	defer b.bMx.Unlock()
 	if deleteItems, err = b.GCCount(); chk.E(err) {
 		return
 	}

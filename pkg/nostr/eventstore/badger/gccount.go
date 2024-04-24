@@ -28,7 +28,7 @@ func GCCount() func(bi any) (deleteItems del.Items, err error) {
 		v := make([]byte, createdat.Len+sizer.Len)
 		key := make([]byte, index.Len+id.Len+serial.Len)
 		// var restSer []uint64
-		if err = b.View(func(txn *badger.Txn) (err error) {
+		if err = b.DB.View(func(txn *badger.Txn) (err error) {
 			it := txn.NewIterator(badger.IteratorOptions{
 				Prefix: count.Prefix,
 			})
