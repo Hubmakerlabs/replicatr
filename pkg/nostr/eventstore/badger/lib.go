@@ -11,6 +11,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/del"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
+	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/dgraph-io/badger/v4"
 	"mleku.dev/git/slog"
 )
@@ -57,6 +58,8 @@ type Backend struct {
 	*badger.DB
 	// seq is the monotonic collision free index for raw event storage.
 	seq *badger.Sequence
+	// bMx is a lock that prevents more than one operation running at a time
+	bMx sync.Mutex
 }
 
 // GCCount calls the closure that was loaded for the back end second level cache.
@@ -67,17 +70,18 @@ func (b *Backend) Prune(deleteItems del.Items) (err error) { return b.PruneFunc(
 
 const DefaultMaxLimit = 1024
 
-// GetDefaultBackend returns a reasonably configured badger.Backend.
+// GetBackend returns a reasonably configured badger.Backend.
 //
 // The variadic params correspond to DBSizeLimit, DBLowWater, DBHighWater and
 // GCFrequency as an integer multiplier of number of seconds.
 //
 // Note that the cancel function for the context needs to be managed by the
 // caller.
-func GetDefaultBackend(
+func GetBackend(
 	Ctx context.T,
 	WG *sync.WaitGroup,
 	path string,
+	hasL2 bool,
 	params ...int,
 ) (b *Backend) {
 	var mb, lw, hw, freq = 0, 86, 92, 60
@@ -99,11 +103,11 @@ func GetDefaultBackend(
 		WG:          WG,
 		Path:        path,
 		MaxLimit:    DefaultMaxLimit,
-		DBSizeLimit: mb * Megabyte,
+		DBSizeLimit: mb * units.Mb,
 		DBLowWater:  lw,
 		DBHighWater: hw,
 		GCFrequency: time.Duration(freq) * time.Second,
-		PruneFunc:   Prune(false),
+		PruneFunc:   Prune(hasL2),
 		GCCountFunc: GCCount(),
 	}
 	return
@@ -153,5 +157,19 @@ func (b *Backend) SerialBytes() (ser []byte, err error) {
 	}
 	ser = make([]byte, serial.Len)
 	binary.BigEndian.PutUint64(ser, serU64)
+	return
+}
+
+func (b *Backend) Update(fn func(txn *badger.Txn) (err error)) (err error) {
+	b.bMx.Lock()
+	err = b.DB.Update(fn)
+	b.bMx.Unlock()
+	return
+}
+
+func (b *Backend) View(fn func(txn *badger.Txn) (err error)) (err error) {
+	b.bMx.Lock()
+	err = b.DB.View(fn)
+	b.bMx.Unlock()
 	return
 }

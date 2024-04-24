@@ -61,7 +61,7 @@ var nips = number.List{
 var log, chk = slog.New(os.Stderr)
 
 // GetInfo returns a default relay info based on configurations
-func GetInfo(args *app.Config) *relayinfo.T {
+func GetInfo(args *base.Config) *relayinfo.T {
 	return &relayinfo.T{
 		Name:        args.Name,
 		Description: args.Description,

@@ -32,7 +32,6 @@ func GetTagKeyPrefix(tagValue string) (key []byte, err error) {
 		key = index.TagAddr.Key(els...)
 	} else if pkb, _ := hex.Dec(tagValue); len(pkb) == 32 {
 		// store value as bytes
-		// copy(key[1:], vb[0:8])
 		var pkk *pubkey.T
 		if pkk, err = pubkey.NewFromBytes(pkb); chk.E(err) {
 			return

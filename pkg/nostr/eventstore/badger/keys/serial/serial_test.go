@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"lukechampine.com/frand"
 )
 
 func TestT(t *testing.T) {
-	fakeSerialBytes := frand.Bytes(badger.SerialLen)
+	fakeSerialBytes := frand.Bytes(serial.Len)
 	v := serial.New(fakeSerialBytes)
 	buf := new(bytes.Buffer)
 	v.Write(buf)

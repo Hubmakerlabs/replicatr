@@ -14,7 +14,7 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-var counter atomic.Uint32
+var deleteCounter atomic.Uint32
 
 func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 	deletionHappened := false
@@ -60,13 +60,12 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 	if chk.E(err) {
 		return
 	}
-
 	// after deleting, run garbage collector (sometimes)
 	if deletionHappened {
-		if counter.Add(1)%256 == 0 {
+		if deleteCounter.Add(1)%256 == 0 {
 			if err = b.RunValueLogGC(0.8); chk.E(err) &&
 				!errors.Is(err, badger.ErrNoRewrite) {
-				log.E.F("badger gc errored:" + err.Error())
+				log.E.F("badger gc error:" + err.Error())
 			}
 		}
 	}

@@ -1,18 +1,12 @@
 package badger
 
 import (
+	"encoding/binary"
+	"fmt"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/del"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/createdat"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/sizer"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/dgraph-io/badger/v4"
+	"github.com/Hubmakerlabs/replicatr/pkg/units"
 )
 
 // GarbageCollector starts up a ticker that runs a check on space utilisation
@@ -27,10 +21,10 @@ func (b *Backend) GarbageCollector() {
 		"low water %0.3f MB "+
 		"(MB = %d bytes) "+
 		"GC check frequency %v",
-		float32(b.DBSizeLimit)/Megabyte,
-		float32(b.DBHighWater*b.DBSizeLimit/100)/Megabyte,
-		float32(b.DBLowWater*b.DBSizeLimit/100)/Megabyte,
-		Megabyte,
+		float32(b.DBSizeLimit)/units.Mb,
+		float32(b.DBHighWater*b.DBSizeLimit/100)/units.Mb,
+		float32(b.DBLowWater*b.DBSizeLimit/100)/units.Mb,
+		units.Mb,
 		b.GCFrequency,
 	)
 	var err error
@@ -62,88 +56,16 @@ func (b *Backend) GCRun() (err error) {
 	if len(deleteItems) < 1 {
 		return
 	}
-	log.I.Ln("deleting:", deleteItems)
+	var delList string
+	for i := range deleteItems {
+		if i != 0 {
+			delList += ", "
+		}
+		delList += fmt.Sprint(binary.BigEndian.Uint64(deleteItems[i]))
+	}
+	// log.I.Ln("pruning:", delList)
 	if err = b.Prune(deleteItems); chk.E(err) {
 		return
 	}
 	return
-}
-
-// Prune implements the Prune function for the case of only using the
-// badger.Backend. This removes the event and all indexes.
-func Prune(hasL2 bool) func(bi any, serials del.Items) (err error) {
-	return func(bi any, serials del.Items) (err error) {
-		b, ok := bi.(*Backend)
-		if !ok {
-			err = log.E.Err("backend type does not match badger eventstore")
-			return
-		}
-		err = b.Update(func(txn *badger.Txn) (err error) {
-			if !hasL2 {
-				it := txn.NewIterator(badger.DefaultIteratorOptions)
-				defer it.Close()
-				for it.Rewind(); it.Valid(); it.Next() {
-					k := it.Item().Key()
-					// check if key matches any of the serials
-					for i := range serials {
-						if serial.Match(k, serials[i]) {
-							if err = txn.Delete(k); chk.E(err) {
-								log.I.Ln(k, serials[i])
-								return
-							}
-							break
-						}
-					}
-				}
-				return
-			}
-			// An L2 is being used, for this, we replace the encoded raw event record with
-			// only the binary version of the eventid.T and zero the size value in the
-			// counter key
-			it := txn.NewIterator(badger.DefaultIteratorOptions)
-			defer it.Close()
-			for it.Rewind(); it.Valid(); it.Next() {
-				k := it.Item().Key()
-				// todo: wth do we do if the txn.Set functions fail??? they can't be retried? they shouldn't fail?
-				switch k[0] {
-				case index.Event.Byte(), index.Counter.Byte():
-					// check if key matches any of the serials
-					for i := range serials {
-						if serial.Match(k, serials[i]) {
-							switch k[0] {
-							case index.Event.Byte():
-								// replace the value with the event ID as binary.
-								var v []byte
-								if v, err = it.Item().ValueCopy(nil); chk.E(err) {
-									continue
-								}
-								var evt *event.T
-								if evt, err = nostrbinary.Unmarshal(v); chk.E(err) {
-									// todo: maybe this should mean we delete the record?
-									continue
-								}
-								// set the value of the key to the event id hash as binary
-								if err = txn.Set(k, evt.ID.Bytes()); chk.E(err) {
-									continue
-								}
-							case index.Counter.Byte():
-								// update access timestamp and set size to zero.
-								v := keys.Write(createdat.New(timestamp.Now()), sizer.New(0))
-								if err = txn.Set(k, v); chk.E(err) {
-									continue
-								}
-							}
-							break
-						}
-					}
-				default:
-				}
-			}
-			return
-		})
-		chk.E(err)
-		log.T.Ln("completed prune")
-		chk.E(b.DB.Sync())
-		return
-	}
 }

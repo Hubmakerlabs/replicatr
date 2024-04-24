@@ -48,7 +48,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 				key := item.Key()
 
 				// this is where the idx actually starts
-				idxOffset := len(key) - SerialLen
+				idxOffset := len(key) - serial.Len
 				// "id" indexes don't contain a timestamp
 				if !q.skipTS {
 					createdAt := binary.BigEndian.Uint64(

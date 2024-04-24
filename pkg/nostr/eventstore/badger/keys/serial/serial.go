@@ -27,7 +27,7 @@ var _ keys.Element = &T{}
 func New(ser []byte) (p *T) {
 	switch {
 	case len(ser) < Len:
-		log.I.Ln("empty serial")
+		// log.I.Ln("empty serial")
 		// allows use of nil to init
 		ser = make([]byte, Len)
 	default:

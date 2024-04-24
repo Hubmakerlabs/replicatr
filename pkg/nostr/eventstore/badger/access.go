@@ -34,12 +34,13 @@ out:
 		txMx.Lock()
 		err = b.Update(func(txn *badger.Txn) error {
 			for i := range acc {
-				var item *badger.Item
 				key := GetCounterKey(&acc[i].EvID, []byte(acc[i].Ser))
 				v := make([]byte, 12)
 				now := timestamp.Now().U64()
-				if item, err = txn.Get(key); !chk.E(err) {
-					if _, err = item.ValueCopy(v); chk.E(err) {
+				it := txn.NewIterator(badger.IteratorOptions{})
+				defer it.Close()
+				if it.Seek(key); it.ValidForPrefix(key) {
+					if _, err = it.Item().ValueCopy(v); chk.E(err) {
 						continue
 					}
 					// update access record

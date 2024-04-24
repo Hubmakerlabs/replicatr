@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
-	bdb "github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/createdat"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/id"
@@ -58,7 +57,7 @@ func TestElement(t *testing.T) {
 		ts := timestamp.Now()
 		vca := createdat.New(ts)
 		// a serial
-		fakeSerialBytes := frand.Bytes(bdb.SerialLen)
+		fakeSerialBytes := frand.Bytes(serial.Len)
 		vs := serial.New(fakeSerialBytes)
 		// write Element list into buffer
 		b := keys.Write(vp, vid, vk, vpk, vca, vs)

@@ -70,7 +70,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 		go func(ch event.C) {
 			log.T.Ln("waiting for result", h.f.ToObject().String())
 			for ev := range ch {
-				log.I.Ln("result ev", ev.ToObject().String())
+				log.T.Ln("result ev", ev.ToObject().String())
 				// if the event is nil the rest of this loop will panic
 				// accessing the nonexistent event's fields
 				if ev == nil {

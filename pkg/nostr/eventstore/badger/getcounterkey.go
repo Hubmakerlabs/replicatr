@@ -8,8 +8,8 @@ import (
 )
 
 // GetCounterKey returns the proper counter key for a given event ID.
-func GetCounterKey(ev *eventid.T, ser []byte) (key []byte) {
-	key = index.Counter.Key(id.New(*ev), serial.New(ser))
+func GetCounterKey(evID *eventid.T, ser []byte) (key []byte) {
+	key = index.Counter.Key(id.New(*evID), serial.New(ser))
 	log.T.F("counter key %0x %0x %0x", key[0], key[1:9], key[9:])
 	return
 }

@@ -84,16 +84,16 @@ func PrepareQueries(f *filter.T) (
 					}
 					ki := kinder.New(kind)
 					sp := index.PubkeyKind.Key(pk, ki)
-					log.I.F("search for authors %0x from pub key %0x and kind %0x", sp, pk.Val, ki.Val)
+					log.T.F("search for authors %0x from pub key %0x and kind %0x", sp, pk.Val, ki.Val)
 					qs[i] = query{index: i, queryFilter: f, searchPrefix: sp}
 					i++
 				}
 			}
-			log.I.S("authors/kinds", qs)
+			log.T.S("authors/kinds", qs)
 		}
 		if f.Tags != nil || len(f.Tags) > 0 {
 			ext = &filter.T{Tags: f.Tags}
-			log.I.S("extra filter", ext)
+			log.T.S("extra filter", ext)
 		}
 	case len(f.Tags) > 0:
 		// determine the size of the queries array by inspecting all tags sizes
@@ -115,12 +115,12 @@ func PrepareQueries(f *filter.T) (
 				var prf []byte
 				prf, err = GetTagKeyPrefix(value)
 				// remove the last part to get just the prefix we want here
-				log.I.F("search for tags from %0x", prf)
+				log.T.F("search for tags from %0x", prf)
 				qs[i] = query{index: i, queryFilter: f, searchPrefix: prf}
 				i++
 			}
 		}
-		log.I.S("tags", qs)
+		log.T.S("tags", qs)
 	case len(f.Kinds) > 0:
 		// if there is no ids, pubs or tags, we are just searching for kinds
 		qs = make([]query, len(f.Kinds))
@@ -134,11 +134,11 @@ func PrepareQueries(f *filter.T) (
 				searchPrefix: ki,
 			}
 		}
-		log.I.S("kinds", qs)
+		log.T.S("kinds", qs)
 	default:
 		qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
 		ext = nil
-		log.I.S("other", qs)
+		log.T.S("other", qs)
 	}
 	var until uint64 = math.MaxUint64
 	if f.Until != nil {
