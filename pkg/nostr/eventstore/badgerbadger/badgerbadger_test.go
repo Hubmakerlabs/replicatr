@@ -52,7 +52,7 @@ func TestBackend(t *testing.T) {
 	defer cancel()
 	// create L1 with a 1Mb cache size target and 2 second GC check
 	path1 := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
-	b1 := badger.GetBackend(c, &wg, path1, true, 1, 10, 11, 2)
+	b1 := badger.GetBackend(c, &wg, path1, true, 100000, 86, 92, 2)
 	// create L2 with no cache management
 	path2 := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
 	b2 := badger.GetBackend(c, &wg, path2, false, 0)

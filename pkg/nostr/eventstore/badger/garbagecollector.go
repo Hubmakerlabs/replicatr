@@ -20,15 +20,15 @@ func (b *Backend) GarbageCollector() {
 		"high water %0.3f MB; "+
 		"low water %0.3f MB "+
 		"(MB = %d bytes) "+
-		"GC check frequency %v",
+		"event GC check frequency %v, index GC frequency %v",
 		float32(b.DBSizeLimit)/units.Mb,
 		float32(b.DBHighWater*b.DBSizeLimit/100)/units.Mb,
 		float32(b.DBLowWater*b.DBSizeLimit/100)/units.Mb,
 		units.Mb,
-		b.GCFrequency,
+		b.GCFrequency, b.GCFrequency*5,
 	)
 	var err error
-	if err = b.GCRun(); chk.E(err) {
+	if err = b.EventGCRun(); chk.E(err) {
 	}
 	gcTicker := time.NewTicker(b.GCFrequency)
 	// force sync to disk every so often, this might be normally about 10 minutes.
@@ -41,7 +41,7 @@ out:
 			break out
 		case <-gcTicker.C:
 			log.T.Ln("running GC check")
-			if err = b.GCRun(); chk.E(err) {
+			if err = b.EventGCRun(); chk.E(err) {
 			}
 		case <-syncTicker.C:
 			chk.E(b.DB.Sync())
@@ -50,12 +50,14 @@ out:
 	log.I.Ln("closing badger event store garbage collector")
 }
 
-func (b *Backend) GCRun() (err error) {
+func (b *Backend) EventGCRun() (err error) {
 	log.T.Ln("running garbage collector check")
 	var deleteItems del.Items
+	// hold a writer lock for the duration as no other activity should take place
+	// while a GC is running, access will corrupt the data during iteration.
 	b.bMx.Lock()
 	defer b.bMx.Unlock()
-	if deleteItems, err = b.GCCount(); chk.E(err) {
+	if deleteItems, err = b.EventGCCount(); chk.E(err) {
 		return
 	}
 	if len(deleteItems) < 1 {
@@ -69,7 +71,7 @@ func (b *Backend) GCRun() (err error) {
 		delList += fmt.Sprint(binary.BigEndian.Uint64(deleteItems[i]))
 	}
 	// log.I.Ln("pruning:", delList)
-	if err = b.Prune(deleteItems); chk.E(err) {
+	if err = b.EventGCPrune(deleteItems); chk.E(err) {
 		return
 	}
 	return

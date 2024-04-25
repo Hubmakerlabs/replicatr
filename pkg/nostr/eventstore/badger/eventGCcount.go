@@ -15,9 +15,9 @@ import (
 	"github.com/dgraph-io/badger/v4"
 )
 
-// GCCount scans for counter entries and based on GC parameters returns a list
+// EventGCCount scans for counter entries and based on GC parameters returns a list
 // of the serials of the events that need to be pruned.
-func GCCount() func(bi any) (deleteItems del.Items, err error) {
+func EventGCCount() func(bi any) (deleteItems del.Items, err error) {
 	return func(bi any) (deleteItems del.Items, err error) {
 		b, ok := bi.(*Backend)
 		if !ok {
@@ -32,7 +32,7 @@ func GCCount() func(bi any) (deleteItems del.Items, err error) {
 			it := txn.NewIterator(badger.IteratorOptions{
 				Prefix: count.Prefix,
 			})
-			for it.Rewind(); it.ValidForPrefix(count.Prefix); it.Next() {
+			for it.Rewind(); it.Valid(); it.Next() {
 				item := it.Item()
 				item.KeyCopy(key)
 				ser := serial.FromKey(key)
@@ -43,7 +43,7 @@ func GCCount() func(bi any) (deleteItems del.Items, err error) {
 				keys.Read(v, ts, size)
 				// skip already pruned items
 				if size.Val == 0 {
-					log.I.F("found count with zero len %0x", key)
+					// log.I.F("found count with zero len %0x", key)
 					continue
 				}
 				countItems = append(countItems, count.MakeItem(ser, ts, size))
@@ -51,7 +51,9 @@ func GCCount() func(bi any) (deleteItems del.Items, err error) {
 			it.Close()
 			return
 		}); chk.E(err) {
-			return
+			// there is nothing that can be done about database errors here so ignore
+			err = nil
+			// return
 		}
 		total := countItems.Total()
 		log.I.F("%d records; total size of data %0.6f MB %0.3f KB high water %0.3f Mb",

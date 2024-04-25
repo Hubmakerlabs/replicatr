@@ -11,7 +11,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/del"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
-	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/dgraph-io/badger/v4"
 	"mleku.dev/git/slog"
 )
@@ -30,7 +29,7 @@ type Backend struct {
 	Path string
 	// MaxLimit is the largest a single event JSON can be, in bytes.
 	MaxLimit int
-	// DBSizeLimit is the number of Mb we want to keep the data store from
+	// DBSizeLimit is the number of bytes we want to keep the data store from
 	// exceeding.
 	DBSizeLimit int
 	// DBLowWater is the percentage of DBSizeLimit a GC run will reduce the used
@@ -41,32 +40,42 @@ type Backend struct {
 	DBHighWater int
 	// GCFrequency is the frequency of checks of the current utilisation.
 	GCFrequency time.Duration
-	// Delete is a closure that implements the garbage collection prune operation.
+	// EventGCPruneFunc is a closure that implements the garbage collection prune
+	// operation.
 	//
 	// This is to enable multi-level caching as well as maintaining a limit of
 	// storage usage.
-	PruneFunc func(ifc any, deleteItems del.Items) (err error)
-	// GCCount is a function that iterates the access timestamp records to determine
-	// the most stale events and return the list of serials the Delete function
-	// should operate on.
+	EventGCPruneFunc func(ifc any, deleteItems del.Items) (err error)
+	// IndexGCPruneFunc is like EventGCPruneFunc except runs GC on pruned indexes.
+	IndexGCPruneFunc func(ifc any, deleteItems del.Items) (err error)
+	// EventGCCountFunc is a function that iterates the access timestamp records to
+	// determine the most stale events and return the list of serials the Delete
+	// function should operate on.
 	//
 	// Note that this function needs to be able to access the DBSizeLimit,
 	// DBLowWater and DBHighWater values as this is the configuration for garbage
 	// collection.
-	GCCountFunc func(ifc any) (deleteItems del.Items, err error)
+	EventGCCountFunc func(ifc any) (deleteItems del.Items, err error)
+	// IndexGCCountFunc is a more intensive counter process that gathers size
+	// information of all pruned records and removes what exceeds the high water
+	// mark percentage of the overhead of the size limit to bring it down to the low
+	// water mark percentage.
+	IndexGCCountFunc func(ifc any) (deleteItems del.Items, err error)
 	// DB is the badger db interface
 	*badger.DB
 	// seq is the monotonic collision free index for raw event storage.
 	seq *badger.Sequence
 	// bMx is a lock that prevents more than one operation running at a time
-	bMx sync.Mutex
+	bMx sync.RWMutex
 }
 
-// GCCount calls the closure that was loaded for the back end second level cache.
-func (b *Backend) GCCount() (deleteItems del.Items, err error) { return b.GCCountFunc(b) }
+// EventGCCount calls the closure that was loaded for the back end second level cache.
+func (b *Backend) EventGCCount() (deleteItems del.Items, err error) { return b.EventGCCountFunc(b) }
 
-// Prune calls the closure that was loaded for the back end second level cache.
-func (b *Backend) Prune(deleteItems del.Items) (err error) { return b.PruneFunc(b, deleteItems) }
+// EventGCPrune calls the closure that was loaded for the back end second level cache.
+func (b *Backend) EventGCPrune(deleteItems del.Items) (err error) {
+	return b.EventGCPruneFunc(b, deleteItems)
+}
 
 const DefaultMaxLimit = 1024
 
@@ -84,7 +93,7 @@ func GetBackend(
 	hasL2 bool,
 	params ...int,
 ) (b *Backend) {
-	var mb, lw, hw, freq = 0, 86, 92, 60
+	var sizeLimit, lw, hw, freq = 0, 86, 92, 60
 	switch len(params) {
 	case 4:
 		freq = params[3]
@@ -96,19 +105,19 @@ func GetBackend(
 		lw = params[1]
 		fallthrough
 	case 1:
-		mb = params[0]
+		sizeLimit = params[0]
 	}
 	b = &Backend{
-		Ctx:         Ctx,
-		WG:          WG,
-		Path:        path,
-		MaxLimit:    DefaultMaxLimit,
-		DBSizeLimit: mb * units.Mb,
-		DBLowWater:  lw,
-		DBHighWater: hw,
-		GCFrequency: time.Duration(freq) * time.Second,
-		PruneFunc:   Prune(hasL2),
-		GCCountFunc: GCCount(),
+		Ctx:              Ctx,
+		WG:               WG,
+		Path:             path,
+		MaxLimit:         DefaultMaxLimit,
+		DBSizeLimit:      sizeLimit,
+		DBLowWater:       lw,
+		DBHighWater:      hw,
+		GCFrequency:      time.Duration(freq) * time.Second,
+		EventGCPruneFunc: EventGCPrune(hasL2),
+		EventGCCountFunc: EventGCCount(),
 	}
 	return
 }
@@ -168,8 +177,8 @@ func (b *Backend) Update(fn func(txn *badger.Txn) (err error)) (err error) {
 }
 
 func (b *Backend) View(fn func(txn *badger.Txn) (err error)) (err error) {
-	b.bMx.Lock()
+	b.bMx.RLock()
 	err = b.DB.View(fn)
-	b.bMx.Unlock()
+	b.bMx.RUnlock()
 	return
 }

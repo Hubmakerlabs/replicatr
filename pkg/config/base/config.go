@@ -51,7 +51,7 @@ type Config struct {
 	AllowIPs []string `arg:"-A,--allow,separate" json:"allow_ip" help:"IP addresses that are always allowed to access"`
 	// DBSizeLimit configures a target maximum size to maintain the local
 	// event store cache at, in megabytes (1,000,000 bytes).
-	DBSizeLimit int `arg:"-S,--sizelimit" json:"db_size_limit" default:"0" help:"set the maximum size of the badger event store in megabytes"`
+	DBSizeLimit int `arg:"-S,--sizelimit" json:"db_size_limit" default:"0" help:"set the maximum size of the badger event store in bytes"`
 	// DBLowWater is the proportion of the DBSizeLimit to prune the database
 	// down to when performing a garbage collection run.
 	DBLowWater int `arg:"-L,--lowwater" json:"db_low_water" default:"86" help:"set target percentage for database size during garbage collection"`
