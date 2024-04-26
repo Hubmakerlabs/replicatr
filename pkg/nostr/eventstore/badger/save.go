@@ -9,7 +9,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/id"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/sizer"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/dgraph-io/badger/v4"
@@ -69,8 +68,8 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 					return
 				}
 				// bump counter key
-				counterKey := GetCounterKey(&ev.ID, seri.Val)
-				val := keys.Write(createdat.New(timestamp.Now()), sizer.New(len(bin)))
+				counterKey := GetCounterKey(seri.Val)
+				val := keys.Write(createdat.New(timestamp.Now()))
 				// log.D.F("counter %x %x", counterKey, val)
 				if err = txn.Set(counterKey, val); chk.E(err) {
 					return
@@ -109,8 +108,8 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 			}
 		}
 		// initialise access counter key
-		counterKey := GetCounterKey(&ev.ID, ser)
-		val := keys.Write(createdat.New(timestamp.Now()), sizer.New(len(bin)))
+		counterKey := GetCounterKey(ser)
+		val := keys.Write(createdat.New(timestamp.Now()))
 		log.T.F("counter %0x %0x", counterKey, val)
 		if err = txn.Set(counterKey, val); chk.E(err) {
 			return

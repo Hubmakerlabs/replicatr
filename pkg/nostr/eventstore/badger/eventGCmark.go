@@ -1,43 +1,41 @@
 package badger
 
 import (
+	"encoding/binary"
 	"sort"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/del"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/count"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/createdat"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/id"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/sizer"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/dgraph-io/badger/v4"
+	"github.com/minio/sha256-simd"
 )
 
 func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) {
-	v := make([]byte, createdat.Len+sizer.Len)
-	key := make([]byte, index.Len+id.Len+serial.Len)
+	key := make([]byte, index.Len+serial.Len)
 	// var restSer []uint64
+	// first find all the non-pruned events.
 	if err = b.DB.View(func(txn *badger.Txn) (err error) {
+		prf := []byte{byte(index.Event)}
 		it := txn.NewIterator(badger.IteratorOptions{
-			Prefix: count.Prefix,
+			Prefix: prf,
 		})
-		for it.Rewind(); it.Valid(); it.Next() {
+		for it.Rewind(); it.ValidForPrefix(prf); it.Next() {
 			item := it.Item()
 			item.KeyCopy(key)
 			ser := serial.FromKey(key)
-			if _, err = item.ValueCopy(v); chk.E(err) || len(v) == 0 {
-				continue
-			}
-			ts, size := createdat.New(0), sizer.New(0)
-			keys.Read(v, ts, size)
 			// skip already pruned items
-			if size.Val == 0 {
-				// log.I.F("found count with zero len %0x", key)
+			size := uint32(item.ValueSize())
+			if size == sha256.Size {
+				// v, _ := item.ValueCopy(nil)
+				// log.I.F("pruned item %d %0x", ser.Uint64(), v)
 				continue
 			}
-			countItems = append(countItems, count.MakeItem(ser, ts, size))
+			countItems = append(countItems, &count.Item{Serial: ser.Uint64(), Size: size})
 		}
 		it.Close()
 		return
@@ -46,6 +44,38 @@ func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) 
 		err = nil
 		// return
 	}
+	v := make([]byte, createdat.Len)
+	// second get the datestamps of the items
+	if err = b.DB.View(func(txn *badger.Txn) (err error) {
+		prf := index.Counter.Key()
+		it := txn.NewIterator(badger.IteratorOptions{
+			Prefix: prf,
+		})
+	fresh:
+		for it.Rewind(); it.ValidForPrefix(prf); it.Next() {
+			item := it.Item()
+			item.KeyCopy(key)
+			ser := serial.FromKey(key)
+			s64 := ser.Uint64()
+			for i := range countItems {
+				if countItems[i].Serial == s64 {
+					// get the value
+					if _, err = item.ValueCopy(v); chk.E(err) {
+						continue fresh
+					}
+					countItems[i].Freshness = timestamp.FromUnix(int64(binary.BigEndian.Uint64(v)))
+					break
+				}
+			}
+		}
+		it.Close()
+		return
+	}); chk.E(err) {
+		// there is nothing that can be done about database errors here so ignore
+		err = nil
+		// return
+	}
+
 	total = countItems.Total()
 	log.I.F("%d records; total size of data %0.6f MB %0.3f KB high water %0.3f Mb",
 		len(countItems),
@@ -79,10 +109,12 @@ func (b *Backend) EventGCMark() (deleteItems del.Items, err error) {
 			break
 		}
 		cumulative += int(countItems[lastIndex].Size)
-		deleteItems = append(deleteItems, countItems[lastIndex].Serial)
-		// serList = append(serList, binary.BigEndian.Uint64(countItems[lastIndex].Serial))
+		v := make([]byte, serial.Len)
+		binary.BigEndian.PutUint64(v, countItems[lastIndex].Serial)
+		deleteItems = append(deleteItems, v)
+		// serList = append(serList, countItems[lastIndex].Serial)
 	}
-	// log.I.Ln("serList", serList, "restSer", restSer)
+	// log.I.Ln("serList", serList)
 	sort.Sort(deleteItems)
 	log.I.Ln("found", lastIndex,
 		"events to prune, which will bring current utilization down to",

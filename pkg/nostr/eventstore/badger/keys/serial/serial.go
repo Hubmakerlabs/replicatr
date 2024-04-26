@@ -70,7 +70,8 @@ func (p *T) Read(buf *bytes.Buffer) (el keys.Element) {
 	return p
 }
 
-func (p *T) Len() int { return Len }
+func (p *T) Len() int           { return Len }
+func (p *T) Uint64() (u uint64) { return binary.BigEndian.Uint64(p.Val) }
 
 // Match compares a key bytes to a serial, all indexes have the serial at
 // the end indicating the event record they refer to, and if they match returns

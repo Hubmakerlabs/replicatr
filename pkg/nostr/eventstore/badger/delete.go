@@ -51,7 +51,7 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 			}
 		}
 		// delete the counter key
-		if err = txn.Delete(GetCounterKey(&ev.ID, foundSerial)); chk.E(err) {
+		if err = txn.Delete(GetCounterKey(foundSerial)); chk.E(err) {
 			return
 		}
 		// delete the raw event

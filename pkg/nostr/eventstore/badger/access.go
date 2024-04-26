@@ -34,7 +34,7 @@ out:
 		txMx.Lock()
 		err = b.Update(func(txn *badger.Txn) error {
 			for i := range acc {
-				key := GetCounterKey(&acc[i].EvID, []byte(acc[i].Ser))
+				key := GetCounterKey([]byte(acc[i].Ser))
 				v := make([]byte, 12)
 				now := timestamp.Now().U64()
 				it := txn.NewIterator(badger.IteratorOptions{})

@@ -9,7 +9,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/createdat"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/sizer"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/minio/sha256-simd"
@@ -33,7 +32,7 @@ func (s SortPruned) Len() int           { return len(s) }
 func (s SortPruned) Less(i, j int) bool { return s[i].accessed < s[j].accessed }
 func (s SortPruned) Swap(i, j int)      {}
 
-const prunedSize = sha256.Size + createdat.Len + sizer.Len
+const prunedSize = sha256.Size + createdat.Len
 
 func IndexGCCount() func(bi any) (deleteItems del.Items, err error) {
 	return func(bi any) (deleteItems del.Items, err error) {
@@ -64,7 +63,7 @@ func IndexGCCount() func(bi any) (deleteItems del.Items, err error) {
 						// indexes.
 					}
 					accessed := createdat.New(0)
-					keys.Read(v, accessed, sizer.New(0))
+					keys.Read(v, accessed)
 					access = accessed.Val
 				}
 				if exists {

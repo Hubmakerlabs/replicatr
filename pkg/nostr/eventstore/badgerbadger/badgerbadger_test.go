@@ -26,6 +26,7 @@ import (
 
 type Counter struct {
 	id        *eventid.T
+	size      int
 	requested int
 }
 
@@ -37,8 +38,12 @@ func TestBackend(t *testing.T) {
 		counter        []Counter
 		total          int
 		MaxContentSize = 16384
-		TotalSize      = 10000000
+		TotalSize      = 100000000
 		MaxDelay       = time.Second / 2
+		HW             = 80
+		LW             = 75
+		// fill rate capped to size of differerce between high and low water mark
+		diff = TotalSize / 100 * (HW - LW) / 100 / 100
 	)
 	sec = keys.GeneratePrivateKey()
 	var nsec string
@@ -50,9 +55,9 @@ func TestBackend(t *testing.T) {
 	c, cancel := context.Cancel(context.Bg())
 	var wg sync.WaitGroup
 	defer cancel()
-	// create L1 with a 1Mb cache size target and 2 second GC check
+	// create L1 with cache management settings enabled
 	path1 := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
-	b1 := badger.GetBackend(c, &wg, path1, true, 100000, 86, 92, 2)
+	b1 := badger.GetBackend(c, &wg, path1, true, TotalSize/100, LW, HW, 2)
 	// create L2 with no cache management
 	path2 := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
 	b2 := badger.GetBackend(c, &wg, path2, false, 0)
@@ -100,8 +105,13 @@ end:
 					// make new request, not necessarily from existing... bias rng
 					// factor by request count
 					mx.Lock()
+					var sum int
 					for i := range counter {
 						rn := frand.Intn(256)
+						if sum > diff {
+							// don't overfill
+							break
+						}
 						// multiply this number by the number of accesses the event
 						// has and request every event that gets over 50% so that we
 						// create a bias towards already requested.
@@ -111,6 +121,7 @@ end:
 							// log.T.Ln("adding to fetchIDs")
 							counter[i].requested++
 							fetchIDs = append(fetchIDs, counter[i].id)
+							sum += counter[i].size
 						}
 					}
 					if len(fetchIDs) > 0 {
@@ -171,7 +182,7 @@ end:
 				return
 			}
 			mx.Lock()
-			counter = append(counter, Counter{id: &ev.ID, requested: 1})
+			counter = append(counter, Counter{id: &ev.ID, size: bs, requested: 1})
 			total += bs
 			if total > TotalSize {
 				mx.Unlock()
