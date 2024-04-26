@@ -119,7 +119,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 					}
 					return nil
 				})
-				chk.E(err)
+				chk.T(err)
 			}()
 		}
 		// max number of events we'll return

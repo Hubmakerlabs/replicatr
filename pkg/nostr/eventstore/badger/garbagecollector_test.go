@@ -34,7 +34,7 @@ func TestGarbageCollector(t *testing.T) {
 		mx             sync.Mutex
 		counter        []Counter
 		total          int
-		MaxContentSize = 40960
+		MaxContentSize = 4096
 		TotalSize      = 10000000
 		MaxDelay       = time.Second / 5
 	)
@@ -49,7 +49,7 @@ func TestGarbageCollector(t *testing.T) {
 	var wg sync.WaitGroup
 	defer cancel()
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
-	be := GetBackend(c, &wg, path, false, 1, 86, 92, 2)
+	be := GetBackend(c, &wg, path, false, TotalSize/100, 86, 92, 2)
 	if err = be.Init(); chk.E(err) {
 		t.Fatal(err)
 	}

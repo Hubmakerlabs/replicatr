@@ -14,7 +14,7 @@ import (
 // indexes.
 func (b *Backend) SweepL1Only(serials del.Items) (err error) {
 	err = b.DB.Update(func(txn *badger2.Txn) (err error) {
-		log.I.Ln("prune with no L2")
+		// log.I.Ln("prune with no L2")
 		it := txn.NewIterator(badger2.DefaultIteratorOptions)
 		defer it.Close()
 		for it.Rewind(); it.Valid(); it.Next() {
