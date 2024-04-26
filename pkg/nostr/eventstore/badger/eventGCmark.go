@@ -71,7 +71,7 @@ func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) 
 		err = nil
 	}
 	total = countItems.Total()
-	log.I.F("%d records; total size of data %0.6f MB %0.3f KB high water %0.3f Mb",
+	log.D.F("%d records; total size of data %0.6f MB %0.3f KB high water %0.3f Mb",
 		len(countItems),
 		float64(total)/units.Mb, float64(total)/units.Kb,
 		float64(b.DBHighWater*b.DBSizeLimit/100)/units.Mb)
@@ -89,28 +89,22 @@ func (b *Backend) EventGCMark() (deleteItems del.Items, err error) {
 	if total < b.DBHighWater*b.DBSizeLimit/100 {
 		return
 	}
-	// log.W.Ln("GC needs to run")
 	sort.Sort(countItems)
 	pruneOff := total - b.DBLowWater*b.DBSizeLimit/100
 	log.T.Ln("will delete nearest to", pruneOff,
 		"bytes of events from the event store from the most stale")
 	var cumulative, lastIndex int
-	// var serList []uint64
 	for lastIndex = range countItems {
 		if cumulative > pruneOff {
-			// restSer = append(restSer, binary.BigEndian.Uint64(countItems[lastIndex].Serial))
-			// continue
 			break
 		}
 		cumulative += int(countItems[lastIndex].Size)
 		v := make([]byte, serial.Len)
 		binary.BigEndian.PutUint64(v, countItems[lastIndex].Serial)
 		deleteItems = append(deleteItems, v)
-		// serList = append(serList, countItems[lastIndex].Serial)
 	}
-	// log.I.Ln("serList", serList)
 	sort.Sort(deleteItems)
-	log.I.Ln("found", lastIndex,
+	log.D.Ln("found", lastIndex,
 		"events to prune, which will bring current utilization down to",
 		total-cumulative)
 	return

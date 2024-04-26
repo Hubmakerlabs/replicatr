@@ -9,7 +9,7 @@ import (
 
 // handleDeleteRequest handles a delete event (kind 5)
 func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
-	// event deletion -- nip09
+	// event deletion -- nip-09
 	for _, t := range evt.Tags {
 		if len(t) >= 2 && t[0] == "e" {
 			// first we fetch the event
@@ -24,6 +24,7 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 				}
 				// got the event, now check if the user can delete it
 				acceptDeletion := target.PubKey == evt.PubKey
+				// todo: enable administrators to do this
 				var msg string
 				if acceptDeletion == false {
 					msg = "you are not the author of this event"

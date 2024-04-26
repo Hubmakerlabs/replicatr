@@ -15,23 +15,11 @@ type Challenge struct {
 
 var _ enveloper.I = &Challenge{}
 
-func (a *Challenge) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
-
-func NewChallenge(c string) (a *Challenge) {
-	return &Challenge{Challenge: c}
-}
-
-func (a *Challenge) Label() string { return labels.AUTH }
-
-func (a *Challenge) String() string { return a.ToArray().String() }
-
-func (a *Challenge) Bytes() []byte { return a.ToArray().Bytes() }
-
-func (a *Challenge) ToArray() array.T { return array.T{labels.AUTH, a.Challenge} }
-
+func NewChallenge(c string) (a *Challenge)        { return &Challenge{Challenge: c} }
+func (a *Challenge) Label() string                { return labels.AUTH }
+func (a *Challenge) String() string               { return a.ToArray().String() }
+func (a *Challenge) Bytes() []byte                { return a.ToArray().Bytes() }
+func (a *Challenge) ToArray() array.T             { return array.T{labels.AUTH, a.Challenge} }
 func (a *Challenge) MarshalJSON() ([]byte, error) { return a.Bytes(), nil }
 
 func (a *Challenge) Unmarshal(buf *text.Buffer) (err error) {

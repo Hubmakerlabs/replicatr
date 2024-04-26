@@ -1,3 +1,5 @@
+// Package context is a set of shorter names for the very stuttery context
+// library.
 package context
 
 import (

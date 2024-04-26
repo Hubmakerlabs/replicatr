@@ -47,6 +47,7 @@ func GetListeningFilters() (respFilters filters.T) {
 	return
 }
 
+// SetListener adds a filter to a connection.
 func SetListener(id string, ws *relayws.WebSocket, f filters.T, c context.C) {
 	subs, _ := listeners.LoadOrCompute(ws, func() ListenerMap {
 		return xsync.NewMapOf[*Listener]()

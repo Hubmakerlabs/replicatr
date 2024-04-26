@@ -31,7 +31,7 @@ type C struct {
 	msgState          *wsflate.MessageState
 }
 
-func NewConnection(c context.T, url string, requestHeader http.Header) (*C, error) {
+func NewConnection(c context.T, url string, requestHeader http.Header) (connection *C, err error) {
 	dialer := ws.Dialer{
 		Header: ws.HandshakeHeaderHTTP(requestHeader),
 		Extensions: []httphead.Option{
@@ -42,7 +42,6 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 	if chk.D(err) {
 		return nil, fmt.Errorf("failed to dial: %w", err)
 	}
-
 	enableCompression := false
 	state := ws.StateClientSide
 	for _, extension := range hs.Extensions {
@@ -52,7 +51,6 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 			break
 		}
 	}
-
 	// reader
 	var flateReader *wsflate.Reader
 	var msgState wsflate.MessageState
@@ -63,7 +61,6 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 			return flate.NewReader(r)
 		})
 	}
-
 	controlHandler := wsutil.ControlFrameHandler(conn, ws.StateClientSide)
 	reader := &wsutil.Reader{
 		Source:         conn,
@@ -74,7 +71,6 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 			&msgState,
 		},
 	}
-
 	// writer
 	var flateWriter *wsflate.Writer
 	if enableCompression {
@@ -87,11 +83,9 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 			return fw
 		})
 	}
-
 	writer := wsutil.NewWriter(conn, state, ws.OpText)
 	writer.SetExtensions(&msgState)
-
-	return &C{
+	connection = &C{
 		Conn:              conn,
 		enableCompression: enableCompression,
 		controlHandler:    controlHandler,
@@ -100,7 +94,8 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (*C, erro
 		flateWriter:       flateWriter,
 		msgState:          &msgState,
 		writer:            writer,
-	}, nil
+	}
+	return
 }
 
 func (c *C) WriteMessage(data []byte) (err error) {
@@ -109,7 +104,6 @@ func (c *C) WriteMessage(data []byte) (err error) {
 		if _, err = io.Copy(c.flateWriter, bytes.NewReader(data)); chk.D(err) {
 			return fmt.Errorf("failed to write message: %w", err)
 		}
-
 		if err = c.flateWriter.Close(); chk.D(err) {
 			return fmt.Errorf("failed to close flate writer: %w", err)
 		}
@@ -118,11 +112,9 @@ func (c *C) WriteMessage(data []byte) (err error) {
 			return fmt.Errorf("failed to write message: %w", err)
 		}
 	}
-
 	if err = c.writer.Flush(); chk.D(err) {
 		return fmt.Errorf("failed to flush writer: %w", err)
 	}
-
 	return nil
 }
 
@@ -139,7 +131,6 @@ func (c *C) ReadMessage(cx context.T, buf io.Writer) (err error) {
 			chk.D(c.Conn.Close())
 			return fmt.Errorf("failed to advance frame: %w", err)
 		}
-
 		if h.OpCode.IsControl() {
 			if err = c.controlHandler(h, c.reader); chk.D(err) {
 				return fmt.Errorf("failed to handle control frame: %w", err)
@@ -148,23 +139,20 @@ func (c *C) ReadMessage(cx context.T, buf io.Writer) (err error) {
 			h.OpCode == ws.OpText {
 			break
 		}
-
-		if err = c.reader.Discard(); err != nil {
+		if err = c.reader.Discard(); chk.E(err) {
 			return fmt.Errorf("failed to discard: %w", err)
 		}
 	}
-
 	if c.msgState.IsCompressed() && c.enableCompression {
 		c.flateReader.Reset(c.reader)
 		if _, err = io.Copy(buf, c.flateReader); chk.D(err) {
 			return fmt.Errorf("failed to read message: %w", err)
 		}
 	} else {
-		if _, err = io.Copy(buf, c.reader); err != nil {
+		if _, err = io.Copy(buf, c.reader); chk.E(err) {
 			return fmt.Errorf("failed to read message: %w", err)
 		}
 	}
-
 	return nil
 }
 

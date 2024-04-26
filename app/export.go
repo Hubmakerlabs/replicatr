@@ -14,6 +14,9 @@ import (
 )
 
 // Export prints the JSON of all events or writes them to a file.
+//
+// This is a raw output, no sorting or filtering is done, it just returns all
+// events.
 func (rl *Relay) Export(db *badger.Backend, filename string) {
 	log.D.Ln("running export subcommand")
 	b := make([]byte, MaxMessageSize)
@@ -38,7 +41,6 @@ func (rl *Relay) Export(db *badger.Backend, filename string) {
 			if len(b) == 0 {
 				continue
 			}
-			// log.D.S(b)
 			buf := bytes.NewBuffer(b)
 			dec := gob.NewDecoder(buf)
 			ev := &nostrbinary.Event{}

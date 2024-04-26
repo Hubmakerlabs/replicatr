@@ -40,7 +40,7 @@ out:
 	for {
 		select {
 		case <-b.Ctx.Done():
-			log.W.Ln("backend context done")
+			log.W.Ln("event store closing")
 			break out
 		case <-eventGCticker.C:
 			log.T.Ln("running event GC")

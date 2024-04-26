@@ -353,7 +353,6 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 		case *countenvelope.Response:
 			if s, ok := r.Subscriptions.Load(env.ID.String()); ok &&
 				s.CountResult != nil {
-
 				s.CountResult <- env.Count
 			}
 		case *okenvelope.T:
