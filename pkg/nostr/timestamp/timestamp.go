@@ -51,7 +51,11 @@ func (tp *Tp) T() T {
 // FromTime returns a T from a time.Time
 func FromTime(t time.Time) T { return T(t.Unix()) }
 
+// FromUnix converts from a standard int64 unix timestamp.
 func FromUnix(t int64) T { return T(t) }
+
+// FromBytes converts from a string of raw bytes.
+func FromBytes(b []byte) T { return T(binary.BigEndian.Uint64(b)) }
 
 func (tp *Tp) String() string {
 	return fmt.Sprint(tp.T())

@@ -17,7 +17,6 @@ import (
 
 func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) {
 	key := make([]byte, index.Len+serial.Len)
-	// var restSer []uint64
 	// first find all the non-pruned events.
 	if err = b.DB.View(func(txn *badger.Txn) (err error) {
 		prf := []byte{byte(index.Event)}
@@ -31,8 +30,6 @@ func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) 
 			// skip already pruned items
 			size := uint32(item.ValueSize())
 			if size == sha256.Size {
-				// v, _ := item.ValueCopy(nil)
-				// log.I.F("pruned item %d %0x", ser.Uint64(), v)
 				continue
 			}
 			countItems = append(countItems, &count.Item{Serial: ser.Uint64(), Size: size})
@@ -42,7 +39,6 @@ func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) 
 	}); chk.E(err) {
 		// there is nothing that can be done about database errors here so ignore
 		err = nil
-		// return
 	}
 	v := make([]byte, createdat.Len)
 	// second get the datestamps of the items
@@ -73,9 +69,7 @@ func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) 
 	}); chk.E(err) {
 		// there is nothing that can be done about database errors here so ignore
 		err = nil
-		// return
 	}
-
 	total = countItems.Total()
 	log.I.F("%d records; total size of data %0.6f MB %0.3f KB high water %0.3f Mb",
 		len(countItems),

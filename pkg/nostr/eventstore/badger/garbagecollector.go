@@ -9,6 +9,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
 )
 
+const IndexGCSkip = 5
+
 // GarbageCollector starts up a ticker that runs a check on space utilisation
 // and when it exceeds the high-water mark, prunes back to the low-water mark.
 //
@@ -25,12 +27,13 @@ func (b *Backend) GarbageCollector() {
 		float32(b.DBHighWater*b.DBSizeLimit/100)/units.Mb,
 		float32(b.DBLowWater*b.DBSizeLimit/100)/units.Mb,
 		units.Mb,
-		b.GCFrequency, b.GCFrequency*5,
+		b.GCFrequency, b.GCFrequency*IndexGCSkip,
 	)
 	var err error
 	if err = b.EventGCRun(); chk.E(err) {
 	}
-	gcTicker := time.NewTicker(b.GCFrequency)
+	eventGCticker := time.NewTicker(b.GCFrequency)
+	indexGCticker := time.NewTicker(b.GCFrequency * IndexGCSkip)
 	// force sync to disk every so often, this might be normally about 10 minutes.
 	syncTicker := time.NewTicker(b.GCFrequency * 10)
 out:
@@ -39,9 +42,13 @@ out:
 		case <-b.Ctx.Done():
 			log.W.Ln("backend context done")
 			break out
-		case <-gcTicker.C:
-			log.T.Ln("running GC check")
+		case <-eventGCticker.C:
+			log.T.Ln("running event GC")
 			if err = b.EventGCRun(); chk.E(err) {
+			}
+		case <-indexGCticker.C:
+			log.T.Ln("running index GC")
+			if err = b.IndexGCRun(); chk.E(err) {
 			}
 		case <-syncTicker.C:
 			chk.E(b.DB.Sync())
@@ -51,7 +58,6 @@ out:
 }
 
 func (b *Backend) EventGCRun() (err error) {
-	log.T.Ln("running garbage collector check")
 	var deleteItems del.Items
 	// hold a writer lock for the duration as no other activity should take place
 	// while a GC is running, access will corrupt the data during iteration.
@@ -75,5 +81,16 @@ func (b *Backend) EventGCRun() (err error) {
 		return
 	}
 	b.EventGCCount()
+	return
+}
+
+func (b *Backend) IndexGCRun() (err error) {
+	var toDelete []uint64
+	if toDelete, err = b.IndexGCMark(); chk.E(err) {
+		return
+	}
+	if err = b.IndexGCSweep(toDelete); chk.E(err) {
+		return
+	}
 	return
 }

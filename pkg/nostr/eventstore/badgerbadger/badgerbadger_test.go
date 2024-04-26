@@ -39,9 +39,9 @@ func TestBackend(t *testing.T) {
 		total          int
 		MaxContentSize = 16384
 		TotalSize      = 100000000
-		MaxDelay       = time.Second / 2
-		HW             = 80
-		LW             = 75
+		MaxDelay       = time.Second / 4
+		HW             = 95
+		LW             = 90
 		// fill rate capped to size of differerce between high and low water mark
 		diff = TotalSize / 100 * (HW - LW) / 100 / 100
 	)
