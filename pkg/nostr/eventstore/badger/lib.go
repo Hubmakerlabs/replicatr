@@ -106,6 +106,9 @@ func (b *Backend) Init() (err error) {
 	if b.MaxLimit == 0 {
 		b.MaxLimit = DefaultMaxLimit
 	}
+	if b.DBSizeLimit > 0 {
+		go b.GarbageCollector()
+	}
 	return nil
 }
 
