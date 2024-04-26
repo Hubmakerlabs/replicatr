@@ -57,7 +57,7 @@ func (b *Backend) EventGCRun() (err error) {
 	// while a GC is running, access will corrupt the data during iteration.
 	b.bMx.Lock()
 	defer b.bMx.Unlock()
-	if deleteItems, err = b.EventGCCount(); chk.E(err) {
+	if deleteItems, err = b.EventGCMark(); chk.E(err) {
 		return
 	}
 	if len(deleteItems) < 1 {
@@ -71,8 +71,9 @@ func (b *Backend) EventGCRun() (err error) {
 		delList += fmt.Sprint(binary.BigEndian.Uint64(deleteItems[i]))
 	}
 	// log.I.Ln("pruning:", delList)
-	if err = b.EventGCPrune(deleteItems); chk.E(err) {
+	if err = b.EventGCSweep(deleteItems); chk.E(err) {
 		return
 	}
+	b.EventGCCount()
 	return
 }

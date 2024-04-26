@@ -40,41 +40,13 @@ type Backend struct {
 	DBHighWater int
 	// GCFrequency is the frequency of checks of the current utilisation.
 	GCFrequency time.Duration
-	// EventGCPruneFunc is a closure that implements the garbage collection prune
-	// operation.
-	//
-	// This is to enable multi-level caching as well as maintaining a limit of
-	// storage usage.
-	EventGCPruneFunc func(ifc any, deleteItems del.Items) (err error)
-	// IndexGCPruneFunc is like EventGCPruneFunc except runs GC on pruned indexes.
-	IndexGCPruneFunc func(ifc any, deleteItems del.Items) (err error)
-	// EventGCCountFunc is a function that iterates the access timestamp records to
-	// determine the most stale events and return the list of serials the Delete
-	// function should operate on.
-	//
-	// Note that this function needs to be able to access the DBSizeLimit,
-	// DBLowWater and DBHighWater values as this is the configuration for garbage
-	// collection.
-	EventGCCountFunc func(ifc any) (deleteItems del.Items, err error)
-	// IndexGCCountFunc is a more intensive counter process that gathers size
-	// information of all pruned records and removes what exceeds the high water
-	// mark percentage of the overhead of the size limit to bring it down to the low
-	// water mark percentage.
-	IndexGCCountFunc func(ifc any) (deleteItems del.Items, err error)
+	HasL2       bool
 	// DB is the badger db interface
 	*badger.DB
 	// seq is the monotonic collision free index for raw event storage.
 	seq *badger.Sequence
 	// bMx is a lock that prevents more than one operation running at a time
 	bMx sync.RWMutex
-}
-
-// EventGCCount calls the closure that was loaded for the back end second level cache.
-func (b *Backend) EventGCCount() (deleteItems del.Items, err error) { return b.EventGCCountFunc(b) }
-
-// EventGCPrune calls the closure that was loaded for the back end second level cache.
-func (b *Backend) EventGCPrune(deleteItems del.Items) (err error) {
-	return b.EventGCPruneFunc(b, deleteItems)
 }
 
 const DefaultMaxLimit = 1024
@@ -108,16 +80,15 @@ func GetBackend(
 		sizeLimit = params[0]
 	}
 	b = &Backend{
-		Ctx:              Ctx,
-		WG:               WG,
-		Path:             path,
-		MaxLimit:         DefaultMaxLimit,
-		DBSizeLimit:      sizeLimit,
-		DBLowWater:       lw,
-		DBHighWater:      hw,
-		GCFrequency:      time.Duration(freq) * time.Second,
-		EventGCPruneFunc: EventGCPrune(hasL2),
-		EventGCCountFunc: EventGCCount(),
+		Ctx:         Ctx,
+		WG:          WG,
+		Path:        path,
+		MaxLimit:    DefaultMaxLimit,
+		DBSizeLimit: sizeLimit,
+		DBLowWater:  lw,
+		DBHighWater: hw,
+		GCFrequency: time.Duration(freq) * time.Second,
+		HasL2:       hasL2,
 	}
 	return
 }
