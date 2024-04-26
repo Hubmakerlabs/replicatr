@@ -53,7 +53,6 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	if E == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
-	// log.D.F("REQ '%s'", buf.Buf[buf.Pos:])
 	// Next, find the comma after the label
 	if err = buf.ScanThrough(','); err != nil {
 		return
@@ -72,7 +71,6 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 		if sid, err = buf.ReadUntil('"'); chk.D(err) {
 			return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
 		}
-		// log.T.F("Subscription ID: '%s'", sid)
 		E.SubscriptionID = subscriptionid.T(sid)
 	}
 	// Next, find the comma (there must be one and at least one object brace
@@ -94,18 +92,15 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 		if filterArray, err = buf.ReadEnclosed(); chk.D(err) {
 			return
 		}
-		log.T.F("filter: '%s'", filterArray)
 		f := &filter.T{}
 		if err = json.Unmarshal(filterArray, f); chk.D(err) {
 			return
 		}
 		E.Filters = append(E.Filters, f)
-		// log.D.F("remaining: '%s'", buf.Buf[buf.Pos:])
 		which = 0
 		if which, err = buf.ScanForOneOf(true, ',', ']'); chk.D(err) {
 			return
 		}
-		// log.D.F("'%s'", string(which))
 		if which == ']' {
 			break
 		}

@@ -3,15 +3,9 @@ package relayws
 import (
 	"crypto/rand"
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"os"
-	"runtime"
 	"sync"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/fasthttp/websocket"
@@ -77,22 +71,22 @@ func (ws *WebSocket) WriteMessage(t MessageType, b []byte) (err error) {
 func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
-	var file string
-	var line int
-	_, file, line, _ = runtime.Caller(1)
-	loc := fmt.Sprintf("%s:%d", file, line)
-	var evkind string
-	var ek kind.T
-	if env.Label() == labels.EVENT {
-		ek = env.(*eventenvelope.T).Event.Kind
-		evkind = kind.GetString(ek)
-	}
-	log.T.F("sending message to %s %s %s\n%s\n%s",
-		ws.RealRemote(),
-		ws.AuthPubKey(),
-		evkind,
-		env.ToArray().String(),
-		loc)
+	// var file string
+	// var line int
+	// _, file, line, _ = runtime.Caller(1)
+	// loc := fmt.Sprintf("%s:%d", file, line)
+	// var evkind string
+	// var ek kind.T
+	// if env.Label() == labels.EVENT {
+	// 	ek = env.(*eventenvelope.T).Event.Kind
+	// 	evkind = kind.GetString(ek)
+	// }
+	// log.T.F("sending message to %s %s %s\n%s\n%s",
+	// 	ws.RealRemote(),
+	// 	ws.AuthPubKey(),
+	// 	evkind,
+	// 	env.ToArray().String(),
+	// 	loc)
 	chk.E(ws.Conn.WriteMessage(int(TextMessage), env.ToArray().Bytes()))
 	return
 }

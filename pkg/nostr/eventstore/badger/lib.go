@@ -124,7 +124,7 @@ func (b *Backend) SerialKey() (idx []byte, ser []byte) {
 func (b *Backend) Serial() (ser uint64, err error) {
 	if ser, err = b.seq.Next(); chk.E(err) {
 	}
-	log.T.F("serial %x", ser)
+	// log.T.F("serial %x", ser)
 	return
 }
 

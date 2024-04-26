@@ -84,11 +84,11 @@ func (rl *Relay) Chat(c context.T, ev *event.T) (err error) {
 	}
 	if !ev.Tags.ContainsAny("p",
 		rl.RelayPubHex) && ev.PubKey != rl.RelayPubHex {
-		log.T.Ln("direct message not for relay chat", ev.PubKey, rl.RelayPubHex)
+		// log.T.Ln("direct message not for relay chat", ev.PubKey, rl.RelayPubHex)
 		return
 	}
 	meSec, youPub := rl.Config.SecKey, ev.PubKey
-	log.I.Ln(rl.RelayPubHex, "receiving message via DM", ev.ToObject().String())
+	log.T.Ln(rl.RelayPubHex, "receiving message via DM", ev.ToObject().String())
 	var decryptedStr string
 	decryptedStr, err = DecryptDM(ev, meSec, youPub)
 	log.T.F("decrypted message: '%s'", decryptedStr)

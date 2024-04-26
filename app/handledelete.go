@@ -9,7 +9,6 @@ import (
 
 // handleDeleteRequest handles a delete event (kind 5)
 func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
-	log.T.Ln("running relay method")
 	// event deletion -- nip09
 	for _, t := range evt.Tags {
 		if len(t) >= 2 && t[0] == "e" {

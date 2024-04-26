@@ -3,7 +3,6 @@ package app
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
@@ -19,12 +18,12 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 			log.E.Ln("cannot broadcast to", ws.RealRemote(), "not authorized")
 			return true
 		}
-		log.T.Ln("broadcasting", ws.RealRemote(), ws.AuthPubKey(), subs.Size())
+		// log.T.Ln("broadcasting", ws.RealRemote(), ws.AuthPubKey(), subs.Size())
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {
-				log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
-					listener.ws.RealRemote(), listener.ws.AuthPubKey(),
-					listener.filters, evt.ToObject().String())
+				// log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
+				// 	listener.ws.RealRemote(), listener.ws.AuthPubKey(),
+				// 	listener.filters, evt.ToObject().String())
 				return true
 			}
 			if kinds.IsPrivileged(evt.Kind) && rl.Info.Limitation.AuthRequired {
@@ -44,11 +43,11 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 					return true
 				}
 			}
-			log.D.F("sending event to subscriber %v %s (%d %s)",
-				ws.RealRemote(), ws.AuthPubKey(),
-				evt.Kind,
-				kind.GetString(evt.Kind),
-			)
+			// log.D.F("sending event to subscriber %v %s (%d %s)",
+			// 	ws.RealRemote(), ws.AuthPubKey(),
+			// 	evt.Kind,
+			// 	kind.GetString(evt.Kind),
+			// )
 			chk.E(ws.WriteEnvelope(&eventenvelope.T{
 				SubscriptionID: subscriptionid.T(id),
 				Event:          evt},

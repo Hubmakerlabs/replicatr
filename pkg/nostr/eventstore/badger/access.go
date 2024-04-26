@@ -49,7 +49,7 @@ out:
 						continue
 					}
 				}
-				log.T.Ln("last access for", acc[i], "to", now)
+				// log.T.Ln("last access for", acc[i], "to", now)
 			}
 			return nil
 		})
@@ -72,12 +72,12 @@ func (b *Backend) AccessLoop(c context.T, txMx *sync.Mutex, accCh chan *AccessEv
 		select {
 		case <-c.Done():
 			if len(accesses) > 0 {
-				log.T.Ln("accesses", accesses)
+				// log.T.Ln("accesses", accesses)
 				chk.E(b.IncrementAccesses(txMx, accesses))
 			}
 			return
 		case acc := <-accCh:
-			log.T.F("adding access to %s %0x", acc.EvID, acc.Ser)
+			// log.T.F("updating access to %s %0x", acc.EvID, acc.Ser)
 			accesses = append(accesses, &AccessEvent{acc.EvID, acc.Ser})
 		}
 	}

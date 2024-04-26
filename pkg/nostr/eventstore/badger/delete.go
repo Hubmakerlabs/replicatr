@@ -35,7 +35,7 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 			keys.Read(it.Item().Key(), index.Empty(), id.New(""), ser)
 			foundSerial = ser.Val
 			idx = index.Event.Key(ser)
-			log.D.Ln("added found item")
+			// log.D.Ln("added found item")
 		}
 		it.Close()
 		// if no idx was found, end here, this event doesn't exist
