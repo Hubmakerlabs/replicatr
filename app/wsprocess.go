@@ -105,8 +105,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
-			log.D.F("id mismatch got %s, expected %s %s %s", ws.RealRemote(),
-				ws.AuthPubKey(), id, env.Event.ID.String())
+			log.D.F("id mismatch got %s, expected %s %s %s",
+				ws.AuthPubKey(), id, env.Event.ID.String(), ws.RealRemote())
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
