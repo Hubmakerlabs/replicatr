@@ -30,7 +30,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	if chk.E(err) {
 		return
 	}
-	log.T.S(queries, extraFilter, since)
+	// log.T.S(queries, extraFilter, since)
 	accessChan := make(chan *AccessEvent)
 	var txMx sync.Mutex
 	// start up the access counter
@@ -165,9 +165,10 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			latest := emitQueue[0]
 			// send ID to be incremented for access
 			ae := MakeAccessEvent(latest.T.ID, string(latest.Ser))
-			log.T.S("sending access event", ae)
 			accessChan <- ae
+			log.T.Ln("sent access event", ae)
 			ch <- latest.T
+			log.T.Ln("sent result event", ae)
 			// stop when reaching limit
 			emittedEvents++
 			if emittedEvents == limit {

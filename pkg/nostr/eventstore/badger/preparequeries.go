@@ -52,7 +52,7 @@ func PrepareQueries(f *filter.T) (
 				skipTS:       true, // why are we not checking timestamps?
 			}
 		}
-		log.T.S("ids", qs)
+		// log.T.S("ids", qs)
 		// second we make a set of queries based on author pubkeys, optionally with kinds
 	case len(f.Authors) > 0:
 		// if there is no kinds, we just make the queries based on the author pub keys
@@ -71,7 +71,7 @@ func PrepareQueries(f *filter.T) (
 					searchPrefix: sp,
 				}
 			}
-			log.I.S("authors", qs)
+			// log.I.S("authors", qs)
 		} else {
 			// if there is kinds as well, we are searching via the kind/pubkey prefixes
 			qs = make([]query, len(f.Authors)*len(f.Kinds))
@@ -84,16 +84,16 @@ func PrepareQueries(f *filter.T) (
 					}
 					ki := kinder.New(kind)
 					sp := index.PubkeyKind.Key(pk, ki)
-					log.T.F("search for authors %0x from pub key %0x and kind %0x", sp, pk.Val, ki.Val)
+					log.T.F("search for authors %0x from pub key %0x and kind %0x", index.PubkeyKind, pk.Val, ki.Val)
 					qs[i] = query{index: i, queryFilter: f, searchPrefix: sp}
 					i++
 				}
 			}
-			log.T.S("authors/kinds", qs)
+			// log.T.S("authors/kinds", qs)
 		}
 		if f.Tags != nil || len(f.Tags) > 0 {
 			ext = &filter.T{Tags: f.Tags}
-			log.T.S("extra filter", ext)
+			log.T.Ln("extra filter", ext.ToObject().String())
 		}
 	case len(f.Tags) > 0:
 		// determine the size of the queries array by inspecting all tags sizes
@@ -120,7 +120,7 @@ func PrepareQueries(f *filter.T) (
 				i++
 			}
 		}
-		log.T.S("tags", qs)
+		// log.T.S("tags", qs)
 	case len(f.Kinds) > 0:
 		// if there is no ids, pubs or tags, we are just searching for kinds
 		qs = make([]query, len(f.Kinds))
@@ -134,11 +134,11 @@ func PrepareQueries(f *filter.T) (
 				searchPrefix: ki,
 			}
 		}
-		log.T.S("kinds", qs)
+		// log.T.S("kinds", qs)
 	default:
 		qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
 		ext = nil
-		log.T.S("other", qs)
+		// log.T.S("other", qs)
 	}
 	var until uint64 = math.MaxUint64
 	if f.Until != nil {

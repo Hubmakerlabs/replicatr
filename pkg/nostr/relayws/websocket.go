@@ -87,7 +87,7 @@ func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 		ek = env.(*eventenvelope.T).Event.Kind
 		evkind = kind.GetString(ek)
 	}
-	log.T.F("sending message to %s %s %s\n%s\n%s",
+	log.I.F("sending message to %s %s %s %s %s",
 		ws.RealRemote(),
 		ws.AuthPubKey(),
 		evkind,
