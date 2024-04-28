@@ -99,7 +99,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		// send out authorization request
 		if ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
 			log.I.Ln("requesting auth to store event")
-			RequestAuth(c)
+			RequestAuth(c, env.Label())
 		out:
 			for {
 				select {
@@ -111,7 +111,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 					break out
 				case <-time.After(5 * time.Second):
 					if ws.AuthPubKey() == "" {
-						reason := "this relay requires authentication for publication"
+						reason := "this relay requires authentication for storing events"
 						log.I.Ln(reason)
 						chk.E(ws.WriteEnvelope(&okenvelope.T{
 							ID:     env.Event.ID,
@@ -183,8 +183,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		if ok = !chk.E(err); !ok {
 			reason = err.Error()
 			if strings.HasPrefix(reason, auth.Required) {
-				log.I.Ln("requesting auth")
-				RequestAuth(c)
+				RequestAuth(c, env.Label())
 				ok = true
 			}
 			if strings.HasPrefix(reason, "duplicate") {
@@ -210,8 +209,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}
 		// send out authorization request
 		if ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
-			log.I.Ln("requesting auth to store event")
-			RequestAuth(c)
+			RequestAuth(c, env.Label())
 		outcount:
 			for {
 				select {
@@ -223,7 +221,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 					break outcount
 				case <-time.After(5 * time.Second):
 					if ws.AuthPubKey() == "" {
-						reason := "this relay requires authentication for publication"
+						reason := "this relay requires authentication for count requests"
 						log.I.Ln(reason)
 						chk.E(ws.WriteEnvelope(&closedenvelope.T{
 							ID:     env.ID,
@@ -246,8 +244,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	case *reqenvelope.T:
 		// send out authorization request
 		if ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
-			log.I.Ln("requesting auth to store event")
-			RequestAuth(c)
+			RequestAuth(c, env.Label())
 		outreq:
 			for {
 				select {
@@ -259,7 +256,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 					break outreq
 				case <-time.After(5 * time.Second):
 					if ws.AuthPubKey() == "" {
-						reason := "this relay requires authentication for publication"
+						reason := "this relay requires authentication for queries"
 						log.I.Ln(reason)
 						chk.E(ws.WriteEnvelope(&closedenvelope.T{
 							ID:     env.SubscriptionID,
@@ -291,7 +288,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 				// fail everything if any filter is rejected
 				reason := err.Error()
 				if strings.HasPrefix(reason, auth.Required) {
-					RequestAuth(c)
+					RequestAuth(c, env.Label())
 				}
 				if strings.HasPrefix(reason, "blocked") {
 					return
