@@ -24,21 +24,10 @@ type Request struct {
 
 var _ enveloper.I = &Request{}
 
-func (C *Request) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (C *Request) Label() string { return labels.COUNT }
-
-func (C *Request) ToArray() array.T {
-	return array.T{labels.COUNT, C.ID, C.Filters}
-}
-
-func (C *Request) String() string { return C.ToArray().String() }
-
-func (C *Request) Bytes() []byte { return C.ToArray().Bytes() }
-
+func (C *Request) Label() string                { return labels.COUNT }
+func (C *Request) ToArray() array.T             { return array.T{labels.COUNT, C.ID, C.Filters} }
+func (C *Request) String() string               { return C.ToArray().String() }
+func (C *Request) Bytes() []byte                { return C.ToArray().Bytes() }
 func (C *Request) MarshalJSON() ([]byte, error) { return C.Bytes(), nil }
 
 func (C *Request) Unmarshal(buf *text.Buffer) (err error) {
@@ -64,9 +53,9 @@ func (C *Request) Unmarshal(buf *text.Buffer) (err error) {
 	if err = buf.ScanUntil('{'); chk.D(err) {
 		return fmt.Errorf("event not found in event envelope: %s", err)
 	}
-	// T in the count envelope are variadic, there can be more than one,
-	// with subsequent items separated by a comma, so we read them in in a loop,
-	// breaking when we don't find a comma after.
+	// T in the count envelope are variadic, there can be more than one, with
+	// subsequent items separated by a comma, so we read them in in a loop, breaking
+	// when we don't find a comma after.
 	for {
 		var filterArray []byte
 		if filterArray, err = buf.ReadEnclosed(); chk.D(err) {
@@ -85,19 +74,13 @@ func (C *Request) Unmarshal(buf *text.Buffer) (err error) {
 			break
 		}
 	}
-	// If we found at least one filter, there is no error, the io.EOF is
-	// expected at any point after at least one filter.
+	// If we found at least one filter, there is no error, the io.EOF is expected at
+	// any point after at least one filter.
 	if len(C.Filters) > 0 {
 		err = nil
 	}
-	// // Technically we maybe should read ahead further to make sure the JSON
-	// // closes correctly. Not going to abort because of this.
-	// //
-	// TODO: this is a waste of time really, the rest of the buffer will be
-	//  discarded anyway as no more content is expected
-	// if e = buf.ScanUntil(']'); e != nil {
-	// 	return fmt.Errorf("malformed JSON, no closing bracket on array")
-	// }
-	// whatever remains doesn't matter as the envelope has fully unmarshaled.
+	// Technically we maybe should read ahead further to make sure the JSON closes
+	// correctly. Not going to abort because of this. Whatever remains doesn't
+	// matter as the envelope has fully unmarshalled.
 	return
 }

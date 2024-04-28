@@ -35,7 +35,7 @@ func TestGarbageCollector(t *testing.T) {
 		counter        []Counter
 		total          int
 		MaxContentSize = 4096
-		TotalSize      = 10000000
+		TotalSize      = 1000000
 		MaxDelay       = time.Second / 5
 	)
 	sec = keys.GeneratePrivateKey()

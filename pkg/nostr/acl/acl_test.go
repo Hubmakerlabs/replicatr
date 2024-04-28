@@ -13,14 +13,14 @@ import (
 var testRelaySec = "f16dca5c36931305a4ac30d31b77962af96ea6b7240736da11af318fb7e11317"
 
 func TestT(t *testing.T) {
-	// generate a bunch of deterministic random pubkeys
-	// might as well use the test relay pubkey
+	// generate a bunch of deterministic random pub keys might as well use the test
+	// relay pubkey
 	seed, err := hex.Dec(testRelaySec)
 	if err != nil {
 		t.Fatal(err)
 	}
 	src := frand.NewCustom(seed, 128, 20)
-	var pubkeys []string
+	var pubKeys []string
 	var sec *secp256k1.SecretKey
 	for i := 0; i < 10; i++ {
 		if sec, err = secp256k1.GenerateSecretKeyFromRand(src); err != nil {
@@ -28,14 +28,14 @@ func TestT(t *testing.T) {
 		}
 		pub := sec.PubKey()
 		pubBytes := schnorr.SerializePubKey(pub)
-		pubkeys = append(pubkeys, hex.Enc(pubBytes))
+		pubKeys = append(pubKeys, hex.Enc(pubBytes))
 	}
 	aclT := &T{}
-	for i := range pubkeys {
+	for i := range pubKeys {
 		role := (i % (len(RoleStrings) - 1)) + 1
 		en := &Entry{
 			Role:         Role(role),
-			Pubkey:       pubkeys[i],
+			Pubkey:       pubKeys[i],
 			Created:      timestamp.Now() - 1,
 			LastModified: timestamp.Now(),
 			Expires:      timestamp.Now() + 100000,
@@ -53,11 +53,11 @@ func TestT(t *testing.T) {
 		}
 		_ = e
 	}
-	frand.Shuffle(len(pubkeys), func(i, j int) {
-		pubkeys[i], pubkeys[j] = pubkeys[j], pubkeys[i]
+	frand.Shuffle(len(pubKeys), func(i, j int) {
+		pubKeys[i], pubKeys[j] = pubKeys[j], pubKeys[i]
 	})
-	for i := range pubkeys {
-		if err = aclT.DeleteEntry(pubkeys[i]); err != nil {
+	for i := range pubKeys {
+		if err = aclT.DeleteEntry(pubKeys[i]); err != nil {
 			t.Fatal(err)
 		}
 	}

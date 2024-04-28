@@ -26,16 +26,11 @@ func (E *T) UnmarshalJSON(bytes []byte) error {
 	panic("implement me")
 }
 
-func New(s subscriptionid.T) (ce *T) { return &T{T: s} }
-
-func (E *T) Label() string { return labels.CLOSE }
-
-func (E *T) ToArray() array.T { return array.T{labels.CLOSE, E.T} }
-
-func (E *T) String() string { return E.ToArray().String() }
-
-func (E *T) Bytes() []byte { return E.ToArray().Bytes() }
-
+func New(s subscriptionid.T) (ce *T)      { return &T{T: s} }
+func (E *T) Label() string                { return labels.CLOSE }
+func (E *T) ToArray() array.T             { return array.T{labels.CLOSE, E.T} }
+func (E *T) String() string               { return E.ToArray().String() }
+func (E *T) Bytes() []byte                { return E.ToArray().Bytes() }
 func (E *T) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
 
 // Unmarshal the envelope.

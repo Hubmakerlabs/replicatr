@@ -39,7 +39,7 @@ func ConvertFromBech32(b5 []byte) (b8 []byte, err error) {
 func SecretKeyToNsec(sk *secp256k1.SecretKey) (encoded string, err error) {
 
 	var b5 []byte
-	if b5, err = ConvertForBech32(sk.Serialize()); err != nil {
+	if b5, err = ConvertForBech32(sk.Serialize()); chk.E(err) {
 		return
 	}
 	return bech32.Encode(SecHRP, b5)
@@ -49,7 +49,8 @@ func SecretKeyToNsec(sk *secp256k1.SecretKey) (encoded string, err error) {
 func PublicKeyToNpub(pk *secp256k1.PublicKey) (encoded string, err error) {
 
 	var bits5 []byte
-	if bits5, err = ConvertForBech32(schnorr.SerializePubKey(pk)); err != nil {
+	pubKeyBytes := schnorr.SerializePubKey(pk)
+	if bits5, err = ConvertForBech32(pubKeyBytes); chk.E(err) {
 		return
 	}
 	return bech32.Encode(PubHRP, bits5)
@@ -61,8 +62,7 @@ func NsecToSecretKey(encoded string) (sk *secp256k1.SecretKey, err error) {
 
 	var b5, b8 []byte
 	var hrp string
-	hrp, b5, err = bech32.Decode(encoded)
-	if err != nil {
+	if hrp, b5, err = bech32.Decode(encoded); chk.E(err) {
 		return
 	}
 	if hrp != SecHRP {
@@ -70,8 +70,7 @@ func NsecToSecretKey(encoded string) (sk *secp256k1.SecretKey, err error) {
 			hrp, SecHRP)
 		return
 	}
-	b8, err = ConvertFromBech32(b5)
-	if err != nil {
+	if b8, err = ConvertFromBech32(b5); chk.E(err) {
 		return
 	}
 	sk = secp256k1.SecKeyFromBytes(b8)
@@ -83,8 +82,7 @@ func NsecToSecretKey(encoded string) (sk *secp256k1.SecretKey, err error) {
 func NpubToPublicKey(encoded string) (pk *secp256k1.PublicKey, err error) {
 	var b5, b8 []byte
 	var hrp string
-	hrp, b5, err = bech32.Decode(encoded)
-	if err != nil {
+	if hrp, b5, err = bech32.Decode(encoded); chk.E(err) {
 		err = log.E.Err("ERROR: '%s'", err)
 		return
 	}
@@ -93,8 +91,7 @@ func NpubToPublicKey(encoded string) (pk *secp256k1.PublicKey, err error) {
 			hrp, PubHRP)
 		return
 	}
-	b8, err = ConvertFromBech32(b5)
-	if err != nil {
+	if b8, err = ConvertFromBech32(b5); chk.E(err) {
 		return
 	}
 
@@ -151,9 +148,7 @@ func HexToNsec(sk string) (nsec string, err error) {
 
 // SecretKeyToHex converts a secret key to the hex encoding.
 func SecretKeyToHex(sk *ec.SecretKey) (hexSec string) {
-	b := sk.Serialize()
-	hexSec = hex.Enc(b)
-	return
+	return hex.Enc(sk.Serialize())
 }
 
 func NsecToHex(nsec string) (hexSec string, err error) {

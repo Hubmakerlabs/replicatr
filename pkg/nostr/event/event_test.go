@@ -73,7 +73,6 @@ func GenTextNote(sk *secp256k1.SecretKey, replyID,
 }
 
 func TestGenerateEvent(t *testing.T) {
-	// log2.SetLogLevel(log2.Debug)
 	var err error
 	var note, noteID, relayURL string
 	sec, pub := GetTestKeyPair()
@@ -89,30 +88,24 @@ func TestGenerateEvent(t *testing.T) {
 
 func TestEventSerialization(t *testing.T) {
 	for _, evt := range eventest.D {
-
 		var b []byte
 		var err error
-
 		b, err = json.Marshal(evt)
-		// t.Log(string(b))
 		var re event.T
 		if err = json.Unmarshal(b, &re); err != nil {
 			t.Log(string(b))
 			t.Error("failed to re parse event just serialized", err)
 		}
-
 		if evt.ID != re.ID || evt.PubKey != re.PubKey || evt.Content != re.Content ||
 			evt.CreatedAt != re.CreatedAt || evt.Sig != re.Sig ||
 			len(evt.Tags) != len(re.Tags) {
 			t.Error("reparsed event differs from original")
 		}
-
 		for i := range evt.Tags {
 			if len(evt.Tags[i]) != len(re.Tags[i]) {
 				t.Errorf("reparsed tags %d length differ from original", i)
 				continue
 			}
-
 			for j := range evt.Tags[i] {
 				if evt.Tags[i][j] != re.Tags[i][j] {
 					t.Errorf("reparsed tag content %d %d length differ from original",

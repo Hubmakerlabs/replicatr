@@ -20,11 +20,9 @@ type T struct {
 
 var _ keys.Element = &T{}
 
-func New(c timestamp.T) (p *T) { return &T{Val: c} }
-
-func (c *T) Write(buf *bytes.Buffer) {
-	buf.Write(c.Val.Bytes())
-}
+func New(c timestamp.T) (p *T)       { return &T{Val: c} }
+func (c *T) Len() int                { return Len }
+func (c *T) Write(buf *bytes.Buffer) { buf.Write(c.Val.Bytes()) }
 
 func (c *T) Read(buf *bytes.Buffer) (el keys.Element) {
 	b := make([]byte, Len)
@@ -34,5 +32,3 @@ func (c *T) Read(buf *bytes.Buffer) (el keys.Element) {
 	c.Val = timestamp.FromUnix(int64(binary.BigEndian.Uint64(b)))
 	return c
 }
-
-func (c *T) Len() int { return Len }

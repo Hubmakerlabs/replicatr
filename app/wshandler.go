@@ -10,6 +10,8 @@ import (
 	"github.com/fasthttp/websocket"
 )
 
+// HandleWebsocket is a http handler that accepts and manages websocket
+// connections.
 func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var conn *websocket.Conn
@@ -55,7 +57,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	if len(rl.Whitelist) > 0 {
 		for i := range rl.Whitelist {
 			if rr == rl.Whitelist[i] {
-				// log.T.Ln("inbound connection from", rr)
+				log.T.Ln("whitelisted inbound connection from", rr)
 			}
 		}
 	} else {
@@ -65,7 +67,7 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		if len(rl.Whitelist) > 0 {
 			for i := range rl.Whitelist {
 				if rr == rl.Whitelist[i] {
-					log.T.Ln("disconnecting from", rr)
+					log.T.Ln("disconnecting whitelisted client from", rr)
 				}
 			}
 		} else {

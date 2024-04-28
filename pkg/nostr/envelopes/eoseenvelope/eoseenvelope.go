@@ -16,9 +16,9 @@ import (
 
 var log, chk = slog.New(os.Stderr)
 
-// T is a message that indicates that all cached events have been
-// delivered and thereafter events will be new and delivered in pubsub subscribe
-// fashion while the socket remains open.
+// T is a message that indicates that all cached events have been delivered and
+// thereafter events will be new and delivered in publish/subscribe fashion
+// while the socket remains open.
 type T struct {
 	Sub subscriptionid.T
 }

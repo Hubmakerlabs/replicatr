@@ -36,8 +36,8 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 	}
 	// save the position before the comma for the Unmarshal processing.
 	pos := buf.Pos
-	// For most labels there is only one expected type, so we just return an
-	// empty, initialized envelope struct.
+	// For most labels there is only one expected type, so we just return an empty,
+	// initialized envelope struct.
 	switch match {
 	case labels.EVENT:
 		env = &eventenvelope.T{}
@@ -54,14 +54,13 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 	case labels.REQ:
 		env = &reqenvelope.T{}
 	case labels.COUNT:
-		// this has two subtypes, a request and a response, the request is
-		// basically like a req envelope but only wants a count response
+		// this has two subtypes, a request and a response, the request is basically
+		// like a req envelope but only wants a count response
 		//
-		// Both types have a subscription ID so we ensure we have a string
-		// followed by a comma, the reading of it will be repeated for each
-		// Unmarshal call to accommodate the more efficient, new
-		// ProcessEnvelope, this function is for the UnmarshalJSON and
-		// ParseEnvelope, which are not used there.
+		// Both types have a subscription ID so we ensure we have a string followed by a
+		// comma, the reading of it will be repeated for each Unmarshal call to
+		// accommodate the more efficient, new ProcessEnvelope, this function is for the
+		// UnmarshalJSON and ParseEnvelope, which are not used there.
 		//
 		// Next, find the comma after the label.
 		if err = buf.ScanThrough(','); chk.E(err) {
@@ -85,8 +84,8 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 			log.D.Ln(err)
 			return
 		}
-		// as it is the simplest thing to look for, we search for a match on the
-		// count response, which has only two fields, "count" and "approximate".
+		// as it is the simplest thing to look for, we search for a match on the count
+		// response, which has only two fields, "count" and "approximate".
 		if err = buf.ScanThrough('"'); chk.E(err) {
 			return
 		}
@@ -98,35 +97,33 @@ func Read(buf *text.Buffer, match string) (env enveloper.I, err error) {
 		}
 		// we should now have a string to compare
 		//
-		// we assume here that json encoding at least respects case for keys,
-		// generally it does and cases for keys are clearly specified in the
-		// NIPs. (it doesn't seem like it should ever be necessary to use a
-		// ToLower function on the string but just noting that this may not be
-		// true).
+		// we assume here that json encoding at least respects case for keys, generally
+		// it does and cases for keys are clearly specified in the NIPs. (it doesn't
+		// seem like it should ever be necessary to use a ToLower function on the string
+		// but just noting that this may not be true).
 		if bytes.Compare(bb, countString) == 0 ||
 			bytes.Compare(bb, approximateString) == 0 {
-			// we found a valid count response object, probably, the rest of the
-			// object should be a count response.
+			// we found a valid count response object, probably, the rest of the object
+			// should be a count response.
 			env = &countenvelope.Response{
 				ID: s,
 			}
 		}
-		// we only check if it matches one of the two possible count
-		// response key strings, as this is the smaller operation than
-		// checking if the following object is a filter, thus, it is assumed
-		// here that the object is a filter as it doesn't contain keys from
-		// a count response
+		// we only check if it matches one of the two possible count response key
+		// strings, as this is the smaller operation than checking if the following
+		// object is a filter, thus, it is assumed here that the object is a filter as
+		// it doesn't contain keys from a count response
 		//
-		// a COUNT envelope could have many filters but it doesn't matter
-		// because we are only concerned with correctly identifying whether
-		// this is a count response or request
+		// a COUNT envelope could have many filters but it doesn't matter because we are
+		// only concerned with correctly identifying whether this is a count response or
+		// request
 		env = &countenvelope.Request{
 			ID: s,
 		}
 	case labels.AUTH:
-		// this has two subtypes, a request and a response, but backwards, the
-		// challenge is from a relay, and the response is from a client
-		// Next, find the comma after the label
+		// this has two subtypes, a request and a response, but backwards, the challenge
+		// is from a relay, and the response is from a client Next, find the comma after
+		// the label
 		if err = buf.ScanThrough(','); chk.E(err) {
 			return
 		}

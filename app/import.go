@@ -53,9 +53,11 @@ func (rl *Relay) Import(db *badger.Backend, files []string) {
 			log.D.Ln("signature was valid")
 			if ev.Kind == kind.Deletion {
 				// this always returns "blocked: " whenever it returns an error
-				err = rl.handleDeleteRequest(context.Bg(), ev)
+				if err = rl.handleDeleteRequest(context.Bg(), ev); chk.E(err) {
+					continue
+				}
 			} else {
-				log.D.Ln("adding event")
+				log.D.Ln("adding event", ev.ID)
 				// this will also always return a prefixed reason
 				err = rl.AddEvent(context.Bg(), ev)
 			}

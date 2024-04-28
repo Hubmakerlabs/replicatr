@@ -22,24 +22,12 @@ type T struct {
 
 var _ enveloper.I = &T{}
 
-func (E *T) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
-
-func New(s subscriptionid.T, reason string) *T {
-	return &T{ID: s, Reason: reason}
-}
-
-func (E *T) ToArray() array.T { return array.T{labels.CLOSED, E.ID, E.Reason} }
-
-func (E *T) Label() string { return labels.CLOSED }
-
-func (E *T) String() (s string) { return E.ToArray().String() }
-
-func (E *T) Bytes() (s []byte) { return E.ToArray().Bytes() }
-
-func (E *T) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
+func New(s subscriptionid.T, reason string) *T { return &T{ID: s, Reason: reason} }
+func (E *T) ToArray() array.T                  { return array.T{labels.CLOSED, E.ID, E.Reason} }
+func (E *T) Label() string                     { return labels.CLOSED }
+func (E *T) String() (s string)                { return E.ToArray().String() }
+func (E *T) Bytes() (s []byte)                 { return E.ToArray().Bytes() }
+func (E *T) MarshalJSON() ([]byte, error)      { return E.Bytes(), nil }
 
 // Unmarshal the envelope.
 func (E *T) Unmarshal(buf *text.Buffer) (err error) {

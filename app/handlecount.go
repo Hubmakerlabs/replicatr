@@ -12,8 +12,8 @@ func (rl *Relay) handleCountRequest(c context.T, id subscriptionid.T,
 	ws *relayws.WebSocket, f *filter.T) (subtotal int) {
 
 	log.T.Ln("running count method")
-	// overwrite the filter (for example, to eliminate some kinds or tags that
-	// we know we don't support)
+	// overwrite the filter (for example, to eliminate some kinds or tags that we
+	// know we don't support)
 	for _, ovw := range rl.OverwriteCountFilter {
 		ovw(c, f)
 	}

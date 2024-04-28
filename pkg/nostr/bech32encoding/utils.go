@@ -5,15 +5,15 @@ import (
 )
 
 const (
-	TLVDefault uint8 = 0
-	TLVRelay   uint8 = 1
-	TLVAuthor  uint8 = 2
-	TLVKind    uint8 = 3
+	TLVDefault byte = iota
+	TLVRelay
+	TLVAuthor
+	TLVKind
 )
 
 func readTLVEntry(data []byte) (typ uint8, value []byte) {
 	if len(data) < 2 {
-		return 0, nil
+		return
 	}
 	typ = data[0]
 	length := int(data[1])
