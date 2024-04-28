@@ -84,7 +84,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 							count++
 						}
 						log.I.F("adding access for count %0x %0x", evt.ID, ser)
-						accessChan <- &AccessEvent{EvID: evt.ID, Ser: string(ser)}
+						accessChan <- &AccessEvent{EvID: evt.ID, Ser: serial.New(ser)}
 						return nil
 					})
 					if chk.D(err) {

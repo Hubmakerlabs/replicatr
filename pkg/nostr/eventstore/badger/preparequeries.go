@@ -10,8 +10,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/kinder"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/pubkey"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 type query struct {
@@ -26,7 +28,7 @@ type query struct {
 type Results struct {
 	Ev  *event.T
 	TS  timestamp.T
-	Ser string
+	Ser *serial.T
 }
 
 // PrepareQueries analyses a filter and generates a set of query specs that produce
@@ -93,7 +95,7 @@ func PrepareQueries(f *filter.T) (
 		}
 		if f.Tags != nil || len(f.Tags) > 0 {
 			ext = &filter.T{Tags: f.Tags}
-			log.T.Ln("extra filter", ext.ToObject().String())
+			log.T.Ln("extra filter", text.DefLimit(ext.ToObject().String()))
 		}
 	case len(f.Tags) > 0:
 		// determine the size of the queries array by inspecting all tags sizes
@@ -136,9 +138,11 @@ func PrepareQueries(f *filter.T) (
 		}
 		// log.T.S("kinds", qs)
 	default:
-		qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
-		ext = nil
-		// log.T.S("other", qs)
+		if len(qs) > 0 {
+			qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
+			ext = nil
+			// log.T.S("other", qs)
+		}
 	}
 	var until uint64 = math.MaxUint64
 	if f.Until != nil {

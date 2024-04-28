@@ -2,6 +2,7 @@ package badger
 
 import (
 	"container/heap"
+	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"sync"
@@ -16,8 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/dgraph-io/badger/v4"
-	"github.com/minio/sha256-simd"
+	badger "github.com/dgraph-io/badger/v4"
 )
 
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
@@ -72,11 +72,10 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 								break
 							}
 						}
-						log.T.F("found key %0x", key)
 						ser := key[len(key)-serial.Len:]
-						log.T.F("ser %0x", ser)
+						seri := serial.New(ser)
 						idx := index.Event.Key(serial.New(ser))
-						log.T.F("idx %0x", idx)
+						log.T.F("serial %d", seri.Uint64())
 						// fetch actual event
 						item, err = txn.Get(idx)
 						if chk.T(err) {
@@ -98,7 +97,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 								// the right length.
 								log.T.F("found event stub %0x must seek in L2", val)
 								evt.ID, _ = eventid.New(hex.Enc(val))
-								q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: string(ser)}
+								q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: serial.New(ser)}
 								return
 							}
 							if evt, err = nostrbinary.Unmarshal(val); chk.E(err) {
@@ -109,8 +108,8 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 							}
 							// check if this matches the other filters that were not part of the index
 							if extraFilter == nil || extraFilter.Matches(evt) {
-								res := Results{Ev: evt, TS: timestamp.Now(), Ser: string(ser)}
-								log.T.F("ser result %s %d %0x", res.Ev.ID, res.TS, []byte(res.Ser))
+								res := Results{Ev: evt, TS: timestamp.Now(), Ser: serial.New(ser)}
+								log.T.F("ser result %s %d %0x", res.Ev.ID, res.TS, res.Ser.Uint64())
 								q2.results <- res
 							}
 							return
@@ -134,12 +133,12 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 		for _, q := range queries {
 			evt, ok := <-q.results
 			if ok {
-				log.T.F("adding event to queue %d %0x %0x", evt.Ev.ID, evt.TS.U64(), []byte(evt.Ser))
+				log.T.F("adding event to queue [%s,%d]", evt.Ev.ID, evt.Ser.Uint64())
 				emitQueue = append(emitQueue,
 					&priority.QueryEvent{
 						T:     evt.Ev,
 						Query: q.index,
-						Ser:   []byte(evt.Ser),
+						Ser:   evt.Ser,
 					})
 			}
 		}
@@ -164,7 +163,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			// emit latest event in queue
 			latest := emitQueue[0]
 			// send ID to be incremented for access
-			ae := MakeAccessEvent(latest.T.ID, string(latest.Ser))
+			ae := MakeAccessEvent(latest.T.ID, latest.Ser)
 			accessChan <- ae
 			log.T.Ln("sent access event", ae)
 			ch <- latest.T
@@ -177,9 +176,9 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			}
 			// fetch a new one from query results and replace the previous one with it
 			if evt, ok := <-queries[latest.Query].results; ok {
-				log.T.Ln("adding event to queue", evt.TS.U64())
+				log.T.F("adding event to queue [%s,%d]", evt.Ev.ID, evt.Ser.Uint64())
 				emitQueue[0].T = evt.Ev
-				emitQueue[0].Ser = []byte(evt.Ser)
+				emitQueue[0].Ser = evt.Ser
 				heap.Fix(&emitQueue, 0)
 			} else {
 				log.T.Ln("removing event from queue")
