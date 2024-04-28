@@ -8,6 +8,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 // BroadcastEvent emits an event to all listeners whose filters' match, skipping all filters and actions
@@ -24,7 +25,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 			if !listener.filters.Match(evt) {
 				log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
 					listener.ws.RealRemote(), listener.ws.AuthPubKey(),
-					listener.filters, evt.ToObject().String())
+					text.DefLimit(listener.filters.ToArray().String()), text.DefLimit(evt.ToObject().String()))
 				return true
 			}
 			if kinds.IsPrivileged(evt.Kind) && rl.Info.Limitation.AuthRequired {

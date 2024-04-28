@@ -92,8 +92,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	}
 	switch env := en.(type) {
 	case *eventenvelope.T:
-		// log.T.Ln("received event envelope from", ws.RealRemote(),
-		// 	ws.AuthPubKey(), en.ToArray().String())
+		log.T.Ln("received event envelope from", ws.RealRemote(),
+			ws.AuthPubKey(), en.ToArray().String())
 		// reject old dated events according to nip11
 		if env.Event.CreatedAt <= rl.Info.Limitation.Oldest {
 			log.D.F("rejecting event with date: %s %s %s",
