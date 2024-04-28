@@ -47,14 +47,14 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}
 		log.T.Ln("dropping message due to over", IgnoreAfter,
 			"errors from this client on this connection",
-			ws.RealRemote(), ws.AuthPubKey(), strMsg)
+			ws.Origin(), strMsg)
 		return
 	}
 	// log.T.Ln("processing message", ws.RealRemote(),
 	// 	ws.AuthPubKey(), strMsg)
 	if len(msg) > rl.Info.Limitation.MaxMessageLength {
-		log.D.F("rejecting event with size: %d from %s %s",
-			len(msg), ws.RealRemote(), ws.AuthPubKey())
+		log.D.F("rejecting event with size: %d from %s",
+			len(msg), ws.Origin())
 		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			OK: false,
 			Reason: fmt.Sprintf(
@@ -75,7 +75,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		deny = false
 	}
 	if deny {
-		log.E.F("denying access to '%s' %s: dropping message", ws.RealRemote(),
+		log.E.F("denying access to '%s' %s: dropping message", ws.Origin(),
 			ws.AuthPubKey())
 		// kill()
 		return
@@ -94,8 +94,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	}
 	switch env := en.(type) {
 	case *eventenvelope.T:
-		log.T.Ln("received event envelope from", ws.RealRemote(),
-			ws.AuthPubKey(), en.ToArray().String())
+		log.T.Ln("received event envelope from", ws.Origin(), en.ToArray().String())
 		// send out authorization request
 		if ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
 			log.I.Ln("requesting auth to store event")
@@ -104,7 +103,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			for {
 				select {
 				case <-ws.Authed:
-					log.I.Ln("user authed", ws.RealRemote(), ws.AuthPubKey())
+					log.I.Ln("user authed", ws.Origin())
 					break out
 				case <-c.Done():
 					log.D.Ln("context canceled while waiting for auth")
@@ -126,8 +125,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		// reject old dated events according to nip11
 		if env.Event.CreatedAt <= rl.Info.Limitation.Oldest {
 			log.D.F("rejecting event with date: %s %s %s",
-				env.Event.CreatedAt.Time().String(), ws.RealRemote(),
-				ws.AuthPubKey())
+				env.Event.CreatedAt.Time().String(), ws.Origin())
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,
 				OK: false,
@@ -143,8 +141,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
-			log.D.F("id mismatch got %s, expected %s %s %s", ws.RealRemote(),
-				ws.AuthPubKey(), id, env.Event.ID.String())
+			log.D.F("id mismatch got %s, expected %s %s %s",
+				ws.AuthPubKey(), id, env.Event.ID.String(), ws.Origin())
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
@@ -162,8 +160,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			}))
 			return
 		} else if !ok {
-			log.E.Ln("invalid: signature is invalid", ws.RealRemote(),
-				ws.AuthPubKey())
+			log.E.Ln("invalid: signature is invalid", ws.Origin())
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID:     env.Event.ID,
 				OK:     false,
@@ -174,8 +171,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			// this always returns "blocked: " whenever it returns an error
 			err = rl.handleDeleteRequest(c, env.Event)
 		} else {
-			log.I.Ln("adding event", ws.AuthPubKey(),
-				ws.RealRemote(), env.Event.ToObject().String())
+			log.I.Ln("adding event", ws.Origin(), env.Event.ToObject().String())
 			// this will also always return a prefixed reason
 			err = rl.AddEvent(c, env.Event)
 		}
@@ -214,7 +210,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			for {
 				select {
 				case <-ws.Authed:
-					log.I.Ln("user authed", ws.RealRemote(), ws.AuthPubKey())
+					log.I.Ln("user authed", ws.Origin())
 					break outcount
 				case <-c.Done():
 					log.D.Ln("context canceled while waiting for auth")
@@ -249,7 +245,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			for {
 				select {
 				case <-ws.Authed:
-					log.I.Ln("user authed", ws.RealRemote(), ws.AuthPubKey())
+					log.I.Ln("user authed", ws.Origin())
 					break outreq
 				case <-c.Done():
 					log.D.Ln("context canceled while waiting for auth")

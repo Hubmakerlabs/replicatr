@@ -89,7 +89,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					}
 					if h.ws.AuthPubKey() == "" && !allow {
 						log.D.Ln("not broadcasting privileged event to",
-							h.ws.RealRemote(), "not authenticated")
+							h.ws.Origin(), "not authenticated")
 						continue
 					}
 					if !allow {
@@ -111,7 +111,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 						if !parties.Contains(h.ws.AuthPubKey()) &&
 							rl.Info.Limitation.AuthRequired {
 							log.D.Ln("not broadcasting privileged event to",
-								h.ws.RealRemote(), h.ws.AuthPubKey(),
+								h.ws.Origin(),
 								"not party to event")
 							return
 						}

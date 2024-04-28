@@ -11,6 +11,7 @@ type T uint16
 
 func (ki T) ToInt() int       { return int(ki) }
 func (ki T) ToUint16() uint16 { return uint16(ki) }
+func (ki T) Name() string     { return GetString(ki) }
 
 // The event kinds are put in a separate package so they will be referred to as
 // `kind.EventType` rather than `nostr.KindEventType` as this is correct Go

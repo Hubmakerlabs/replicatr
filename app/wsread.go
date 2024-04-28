@@ -22,7 +22,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 	if p.ws.OffenseCount.Load() > IgnoreAfter {
 		log.T.Ln("dropping message due to over", IgnoreAfter,
 			"errors from this client on this connection",
-			p.ws.RealRemote(), p.ws.AuthPubKey())
+			p.ws.Origin())
 		return
 	}
 	deny := true
@@ -37,7 +37,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 	}
 	if deny {
 		log.T.F("denying access to '%s': dropping message",
-			p.ws.RealRemote())
+			p.ws.Origin())
 		p.kill()
 		return
 	}
@@ -65,7 +65,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 				websocket.CloseAbnormalClosure,  // 1006
 			) {
 				log.E.F("unexpected close error from %s: %v",
-					p.ws.RealRemote(), err)
+					p.ws.Origin(), err)
 			}
 			p.kill()
 			return

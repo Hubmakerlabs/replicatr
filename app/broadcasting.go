@@ -3,7 +3,6 @@ package app
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
@@ -17,21 +16,21 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 	listeners.Range(func(ws *relayws.WebSocket, subs ListenerMap) bool {
 
 		if ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
-			log.E.Ln("cannot broadcast to", ws.RealRemote(), "not authorized")
+			log.E.Ln("cannot broadcast to", ws.Origin(), "not authorized")
 			return true
 		}
-		log.T.Ln("broadcasting", ws.RealRemote(), ws.AuthPubKey(), subs.Size())
+		log.T.Ln("broadcasting", ws.Origin(), subs.Size())
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {
-				log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
-					listener.ws.RealRemote(), listener.ws.AuthPubKey(),
-					text.DefLimit(listener.filters.ToArray().String()), text.DefLimit(evt.ToObject().String()))
+				log.T.F("filter doesn't match subscription %s\nfilters\n%s\nevent\n%s",
+					listener.ws.Origin(), text.DefLimit(listener.filters.ToArray().String()),
+					text.DefLimit(evt.ToObject().String()))
 				return true
 			}
 			if kinds.IsPrivileged(evt.Kind) && rl.Info.Limitation.AuthRequired {
 				if ws.AuthPubKey() == "" {
 					log.T.Ln("not broadcasting privileged event to",
-						ws.RealRemote(), "not authenticated")
+						ws.Origin(), "not authenticated")
 					return true
 				}
 				parties := tag.T{evt.PubKey}
@@ -41,14 +40,12 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 				}
 				if !parties.Contains(ws.AuthPubKey()) {
 					log.T.Ln("not broadcasting privileged event to",
-						ws.RealRemote(), "not party to event")
+						ws.Origin(), "not party to event")
 					return true
 				}
 			}
-			log.D.F("sending event to subscriber %v %s (%d %s)",
-				ws.RealRemote(), ws.AuthPubKey(),
-				evt.Kind,
-				kind.GetString(evt.Kind),
+			log.D.F("sending event to subscriber %s (%d %s)",
+				ws.Origin(), evt.Kind, evt.Kind.Name(),
 			)
 			chk.E(ws.WriteEnvelope(&eventenvelope.T{
 				SubscriptionID: subscriptionid.T(id),

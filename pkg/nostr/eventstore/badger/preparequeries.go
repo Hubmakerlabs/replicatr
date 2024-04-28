@@ -79,19 +79,20 @@ func PrepareQueries(f *filter.T) (
 			qs = make([]query, len(f.Authors)*len(f.Kinds))
 			i := 0
 			for _, pubkeyHex := range f.Authors {
-				for _, kind := range f.Kinds {
+				for _, ks := range f.Kinds {
 					var pk *pubkey.T
 					if pk, err = pubkey.New(pubkeyHex); chk.E(err) {
 						return
 					}
-					ki := kinder.New(kind)
+					ki := kinder.New(ks)
 					sp := index.PubkeyKind.Key(pk, ki)
-					log.T.F("search for authors %0x from pub key %0x and kind %0x", index.PubkeyKind, pk.Val, ki.Val)
+					log.T.F("search for authors %0x from pub key %0x and ks %d %s",
+						index.PubkeyKind, pk.Val, ki.Val, ki.Val.Name())
 					qs[i] = query{index: i, queryFilter: f, searchPrefix: sp}
 					i++
 				}
 			}
-			// log.T.S("authors/kinds", qs)
+			log.T.S("authors/kinds", qs)
 		}
 		if f.Tags != nil || len(f.Tags) > 0 {
 			ext = &filter.T{Tags: f.Tags}

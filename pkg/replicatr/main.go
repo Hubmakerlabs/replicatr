@@ -256,8 +256,10 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
 	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
 	rl.OnConnect = append(rl.OnConnect, rl.AuthCheck)
+	rl.RejectFilter = append(rl.RejectFilter, app.NoSearchQueries)
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
+	rl.OverwriteFilter = append(rl.OverwriteFilter, app.LimitAuthorsAndIDs(20, 20))
 	// commenting out the override so GC will work
 	// rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	// run the chat ACL initialization

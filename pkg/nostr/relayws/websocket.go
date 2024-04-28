@@ -67,7 +67,7 @@ func (ws *WebSocket) WriteMessage(t MessageType, b []byte) (err error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
 	if len(b) != 0 {
-		log.T.F("sending message to %s %s\n%s", ws.RealRemote(), ws.AuthPubKey(), string(b))
+		log.T.F("sending message to %s %s", ws.Origin(), string(b))
 	}
 	chk.E(ws.Conn.WriteMessage(int(t), b))
 	return
@@ -123,3 +123,7 @@ func (ws *WebSocket) SetRealRemote(remote string) { ws.remote.Store(remote) }
 // AuthPubKey returns the current authed Pubkey.
 func (ws *WebSocket) AuthPubKey() (a string) { return ws.authPubKey.Load() }
 func (ws *WebSocket) SetAuthPubKey(a string) { ws.authPubKey.Store(a) }
+
+func (ws *WebSocket) Origin() (s string) {
+	return fmt.Sprintf("%s <<%s>>", ws.RealRemote(), ws.AuthPubKey())
+}
