@@ -98,17 +98,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	os.Args = osArgs
 	arg.MustParse(&args)
 	os.Args = tmp
-	// set logging level if non-default was set in args
-	if args.LogLevel != "info" {
-		for i := range slog.LevelSpecs {
-			if slog.LevelSpecs[i].Name[:1] == strings.
-				ToLower(args.LogLevel[:1]) {
-
-				slog.SetLogLevel(i)
-			}
-		}
-	}
-	// log.D.S(args)
 	runtime.GOMAXPROCS(args.MaxProcs)
 	var err error
 	var dataDirBase string
@@ -210,8 +199,9 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	rl := app.NewRelay(c, cancel, inf, &args)
 	var db eventstore.Store
 	// if we are wiping we don't want to init db normally
-	if args.Wipe != nil {
+	if args.Wipe != nil || args.ExportCmd != nil || args.ImportCmd != nil {
 		conf.DBSizeLimit = 0
+		args.LogLevel = "off"
 	}
 	// create both structures in any case
 	var badgerDB *badger.Backend
@@ -249,6 +239,16 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	if err = db.Init(); chk.E(err) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
+	}
+	// set logging level if non-default was set in args
+	if args.LogLevel != "info" {
+		for i := range slog.LevelSpecs {
+			if slog.LevelSpecs[i].Name[:1] == strings.
+				ToLower(args.LogLevel[:1]) {
+
+				slog.SetLogLevel(i)
+			}
+		}
 	}
 	rl.StoreEvent = append(rl.StoreEvent, rl.Chat)
 	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)

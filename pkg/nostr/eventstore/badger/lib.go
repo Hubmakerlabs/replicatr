@@ -24,9 +24,10 @@ type PruneFunc func(ifc any, deleteItems del.Items) (err error)
 type GCCountFunc func(ifc any) (deleteItems del.Items, err error)
 
 type Backend struct {
-	Ctx  context.T
-	WG   *sync.WaitGroup
-	Path string
+	Ctx      context.T
+	WG       *sync.WaitGroup
+	Path     string
+	LogLevel int
 	// MaxLimit is the largest a single event JSON can be, in bytes.
 	MaxLimit int
 	// DBSizeLimit is the number of bytes we want to keep the data store from
@@ -63,6 +64,7 @@ func GetBackend(
 	WG *sync.WaitGroup,
 	path string,
 	hasL2 bool,
+	logLevel int,
 	params ...int,
 ) (b *Backend) {
 	var sizeLimit, lw, hw, freq = 0, 86, 92, 60
@@ -83,6 +85,7 @@ func GetBackend(
 		Ctx:         Ctx,
 		WG:          WG,
 		Path:        path,
+		LogLevel:    logLevel,
 		MaxLimit:    DefaultMaxLimit,
 		DBSizeLimit: sizeLimit,
 		DBLowWater:  lw,
@@ -94,7 +97,7 @@ func GetBackend(
 }
 
 func (b *Backend) Init() (err error) {
-	if b.DB, err = badger.Open(badger.DefaultOptions(b.Path)); chk.E(err) {
+	if b.DB, err = badger.Open(badger.DefaultOptions(b.Path).WithLogger(logger(b.LogLevel))); chk.E(err) {
 		return err
 	}
 	if b.seq, err = b.DB.GetSequence([]byte("events"), 1000); chk.E(err) {
