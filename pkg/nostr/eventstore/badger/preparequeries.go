@@ -66,7 +66,7 @@ func PrepareQueries(f *filter.T) (
 					return
 				}
 				sp := index.Pubkey.Key(pk)
-				log.I.F("search only for authors %0x from pub key %0x", sp, pk.Val)
+				log.T.F("search only for authors %0x from pub key %0x", sp, pk.Val)
 				qs[i] = query{
 					index:        i,
 					queryFilter:  f,

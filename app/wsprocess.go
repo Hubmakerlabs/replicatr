@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
@@ -20,6 +21,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/fasthttp/websocket"
 	"github.com/minio/sha256-simd"
@@ -94,6 +96,33 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	case *eventenvelope.T:
 		log.T.Ln("received event envelope from", ws.RealRemote(),
 			ws.AuthPubKey(), en.ToArray().String())
+		// send out authorization request
+		if ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
+			log.I.Ln("requesting auth to store event")
+			RequestAuth(c)
+		out:
+			for {
+				select {
+				case <-ws.Authed:
+					log.I.Ln("user authed", ws.RealRemote(), ws.AuthPubKey())
+					break out
+				case <-c.Done():
+					log.D.Ln("context canceled while waiting for auth")
+					break out
+				case <-time.After(5 * time.Second):
+					if ws.AuthPubKey() == "" {
+						reason := "this relay requires authentication for publication"
+						log.I.Ln(reason)
+						chk.E(ws.WriteEnvelope(&okenvelope.T{
+							ID:     env.Event.ID,
+							Reason: normalize.Reason(reason, auth.Required),
+						}))
+						return
+					}
+					break out
+				}
+			}
+		}
 		// reject old dated events according to nip11
 		if env.Event.CreatedAt <= rl.Info.Limitation.Oldest {
 			log.D.F("rejecting event with date: %s %s %s",
@@ -179,6 +208,33 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			}))
 			return
 		}
+		// send out authorization request
+		if ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
+			log.I.Ln("requesting auth to store event")
+			RequestAuth(c)
+		outcount:
+			for {
+				select {
+				case <-ws.Authed:
+					log.I.Ln("user authed", ws.RealRemote(), ws.AuthPubKey())
+					break outcount
+				case <-c.Done():
+					log.D.Ln("context canceled while waiting for auth")
+					break outcount
+				case <-time.After(5 * time.Second):
+					if ws.AuthPubKey() == "" {
+						reason := "this relay requires authentication for publication"
+						log.I.Ln(reason)
+						chk.E(ws.WriteEnvelope(&closedenvelope.T{
+							ID:     env.ID,
+							Reason: normalize.Reason(reason, auth.Required),
+						}))
+						return
+					}
+					break outcount
+				}
+			}
+		}
 		var total int
 		for _, f := range env.Filters {
 			total += rl.handleCountRequest(c, env.ID, ws, f)
@@ -188,6 +244,33 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			Count: total,
 		}))
 	case *reqenvelope.T:
+		// send out authorization request
+		if ws.AuthPubKey() == "" && rl.Info.Limitation.AuthRequired {
+			log.I.Ln("requesting auth to store event")
+			RequestAuth(c)
+		outreq:
+			for {
+				select {
+				case <-ws.Authed:
+					log.I.Ln("user authed", ws.RealRemote(), ws.AuthPubKey())
+					break outreq
+				case <-c.Done():
+					log.D.Ln("context canceled while waiting for auth")
+					break outreq
+				case <-time.After(5 * time.Second):
+					if ws.AuthPubKey() == "" {
+						reason := "this relay requires authentication for publication"
+						log.I.Ln(reason)
+						chk.E(ws.WriteEnvelope(&closedenvelope.T{
+							ID:     env.SubscriptionID,
+							Reason: normalize.Reason(reason, auth.Required),
+						}))
+						return
+					}
+					break outreq
+				}
+			}
+		}
 		wg := sync.WaitGroup{}
 		wg.Add(len(env.Filters))
 		// a context just for the "stored events" request handler
