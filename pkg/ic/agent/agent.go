@@ -3,14 +3,12 @@ package agent
 import (
 	"net/url"
 	"os"
-	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	agent_go "github.com/aviate-labs/agent-go"
 	"github.com/aviate-labs/agent-go/principal"
-	"mleku.dev/git/atomic"
 	"mleku.dev/git/slog"
 )
 
@@ -92,6 +90,18 @@ func (b *Backend) GetCandidEvent(c context.T, filter *Filter) ([]Event, error) {
 	return result, err
 }
 
+func (b *Backend) CountCandidEvent(c context.T, filter *Filter) (int, error) {
+	methodName := "get_events_count"
+	args := []any{*filter}
+	// log.T.S(filter)
+	var result int
+	err := b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
+	if err != nil {
+		return -1, err
+	}
+	return result, err
+}
+
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
 
 	if f == nil {
@@ -144,32 +154,11 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 // CountEvents counts how many events match the filter in the IC.
 // todo: use the proper count events API call in the canister
 func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
-	ch := make(chan *event.T)
-	done := make(chan struct{})
-	var counter atomic.Int32
-	go func(ch chan *event.T) {
-		// receive events and increment counter
-		for _ = range ch {
-			counter.Add(1)
-		}
-		close(done)
-	}(ch)
-	if ch, err = b.QueryEvents(c, f); chk.E(err) {
+	if f == nil {
+		err = log.E.Err("nil filter for count query")
 		return
 	}
-out:
-	for {
-		select {
-		case <-c.Done():
-			break out
-		// todo: there should be some place to set this timeout more centrally
-		case <-time.After(time.Second * 5):
-			break out
-		case <-done:
-			break out
-		}
-	}
-	count = int(counter.Load())
+	count, err = b.CountCandidEvent(c, FilterToCandid(f))
 	return
 }
 
