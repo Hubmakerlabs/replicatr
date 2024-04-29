@@ -7,8 +7,11 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	agent_go "github.com/aviate-labs/agent-go"
+	"github.com/aviate-labs/agent-go/identity"
 	"github.com/aviate-labs/agent-go/principal"
+	sec "github.com/aviate-labs/secp256k1"
 	"mleku.dev/git/slog"
 )
 
@@ -46,13 +49,20 @@ type Backend struct {
 	CanisterID principal.Principal
 }
 
-func New(c context.T, cid, canAddr string) (a *Backend, err error) {
+func New(c context.T, cid, canAddr, secKey string) (a *Backend, err error) {
 	log.D.Ln("setting up IC backend to", canAddr, cid)
 	a = &Backend{Ctx: c}
 	localReplicaURL, _ := url.Parse(canAddr)
+	secKeyBytes, err := hex.Dec(secKey)
+	if err != nil {
+		return nil, err
+	}
+	privKey, _ := sec.PrivKeyFromBytes(sec.S256(), secKeyBytes)
+	id, _ := identity.NewSecp256k1Identity(privKey)
 	cfg := agent_go.Config{
 		FetchRootKey: true,
 		ClientConfig: &agent_go.ClientConfig{Host: localReplicaURL},
+		Identity:     id,
 	}
 	if a.Agent, err = agent_go.New(cfg); chk.E(err) {
 		return

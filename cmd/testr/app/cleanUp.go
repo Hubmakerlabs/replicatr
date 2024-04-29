@@ -8,10 +8,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
 )
 
-func CanisterCleanUp(id string, addr string) error {
+func CanisterCleanUp(id string, addr string, SecKey string) error {
 	var b *agent.Backend
 	var err error
-	if b, err = agent.New(nil, id, addr); chk.E(err) {
+	if b, err = agent.New(nil, id, addr, SecKey); chk.E(err) {
 		return err
 	}
 

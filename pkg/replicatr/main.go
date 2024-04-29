@@ -214,6 +214,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			CanisterAddr:    rl.Config.CanisterAddr,
 			CanisterId:      rl.Config.CanisterId,
 			PrivateCanister: false, // for future implementation
+			SecKey:          rl.Config.SecKey,
 		}
 	}
 	if eso == "ic" || eso == "badger" {

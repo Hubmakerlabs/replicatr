@@ -25,6 +25,7 @@ type Backend struct {
 	CanisterAddr    string
 	CanisterId      string
 	PrivateCanister bool
+	SecKey          string
 }
 
 var _ eventstore.Store = (*Backend)(nil)
@@ -35,7 +36,7 @@ func (b *Backend) Init() (err error) {
 		return log.E.Err("missing required canister parameters, got addr: \"%s\" and id: \"%s\"",
 			b.CanisterAddr, b.CanisterId)
 	}
-	if b.IC, err = agent.New(b.Ctx, b.CanisterId, b.CanisterAddr); chk.E(err) {
+	if b.IC, err = agent.New(b.Ctx, b.CanisterId, b.CanisterAddr, b.SecKey); chk.E(err) {
 		return
 	}
 	return
