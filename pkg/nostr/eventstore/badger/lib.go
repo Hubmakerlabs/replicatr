@@ -141,15 +141,15 @@ func (b *Backend) SerialBytes() (ser []byte, err error) {
 }
 
 func (b *Backend) Update(fn func(txn *badger.Txn) (err error)) (err error) {
-	b.bMx.Lock()
+	// b.bMx.Lock()
 	err = b.DB.Update(fn)
-	b.bMx.Unlock()
+	// b.bMx.Unlock()
 	return
 }
 
 func (b *Backend) View(fn func(txn *badger.Txn) (err error)) (err error) {
-	b.bMx.RLock()
+	// b.bMx.RLock()
 	err = b.DB.View(fn)
-	b.bMx.RUnlock()
+	// b.bMx.RUnlock()
 	return
 }

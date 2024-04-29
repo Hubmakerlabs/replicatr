@@ -48,8 +48,9 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	}
 	// run the functions to query events (generally just one, but we might be
 	// fetching stuff from multiple places)
-	h.eose.Add(len(rl.QueryEvents))
+	// 		h.eose.Add(len(rl.QueryEvents))
 	for i, query := range rl.QueryEvents {
+		h.eose.Add(1)
 		var ch event.C
 		// start up event receiver before running query on this channel
 		// go func(ch chan *event.T) {
@@ -130,8 +131,8 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 			return
 		default:
 		}
-
 		// h.eose.Done()
+
 		// }(ch)
 		// log.I.Ln("running query")
 	}

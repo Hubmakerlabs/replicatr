@@ -4,7 +4,6 @@ package keys_test
 
 import (
 	"bytes"
-	"math"
 	"os"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/kinder"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/pubkey"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/sizer"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
@@ -113,23 +111,15 @@ func TestElement(t *testing.T) {
 		ts := timestamp.Now()
 		vca := createdat.New(ts)
 		// a sizer
-		n := uint32(frand.Uint64n(math.MaxUint32))
-		vs := sizer.New(n)
 		// write out values
-		b := keys.Write(vca, vs)
+		b := keys.Write(vca)
 		// check that values decoded all correctly
 		// we expect the following types, so we must create them:
 		var vca2 = createdat.New(0)
-		var vs2 = sizer.New(0)
 		// read it in
-		keys.Read(b, vca2, vs2)
+		keys.Read(b, vca2)
 		// check they match
 		if vca.Val != vca2.Val {
-			t.Logf("failed to decode correctly got %v expected %v", vca2.Val,
-				vca.Val)
-			failed = true
-		}
-		if vs.Val != vs2.Val {
 			t.Logf("failed to decode correctly got %v expected %v", vca2.Val,
 				vca.Val)
 			failed = true

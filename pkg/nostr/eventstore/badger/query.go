@@ -132,9 +132,10 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 		// first pass
 		emitQueue := make(priority.Queue, 0, len(queries)+limit)
 		for _, q := range queries {
+			q := q
 			evt, ok := <-q.results
 			if ok {
-				log.T.F("adding event to queue %d %0x %0x", evt.Ev.ID, evt.TS.U64(), []byte(evt.Ser))
+				log.T.F("adding event to queue %s %d %0x", evt.Ev.ID, evt.TS.U64(), []byte(evt.Ser))
 				emitQueue = append(emitQueue,
 					&priority.QueryEvent{
 						T:     evt.Ev,
@@ -165,7 +166,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			latest := emitQueue[0]
 			// send ID to be incremented for access
 			ae := MakeAccessEvent(latest.T.ID, string(latest.Ser))
-			log.T.S("sending access event", ae)
+			log.T.Ln("sending access event", ae)
 			accessChan <- ae
 			ch <- latest.T
 			// stop when reaching limit
