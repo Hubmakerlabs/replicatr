@@ -12,6 +12,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/pubkey"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 type query struct {
@@ -21,6 +22,10 @@ type query struct {
 	start        []byte
 	results      chan Results
 	skipTS       bool
+}
+
+func (q query) String() string {
+	return fmt.Sprintf("%s", text.Trunc(q.queryFilter.ToObject().String()))
 }
 
 type Results struct {
@@ -136,9 +141,11 @@ func PrepareQueries(f *filter.T) (
 		}
 		log.T.S("kinds", qs)
 	default:
-		qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
-		ext = nil
-		log.T.S("other", qs)
+		if len(qs) > 0 {
+			qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
+			ext = nil
+			log.T.S("other", qs)
+		}
 	}
 	var until uint64 = math.MaxUint64
 	if f.Until != nil {

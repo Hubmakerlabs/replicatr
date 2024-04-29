@@ -22,7 +22,7 @@ func MakeAccessEvent(EvID eventid.T, Ser string) (ae *AccessEvent) {
 }
 
 func (a AccessEvent) String() (s string) {
-	return fmt.Sprintf("%s %16x", a.EvID.String(), a.Ser)
+	return fmt.Sprintf("[%s, %d]", a.EvID.String(), a.Ser)
 }
 
 // IncrementAccesses takes a list of event IDs of events that were accessed in a

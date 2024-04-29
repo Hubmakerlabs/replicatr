@@ -108,7 +108,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			}
 		}
 	}
-	log.D.S(args)
+	// log.D.S(args)
 	runtime.GOMAXPROCS(args.MaxProcs)
 	var err error
 	var dataDirBase string
@@ -123,7 +123,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
 	// inf := *relayinfo.NewInfo(&relayinfo.T{Nips: nips})
-	var inf *relayinfo.T
+	inf := &relayinfo.T{}
 	// generate a relay identity key if one wasn't given
 	if args.SecKey == "" {
 		args.SecKey = keys.GeneratePrivateKey()
@@ -181,7 +181,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.SecKey == "" {
 			conf.SecKey = args.SecKey
 		}
-		log.I.Ln(args.DBSizeLimit)
+		// log.I.Ln(args.DBSizeLimit)
 		if args.DBSizeLimit != 0 {
 			conf.DBSizeLimit = args.DBSizeLimit
 		}
@@ -206,7 +206,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		conf.AuthRequired = true
 		inf.Limitation.AuthRequired = true
 	}
-	log.D.S(&inf)
+	// log.D.S(&inf)
 	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, inf, &args)
 	var db eventstore.Store

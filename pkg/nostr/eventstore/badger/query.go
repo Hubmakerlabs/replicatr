@@ -30,7 +30,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	if chk.E(err) {
 		return
 	}
-	log.T.S(queries, extraFilter, since)
+	// log.T.S(queries, extraFilter, since)
 	accessChan := make(chan *AccessEvent)
 	var txMx sync.Mutex
 	// start up the access counter

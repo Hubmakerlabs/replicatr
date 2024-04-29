@@ -15,6 +15,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 type handleFilterParams struct {
@@ -69,7 +70,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 		}
 		log.T.Ln("preparing to receive results", h.f.ToObject().String())
 		go func(ch event.C) {
-			log.T.Ln("waiting for result", h.f.ToObject().String())
+			log.T.Ln("waiting for result", text.Trunc(h.f.ToObject().String()))
 			for ev := range ch {
 				log.T.Ln("result ev", ev.ToObject().String())
 				// if the event is nil the rest of this loop will panic
