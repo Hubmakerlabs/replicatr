@@ -116,12 +116,14 @@ func (b *Backend) Close() { _, _ = b.DB.Close(), b.seq.Release() }
 
 // SerialKey returns a key used for storing events, and the raw serial counter
 // bytes to copy into index keys.
-func (b *Backend) SerialKey() (idx []byte, ser []byte) {
+func (b *Backend) SerialKey() (idx []byte, ser *serial.T) {
 	var err error
-	if ser, err = b.SerialBytes(); chk.E(err) {
+	var s []byte
+	if s, err = b.SerialBytes(); chk.E(err) {
 		panic(err)
 	}
-	return index.Event.Key(serial.New(ser)), ser
+	ser = serial.New(s)
+	return index.Event.Key(ser), ser
 }
 
 func (b *Backend) Serial() (ser uint64, err error) {
@@ -144,15 +146,15 @@ func (b *Backend) SerialBytes() (ser []byte, err error) {
 }
 
 func (b *Backend) Update(fn func(txn *badger.Txn) (err error)) (err error) {
-	b.bMx.Lock()
+	// b.bMx.Lock()
 	err = b.DB.Update(fn)
-	b.bMx.Unlock()
+	// b.bMx.Unlock()
 	return
 }
 
 func (b *Backend) View(fn func(txn *badger.Txn) (err error)) (err error) {
-	b.bMx.RLock()
+	// b.bMx.RLock()
 	err = b.DB.View(fn)
-	b.bMx.RUnlock()
+	// b.bMx.RUnlock()
 	return
 }

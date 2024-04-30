@@ -1,10 +1,13 @@
 package priority
 
-import "github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+import (
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
+)
 
 type QueryEvent struct {
 	*event.T
-	Ser   []byte
+	Ser   *serial.T
 	Query int
 }
 

@@ -7,22 +7,23 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/dgraph-io/badger/v4"
 )
 
 type AccessEvent struct {
 	EvID eventid.T
-	Ser  string
+	Ser  *serial.T
 }
 
 // MakeAccessEvent generates an *AccessEvent from an event ID and serial.
-func MakeAccessEvent(EvID eventid.T, Ser string) (ae *AccessEvent) {
+func MakeAccessEvent(EvID eventid.T, Ser *serial.T) (ae *AccessEvent) {
 	return &AccessEvent{EvID, Ser}
 }
 
 func (a AccessEvent) String() (s string) {
-	return fmt.Sprintf("%s %16x", a.EvID.String(), a.Ser)
+	return fmt.Sprintf("[%s, %d]", a.EvID.String(), a.Ser)
 }
 
 // IncrementAccesses takes a list of event IDs of events that were accessed in a
@@ -34,7 +35,7 @@ out:
 		txMx.Lock()
 		err = b.Update(func(txn *badger.Txn) error {
 			for i := range acc {
-				key := GetCounterKey([]byte(acc[i].Ser))
+				key := GetCounterKey(acc[i].Ser)
 				v := make([]byte, 12)
 				now := timestamp.Now().U64()
 				it := txn.NewIterator(badger.IteratorOptions{})

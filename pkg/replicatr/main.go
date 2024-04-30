@@ -108,6 +108,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			}
 		}
 	}
+	// log.D.S(args)
 	if args.ExportCmd != nil {
 		slog.SetLogLevel(slog.Off)
 	}
@@ -126,7 +127,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
 	// inf := *relayinfo.NewInfo(&relayinfo.T{Nips: nips})
-	var inf = &relayinfo.T{}
+	inf := &relayinfo.T{}
 	// generate a relay identity key if one wasn't given
 	if args.SecKey == "" {
 		args.SecKey = keys.GeneratePrivateKey()
@@ -262,6 +263,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	rl.OnConnect = append(rl.OnConnect, rl.AuthCheck)
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
+	// commenting out the override so GC will work
+	// rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	// run the chat ACL initialization
 	rl.Init()
 	serv := http.Server{

@@ -68,7 +68,7 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 					return
 				}
 				// bump counter key
-				counterKey := GetCounterKey(seri.Val)
+				counterKey := GetCounterKey(seri)
 				val := keys.Write(createdat.New(timestamp.Now()))
 				// log.D.F("counter %x %x", counterKey, val)
 				if err = txn.Set(counterKey, val); chk.E(err) {
@@ -81,13 +81,14 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 				return eventstore.ErrDupEvent
 			}
 		}
-		var idx, ser []byte
+		var idx []byte
+		var ser *serial.T
 		if len(foundSerial) > 0 {
 			// if the ID key was found but not the raw event then we should write it anyway
 			log.E.F("event ID %s found key but event record missing, rewriting event and indexes",
 				ev.ID)
 			idx = index.Event.Key(serial.New(foundSerial))
-			ser = foundSerial
+			ser = serial.New(foundSerial)
 		} else {
 			idx, ser = b.SerialKey()
 		}

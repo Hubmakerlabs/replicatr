@@ -16,12 +16,11 @@ import (
 // GetIndexKeysForEvent generates all the index keys required to filter for
 // events. evtSerial should be the output of Serial() which gets a unique,
 // monotonic counter value for each new event.
-func GetIndexKeysForEvent(ev *event.T, evtSerial []byte) (keyz [][]byte) {
+func GetIndexKeysForEvent(ev *event.T, ser *serial.T) (keyz [][]byte) {
 
 	var err error
 	keyz = make([][]byte, 0, 18)
 	ID := id.New(ev.ID)
-	ser := serial.New(evtSerial)
 	CA := createdat.New(ev.CreatedAt)
 	K := kinder.New(ev.Kind)
 	PK, _ := pubkey.New(ev.PubKey)

@@ -15,6 +15,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 type handleFilterParams struct {
@@ -39,8 +40,8 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	}
 	// then check if we'll reject this filter (we apply this after overwriting
 	// because we may, for example, remove some things from the incoming filters
-	// that we know we don't support, and then if the end result is an empty filter
-	// we can just reject it)
+	// that we know we don't support, and then if the end result is an empty
+	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(h.c, h.id, h.f); rej {
 			return log.D.Err(normalize.Reason(msg, "blocked"))
@@ -48,9 +49,9 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	}
 	// run the functions to query events (generally just one, but we might be
 	// fetching stuff from multiple places)
-	h.eose.Add(len(rl.QueryEvents))
+	// 		h.eose.Add(len(rl.QueryEvents))
 	for i, query := range rl.QueryEvents {
-		_ = i
+		h.eose.Add(1)
 		var ch event.C
 		// start up event receiver before running query on this channel
 		// go func(ch chan *event.T) {
@@ -60,14 +61,18 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 				kindStrings = append(kindStrings, kind.GetString(ks))
 			}
 		}
+		log.T.Ln("query", i, kindStrings, h.f.ToObject().String())
 		if ch, err = query(h.c, h.f); chk.E(err) {
 			h.ws.OffenseCount.Inc()
 			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
 			h.eose.Done()
 			continue
 		}
+		log.T.Ln("preparing to receive results", h.f.ToObject().String())
 		go func(ch event.C) {
+			log.T.Ln("waiting for result", text.Trunc(h.f.ToObject().String()))
 			for ev := range ch {
+				log.T.Ln("result ev", ev.ToObject().String())
 				// if the event is nil the rest of this loop will panic
 				// accessing the nonexistent event's fields
 				if ev == nil {
@@ -120,12 +125,17 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 				}))
 			}
 		}(ch)
+		log.T.Ln("query", i, "done", h.f.ToObject().String())
 		select {
 		case <-rl.Ctx.Done():
 			log.T.Ln("shutting down")
 			return
 		default:
 		}
+
+		// h.eose.Done()
+		// }(ch)
+		// log.I.Ln("running query")
 	}
 	return nil
 }
