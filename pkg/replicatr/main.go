@@ -98,17 +98,20 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	os.Args = osArgs
 	arg.MustParse(&args)
 	os.Args = tmp
-	// set logging level if non-default was set in args
-	if args.LogLevel != "info" {
-		for i := range slog.LevelSpecs {
-			if slog.LevelSpecs[i].Name[:1] == strings.
-				ToLower(args.LogLevel[:1]) {
-
-				slog.SetLogLevel(i)
+	if args.ImportCmd != nil || args.ExportCmd != nil || args.Wipe != nil {
+		// if any of these commands have been invoked we are only using badger, and no GC
+		args.EventStore = "badger"
+		args.DBSizeLimit = 0
+	} else {
+		// set logging level if non-default was set in args
+		if args.LogLevel != "info" {
+			for i := range slog.LevelSpecs {
+				if slog.LevelSpecs[i].Name[:1] == strings.ToLower(args.LogLevel[:1]) {
+					slog.SetLogLevel(i)
+				}
 			}
 		}
 	}
-	// log.D.S(args)
 	runtime.GOMAXPROCS(args.MaxProcs)
 	var err error
 	var dataDirBase string
@@ -206,14 +209,9 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		conf.AuthRequired = true
 		inf.Limitation.AuthRequired = true
 	}
-	// log.D.S(&inf)
 	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, inf, &args)
 	var db eventstore.Store
-	// if we are wiping we don't want to init db normally
-	if args.Wipe != nil {
-		conf.DBSizeLimit = 0
-	}
 	// create both structures in any case
 	var badgerDB *badger.Backend
 	var icDB *IConly.Backend

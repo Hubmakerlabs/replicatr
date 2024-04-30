@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"mleku.dev/git/slog"
 )
@@ -36,3 +37,13 @@ func (c *T) Read(buf *bytes.Buffer) (el keys.Element) {
 }
 
 func (c *T) Len() int { return Len }
+
+// FromKey expects to find a datestamp in the 8 bytes before a serial in a key.
+func FromKey(k []byte) (p *T) {
+	if len(k) < Len+serial.Len {
+		panic("cannot get a serial without at least 16 bytes")
+	}
+	key := make([]byte, Len)
+	copy(key, k[len(k)-serial.Len:len(k)-Len+serial.Len])
+	return &T{Val: timestamp.FromBytes(key)}
+}
