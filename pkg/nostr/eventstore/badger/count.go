@@ -62,10 +62,10 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 						break
 					}
 				}
-				ser := key[len(key)-serial.Len:]
-				idx := index.Event.Key(serial.New(ser))
+				ser := serial.FromKey(key)
+				idx := index.Event.Key(ser)
 				if extraFilter == nil {
-					log.I.F("adding access for count (no extra filter) %0x %0x", key, ser)
+					log.I.F("adding access for count (no extra filter) %d", ser.Uint64())
 					count++
 				} else {
 					log.I.Ln("fetching actual event", i)
@@ -90,7 +90,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 							count++
 						}
 						log.I.F("adding access for count %s %0x", evt.ID, ser)
-						accessChan <- &AccessEvent{EvID: evt.ID, Ser: string(ser)}
+						accessChan <- &AccessEvent{EvID: evt.ID, Ser: ser}
 						return nil
 					})
 					if chk.D(err) {

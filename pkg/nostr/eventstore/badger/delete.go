@@ -28,12 +28,10 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 		it := txn.NewIterator(opts)
 		it.Seek(idKey)
 		var ser *serial.T
-		var foundSerial []byte
 		if it.ValidForPrefix(idKey) {
 			// we only need the serial to generate the event key
 			ser = serial.New(nil)
 			keys.Read(it.Item().Key(), index.Empty(), id.New(""), ser)
-			foundSerial = ser.Val
 			idx = index.Event.Key(ser)
 			log.D.Ln("added found item")
 		}
@@ -45,13 +43,13 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 		// set this so we'll run the GC later
 		deletionHappened = true
 		// calculate all index keys we have for this event and delete them
-		for _, k := range GetIndexKeysForEvent(ev, idx[1:]) {
+		for _, k := range GetIndexKeysForEvent(ev, serial.New(idx[1:])) {
 			if err = txn.Delete(k); chk.E(err) {
 				return
 			}
 		}
 		// delete the counter key
-		if err = txn.Delete(GetCounterKey(foundSerial)); chk.E(err) {
+		if err = txn.Delete(GetCounterKey(ser)); chk.E(err) {
 			return
 		}
 		// delete the raw event
