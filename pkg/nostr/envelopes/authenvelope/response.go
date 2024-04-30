@@ -42,18 +42,12 @@ func NewResponse(ac *Challenge, rl string) (ae *Response) {
 	return
 }
 
-func (a *Response) Label() string { return labels.AUTH }
-
-func (a *Response) ToArray() array.T { return array.T{labels.AUTH, a.Event.ToObject()} }
-
-func (a *Response) String() string { return a.ToArray().String() }
-
-func (a *Response) Bytes() []byte { return a.ToArray().Bytes() }
-
+func (a *Response) Label() string                { return labels.AUTH }
+func (a *Response) ToArray() array.T             { return array.T{labels.AUTH, a.Event.ToObject()} }
+func (a *Response) String() string               { return a.ToArray().String() }
+func (a *Response) Bytes() []byte                { return a.ToArray().Bytes() }
 func (a *Response) MarshalJSON() ([]byte, error) { return a.Bytes(), nil }
-
 func (a *Response) Unmarshal(buf *text.Buffer) (err error) {
-	// log.T.F("AUTH '%s'", buf.Tail())
 	if a == nil {
 		return fmt.Errorf("cannot unmarshal to nil pointer")
 	}
@@ -86,6 +80,6 @@ func (a *Response) Unmarshal(buf *text.Buffer) (err error) {
 	if err = buf.ScanUntil(']'); err != nil {
 		return fmt.Errorf("malformed JSON, no closing bracket on array: %s", err)
 	}
-	// whatever remains doesn't matter as the envelope has fully unmarshaled.
+	// whatever remains doesn't matter as the envelope has fully unmarshalled.
 	return
 }

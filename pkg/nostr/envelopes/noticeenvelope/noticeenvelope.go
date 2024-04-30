@@ -13,8 +13,8 @@ import (
 
 var log, chk = slog.New(os.Stderr)
 
-// T is a relay message intended to be shown to users in a nostr
-// client interface.
+// T is a relay message intended to be shown to users in a nostr client
+// interface.
 type T struct {
 	Text string
 }
@@ -33,14 +33,10 @@ func NewNoticeEnvelope(text string) (E *T) {
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *T) Label() string { return labels.NOTICE }
-
-func (E *T) ToArray() array.T { return array.T{labels.NOTICE, E.Text} }
-
-func (E *T) String() (s string) { return E.ToArray().String() }
-
-func (E *T) Bytes() (s []byte) { return E.ToArray().Bytes() }
-
+func (E *T) Label() string                { return labels.NOTICE }
+func (E *T) ToArray() array.T             { return array.T{labels.NOTICE, E.Text} }
+func (E *T) String() (s string)           { return E.ToArray().String() }
+func (E *T) Bytes() (s []byte)            { return E.ToArray().Bytes() }
 func (E *T) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
 
 // Unmarshal the envelope.
@@ -64,6 +60,5 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
 	}
 	E.Text = string(text.UnescapeByteString(noticeText))
-	// log.D.F("'%s'", E.Text)
 	return
 }

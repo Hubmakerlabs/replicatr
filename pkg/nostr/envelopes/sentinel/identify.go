@@ -33,7 +33,6 @@ func Identify(b []byte) (match string, buf *text.Buffer, err error) {
 		err = log.E.Err("cannot read envelope without a label\n%s", string(b))
 		return
 	}
-	// log.T.F("label: '%s'", string(candidate))
 	var differs bool
 matched:
 	for i := range labels.List {

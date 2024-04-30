@@ -27,25 +27,25 @@ func GetIndexKeysForEvent(ev *event.T, ser *serial.T) (keyz [][]byte) {
 	// indexes
 	{ // ~ by id
 		k := index.Id.Key(ID, ser)
-		log.T.F("id key: %x %0x %0x", k[0], k[1:9], k[9:])
+		// log.T.F("id key: %x %0x %0x", k[0], k[1:9], k[9:])
 		keyz = append(keyz, k)
 	}
 	{ // ~ by pubkey+date
 		k := index.Pubkey.Key(PK, CA, ser)
-		log.T.F("pubkey + date key: %x %0x %0x %0x",
-			k[0], k[1:9], k[9:17], k[17:])
+		// log.T.F("pubkey + date key: %x %0x %0x %0x",
+		// 	k[0], k[1:9], k[9:17], k[17:])
 		keyz = append(keyz, k)
 	}
 	{ // ~ by kind+date
 		k := index.Kind.Key(K, CA, ser)
-		log.T.F("kind + date key: %x %0x %0x %0x",
-			k[0], k[1:3], k[3:11], k[11:])
+		// log.T.F("kind + date key: %x %0x %0x %0x",
+		// 	k[0], k[1:3], k[3:11], k[11:])
 		keyz = append(keyz, k)
 	}
 	{ // ~ by pubkey+kind+date
 		k := index.PubkeyKind.Key(PK, K, CA, ser)
-		log.T.F("pubkey + kind + date key: %x %0x %0x %0x %0x",
-			k[0], k[1:9], k[9:11], k[11:19], k[19:])
+		// log.T.F("pubkey + kind + date key: %x %0x %0x %0x %0x",
+		// 	k[0], k[1:9], k[9:11], k[11:19], k[19:])
 		keyz = append(keyz, k)
 	}
 	// ~ by tag value + date
@@ -76,12 +76,12 @@ func GetIndexKeysForEvent(ev *event.T, ser *serial.T) (keyz [][]byte) {
 			return
 		}
 		k := prf.Key(elems...)
-		log.T.F("tag '%s': %v key %x", t[0], t[1:], k)
+		// log.T.F("tag '%s': %v key %x", t[0], t[1:], k)
 		keyz = append(keyz, k)
 	}
 	{ // ~ by date only
 		k := index.CreatedAt.Key(CA, ser)
-		log.T.F("date key: %x %0x %0x", k[0], k[1:9], k[9:])
+		// log.T.F("date key: %x %0x %0x", k[0], k[1:9], k[9:])
 		keyz = append(keyz, k)
 	}
 	return

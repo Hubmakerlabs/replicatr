@@ -20,23 +20,16 @@ var _ enveloper.I = (*T)(nil)
 
 // T is the wrapper expected by a relay around an event.
 type T struct {
-
 	// The SubscriptionID field is optional, and may at most contain 64 characters,
 	// sufficient for encoding a 256 bit hash as hex.
 	SubscriptionID subscriptionid.T
-
 	// The Event is here a pointer because it should not be copied unnecessarily.
 	Event *event.T
 }
 
-func (env *T) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
-
-// NewEventEnvelope builds an T from a provided T
-// string and pointer to an T, and returns either the T or an
-// error if the Subscription ID is invalid or the T is nil.
+// NewEventEnvelope builds an T from a provided T string and pointer to an T,
+// and returns either the T or an error if the Subscription ID is invalid or the
+// T is nil.
 func NewEventEnvelope(si string, ev *event.T) (ee *T, err error) {
 	var sid subscriptionid.T
 	if sid, err = subscriptionid.New(si); chk.D(err) {
@@ -49,8 +42,6 @@ func NewEventEnvelope(si string, ev *event.T) (ee *T, err error) {
 	return &T{SubscriptionID: sid, Event: ev}, nil
 }
 
-func (env *T) Label() string { return labels.EVENT }
-
 func (env *T) ToArray() (a array.T) {
 	a = make(array.T, 0, 3)
 	a = append(a, labels.EVENT)
@@ -61,10 +52,9 @@ func (env *T) ToArray() (a array.T) {
 	return
 }
 
-func (env *T) String() (s string) { return env.ToArray().String() }
-
-func (env *T) Bytes() (s []byte) { return env.ToArray().Bytes() }
-
+func (env *T) Label() string                { return labels.EVENT }
+func (env *T) String() (s string)           { return env.ToArray().String() }
+func (env *T) Bytes() (s []byte)            { return env.ToArray().Bytes() }
 func (env *T) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
 
 // Unmarshal the envelope.
@@ -118,11 +108,8 @@ func (env *T) Unmarshal(buf *text.Buffer) (err error) {
 		log.D.S(string(eventObj))
 		return
 	}
-	// technically we maybe should read ahead further to make sure the JSON
-	// closes correctly. Not going to abort because of this.
-	if err = buf.ScanUntil(']'); log.D.Chk(err) {
-		return fmt.Errorf("malformed JSON, no closing bracket on array")
-	}
-	// whatever remains doesn't matter as the envelope has fully unmarshaled.
+	// technically we maybe should read ahead further to make sure the JSON closes
+	// correctly. Not going to abort because of this. whatever remains doesn't
+	// matter as the envelope has fully unmarshalled.
 	return
 }

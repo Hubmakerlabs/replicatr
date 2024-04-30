@@ -38,7 +38,6 @@ func DecodeToString(bech32String string) (prefix, value string, err error) {
 
 func Decode(bech32string string) (prefix string, value any, err error) {
 	var bits5 []byte
-	// log.D.Ln("decoding bech32", bech32string)
 	if prefix, bits5, err = bech32.DecodeNoLimit(bech32string); chk.D(err) {
 		return
 	}
@@ -120,7 +119,6 @@ func Decode(bech32string string) (prefix string, value any, err error) {
 		for {
 			t, v := readTLVEntry(data[curr:])
 			if v == nil {
-				// log.D.S(t, v)
 				// end here
 				if result.Kind == 0 || result.Identifier == "" || result.PublicKey == "" {
 					return prefix, result, fmt.Errorf("incomplete naddr")
@@ -152,14 +150,15 @@ func Decode(bech32string string) (prefix string, value any, err error) {
 
 var EncodePrivateKey = EncodeSecretKey
 
-func EncodeSecretKey(privateKeyHex string) (string, error) {
-	b, err := hex.Dec(privateKeyHex)
-	if chk.D(err) {
-		return "", fmt.Errorf("failed to decode private key hex: %w", err)
+func EncodeSecretKey(privateKeyHex string) (nsec string, err error) {
+	var b []byte
+	if b, err = hex.Dec(privateKeyHex); chk.D(err) {
+		err = fmt.Errorf("failed to decode private key hex: %w", err)
+		return
 	}
-	bits5, err := bech32.ConvertBits(b, 8, 5, true)
-	if chk.D(err) {
-		return "", err
+	var bits5 []byte
+	if bits5, err = bech32.ConvertBits(b, 8, 5, true); chk.D(err) {
+		return
 	}
 	return bech32.Encode(NsecHRP, bits5)
 }
@@ -171,8 +170,7 @@ func EncodePublicKey(publicKeyHex string) (s string, err error) {
 		return
 	}
 	var bits5 []byte
-	bits5, err = bech32.ConvertBits(b, 8, 5, true)
-	if chk.D(err) {
+	if bits5, err = bech32.ConvertBits(b, 8, 5, true); chk.D(err) {
 		return "", err
 	}
 	return bech32.Encode(NpubHRP, bits5)
@@ -215,8 +213,7 @@ func EncodeEvent(eventIDHex eventid.T, relays []string,
 
 	buf := &bytes.Buffer{}
 	var id []byte
-	id, err = hex.Dec(eventIDHex.String())
-	if chk.D(err) || len(id) != 32 {
+	if id, err = hex.Dec(eventIDHex.String()); chk.D(err) || len(id) != 32 {
 		return "", fmt.Errorf("invalid id '%s': %w", eventIDHex, err)
 	}
 	writeTLVEntry(buf, TLVDefault, id)
@@ -244,8 +241,7 @@ func EncodeEntity(publicKey string, kind kind.T, identifier string,
 		writeTLVEntry(buf, TLVRelay, []byte(url))
 	}
 	var pb []byte
-	pb, err = hex.Dec(publicKey)
-	if chk.D(err) {
+	if pb, err = hex.Dec(publicKey); chk.D(err) {
 		return "", fmt.Errorf("invalid pubkey '%s': %w", pb, err)
 	}
 	writeTLVEntry(buf, TLVAuthor, pb)

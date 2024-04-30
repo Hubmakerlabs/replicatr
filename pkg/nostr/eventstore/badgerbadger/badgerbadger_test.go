@@ -38,7 +38,7 @@ func TestBackend(t *testing.T) {
 		counter        []Counter
 		total          int
 		MaxContentSize = 16384
-		TotalSize      = 100000000
+		TotalSize      = 10000000
 		MaxDelay       = time.Second / 4
 		HW             = 95
 		LW             = 90

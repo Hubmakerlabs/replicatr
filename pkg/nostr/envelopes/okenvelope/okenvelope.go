@@ -34,11 +34,11 @@ func (env *T) UnmarshalJSON(bytes []byte) error {
 	panic("implement me")
 }
 
-// T is a relay message sent in response to an EventEnvelope to
-// indicate acceptance (OK is true), rejection and provide a human readable
-// Reason for clients to display to users, with the first word being a machine
-// readable reason type, as listed in the RejectReason* constants above,
-// followed by ": " and a human readable message.
+// T is a relay message sent in response to an EventEnvelope to indicate
+// acceptance (OK is true), rejection and provide a human readable Reason for
+// clients to display to users, with the first word being a machine readable
+// reason type, as listed in the RejectReason* constants above, followed by ": "
+// and a human readable message.
 type T struct {
 	ID     eventid.T
 	OK     bool
@@ -55,17 +55,10 @@ func NewOKEnvelope(eventID eventid.T, ok bool, reason string) (o *T,
 	return
 }
 
-func (env *T) Label() (l string) { return labels.OK }
-
-func (env *T) ToArray() (a array.T) {
-	return array.T{labels.OK, env.ID, env.OK, env.Reason}
-}
-
-func (env *T) String() (s string) { return env.ToArray().String() }
-
-func (env *T) Bytes() (s []byte) { return env.ToArray().Bytes() }
-
-// MarshalJSON returns the JSON encoded form of the envelope.
+func (env *T) ToArray() (a array.T)         { return array.T{labels.OK, env.ID, env.OK, env.Reason} }
+func (env *T) Label() (l string)            { return labels.OK }
+func (env *T) String() (s string)           { return env.ToArray().String() }
+func (env *T) Bytes() (s []byte)            { return env.ToArray().Bytes() }
 func (env *T) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
 
 const (
@@ -103,9 +96,9 @@ func (env *T) Unmarshal(buf *text.Buffer) (err error) {
 	const hexChars = "0123456789abcdefABCDEF"
 	tmp := make([]byte, 64)
 	copy(tmp, eventID)
-	// this sort is backwards because invalid characters are more likely after
-	// the set of hex numbers than before, and the error will be found sooner
-	// and shorten the iteration below.
+	// this sort is backwards because invalid characters are more likely after the
+	// set of hex numbers than before, and the error will be found sooner and
+	// shorten the iteration below.
 	sort.Slice(tmp, func(i, j int) bool { return tmp[i] > tmp[j] })
 next:
 	for j := range tmp {
@@ -116,7 +109,8 @@ next:
 				continue next
 			}
 		}
-		// if a character in tmp didn't match by the end of hexChars we found an invalid character.
+		// if a character in tmp didn't match by the end of hexChars we found an invalid
+		// character.
 		if !inSet {
 			return fmt.Errorf("found non-hex character in event ID: '%s'",
 				string(eventID))
@@ -132,8 +126,8 @@ next:
 	if isOK, err = buf.ReadUntil(','); chk.D(err) {
 		return fmt.Errorf("did not find OK value in ok envelope: %s", err)
 	}
-	isOK = []byte(strings.TrimSpace(string(isOK)))
 	// trim any whitespace
+	isOK = []byte(strings.TrimSpace(string(isOK)))
 	// determine the value encoded
 	l := len(isOK)
 	var isBool bool
@@ -159,8 +153,8 @@ maybeOK:
 		return fmt.Errorf("unexpected string in ok envelope OK field '%s'",
 			string(isOK))
 	}
-	// Next must be a string, which can be empty, but must be at minimum a pair
-	// of quotes.
+	// Next must be a string, which can be empty, but must be at minimum a pair of
+	// quotes.
 	if err = buf.ScanThrough('"'); err != nil {
 		return
 	}

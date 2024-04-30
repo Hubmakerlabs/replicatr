@@ -48,8 +48,6 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			ws.RealRemote(), ws.AuthPubKey(), strMsg)
 		return
 	}
-	// log.T.Ln("processing message", ws.RealRemote(),
-	// 	ws.AuthPubKey(), strMsg)
 	if len(msg) > rl.Info.Limitation.MaxMessageLength {
 		log.D.F("rejecting event with size: %d from %s %s",
 			len(msg), ws.RealRemote(), ws.AuthPubKey())
@@ -75,7 +73,6 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	if deny {
 		log.E.F("denying access to '%s' %s: dropping message", ws.RealRemote(),
 			ws.AuthPubKey())
-		// kill()
 		return
 	}
 	var en enveloper.I
@@ -83,17 +80,12 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		if en == nil {
 			log.E.F("nil envelope label: ignoring message\n%s", string(msg))
 			ws.OffenseCount.Inc()
-			// kill()
-			// chk.E(ws.Conn.Close())
 			return
 		}
-		// kill()
 		return
 	}
 	switch env := en.(type) {
 	case *eventenvelope.T:
-		// log.T.Ln("received event envelope from", ws.RealRemote(),
-		// 	ws.AuthPubKey(), en.ToArray().String())
 		// reject old dated events according to nip11
 		if env.Event.CreatedAt <= rl.Info.Limitation.Oldest {
 			log.D.F("rejecting event with date: %s %s %s",
@@ -110,7 +102,6 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}
 		// check id
 		evs := env.Event.ToCanonical().Bytes()
-		// log.D.F("serialized %s", evs)
 		hash := sha256.Sum256(evs)
 		id := hex.Enc(hash[:])
 		if id != env.Event.ID.String() {
@@ -164,8 +155,6 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		} else {
 			ok = true
 		}
-		// log.T.Ln("sending back ok envelope", ok, ws.AuthPubKey(),
-		// 	ws.RealRemote())
 		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,
 			OK:     ok,
@@ -230,13 +219,9 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}()
 		SetListener(env.SubscriptionID.String(), ws, env.Filters, cancelReqCtx)
 	case *closeenvelope.T:
-		// log.T.Ln("received close envelope from", ws.RealRemote(),
-		// 	ws.AuthPubKey(), en.ToArray().String())
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
-		// log.I.Ln("received auth response envelope from",
-		// 	ws.RealRemote(), en.ToArray().String())
-		// log.D.Ln("received auth response")
+		log.T.Ln("received auth response")
 		wsBaseUrl := strings.Replace(rl.ServiceURL.Load(), "http", "ws", 1)
 		var ok bool
 		var pubkey string

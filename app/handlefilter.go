@@ -132,8 +132,8 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 			return
 		default:
 		}
-		// h.eose.Done()
 
+		// h.eose.Done()
 		// }(ch)
 		// log.I.Ln("running query")
 	}

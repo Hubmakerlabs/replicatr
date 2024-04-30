@@ -36,7 +36,9 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		log.D.Ln("ephemeral event")
 		// do not store ephemeral events
 	} else {
-		// todo: this seems to be unnecessary for badger
+		// todo: we are not deleting replaceables, only returning one for each match
+		// todo: deleting them is racy, they will simply expire from the cache eventually
+		//
 		// if ev.Kind.IsReplaceable() {
 		// 	log.D.Ln("replaceable event")
 		// 	// replaceable event, delete before storing

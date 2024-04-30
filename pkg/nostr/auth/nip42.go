@@ -54,7 +54,6 @@ func Validate(evt *event.T, challenge string,
 		log.D.Ln(err)
 		return
 	}
-	// log.I.Ln(relayURL)
 	var expected, found *url.URL
 	if expected, err = parseURL(relayURL); chk.D(err) {
 		log.D.Ln(err)
@@ -90,7 +89,6 @@ func Validate(evt *event.T, challenge string,
 		log.D.Ln(err)
 		return
 	}
-
 	now := time.Now()
 	if evt.CreatedAt.Time().After(now.Add(10*time.Minute)) ||
 		evt.CreatedAt.Time().Before(now.Add(-10*time.Minute)) {

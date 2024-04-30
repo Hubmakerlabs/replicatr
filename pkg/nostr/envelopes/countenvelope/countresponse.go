@@ -20,11 +20,6 @@ type Response struct {
 
 var _ enveloper.I = &Response{}
 
-func (env *Response) UnmarshalJSON(bytes []byte) error {
-	// TODO implement me
-	panic("implement me")
-}
-
 func New(sid subscriptionid.T, count int, approx bool) (C *Response) {
 	C = &Response{
 		ID:          sid,
@@ -33,7 +28,6 @@ func New(sid subscriptionid.T, count int, approx bool) (C *Response) {
 	}
 	return
 }
-func (env *Response) Label() string { return labels.COUNT }
 
 func (env *Response) ToArray() array.T {
 	count := object.T{
@@ -46,10 +40,9 @@ func (env *Response) ToArray() array.T {
 	return array.T{labels.COUNT, env.ID, count}
 }
 
-func (env *Response) String() (s string) { return env.ToArray().String() }
-
-func (env *Response) Bytes() (s []byte) { return env.ToArray().Bytes() }
-
+func (env *Response) Label() string                { return labels.COUNT }
+func (env *Response) String() (s string)           { return env.ToArray().String() }
+func (env *Response) Bytes() (s []byte)            { return env.ToArray().Bytes() }
 func (env *Response) MarshalJSON() ([]byte, error) { return env.Bytes(), nil }
 
 func (env *Response) Unmarshal(buf *text.Buffer) (err error) {

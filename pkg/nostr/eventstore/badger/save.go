@@ -111,11 +111,11 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 		// initialise access counter key
 		counterKey := GetCounterKey(ser)
 		val := keys.Write(createdat.New(timestamp.Now()))
-		log.T.F("counter %0x %0x", counterKey, val)
+		// log.T.F("counter %0x %0x", counterKey, val)
 		if err = txn.Set(counterKey, val); chk.E(err) {
 			return
 		}
-		log.T.F("event saved")
+		// log.T.F("event saved")
 		return
 	})
 }

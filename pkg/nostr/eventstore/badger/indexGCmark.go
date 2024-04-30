@@ -93,7 +93,7 @@ func (b *Backend) IndexGCMark() (toDelete []uint64, err error) {
 	headroom := b.DBSizeLimit * (100 - b.DBHighWater) / 100
 	lw, hw := headroom*b.DBLowWater/100, headroom*b.DBHighWater/100
 	total := pruned.Total()
-	log.I.F("total size of pruned indexes %d LW %d HW %d", total, lw, hw)
+	log.D.F("total size of pruned indexes %d LW %d HW %d", total, lw, hw)
 	if total < hw {
 		return
 	}
@@ -106,7 +106,7 @@ func (b *Backend) IndexGCMark() (toDelete []uint64, err error) {
 		}
 		space -= int(pruned[lastIndex].size)
 	}
-	log.I.F("deleting %d indexes using %d bytes to bring pruned index size to %d",
+	log.D.F("deleting %d indexes using %d bytes to bring pruned index size to %d",
 		lastIndex+1, headroom-space, space)
 	for i := range pruned {
 		if i > lastIndex {

@@ -21,8 +21,8 @@ var _ keys.Element = &T{}
 
 // New creates a new arb.T. This must have the expected length for the provided
 // byte slice as this is what the Read method will aim to copy. In general this
-// will be a bounded field, either the final or only arbitrary length field in
-// a key.
+// will be a bounded field, either the final or only arbitrary length field in a
+// key.
 func New(b []byte) (p *T) {
 	if len(b) == 0 {
 		log.T.Ln("empty or nil slice is the same as zero value, " +
@@ -32,10 +32,7 @@ func New(b []byte) (p *T) {
 	return &T{Val: b}
 }
 
-func NewWithLen(l int) (p *T) {
-	return &T{Val: make([]byte, l)}
-}
-
+func NewWithLen(l int) (p *T)       { return &T{Val: make([]byte, l)} }
 func NewFromString(s string) (p *T) { return New([]byte(s)) }
 
 func (p *T) Write(buf *bytes.Buffer) {
@@ -86,8 +83,7 @@ func ReadWithArbElem(b []byte, elems ...keys.Element) {
 			arbSet = true
 		}
 	}
-	// now we can say that the remainder is the correct length for the arb
-	// element
+	// now we can say that the remainder is the correct length for the arb element
 	elems[arbEl] = New(make([]byte, l))
 	buf := bytes.NewBuffer(b)
 	for _, el := range elems {

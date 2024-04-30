@@ -169,6 +169,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 							}
 							if evt == nil {
 								log.D.S("got nil event from", val)
+								return
 							}
 							// check if this matches the other filters that were not part of the index
 							if extraFilter == nil || extraFilter.Matches(evt) {

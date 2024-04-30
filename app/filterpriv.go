@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
@@ -41,7 +40,6 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 	if allow {
 		return
 	}
-	// log.I.Ln("checking privilege", ws.RealRemote(), ws.AuthPubKey())
 	// check if the request filter kinds are privileged
 	privileged := kinds.IsPrivileged(f.Kinds...)
 	// if access requires auth, check that auth is present.
@@ -72,8 +70,8 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 			case <-time.After(5 * time.Second):
 				if ws.AuthPubKey() == "" {
 					return true,
-						fmt.Sprint("Authorization timeout from ",
-							ws.RealRemote())
+						log.I.Err("Authorization timeout from ",
+							ws.RealRemote()).Error()
 				}
 			}
 

@@ -110,7 +110,6 @@ func TestElement(t *testing.T) {
 		// a createdat
 		ts := timestamp.Now()
 		vca := createdat.New(ts)
-		// a sizer
 		// write out values
 		b := keys.Write(vca)
 		// check that values decoded all correctly

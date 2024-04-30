@@ -20,7 +20,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 			log.E.Ln("cannot broadcast to", ws.RealRemote(), "not authorized")
 			return true
 		}
-		log.T.Ln("broadcasting", ws.RealRemote(), ws.AuthPubKey(), subs.Size())
+		// log.T.Ln("broadcasting", ws.RealRemote(), ws.AuthPubKey(), subs.Size())
 		subs.Range(func(id string, listener *Listener) bool {
 			if !listener.filters.Match(evt) {
 				log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
