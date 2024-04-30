@@ -14,16 +14,17 @@ import (
 
 type AccessEvent struct {
 	EvID eventid.T
+	Ts   timestamp.T
 	Ser  *serial.T
 }
 
 // MakeAccessEvent generates an *AccessEvent from an event ID and serial.
 func MakeAccessEvent(EvID eventid.T, Ser *serial.T) (ae *AccessEvent) {
-	return &AccessEvent{EvID, Ser}
+	return &AccessEvent{EvID, timestamp.Now(), Ser}
 }
 
 func (a AccessEvent) String() (s string) {
-	return fmt.Sprintf("[%s, %d]", a.EvID.String(), a.Ser)
+	return fmt.Sprintf("[%s, %v, %d]", a.EvID.String(), a.Ts.Time(), a.Ser.Uint64())
 }
 
 // IncrementAccesses takes a list of event IDs of events that were accessed in a
@@ -37,7 +38,6 @@ out:
 			for i := range acc {
 				key := GetCounterKey(acc[i].Ser)
 				v := make([]byte, 12)
-				now := timestamp.Now().U64()
 				it := txn.NewIterator(badger.IteratorOptions{})
 				defer it.Close()
 				if it.Seek(key); it.ValidForPrefix(key) {
@@ -45,12 +45,12 @@ out:
 						continue
 					}
 					// update access record
-					binary.BigEndian.PutUint64(v[:8], now)
+					binary.BigEndian.PutUint64(v[:8], acc[i].Ts.U64())
 					if err = txn.Set(key, v); chk.E(err) {
 						continue
 					}
 				}
-				log.T.Ln("last access for", acc[i], "to", now)
+				log.T.Ln("last access for", acc[i].Ser.Uint64(), acc[i].Ts.U64())
 			}
 			return nil
 		})
@@ -73,13 +73,13 @@ func (b *Backend) AccessLoop(c context.T, txMx *sync.Mutex, accCh chan *AccessEv
 		select {
 		case <-c.Done():
 			if len(accesses) > 0 {
-				log.T.Ln("accesses", accesses)
+				// log.T.Ln("accesses", accesses)
 				chk.E(b.IncrementAccesses(txMx, accesses))
 			}
 			return
 		case acc := <-accCh:
-			log.T.F("adding access to %s %0x", acc.EvID, acc.Ser)
-			accesses = append(accesses, &AccessEvent{acc.EvID, acc.Ser})
+			// log.T.F("adding access to %s %d", acc.EvID, acc.Ser.Uint64())
+			accesses = append(accesses, &AccessEvent{acc.EvID, timestamp.Now(), acc.Ser})
 		}
 	}
 }

@@ -106,6 +106,9 @@ func (b *Backend) Init() (err error) {
 	if b.MaxLimit == 0 {
 		b.MaxLimit = DefaultMaxLimit
 	}
+	if b.DBSizeLimit > 0 {
+		go b.GarbageCollector()
+	}
 	return nil
 }
 
@@ -126,7 +129,7 @@ func (b *Backend) SerialKey() (idx []byte, ser *serial.T) {
 func (b *Backend) Serial() (ser uint64, err error) {
 	if ser, err = b.seq.Next(); chk.E(err) {
 	}
-	log.T.F("serial %x", ser)
+	// log.T.F("serial %x", ser)
 	return
 }
 

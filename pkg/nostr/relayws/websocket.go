@@ -11,9 +11,8 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/fasthttp/websocket"
 	"mleku.dev/git/atomic"
 	"mleku.dev/git/slog"
@@ -87,13 +86,16 @@ func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 		ek = env.(*eventenvelope.T).Event.Kind
 		evkind = kind.GetString(ek)
 	}
-	log.T.F("sending message to %s %s %s\n%s\n%s",
+	rawJSON := env.ToArray().Bytes()
+	log.D.F("sending message to %s %s %s %s %s",
 		ws.RealRemote(),
 		ws.AuthPubKey(),
 		evkind,
-		env.ToArray().String(),
+		// text.Trunc(
+		string(rawJSON),
+		// ),
 		loc)
-	chk.E(ws.Conn.WriteMessage(int(TextMessage), env.ToArray().Bytes()))
+	chk.E(ws.Conn.WriteMessage(int(TextMessage), rawJSON))
 	return
 }
 

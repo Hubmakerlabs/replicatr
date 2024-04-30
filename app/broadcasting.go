@@ -25,7 +25,7 @@ func (rl *Relay) BroadcastEvent(evt *event.T) {
 			if !listener.filters.Match(evt) {
 				log.T.F("filter doesn't match subscription %s %s\nfilters\n%s\nevent\n%s",
 					listener.ws.RealRemote(), listener.ws.AuthPubKey(),
-					listener.filters, text.Trunc(evt.ToObject().String()))
+					text.Trunc(listener.filters.ToArray().String()), text.Trunc(evt.ToObject().String()))
 				return true
 			}
 			if kinds.IsPrivileged(evt.Kind) && rl.Info.Limitation.AuthRequired {

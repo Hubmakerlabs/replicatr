@@ -61,18 +61,18 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 				kindStrings = append(kindStrings, kind.GetString(ks))
 			}
 		}
-		log.T.Ln("query", i, kindStrings, h.f.ToObject().String())
+		log.T.Ln("query", i, kindStrings, text.Trunc(h.f.ToObject().String()))
 		if ch, err = query(h.c, h.f); chk.E(err) {
 			h.ws.OffenseCount.Inc()
 			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
 			h.eose.Done()
 			continue
 		}
-		log.T.Ln("preparing to receive results", h.f.ToObject().String())
+		// log.T.Ln("preparing to receive results", h.f.ToObject().String())
 		go func(ch event.C) {
-			log.T.Ln("waiting for result", text.Trunc(h.f.ToObject().String()))
+			// log.T.Ln("waiting for result", text.Trunc(h.f.ToObject().String()))
 			for ev := range ch {
-				log.T.Ln("result ev", ev.ToObject().String())
+				// log.T.Ln("result ev", text.Trunc(ev.ToObject().String()))
 				// if the event is nil the rest of this loop will panic
 				// accessing the nonexistent event's fields
 				if ev == nil {

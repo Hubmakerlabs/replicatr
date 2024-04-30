@@ -19,35 +19,35 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 	var queries []query
 	var extraFilter *filter.T
 	var since uint64
-	log.I.Ln("preparing queries for count")
+	// log.I.Ln("preparing queries for count")
 	if queries, extraFilter, since, err = PrepareQueries(f); chk.E(err) {
 		return
 	}
 	accessChan := make(chan *AccessEvent)
 	var txMx sync.Mutex
 	// start up the access counter
-	log.I.Ln("starting access counter for count")
+	// log.I.Ln("starting access counter for count")
 	go b.AccessLoop(c, &txMx, accessChan)
 	err = b.View(func(txn *badger.Txn) (err error) {
-		log.I.Ln("running query")
+		// log.I.Ln("running query")
 		// iterate only through keys and in reverse order
 		opts := badger.IteratorOptions{
 			Reverse: true,
 		}
 		// actually iterate
-		for i, q := range queries {
-			log.I.Ln("running count query", i)
+		for _, q := range queries {
+			// log.I.Ln("running count query", i)
 			select {
 			case <-c.Done():
 				err = log.W.Err("shutting down")
 				return
 			default:
 			}
-			log.I.Ln("creating new iterator", i)
+			// log.I.Ln("creating new iterator", i)
 			txMx.Lock()
 			it := txn.NewIterator(opts)
 			txMx.Unlock()
-			log.I.Ln("defer iterator to close", i)
+			// log.I.Ln("defer iterator to close", i)
 			defer it.Close()
 			for it.Seek(q.start); it.ValidForPrefix(q.searchPrefix); it.Next() {
 				item := it.Item()
@@ -68,14 +68,14 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 					log.I.F("adding access for count (no extra filter) %d", ser.Uint64())
 					count++
 				} else {
-					log.I.Ln("fetching actual event", i)
+					// log.I.Ln("fetching actual event", i)
 					// fetch actual event
 					if item, err = txn.Get(idx); chk.E(err) {
 						if errors.Is(err, badger.ErrDiscardedTxn) {
 							return
 						}
-						log.D.F("badger: count (%v) failed to get %d "+
-							"from raw event store: %s", q, idx)
+						// log.D.F("badger: count (%v) failed to get %d "+
+						// 	"from raw event store: %s", q, idx)
 						return
 					}
 					err = item.Value(func(val []byte) (err error) {
@@ -89,7 +89,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 						if extraFilter == nil || extraFilter.Matches(evt) {
 							count++
 						}
-						log.I.F("adding access for count %s %0x", evt.ID, ser)
+						// log.I.F("adding access for count %s %0x", evt.ID, ser)
 						accessChan <- &AccessEvent{EvID: evt.ID, Ser: ser}
 						return nil
 					})

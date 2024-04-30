@@ -94,7 +94,7 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 		if filterArray, err = buf.ReadEnclosed(); chk.D(err) {
 			return
 		}
-		log.T.F("filter: '%s'", filterArray)
+		// log.T.F("filter: '%s'", filterArray)
 		f := &filter.T{}
 		if err = json.Unmarshal(filterArray, f); chk.D(err) {
 			return

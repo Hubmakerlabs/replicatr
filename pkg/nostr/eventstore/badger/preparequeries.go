@@ -13,7 +13,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 type query struct {
@@ -26,7 +25,14 @@ type query struct {
 }
 
 func (q query) String() string {
-	return fmt.Sprintf("%s", text.Trunc(q.queryFilter.ToObject().String()))
+	return fmt.Sprintf("%d %s prf %0x start %0x skipTS %v", q.index,
+		// text.Trunc(
+		q.queryFilter.ToObject().String(),
+		// ),
+		q.searchPrefix,
+		q.start,
+		q.skipTS,
+	)
 }
 
 type Results struct {
@@ -50,7 +56,7 @@ func PrepareQueries(f *filter.T) (
 		for i, idHex := range f.IDs {
 			ih := id.New(idHex)
 			prf := index.Id.Key(ih)
-			log.T.F("id prefix to search on %0x from key %0x", prf, ih.Val)
+			// log.T.F("id prefix to search on %0x from key %0x", prf, ih.Val)
 			qs[i] = query{
 				index:        i,
 				queryFilter:  f,
@@ -58,7 +64,7 @@ func PrepareQueries(f *filter.T) (
 				skipTS:       true, // why are we not checking timestamps?
 			}
 		}
-		log.T.S("ids", qs)
+		// log.T.S("ids", qs)
 		// second we make a set of queries based on author pubkeys, optionally with kinds
 	case len(f.Authors) > 0:
 		// if there is no kinds, we just make the queries based on the author pub keys
@@ -77,7 +83,7 @@ func PrepareQueries(f *filter.T) (
 					searchPrefix: sp,
 				}
 			}
-			log.I.S("authors", qs)
+			// log.I.S("authors", qs)
 		} else {
 			// if there is kinds as well, we are searching via the kind/pubkey prefixes
 			qs = make([]query, len(f.Authors)*len(f.Kinds))
@@ -90,16 +96,16 @@ func PrepareQueries(f *filter.T) (
 					}
 					ki := kinder.New(kind)
 					sp := index.PubkeyKind.Key(pk, ki)
-					log.T.F("search for authors %0x from pub key %0x and kind %0x", sp, pk.Val, ki.Val)
+					// log.T.F("search for authors from pub key %0x and kind %0x", pk.Val, ki.Val)
 					qs[i] = query{index: i, queryFilter: f, searchPrefix: sp}
 					i++
 				}
 			}
-			log.T.S("authors/kinds", qs)
+			// log.T.S("authors/kinds", qs)
 		}
 		if f.Tags != nil || len(f.Tags) > 0 {
 			ext = &filter.T{Tags: f.Tags}
-			log.T.S("extra filter", ext)
+			// log.T.S("extra filter", ext)
 		}
 	case len(f.Tags) > 0:
 		// determine the size of the queries array by inspecting all tags sizes
@@ -121,31 +127,30 @@ func PrepareQueries(f *filter.T) (
 				var prf []byte
 				prf, err = GetTagKeyPrefix(value)
 				// remove the last part to get just the prefix we want here
-				log.T.F("search for tags from %0x", prf)
+				// log.T.F("search for tags from %0x", prf)
 				qs[i] = query{index: i, queryFilter: f, searchPrefix: prf}
 				i++
 			}
 		}
-		log.T.S("tags", qs)
+		// log.T.S("tags", qs)
 	case len(f.Kinds) > 0:
 		// if there is no ids, pubs or tags, we are just searching for kinds
 		qs = make([]query, len(f.Kinds))
 		for i, kind := range f.Kinds {
 			kk := kinder.New(kind)
 			ki := index.Kind.Key(kk)
-
 			qs[i] = query{
 				index:        i,
 				queryFilter:  f,
 				searchPrefix: ki,
 			}
 		}
-		log.T.S("kinds", qs)
+		// log.T.S("kinds", qs)
 	default:
 		if len(qs) > 0 {
 			qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
 			ext = nil
-			log.T.S("other", qs)
+			// log.T.S("other", qs)
 		}
 	}
 	var until uint64 = math.MaxUint64

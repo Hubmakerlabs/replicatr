@@ -13,15 +13,16 @@ import (
 // SweepL1Only implements a simple prune that deletes an event and all related
 // indexes.
 func (b *Backend) SweepL1Only(serials del.Items) (err error) {
-	err = b.DB.Update(func(txn *badger2.Txn) (err error) {
-		// log.I.Ln("prune with no L2")
-		it := txn.NewIterator(badger2.DefaultIteratorOptions)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			k := it.Item().Key()
-			// check if key matches any of the serials
-			for i := range serials {
+	for i := range serials {
+		err = b.DB.Update(func(txn *badger2.Txn) (err error) {
+			// log.I.Ln("prune with no L2")
+			it := txn.NewIterator(badger2.DefaultIteratorOptions)
+			defer it.Close()
+			for it.Rewind(); it.Valid(); it.Next() {
+				k := it.Item().Key()
+				// check if key matches any of the serials
 				if serial.Match(k, serials[i]) {
+					log.I.Ln("deleting event serial", serial.FromKey(k).Uint64())
 					if err = txn.Delete(k); chk.E(err) {
 						log.I.Ln(k, serials[i])
 						return
@@ -29,9 +30,9 @@ func (b *Backend) SweepL1Only(serials del.Items) (err error) {
 					break
 				}
 			}
-		}
-		return
-	})
+			return
+		})
+	}
 	return
 }
 
