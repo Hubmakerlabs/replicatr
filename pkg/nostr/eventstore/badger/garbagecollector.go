@@ -32,8 +32,25 @@ func (b *Backend) GarbageCollector() {
 	var err error
 	if err = b.EventGCRun(); chk.E(err) {
 	}
+	if b.HasL2 {
+		indexGCticker := time.NewTicker(b.GCFrequency * IndexGCSkip)
+		go func() {
+		out:
+			for {
+				select {
+				case <-b.Ctx.Done():
+					log.W.Ln("event store closing")
+					break out
+				case <-indexGCticker.C:
+					log.T.Ln("running index GC")
+					if err = b.IndexGCRun(); chk.E(err) {
+					}
+				}
+			}
+
+		}()
+	}
 	eventGCticker := time.NewTicker(b.GCFrequency)
-	indexGCticker := time.NewTicker(b.GCFrequency * IndexGCSkip)
 	// force sync to disk every so often, this might be normally about 10 minutes.
 	syncTicker := time.NewTicker(b.GCFrequency * 10)
 out:
@@ -45,10 +62,6 @@ out:
 		case <-eventGCticker.C:
 			log.T.Ln("running event GC")
 			if err = b.EventGCRun(); chk.E(err) {
-			}
-		case <-indexGCticker.C:
-			log.T.Ln("running index GC")
-			if err = b.IndexGCRun(); chk.E(err) {
 			}
 		case <-syncTicker.C:
 			chk.E(b.DB.Sync())

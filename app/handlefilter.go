@@ -125,7 +125,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 				}))
 			}
 		}(ch)
-		log.T.Ln("query", i, "done", h.f.ToObject().String())
+		// log.T.Ln("query", i, "done", h.f.ToObject().String())
 		select {
 		case <-rl.Ctx.Done():
 			log.T.Ln("shutting down")

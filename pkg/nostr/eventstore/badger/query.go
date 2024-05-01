@@ -2,8 +2,6 @@ package badger
 
 import (
 	"container/heap"
-	"encoding/binary"
-	"errors"
 	"math"
 	"sync"
 
@@ -18,7 +16,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/minio/sha256-simd"
 )
@@ -33,10 +30,6 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	if chk.E(err) {
 		return
 	}
-	for i := range queries {
-		log.W.F("query %d %s", i, queries[i].queryFilter.ToObject().String())
-	}
-	// log.T.S(queries, extraFilter, since)
 	accessChan := make(chan *AccessEvent)
 	var txMx sync.Mutex
 	// start up the access counter
@@ -52,16 +45,15 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 		for _, q1 := range queries {
 			select {
 			case <-c.Done():
-				// log.I.Ln("websocket closed")
+				log.I.Ln("websocket closed")
 				return
 			case <-b.Ctx.Done():
-				// log.I.Ln("backend context canceled")
+				log.I.Ln("backend context canceled")
 				return
 			default:
 			}
 			q2 := q1
 			go func() {
-				log.I.Ln("query", text.Trunc(q2.queryFilter.ToObject().String()))
 				var eventKeys [][]byte
 				err := b.View(func(txn *badger.Txn) (err error) {
 					// iterate only through keys and in reverse order
@@ -71,12 +63,9 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 					for it.Seek(q2.start); it.ValidForPrefix(q2.searchPrefix); it.Next() {
 						item := it.Item()
 						k := item.KeyCopy(nil)
-						// log.I.F("item key %0x", k)
 						if !q2.skipTS {
 							createdAt := createdat.FromKey(k)
-							// log.I.F("%d > %d", createdAt.Val.U64(), since)
 							if createdAt.Val.U64() < since {
-								// log.I.Ln("break")
 								break
 							}
 						}
@@ -85,8 +74,10 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 					}
 					return
 				})
+				if err != nil {
+					return
+				}
 				for _, eventKey := range eventKeys {
-					log.I.F("event key %0x", eventKey)
 					err = b.View(func(txn *badger.Txn) (err error) {
 						opts := badger.IteratorOptions{Reverse: true}
 						it := txn.NewIterator(opts)
@@ -97,93 +88,36 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 							if v, err = item.ValueCopy(nil); chk.E(err) {
 								continue
 							}
+							ser := serial.FromKey(item.KeyCopy(nil))
 							if len(v) == sha256.Size {
-
+								// this is a stub entry that indicates an L2 needs to be accessed for it, so we
+								// populate only the event.T.ID and return the result.
+								evt := &event.T{}
+								log.T.F("found event stub %0x must seek in L2", v)
+								evt.ID, _ = eventid.New(hex.Enc(v))
+								q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
+								return
 							}
-							// log.I.F("event binary %0x", v)
 							var evt *event.T
 							if evt, err = nostrbinary.Unmarshal(v); chk.E(err) {
 								continue
 							}
-							log.W.F("key %0x val %s", item.KeyCopy(nil), evt.ToObject().String())
-						}
-						return
-					})
-				}
-				if len(eventKeys) < 1 {
-					log.W.Ln("nothing found for", text.Trunc(q2.queryFilter.ToObject().String()))
-					// return
-				}
-				err = b.View(func(txn *badger.Txn) (err error) {
-					// iterate only through keys and in reverse order
-					opts := badger.IteratorOptions{
-						Reverse: true,
-					}
-					txMx.Lock()
-					it := txn.NewIterator(opts)
-					txMx.Unlock()
-					defer it.Close()
-					defer close(q2.results)
-					for it.Seek(q2.start); it.ValidForPrefix(q2.searchPrefix); it.Next() {
-						item := it.Item()
-						key := item.Key()
-						// log.T.F("key %d %0x", len(key), key)
-						idxOffset := len(key) - serial.Len
-						// "id" indexes don't contain a timestamp
-						if !q2.skipTS {
-							createdAt := binary.BigEndian.Uint64(key[idxOffset-serial.Len : idxOffset])
-							if createdAt < since {
-								break
-							}
-						}
-						ser := serial.FromKey(key)
-						log.T.F("ser %d", ser.Uint64())
-						idx := index.Event.Key(ser)
-						log.T.F("idx %0x", idx)
-						// fetch actual event
-						item, err = txn.Get(idx)
-						if err != nil {
-							if errors.Is(err, badger.ErrDiscardedTxn) {
-								return err
-							}
-							log.T.F("badger: failed to get %x based on prefix %x, "+
-								"index key %x from raw event store: %s\n",
-								idx, q2.searchPrefix, key, err)
-							return err
-						}
-						err = item.Value(func(val []byte) (err error) {
-							evt := &event.T{}
-							if len(val) == sha256.Size {
-								// this is a stub entry that indicates an L2 needs to be accessed for it, so we
-								// populate only the event.T.ID and return the result.
-								//
-								// We can ignore the error because we know for certain by the test above it is
-								// the right length.
-								log.T.F("found event stub %0x must seek in L2", val)
-								evt.ID, _ = eventid.New(hex.Enc(val))
-								q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
-								return
-							}
-							if evt, err = nostrbinary.Unmarshal(val); chk.E(err) {
-								return
-							}
 							if evt == nil {
-								log.D.S("got nil event from", val)
+								log.D.S("got nil event from", v)
 								return
 							}
 							// check if this matches the other filters that were not part of the index
 							if extraFilter == nil || extraFilter.Matches(evt) {
 								res := Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
-								log.T.F("ser result %s %d %d", res.Ev.ID, res.TS, res.Ser.Uint64())
+								log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
+									evt.ToObject().String())
 								q2.results <- res
 							}
-							return
-						})
-						chk.E(err)
-					}
-					return nil
-				})
-				chk.T(err)
+						}
+						return
+					})
+				}
+				close(q2.results)
 			}()
 		}
 		// receive results and ensure we only return the most recent ones always
@@ -236,17 +170,14 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			}
 			// fetch a new one from query results and replace the previous one with it
 			if evt, ok := <-queries[latest.Query].results; ok {
-				// log.T.Ln("adding event to queue", evt.TS.U64())
 				emitQueue[0].T = evt.Ev
 				emitQueue[0].Ser = evt.Ser
 				heap.Fix(&emitQueue, 0)
 			} else {
-				// log.T.Ln("removing event from queue")
 				// if this query has no more events we just remove this and proceed normally
 				heap.Remove(&emitQueue, 0)
 				// check if the list is empty and end
 				if len(emitQueue) == 0 {
-					// log.T.Ln("emit queue empty")
 					break
 				}
 			}
@@ -254,7 +185,6 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 		if chk.E(err) {
 			log.D.F("badger: query txn error: %s", err)
 		}
-		// log.T.Ln("completed query")
 	}()
 
 	return ch, nil

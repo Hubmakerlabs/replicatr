@@ -50,7 +50,8 @@ out:
 						continue
 					}
 				}
-				log.T.Ln("last access for", acc[i].Ser.Uint64(), acc[i].Ts.U64())
+				// todo: we can now make this concurrent instead of afterwards
+				// log.T.Ln("last access for", acc[i].Ser.Uint64(), acc[i].Ts.U64())
 			}
 			return nil
 		})
