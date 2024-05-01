@@ -16,45 +16,44 @@ import (
 )
 
 func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
-	return b.Update(func(txn *badger.Txn) (err error) {
-		// make sure Close waits for this to complete
-		b.WG.Add(1)
-		defer b.WG.Done()
-		// query event by id to ensure we don't save duplicates
+	// make sure Close waits for this to complete
+	b.WG.Add(1)
+	defer b.WG.Done()
+	// first, search to see if the event ID already exists.
+	var foundSerial []byte
+	seri := serial.New(nil)
+	err = b.View(func(txn *badger.Txn) (err error) {
+		// query event by id to ensure we don't try to save duplicates
 		prf := index.Id.Key(id.New(ev.ID))
 		it := txn.NewIterator(badger.IteratorOptions{})
 		defer it.Close()
 		it.Seek(prf)
-		var foundSerial []byte
-		seri := serial.New(nil)
 		if it.ValidForPrefix(prf) {
-			// event exists - check if it is a stub
 			var k []byte
 			// get the serial
 			k = it.Item().Key()
-			// log.I.F("id key found %0x", k)
 			// copy serial out
 			keys.Read(k, index.Empty(), id.New(""), seri)
 			// save into foundSerial
 			foundSerial = seri.Val
 		}
-		if foundSerial != nil && len(foundSerial) > 0 {
-			// log.I.F("found serial %d", binary.BigEndian.Uint64(foundSerial))
+		return
+	})
+	if chk.E(err) {
+		return
+	}
+	// if the event is found but it has been replaced with the event ID (in case of
+	// L2) we need to restore it, or otherwise return that the event exists.
+	if foundSerial != nil {
+		var restored bool
+		err = b.Update(func(txn *badger.Txn) (err error) {
 			// retrieve the event record
 			evKey := keys.Write(index.New(index.Event), seri)
-			it2 := txn.NewIterator(badger.IteratorOptions{})
-			defer it2.Close()
-			it2.Seek(evKey)
-			if it2.ValidForPrefix(evKey) {
-				// log.I.F("found event key %0x", evKey)
-				// we are restoring a pruned event
-				var v []byte
-				if v, err = it2.Item().ValueCopy(nil); chk.E(err) {
-					return
-				}
-				vLen := len(v)
-				if vLen != sha256.Size {
-					// log.D.F("not pruned record %0x length %d", evKey, vLen)
+			it := txn.NewIterator(badger.IteratorOptions{})
+			defer it.Close()
+			it.Seek(evKey)
+			if it.ValidForPrefix(evKey) {
+				if it.Item().ValueSize() != sha256.Size {
 					// not a stub, we already have it
 					return eventstore.ErrDupEvent
 				}
@@ -64,34 +63,31 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 				if bin, err = nostrbinary.Marshal(ev); chk.D(err) {
 					return
 				}
-				if err = txn.Set(it2.Item().Key(), bin); chk.E(err) {
+				if err = txn.Set(it.Item().Key(), bin); chk.E(err) {
 					return
 				}
 				// bump counter key
 				counterKey := GetCounterKey(seri)
 				val := keys.Write(createdat.New(timestamp.Now()))
-				// log.D.F("counter %x %x", counterKey, val)
 				if err = txn.Set(counterKey, val); chk.E(err) {
 					return
 				}
-				// log.D.F("restored pruned record %s", ev.ID)
-				// all done, we can return
+				restored = true
 				return
 			} else {
 				return eventstore.ErrDupEvent
 			}
+		})
+		// if it was a dupe, or restored, we are done.
+		if chk.E(err) || restored {
+			return
 		}
+	}
+	// otherwise, save new event record.
+	return b.Update(func(txn *badger.Txn) (err error) {
 		var idx []byte
 		var ser *serial.T
-		if len(foundSerial) > 0 {
-			// if the ID key was found but not the raw event then we should write it anyway
-			log.E.F("event ID %s found key but event record missing, rewriting event and indexes",
-				ev.ID)
-			idx = index.Event.Key(serial.New(foundSerial))
-			ser = serial.New(foundSerial)
-		} else {
-			idx, ser = b.SerialKey()
-		}
+		idx, ser = b.SerialKey()
 		// encode to binary
 		var bin []byte
 		if bin, err = nostrbinary.Marshal(ev); chk.E(err) {
@@ -101,6 +97,7 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 		if err = txn.Set(idx, bin); chk.E(err) {
 			return
 		}
+		// 	add the indexes
 		var keyz [][]byte
 		keyz = GetIndexKeysForEvent(ev, ser)
 		for _, k := range keyz {
@@ -111,11 +108,10 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 		// initialise access counter key
 		counterKey := GetCounterKey(ser)
 		val := keys.Write(createdat.New(timestamp.Now()))
-		// log.T.F("counter %0x %0x", counterKey, val)
 		if err = txn.Set(counterKey, val); chk.E(err) {
 			return
 		}
-		// log.T.F("event saved")
+		log.T.F("event saved")
 		return
 	})
 }

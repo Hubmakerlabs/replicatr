@@ -39,7 +39,7 @@ func (b *Backend) GarbageCollector() {
 			for {
 				select {
 				case <-b.Ctx.Done():
-					log.W.Ln("event store closing")
+					log.W.Ln("stopping index GC ticker")
 					break out
 				case <-indexGCticker.C:
 					log.T.Ln("running index GC")
@@ -57,7 +57,7 @@ out:
 	for {
 		select {
 		case <-b.Ctx.Done():
-			log.W.Ln("event store closing")
+			log.W.Ln("stopping event GC ticker")
 			break out
 		case <-eventGCticker.C:
 			log.T.Ln("running event GC")
@@ -72,10 +72,6 @@ out:
 
 func (b *Backend) EventGCRun() (err error) {
 	var deleteItems del.Items
-	// hold a writer lock for the duration as no other activity should take place
-	// while a GC is running, access will corrupt the data during iteration.
-	b.bMx.Lock()
-	defer b.bMx.Unlock()
 	if deleteItems, err = b.EventGCMark(); chk.E(err) {
 		return
 	}
@@ -93,7 +89,7 @@ func (b *Backend) EventGCRun() (err error) {
 	if err = b.EventGCSweep(deleteItems); chk.E(err) {
 		return
 	}
-	b.EventGCCount()
+	// b.EventGCCount()
 	return
 }
 

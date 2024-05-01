@@ -45,8 +45,6 @@ type Backend struct {
 	*badger.DB
 	// seq is the monotonic collision free index for raw event storage.
 	seq *badger.Sequence
-	// bMx is a lock that prevents more than one operation running at a time
-	bMx sync.RWMutex
 }
 
 const DefaultMaxLimit = 1024
@@ -146,15 +144,11 @@ func (b *Backend) SerialBytes() (ser []byte, err error) {
 }
 
 func (b *Backend) Update(fn func(txn *badger.Txn) (err error)) (err error) {
-	// b.bMx.Lock()
 	err = b.DB.Update(fn)
-	// b.bMx.Unlock()
 	return
 }
 
 func (b *Backend) View(fn func(txn *badger.Txn) (err error)) (err error) {
-	// b.bMx.RLock()
 	err = b.DB.View(fn)
-	// b.bMx.RUnlock()
 	return
 }
