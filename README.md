@@ -1,8 +1,26 @@
 # replicatr
 
-nostr relay with modular storage and connectivity
+## [nostr](https://nostr.com/) layer2
 
-## about
+Modular NOSTR relay designed to enable modular data storage and connectivity for a borderless, composable global social network.
+
+Nostr is the base layer, and what Replicatr brings is the **Layer 2** enabling the data to be separated from the delivery.
+
+With Replicatr, Nostr can scale up to massive, heteregenous islands in a great archipelago of social networks, with low friction for users to transit or interact with multiple communities concurrently.
+
+# sponsors
+
+We gratefully acknowledge 
+
+### ![](https://cdn-assets-eu.frontify.com/s3/frontify-enterprise-files-eu/eyJwYXRoIjoiZGZpbml0eVwvZmlsZVwvZmE0QTVhcUR4MWVWZVJFQTRiTnAucG5nIn0:dfinity:IdAJOMHSBmHNqnd87mG-FQjWJO9E7dGTG802kJeqRTk?width=32) Dfinity and the Internet Computer Protocol
+
+who provided the funding and framework to execute this project
+
+### ![](https://aqs24-xaaaa-aaaal-qbbea-cai.ic0.app/logos/catalyze-mini.svg) Hubmakerlabs and Catalyze One
+
+who organised this project and brought together the developers and administrators required to make it happen
+
+# about
 
 `replicatr` is a `nostr` relay written in pure Go, aimed at becoming a single,
 modular, and extensible reference implementation of the `nostr` protocol as
@@ -10,11 +28,15 @@ described in the
 nostr [NIP (nostr implementation possibilities) specification](https://github.com/nostr-protocol/nips).
 
 It will use a [badger](https://github.com/dgraph-io/badger)
-data store for local caching, and interface with
-the [internet computer](https://internetcomputer.org/) for storage of all
-event types except ephemeral and private events.
+key/value store for local caching, and interface, and be designed to integrate with **layer 2** data storage systems such as [the internet computer protocol](https://internetcomputer.org) - and to bring the borderless, low friction connectivity of Nostr to the world.
 
-## Notes about the logger
+# Documentation
+
+todo
+
+## developer notes
+
+### Notes about the logger
 
 Due to its high performance at rendering and its programmable custom 
 hyperlink capability, VTE based terminal 
