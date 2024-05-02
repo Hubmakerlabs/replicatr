@@ -16,6 +16,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/minio/sha256-simd"
 )
@@ -77,6 +78,10 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				})
 				if err != nil {
 					close(q2.results)
+					for _ = range q2.results {
+					}
+					log.I.Ln("query results channel clear",
+						text.Trunc(q2.queryFilter.ToObject().String()))
 					return
 				}
 				for _, eventKey := range eventKeys {
@@ -97,6 +102,15 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 								evt := &event.T{}
 								log.T.F("found event stub %0x must seek in L2", v)
 								evt.ID, _ = eventid.New(hex.Enc(v))
+								select {
+								case <-c.Done():
+									log.I.Ln("websocket closed")
+									return
+								case <-b.Ctx.Done():
+									log.I.Ln("backend context canceled")
+									return
+								default:
+								}
 								q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
 								return
 							}
@@ -129,7 +143,13 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 						return
 					})
 				}
+				// log.I.Ln("closing results channel")
 				close(q2.results)
+				// log.I.Ln("draining results channel")
+				for _ = range q2.results {
+				}
+				log.I.Ln("results channel clear",
+					text.Trunc(q2.queryFilter.ToObject().String()))
 			}()
 		}
 		// receive results and ensure we only return the most recent ones always

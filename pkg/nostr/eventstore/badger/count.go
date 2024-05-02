@@ -10,6 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/dgraph-io/badger/v4"
 )
 
@@ -63,6 +64,10 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 			})
 			chk.E(err)
 			close(q.results)
+			for _ = range q.results {
+			}
+			log.T.Ln("count results channel clear",
+				text.Trunc(q.queryFilter.ToObject().String()))
 		}(q)
 		if counted {
 			continue
