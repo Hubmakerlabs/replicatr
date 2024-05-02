@@ -1,6 +1,6 @@
 # replicatr
 
-## [nostr](https://nostr.com/) [layer2](#what-is-layer2)
+## [nostr](https://nostr.com/) [layer2](#what-is-layer2) relay
 
 a nostr relay designed to enable modular data storage and connectivity for a borderless, composable global social network.
 
