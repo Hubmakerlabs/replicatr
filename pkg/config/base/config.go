@@ -64,6 +64,7 @@ type Config struct {
 	GCFrequency int    `arg:"-G,--gcfreq" json:"gc_frequency" default:"60" help:"frequency in seconds to check if database needs garbage collection"`
 	MaxProcs    int    `arg:"-m" json:"max_procs" default:"128" help:"maximum number of goroutines to use"`
 	LogLevel    string `arg:"--loglevel" default:"info" help:"set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)"`
+	PProf       bool   `arg:"--pprof" help:"enable CPU and memory profiling"`
 }
 
 func (c *Config) Save(filename string) (err error) {

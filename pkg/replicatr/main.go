@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/pprof"
 	"strings"
 	"sync"
 	"time"
@@ -98,6 +99,21 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	os.Args = osArgs
 	arg.MustParse(&args)
 	os.Args = tmp
+	if args.PProf {
+		if cpuProf, err := os.Create("cpu.pprof"); !chk.E(err) {
+			if err = pprof.StartCPUProfile(cpuProf); !chk.E(err) {
+				defer func() {
+					pprof.StopCPUProfile()
+					if pprof.WriteHeapProfile(cpuProf); !chk.E(err) {
+						if cpuProf, err = os.Create("heap.pprof"); !chk.E(err) {
+							chk.E(cpuProf.Close())
+						}
+					}
+				}()
+			}
+
+		}
+	}
 	if args.ImportCmd != nil || args.ExportCmd != nil || args.Wipe != nil {
 		// if any of these commands have been invoked we are only using badger, and no GC
 		args.EventStore = "badger"
