@@ -62,12 +62,15 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 				return
 			})
 			chk.E(err)
+			close(q.results)
 		}(q)
 		if counted {
 			continue
 		}
 		// if there was an extra filter
 		for i := range found {
+			evt := &event.T{}
+			val := make([]byte, b.MaxLimit)
 			err = b.View(func(txn *badger.Txn) (err error) {
 				// iterate only through keys and in reverse order
 				opts := badger.IteratorOptions{
@@ -76,8 +79,6 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 				it := txn.NewIterator(opts)
 				defer it.Close()
 				for it.Rewind(); it.ValidForPrefix(found[i]); it.Next() {
-					var evt *event.T
-					var val []byte
 					val, err = it.Item().ValueCopy(nil)
 					if evt, err = nostrbinary.Unmarshal(val); chk.E(err) {
 						return err

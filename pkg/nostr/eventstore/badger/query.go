@@ -41,6 +41,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	}
 	go func() {
 		defer close(ch)
+		defer close(accessChan)
 		// actually iterate
 		for _, q1 := range queries {
 			select {
@@ -75,6 +76,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 					return
 				})
 				if err != nil {
+					close(q2.results)
 					return
 				}
 				for _, eventKey := range eventKeys {
@@ -111,9 +113,19 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 								res := Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
 								log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
 									evt.ToObject().String())
+								select {
+								case <-c.Done():
+									log.I.Ln("websocket closed")
+									return
+								case <-b.Ctx.Done():
+									log.I.Ln("backend context canceled")
+									return
+								default:
+								}
 								q2.results <- res
 							}
 						}
+						// close(q2.results)
 						return
 					})
 				}

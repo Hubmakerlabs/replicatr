@@ -74,13 +74,18 @@ func (b *Backend) AccessLoop(c context.T, txMx *sync.Mutex, accCh chan *AccessEv
 		select {
 		case <-c.Done():
 			if len(accesses) > 0 {
-				// log.T.Ln("accesses", accesses)
 				chk.E(b.IncrementAccesses(txMx, accesses))
+				return
 			}
 			return
 		case acc := <-accCh:
-			// log.T.F("adding access to %s %d", acc.EvID, acc.Ser.Uint64())
-			accesses = append(accesses, &AccessEvent{acc.EvID, timestamp.Now(), acc.Ser})
+			if acc != nil {
+				// log.T.F("adding access to %s %d", acc.EvID, acc.Ser.Uint64())
+				accesses = append(accesses, &AccessEvent{acc.EvID, timestamp.Now(), acc.Ser})
+			} else {
+				chk.E(b.IncrementAccesses(txMx, accesses))
+				return
+			}
 		}
 	}
 }

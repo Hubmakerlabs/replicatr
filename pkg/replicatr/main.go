@@ -102,16 +102,15 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	if args.PProf {
 		if cpuProf, err := os.Create("cpu.pprof"); !chk.E(err) {
 			if err = pprof.StartCPUProfile(cpuProf); !chk.E(err) {
-				defer func() {
+				interrupt.AddHandler(func() {
 					pprof.StopCPUProfile()
-					if pprof.WriteHeapProfile(cpuProf); !chk.E(err) {
-						if cpuProf, err = os.Create("heap.pprof"); !chk.E(err) {
+					if heapProf, err := os.Create("heap.pprof"); !chk.E(err) {
+						if err = pprof.WriteHeapProfile(heapProf); !chk.E(err) {
 							chk.E(cpuProf.Close())
 						}
 					}
-				}()
+				})
 			}
-
 		}
 	}
 	if args.ImportCmd != nil || args.ExportCmd != nil || args.Wipe != nil {
