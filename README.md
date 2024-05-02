@@ -1,8 +1,26 @@
 # replicatr
 
-nostr relay with modular storage and connectivity
+## [nostr](https://nostr.com/) [layer2](#layer2)
 
-## about
+a nostr relay designed to enable modular data storage and connectivity for a borderless, composable global social network.
+
+Nostr is the base layer, and what Replicatr brings is the **Layer 2** enabling the data to be separated from the delivery.
+
+With Replicatr, Nostr can scale up to massive, heteregenous islands in a great archipelago of social networks, with low friction for users to transit or interact with multiple communities concurrently.
+
+# sponsors
+
+We gratefully acknowledge 
+
+### ![](https://cdn-assets-eu.frontify.com/s3/frontify-enterprise-files-eu/eyJwYXRoIjoiZGZpbml0eVwvZmlsZVwvZmE0QTVhcUR4MWVWZVJFQTRiTnAucG5nIn0:dfinity:IdAJOMHSBmHNqnd87mG-FQjWJO9E7dGTG802kJeqRTk?width=32) Dfinity and the Internet Computer Protocol
+
+who provided the funding and framework to execute this project
+
+### ![](https://aqs24-xaaaa-aaaal-qbbea-cai.ic0.app/logos/catalyze-mini.svg) Hubmakerlabs and Catalyze One
+
+who organised this project and brought together the developers and administrators required to make it happen
+
+# about
 
 `replicatr` is a `nostr` relay written in pure Go, aimed at becoming a single,
 modular, and extensible reference implementation of the `nostr` protocol as
@@ -10,11 +28,23 @@ described in the
 nostr [NIP (nostr implementation possibilities) specification](https://github.com/nostr-protocol/nips).
 
 It will use a [badger](https://github.com/dgraph-io/badger)
-data store for local caching, and interface with
-the [internet computer](https://internetcomputer.org/) for storage of all
-event types except ephemeral and private events.
+key/value store for local caching, and interface, and be designed to integrate with **layer 2** data storage systems such as [the internet computer protocol](https://internetcomputer.org) - and to bring the borderless, low friction connectivity of Nostr to the world.
 
-## Notes about the logger
+# what is **layer2**?
+
+## `nostr` relays as distributed caches for (multiple) larger decentralized data stores
+
+The reason why the name of this relay project is `replicatr` is in reference to the distributed database technology term *replica* which is the name given to a node in a distributed database system that contains a copy, or "replica" of the same data as the other nodes in the database cluster.
+
+Part of the details of implementing a two level storage system is the idea of creating bounds on the expansion of storage utilization in one layer and scalability questions on the second level.
+
+Mutable large data stores like the one being implemented for the initial beta of `replicatr`, the Internet Computer Protocol are one strategy for the *layer2* of `nostr`, but immutable stores with dynamic replication strategies that scale up replicas of data that are in demand and discard data that is of lesser importance, such as IPFS and Arweave and other content addressable storage strategies.
+
+It is entirely conceivable, even, to even go to *layer3* and *layer4* with event storage, but really, it makes no sense to add this distinction, when *layer2* can implicitly mean anything beyond the hot cache of a relay.
+
+## developer notes
+
+### notes about the logger
 
 Due to its high performance at rendering and its programmable custom 
 hyperlink capability, VTE based terminal 
