@@ -1,6 +1,7 @@
 package replicatr
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,12 +18,15 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IConly"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/number"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 	"github.com/alexflint/go-arg"
+	"github.com/aviate-labs/agent-go/identity"
+	sec "github.com/aviate-labs/secp256k1"
 	"mleku.dev/git/interrupt"
 	"mleku.dev/git/slog"
 )
@@ -132,6 +136,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			log.E.F("failed to write relay information document: '%s'", err)
 			os.Exit(1)
 		}
+		os.Exit(0)
 	} else {
 		if err = conf.Load(configPath); chk.E(err) {
 			log.D.F("failed to load relay configuration: '%s'", err)
@@ -199,10 +204,27 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	rl := app.NewRelay(c, cancel, inf, &args)
 	var db eventstore.Store
 	// if we are wiping we don't want to init db normally
-	if args.Wipe != nil || args.ExportCmd != nil || args.ImportCmd != nil {
+	switch {
+	case args.Wipe != nil, args.ExportCmd != nil, args.ImportCmd != nil:
 		conf.DBSizeLimit = 0
 		args.LogLevel = "off"
+	case args.PubKeyCmd != nil:
+		secKeyBytes, err := hex.Dec(conf.SecKey)
+		if err != nil {
+			return
+		}
+		privKey, _ := sec.PrivKeyFromBytes(sec.S256(), secKeyBytes)
+		id, _ := identity.NewSecp256k1Identity(privKey)
+		chk.E(err)
+		fmt.Println("Your Canister-Facing Relay Pubkey is:")
+		fmt.Printf("%x\n", id.PublicKey())
+		os.Exit(0)
+	case args.AddClientCmd != nil:
+		_ = args.AddClientCmd.PubKey
+		os.Exit(0)
 	}
+	//add acl canister commands here
+
 	// create both structures in any case
 	var badgerDB *badger.Backend
 	var icDB *IConly.Backend

@@ -53,7 +53,7 @@ func main() { // arg1 = portnum, arg2 = canisterID
 		go func(i int) {
 			log.D.Ln("creating random event")
 			ev := createRandomEvent(i)
-			if err = a.SaveEvent(nil, ev); chk.E(err) {
+			if err = a.SaveEvent(ev); chk.E(err) {
 				log.E.F("Failed to save event %d: %v", i, err)
 				wg.Done()
 				return
@@ -80,7 +80,7 @@ func main() { // arg1 = portnum, arg2 = canisterID
 	// Query events based on the filter
 	var ch event.C
 	go func() {
-		ch, err = a.QueryEvents(context.Bg(), f)
+		ch, err = a.QueryEvents(f)
 		if err != nil {
 			fmt.Println("Failed to query events:", err)
 			return

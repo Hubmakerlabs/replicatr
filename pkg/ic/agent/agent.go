@@ -7,10 +7,11 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	agent_go "github.com/aviate-labs/agent-go"
 	"github.com/aviate-labs/agent-go/identity"
 	"github.com/aviate-labs/agent-go/principal"
+
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	sec "github.com/aviate-labs/secp256k1"
 	"mleku.dev/git/slog"
 )
@@ -88,7 +89,7 @@ func (b *Backend) SaveCandidEvent(event Event) (result string, err error) {
 	return
 }
 
-func (b *Backend) GetCandidEvent(c context.T, filter *Filter) ([]Event, error) {
+func (b *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
 	methodName := "get_events"
 	args := []any{*filter}
 	// log.T.S(filter)
@@ -100,7 +101,7 @@ func (b *Backend) GetCandidEvent(c context.T, filter *Filter) ([]Event, error) {
 	return result, err
 }
 
-func (b *Backend) CountCandidEvent(c context.T, filter *Filter) (int, error) {
+func (b *Backend) CountCandidEvent(filter *Filter) (int, error) {
 	methodName := "get_events_count"
 	args := []any{*filter}
 	// log.T.S(filter)
@@ -112,14 +113,14 @@ func (b *Backend) CountCandidEvent(c context.T, filter *Filter) (int, error) {
 	return result, err
 }
 
-func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
+func (b *Backend) QueryEvents(f *filter.T) (ch event.C, err error) {
 
 	if f == nil {
 		err = log.E.Err("nil filter for query")
 		return
 	}
 	var candidEvents []Event
-	if candidEvents, err = b.GetCandidEvent(c, FilterToCandid(f)); chk.E(err) {
+	if candidEvents, err = b.GetCandidEvent(FilterToCandid(f)); chk.E(err) {
 		return
 	}
 	log.I.Ln("got", len(candidEvents), "events")
@@ -136,9 +137,9 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	return
 }
 
-func (b *Backend) SaveEvent(c context.T, e *event.T) (err error) {
+func (b *Backend) SaveEvent(e *event.T) (err error) {
 	select {
-	case <-c.Done():
+	case <-b.Ctx.Done():
 		return
 	default:
 	}
@@ -155,7 +156,7 @@ func (b *Backend) SaveEvent(c context.T, e *event.T) (err error) {
 
 // DeleteEvent deletes an event matching the given event.
 // todo: not yet implemented, but there is already a backend function for this
-func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
+func (b *Backend) DeleteEvent(ev *event.T) (err error) {
 	log.W.Ln("delete events on IC not yet implemented")
 	// todo: if event is not found, return eventstore.ErrEventNotExists
 	return
@@ -163,16 +164,16 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 
 // CountEvents counts how many events match the filter in the IC.
 // todo: use the proper count events API call in the canister
-func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
+func (b *Backend) CountEvents(f *filter.T) (count int, err error) {
 	if f == nil {
 		err = log.E.Err("nil filter for count query")
 		return
 	}
-	count, err = b.CountCandidEvent(c, FilterToCandid(f))
+	count, err = b.CountCandidEvent(FilterToCandid(f))
 	return
 }
 
-func (b *Backend) ClearEvents(c context.T) (result string, err error) {
+func (b *Backend) ClearEvents() (result string, err error) {
 	methodName := "clear_events"
 	args := []any{}
 	if err = b.Agent.Call(b.CanisterID, methodName, args, []any{&result}); chk.E(err) {

@@ -49,12 +49,12 @@ func (b *Backend) Close() {}
 // CountEvents returns the number of events found matching the filter. This is
 // synchronous.
 func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
-	return b.IC.CountEvents(c, f)
+	return b.IC.CountEvents(f)
 }
 
 // DeleteEvent removes an event from the event store. This is synchronous.
 func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
-	return b.IC.DeleteEvent(c, ev)
+	return b.IC.DeleteEvent(ev)
 }
 
 // QueryEvents searches for events that match a filter and returns them
@@ -65,7 +65,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	ch = make(event.C)
 	go func() {
 		log.D.Ln("querying IC with filter", f.ToObject().String())
-		if ch, err = b.IC.QueryEvents(c, f); chk.E(err) {
+		if ch, err = b.IC.QueryEvents(f); chk.E(err) {
 		}
 	}()
 	return
@@ -74,7 +74,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 // SaveEvent writes an event to the event store. This is synchronous.
 func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 	log.I.Ln("saving event to IC", ev.ToObject().String())
-	if err = b.IC.SaveEvent(c, ev); chk.E(err) {
+	if err = b.IC.SaveEvent(ev); chk.E(err) {
 		return
 	}
 	return

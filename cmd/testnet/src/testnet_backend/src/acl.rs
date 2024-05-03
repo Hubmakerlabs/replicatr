@@ -41,26 +41,26 @@ pub fn is_owner() -> Result<(), String> {
 }
 
 #[query(guard = "is_owner")]
-pub fn add_user(text : String) -> String {
-    let res: Result<Principal, String> 
-        = Principal::from_text(text).map_err(|e| e.to_string());
-    if let Ok(principal) = res{
-        PERMISSIONS.with(|p| p.borrow_mut().insert(principal, false));
+pub fn add_user(pub_key : String,perm : bool) -> String {
+    let principal: Principal 
+        = Principal::self_authenticating(pub_key);
+        PERMISSIONS.with(|p| p.borrow_mut().insert(principal, perm));
         "success".to_string()
-    } else {
-        res.unwrap_err()
-    }
 }
 
 #[query(guard = "is_owner")]
-pub fn remove_user(principal: Principal) -> String{
+pub fn remove_user(pub_key : String) -> String{
+    let principal: Principal 
+        = Principal::self_authenticating(pub_key);
     let mut permissions = PERMISSIONS.with(|p| p.borrow_mut().remove(&principal));
     "success".to_string()
 }
 
 
 #[query(guard = "is_user")]
-pub fn get_permission(principal: Principal) -> String {
+pub fn get_permission(pub_key : String) -> String {
+    let principal: Principal 
+    = Principal::self_authenticating(pub_key);
     let permissions = PERMISSIONS.with(|p| p.borrow().get(&principal));
     if let Some(permission) = permissions {
         if permission == true {

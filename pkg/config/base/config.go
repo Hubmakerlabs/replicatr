@@ -21,11 +21,18 @@ type ImportCmd struct {
 type InitCfg struct{}
 type WipeBDB struct{}
 type RescanAC struct{}
+type PubKey struct{}
+type AddClient struct {
+	PubKey string `arg:"-pub,--pubkey" help:"public key of client to add"`
+	Admin  bool   `arg:"-a,--admin" default:"false" help:"set client as admin"`
+}
 
 type Config struct {
 	ExportCmd    *ExportCmd `arg:"subcommand:export" json:"-" help:"export database as line structured JSON"`
 	ImportCmd    *ImportCmd `arg:"subcommand:import" json:"-" help:"import data from line structured JSON"`
 	InitCfgCmd   *InitCfg   `arg:"subcommand:initcfg" json:"-" help:"initialize relay configuration files"`
+	AddClientCmd *AddClient `arg:"subcommand:addrelay" json:"-" help:"add a relay to the cluster"`
+	PubKeyCmd    *PubKey    `arg:"subcommand:pubkey" json:"-" help:"print public key"`
 	Wipe         *WipeBDB   `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
 	Rescan       *RescanAC  `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
 	Listen       string     `arg:"-l,--listen" default:"0.0.0.0:3334" json:"listen" help:"network address to listen on"`
