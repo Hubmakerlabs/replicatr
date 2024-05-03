@@ -29,4 +29,7 @@ service : {
   save_events : (vec Event) -> (text);
   test : () -> (text) query;
   clear_events: () -> (text);
+  add_user : (text, bool) -> (text);
+  remove_user : (text) -> (text);
+  get_permission : (text) -> (text) query;
 }
