@@ -1,8 +1,8 @@
 package agent
 
-func (b *Backend) AddUser(pubKey string) (err error) {
+func (b *Backend) AddUser(pubKey string, perm bool) (err error) {
 	methodName := "add_user"
-	args := []any{pubKey}
+	args := []any{pubKey, perm}
 	var result string
 	err = b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
@@ -14,9 +14,9 @@ func (b *Backend) AddUser(pubKey string) (err error) {
 	return nil
 }
 
-func (b *Backend) RemoveUser(pubKey string, perm bool) (err error) {
+func (b *Backend) RemoveUser(pubKey string) (err error) {
 	methodName := "remove_user"
-	args := []any{pubKey, perm}
+	args := []any{pubKey}
 	var result string
 	err = b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {

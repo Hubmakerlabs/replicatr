@@ -69,7 +69,7 @@ pub fn get_permission(pub_key : String) -> String {
             "User".to_string()
         }
     } else {
-        "Unauthorized".to_string()
+        "Unauthorized/Error".to_string()
     }
 }
 

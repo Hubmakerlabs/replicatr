@@ -13,6 +13,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
 	"github.com/Hubmakerlabs/replicatr/pkg/config/base"
+	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
@@ -209,7 +210,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		conf.DBSizeLimit = 0
 		args.LogLevel = "off"
 	case args.PubKeyCmd != nil:
-		secKeyBytes, err := hex.Dec(conf.SecKey)
+		secKeyBytes, err := hex.Dec(rl.Config.SecKey)
 		if err != nil {
 			return
 		}
@@ -219,9 +220,41 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		fmt.Println("Your Canister-Facing Relay Pubkey is:")
 		fmt.Printf("%x\n", id.PublicKey())
 		os.Exit(0)
-	case args.AddClientCmd != nil:
-		_ = args.AddClientCmd.PubKey
+	case args.AddRelayCmd != nil:
+		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
+		if err != nil {
+			os.Exit(1)
+		}
+		err = a.AddUser(args.AddRelayCmd.PubKey, args.AddRelayCmd.Admin)
+		if err != nil {
+			os.Exit(1)
+		}
+		perm := "user"
+		if args.AddRelayCmd.Admin {
+			perm = "admin"
+		}
+		fmt.Printf("User %s added with %s level access\n", args.AddRelayCmd.PubKey, perm)
 		os.Exit(0)
+	case args.RemoveRelayCmd != nil:
+		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
+		if err != nil {
+			os.Exit(1)
+		}
+		err = a.RemoveUser(args.RemoveRelayCmd.PubKey)
+		if err != nil {
+			os.Exit(1)
+		}
+		fmt.Printf("User %s removed\n", args.RemoveRelayCmd.PubKey)
+		os.Exit(0)
+	case args.GetPermissionCmd != nil:
+		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
+		if err != nil {
+			os.Exit(1)
+		}
+		perm := a.GetPermission(args.GetPermissionCmd.PubKey)
+		fmt.Printf("User %s has %s level access\n", args.GetPermissionCmd.PubKey, perm)
+		os.Exit(0)
+
 	}
 	//add acl canister commands here
 

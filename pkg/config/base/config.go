@@ -22,33 +22,42 @@ type InitCfg struct{}
 type WipeBDB struct{}
 type RescanAC struct{}
 type PubKey struct{}
-type AddClient struct {
+type AddRelay struct {
 	PubKey string `arg:"-pub,--pubkey" help:"public key of client to add"`
 	Admin  bool   `arg:"-a,--admin" default:"false" help:"set client as admin"`
 }
+type RemoveRelay struct {
+	PubKey string `arg:"-pub,--pubkey" help:"public key of client to remove"`
+}
+
+type GetPermission struct {
+	PubKey string `arg:"-pub,--pubkey" help:"public key of client to get permission"`
+}
 
 type Config struct {
-	ExportCmd    *ExportCmd `arg:"subcommand:export" json:"-" help:"export database as line structured JSON"`
-	ImportCmd    *ImportCmd `arg:"subcommand:import" json:"-" help:"import data from line structured JSON"`
-	InitCfgCmd   *InitCfg   `arg:"subcommand:initcfg" json:"-" help:"initialize relay configuration files"`
-	AddClientCmd *AddClient `arg:"subcommand:addrelay" json:"-" help:"add a relay to the cluster"`
-	PubKeyCmd    *PubKey    `arg:"subcommand:pubkey" json:"-" help:"print public key"`
-	Wipe         *WipeBDB   `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
-	Rescan       *RescanAC  `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
-	Listen       string     `arg:"-l,--listen" default:"0.0.0.0:3334" json:"listen" help:"network address to listen on"`
-	EventStore   string     `arg:"-e,--eventstore" default:"badger" json:"eventstore" help:"select event store backend [ic,badger,iconly]"`
-	CanisterAddr string     `arg:"-C,--canisteraddr" default:"https://icp0.io/" json:"canister_addr" help:"IC canister address to use (for local, use 127.0.0.1:46847)"`
-	CanisterId   string     `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
-	Profile      string     `arg:"-p,--profile" json:"-" default:"replicatr" help:"profile name to use for storage"`
-	Name         string     `arg:"-n,--name" json:"name" default:"replicatr relay" help:"name of relay for NIP-11"`
-	Description  string     `arg:"-d,--description" json:"description" help:"description of relay for NIP-11"`
-	Pubkey       string     `arg:"--pubkey" json:"pubkey" help:"public key of relay operator"`
-	Contact      string     `arg:"-c,--contact" json:"contact,omitempty" help:"non-nostr relay operator contact details"`
-	Icon         string     `arg:"-i,--icon" json:"icon" default:"https://i.nostr.build/n8vM.png" help:"icon to show on relay information pages"`
-	AuthRequired bool       `arg:"-a,--auth" json:"auth_required" default:"false" help:"NIP-42 authentication required for all access"`
-	Public       bool       `arg:"--public" json:"public" default:"true" help:"allow public read access to users not on ACL"`
-	Owners       []string   `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
-	SecKey       string     `arg:"-s,--seckey" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
+	ExportCmd        *ExportCmd     `arg:"subcommand:export" json:"-" help:"export database as line structured JSON"`
+	ImportCmd        *ImportCmd     `arg:"subcommand:import" json:"-" help:"import data from line structured JSON"`
+	InitCfgCmd       *InitCfg       `arg:"subcommand:initcfg" json:"-" help:"initialize relay configuration files"`
+	AddRelayCmd      *AddRelay      `arg:"subcommand:addrelay" json:"-" help:"add a relay to the cluster"`
+	PubKeyCmd        *PubKey        `arg:"subcommand:pubkey" json:"-" help:"print public key"`
+	RemoveRelayCmd   *RemoveRelay   `arg:"subcommand:removerelay" json:"-" help:"remove a relay from the cluster"`
+	GetPermissionCmd *GetPermission `arg:"subcommand:getpermission" json:"-" help:"get permission of a relay"`
+	Wipe             *WipeBDB       `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
+	Rescan           *RescanAC      `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
+	Listen           string         `arg:"-l,--listen" default:"0.0.0.0:3334" json:"listen" help:"network address to listen on"`
+	EventStore       string         `arg:"-e,--eventstore" default:"badger" json:"eventstore" help:"select event store backend [ic,badger,iconly]"`
+	CanisterAddr     string         `arg:"-C,--canisteraddr" default:"https://icp0.io/" json:"canister_addr" help:"IC canister address to use (for local, use 127.0.0.1:46847)"`
+	CanisterId       string         `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
+	Profile          string         `arg:"-p,--profile" json:"-" default:"replicatr" help:"profile name to use for storage"`
+	Name             string         `arg:"-n,--name" json:"name" default:"replicatr relay" help:"name of relay for NIP-11"`
+	Description      string         `arg:"-d,--description" json:"description" help:"description of relay for NIP-11"`
+	Pubkey           string         `arg:"--pubkey" json:"pubkey" help:"public key of relay operator"`
+	Contact          string         `arg:"-c,--contact" json:"contact,omitempty" help:"non-nostr relay operator contact details"`
+	Icon             string         `arg:"-i,--icon" json:"icon" default:"https://i.nostr.build/n8vM.png" help:"icon to show on relay information pages"`
+	AuthRequired     bool           `arg:"-a,--auth" json:"auth_required" default:"false" help:"NIP-42 authentication required for all access"`
+	Public           bool           `arg:"--public" json:"public" default:"true" help:"allow public read access to users not on ACL"`
+	Owners           []string       `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
+	SecKey           string         `arg:"-s,--seckey" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
 	// Whitelist permits ONLY inbound connections from specified IP addresses.
 	Whitelist []string `arg:"-w,--whitelist,separate" json:"ip_whitelist" help:"IP addresses that are only allowed to access"`
 	// AllowIPs is for bypassing authentication required for clients based on IP
