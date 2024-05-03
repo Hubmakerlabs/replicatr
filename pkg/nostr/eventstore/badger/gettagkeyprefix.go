@@ -24,7 +24,9 @@ func GetTagKeyPrefix(tagValue string) (key []byte, err error) {
 	if k, pkb, d := eventstore.GetAddrTagElements(tagValue); len(pkb) == 32 {
 		// store value in the new special "a" tag index
 		var pk *pubkey.T
-		pk, err = pubkey.NewFromBytes(pkb)
+		if pk, err = pubkey.NewFromBytes(pkb); chk.E(err) {
+			return
+		}
 		els := []keys.Element{kinder.New(k), pk}
 		if len(d) > 0 {
 			els = append(els, arb.NewFromString(d))
