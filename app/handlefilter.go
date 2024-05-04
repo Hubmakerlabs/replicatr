@@ -16,6 +16,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
+	"github.com/fasthttp/websocket"
 )
 
 type handleFilterParams struct {
@@ -119,10 +120,21 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 						}
 					}
 				}
-				chk.E(h.ws.WriteEnvelope(&eventenvelope.T{
-					SubscriptionID: h.id,
-					Event:          ev,
-				}))
+				// this event should already be cached so we will use a different websocket
+				// write function.
+				j, ok := rl.Encoder.Get(ev.ID)
+				var err error
+				if !ok {
+					if j, err = rl.Encoder.Put(ev, nil); chk.E(err) {
+						continue
+					}
+				}
+				chk.E(h.ws.WriteMessage(websocket.TextMessage,
+					eventenvelope.FromRawJSON(h.id.String(), j)))
+				// chk.E(h.ws.WriteEnvelope(&eventenvelope.T{
+				// 	SubscriptionID: h.id,
+				// 	Event:          ev,
+				// }))
 			}
 		}(ch)
 		// log.T.Ln("query", i, "done", h.f.ToObject().String())

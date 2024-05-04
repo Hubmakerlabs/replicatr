@@ -1,6 +1,7 @@
 package eventenvelope
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -42,6 +43,16 @@ func NewEventEnvelope(si string, ev *event.T) (ee *T, err error) {
 	return &T{SubscriptionID: sid, Event: ev}, nil
 }
 
+func FromRawJSON(si string, j []byte) (b []byte) {
+	// pre-allocate all the memory the buffer will need.
+	buf := bytes.NewBuffer(make([]byte, len(si)+len(j)+16))
+	buf.WriteString(`["EVENT","`)
+	buf.WriteString(si)
+	buf.WriteString(`",`)
+	buf.Write(j)
+	buf.WriteString(`]`)
+	return buf.Bytes()
+}
 func (env *T) ToArray() (a array.T) {
 	a = make(array.T, 0, 3)
 	a = append(a, labels.EVENT)

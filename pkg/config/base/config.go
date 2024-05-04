@@ -65,6 +65,7 @@ type Config struct {
 	MaxProcs    int    `arg:"-m" json:"max_procs" default:"128" help:"maximum number of goroutines to use"`
 	LogLevel    string `arg:"--loglevel" default:"info" help:"set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)"`
 	PProf       bool   `arg:"--pprof" help:"enable CPU and memory profiling"`
+	EncodeCache int    `arg:"--encodecache" default:"100000000" help:"JSON encode cache size limit for GC"`
 }
 
 func (c *Config) Save(filename string) (err error) {

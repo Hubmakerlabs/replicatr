@@ -43,9 +43,9 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		Conn:    conn,
 		Request: r,
 		Authed:  make(chan struct{}),
+		Encoder: rl.Encoder,
 	}
 	ws.SetRealRemote(rr)
-
 	// NIP-42 challenge
 	ws.GenerateChallenge()
 	c, cancel := context.Cancel(

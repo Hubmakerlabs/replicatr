@@ -136,8 +136,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			// this always returns "blocked: " whenever it returns an error
 			err = rl.handleDeleteRequest(c, env.Event)
 		} else {
-			log.D.Ln("adding event", ws.AuthPubKey(),
-				ws.RealRemote(), env.Event.ToObject().String())
+			// log.D.Ln("adding event", ws.AuthPubKey(),
+			// 	ws.RealRemote(), env.Event.ToObject().String())
 			// this will also always return a prefixed reason
 			err = rl.AddEvent(c, env.Event)
 		}

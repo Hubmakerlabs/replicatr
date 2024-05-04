@@ -45,7 +45,6 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 	// if the event is found but it has been replaced with the event ID (in case of
 	// L2) we need to restore it, or otherwise return that the event exists.
 	if foundSerial != nil {
-		var restored bool
 		err = b.Update(func(txn *badger.Txn) (err error) {
 			// retrieve the event record
 			evKey := keys.Write(index.New(index.Event), seri)
@@ -72,19 +71,21 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 				if err = txn.Set(counterKey, val); chk.E(err) {
 					return
 				}
-				restored = true
 				return
 			} else {
 				return eventstore.ErrDupEvent
 			}
 		})
-		// if it was a dupe, or restored, we are done.
-		if chk.E(err) || restored {
+		// if it was a dupe, we are done.
+		if chk.E(err) {
 			return
 		}
+		// if this is a restore, we are done, no need to cache the JSON, as it is not a
+		// new event.
+		return
 	}
 	// otherwise, save new event record.
-	return b.Update(func(txn *badger.Txn) (err error) {
+	if err = b.Update(func(txn *badger.Txn) (err error) {
 		var idx []byte
 		var ser *serial.T
 		idx, ser = b.SerialKey()
@@ -111,7 +112,20 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 		if err = txn.Set(counterKey, val); chk.E(err) {
 			return
 		}
+		// store the json encoded form in the decoder cache
+		if _, err = b.Encoder.Put(ev, nil); chk.E(err) {
+			return
+		}
 		log.T.F("event saved")
 		return
-	})
+	}); chk.E(err) {
+		return
+	}
+	// store the json encoded form so it is ready to deliver for filter matches on
+	// subscriptions, now the DB tx is complete, as subscription filters may now
+	// match and require the JSON to send to a client.
+	if _, err = b.Encoder.Put(ev, nil); chk.E(err) {
+		return
+	}
+	return
 }

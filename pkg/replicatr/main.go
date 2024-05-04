@@ -18,11 +18,13 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IConly"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/cache"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/number"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
+	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/alexflint/go-arg"
 	"mleku.dev/git/interrupt"
 	"mleku.dev/git/slog"
@@ -209,6 +211,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.DBHighWater != 0 {
 			conf.DBHighWater = args.DBHighWater
 		}
+		conf.EncodeCache = args.EncodeCache
 		if args.GCFrequency != 0 {
 			conf.GCFrequency = args.GCFrequency
 		}
@@ -225,7 +228,9 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		inf.Limitation.AuthRequired = true
 	}
 	var wg sync.WaitGroup
-	rl := app.NewRelay(c, cancel, inf, &args)
+	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
+	encoder := cache.NewEncoder(c, args.EncodeCache, app.MaxMessageSize, time.Second*10)
+	rl := app.NewRelay(c, cancel, inf, &args, encoder)
 	var db eventstore.Store
 	// create both structures in any case
 	var badgerDB *badger.Backend
@@ -250,6 +255,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			DBLowWater:  args.DBLowWater,
 			DBHighWater: args.DBHighWater,
 			GCFrequency: time.Duration(args.GCFrequency) * time.Second,
+			Encoder:     encoder,
 		}
 	}
 	switch rl.Config.EventStore {
@@ -273,7 +279,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
 	// commenting out the override so GC will work
-	// rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
+	rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	// run the chat ACL initialization
 	rl.Init()
 	serv := http.Server{

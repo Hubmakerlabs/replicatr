@@ -68,7 +68,6 @@ func (b *Backend) SweepHasL2(serials del.Items) (err error) {
 		})
 		chk.E(err)
 	}
-
 	// there is nothing that can be done about database errors at this point anyway.
 	err = nil
 	return

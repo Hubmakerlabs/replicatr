@@ -26,7 +26,10 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 		// log.I.Ln("running count query", i)
 		select {
 		case <-c.Done():
-			err = log.W.Err("shutting down")
+			log.I.Ln("websocket closed")
+			return
+		case <-b.Ctx.Done():
+			log.I.Ln("backend context canceled")
 			return
 		default:
 		}
@@ -40,6 +43,15 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 				it := txn.NewIterator(opts)
 				defer it.Close()
 				for it.Seek(q.start); it.ValidForPrefix(q.searchPrefix); it.Next() {
+					select {
+					case <-c.Done():
+						log.I.Ln("websocket closed")
+						return
+					case <-b.Ctx.Done():
+						log.I.Ln("backend context canceled")
+						return
+					default:
+					}
 					item := it.Item()
 					key := item.Key()
 					// this is where the idx actually starts
