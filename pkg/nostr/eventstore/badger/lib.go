@@ -12,7 +12,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/cache"
-	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/dgraph-io/badger/v4"
 	"mleku.dev/git/slog"
 )
@@ -66,7 +65,7 @@ func GetBackend(
 	WG *sync.WaitGroup,
 	path string,
 	hasL2 bool,
-	maxMessageSize int,
+	maxCacheSize int,
 	params ...int,
 ) (b *Backend) {
 	var sizeLimit, lw, hw, freq = 0, 86, 92, 60
@@ -93,7 +92,7 @@ func GetBackend(
 		DBHighWater: hw,
 		GCFrequency: time.Duration(freq) * time.Second,
 		HasL2:       hasL2,
-		Encoder:     cache.NewEncoder(Ctx, 100*units.Mb, maxMessageSize, time.Second*10),
+		Encoder:     cache.NewEncoder(Ctx, maxCacheSize, time.Second*10),
 	}
 	return
 }

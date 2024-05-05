@@ -24,10 +24,10 @@ type Event struct {
 type events map[eventid.T]*Event
 
 type Encoder struct {
-	mx        sync.Mutex
-	events    events
-	pool      *sync.Pool
-	sizeLimit int
+	mx      sync.Mutex
+	events  events
+	pool    *sync.Pool
+	average int
 }
 
 type access struct {
@@ -47,19 +47,21 @@ func (s accesses) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
 // JSON bytes of events to prevent doubling up of both decoding work and JSON
 // bytes usage for multiple concurrent requests of overlapping events by
 // clients.
-func NewEncoder(c context.T, sizeLimit, maxMessageLength int,
+func NewEncoder(c context.T, maxCacheSize int,
 	gcTimer time.Duration) *Encoder {
 
 	d := &Encoder{
-		events:    make(events),
-		sizeLimit: sizeLimit,
-		pool: &sync.Pool{New: func() any {
-			return make([]byte, 0, maxMessageLength)
-		}},
+		events:  make(events),
+		average: 8192,
 	}
+	d.pool = &sync.Pool{New: func() any {
+		// allocate a little more than the average to minimise reallocations.
+		return make([]byte, 0, d.average*120/100)
+	}}
 	go func() {
 		log.D.Ln("starting encoder cache garbage collector")
 		tick := time.NewTicker(gcTimer)
+	gcLoop:
 		for {
 			select {
 			case <-c.Done():
@@ -71,8 +73,9 @@ func NewEncoder(c context.T, sizeLimit, maxMessageLength int,
 				for i := range d.events {
 					total += len(d.events[i].JSON)
 				}
-				log.W.Ln("total encode cache utilization", total, "of", d.sizeLimit)
-				if total > d.sizeLimit {
+				log.W.Ln("total encode cache utilization:", total, "of", maxCacheSize,
+					"average buffer size:", d.average, "count of events:", len(d.events))
+				if total > d.average {
 					// create list of cache by access time
 					var accessed accesses
 					for id := range d.events {
@@ -86,8 +89,12 @@ func NewEncoder(c context.T, sizeLimit, maxMessageLength int,
 					sort.Sort(accessed)
 					var last, size int
 					// count off the items in descending timestamp order until the size exceeds the
-					// sizeLimit.
-					for ; size < d.sizeLimit; last++ {
+					// average.
+					for ; size < maxCacheSize; last++ {
+						if last >= len(accessed) {
+							// no need to GC
+							continue gcLoop
+						}
 						size += accessed[last].size
 					}
 					log.I.F("pruning out %d bytes of %d of cached decoded events", total-size, total)
@@ -132,6 +139,8 @@ func (d *Encoder) Put(ev *event.T, js []byte) (j []byte, err error) {
 	}
 	// we don't have it so store it now
 	d.events[ev.ID] = &Event{JSON: j, lastAccessed: timestamp.Now()}
+	// simple moving average should avoid reallocations 50% of the time
+	d.average = (d.average + len(j)) / 2
 	return
 }
 

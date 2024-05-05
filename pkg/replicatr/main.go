@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"runtime/pprof"
 	"strings"
 	"sync"
@@ -101,6 +102,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	os.Args = osArgs
 	arg.MustParse(&args)
 	os.Args = tmp
+	_ = debug.SetGCPercent(args.GCRatio)
 	if args.PProf {
 		if cpuProf, err := os.Create("cpu.pprof"); !chk.E(err) {
 			if err = pprof.StartCPUProfile(cpuProf); !chk.E(err) {
@@ -229,7 +231,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	}
 	var wg sync.WaitGroup
 	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
-	encoder := cache.NewEncoder(c, args.EncodeCache, app.MaxMessageSize, time.Second*10)
+	encoder := cache.NewEncoder(c, args.EncodeCache, time.Second*10)
 	rl := app.NewRelay(c, cancel, inf, &args, encoder)
 	var db eventstore.Store
 	// create both structures in any case
