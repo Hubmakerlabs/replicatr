@@ -231,7 +231,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	}
 	var wg sync.WaitGroup
 	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
-	encoder := cache.NewEncoder(c, args.EncodeCache, time.Second*10)
+	encoder := cache.NewEncoder(c, args.EncodeCache, time.Second*30)
 	rl := app.NewRelay(c, cancel, inf, &args, encoder)
 	var db eventstore.Store
 	// create both structures in any case

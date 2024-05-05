@@ -92,7 +92,7 @@ func GetBackend(
 		DBHighWater: hw,
 		GCFrequency: time.Duration(freq) * time.Second,
 		HasL2:       hasL2,
-		Encoder:     cache.NewEncoder(Ctx, maxCacheSize, time.Second*10),
+		Encoder:     cache.NewEncoder(Ctx, maxCacheSize, time.Second*30),
 	}
 	return
 }

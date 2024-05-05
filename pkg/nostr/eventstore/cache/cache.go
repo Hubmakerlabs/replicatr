@@ -68,7 +68,6 @@ func NewEncoder(c context.T, maxCacheSize int,
 				log.I.Ln("terminating decoder cache garbage collector")
 				return
 			case <-tick.C:
-				log.I.Ln("decoder cache GC tick")
 				var total int
 				for i := range d.events {
 					total += len(d.events[i].JSON)
@@ -96,6 +95,9 @@ func NewEncoder(c context.T, maxCacheSize int,
 							continue gcLoop
 						}
 						size += accessed[last].size
+					}
+					if size < maxCacheSize {
+						continue gcLoop
 					}
 					log.I.F("pruning out %d bytes of %d of cached decoded events", total-size, total)
 					for ; last < len(accessed); last++ {
