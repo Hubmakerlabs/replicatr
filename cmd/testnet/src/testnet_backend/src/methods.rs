@@ -7,13 +7,10 @@ use candid::export_service;
 use ic_cdk_macros::{query, update};
 use ic_stable_structures::StableBTreeMap;
 use ic_stable_structures::memory_manager::MemoryId;
-use crate::acl::{init,is_user};
+use crate::acl::{is_user};
 
 
-#[ic_cdk_macros::init]
-fn initialize() {
-    init();
-}
+
 
 
 #[query(guard = "is_user")]

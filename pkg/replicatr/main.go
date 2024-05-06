@@ -1,6 +1,7 @@
 package replicatr
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"os"
@@ -215,18 +216,22 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			return
 		}
 		privKey, _ := sec.PrivKeyFromBytes(sec.S256(), secKeyBytes)
-		id, _ := identity.NewSecp256k1Identity(privKey)
+		id, err := identity.NewSecp256k1Identity(privKey)
 		chk.E(err)
 		fmt.Println("Your Canister-Facing Relay Pubkey is:")
-		fmt.Printf("%x\n", id.PublicKey())
+		publicKeyBase64 := base64.StdEncoding.EncodeToString(id.PublicKey())
+
+		fmt.Println(publicKeyBase64)
 		os.Exit(0)
 	case args.AddRelayCmd != nil:
 		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
 		if err != nil {
+			fmt.Printf("Error creating agent: %s\n", err)
 			os.Exit(1)
 		}
 		err = a.AddUser(args.AddRelayCmd.PubKey, args.AddRelayCmd.Admin)
 		if err != nil {
+			fmt.Printf("Error adding user: %s\n", err)
 			os.Exit(1)
 		}
 		perm := "user"
@@ -238,6 +243,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	case args.RemoveRelayCmd != nil:
 		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
 		if err != nil {
+			fmt.Printf("Error creating agent: %s\n", err)
 			os.Exit(1)
 		}
 		err = a.RemoveUser(args.RemoveRelayCmd.PubKey)
@@ -249,10 +255,15 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	case args.GetPermissionCmd != nil:
 		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
 		if err != nil {
+			fmt.Printf("Error creating agent: %s\n", err)
 			os.Exit(1)
 		}
-		perm := a.GetPermission(args.GetPermissionCmd.PubKey)
-		fmt.Printf("User %s has %s level access\n", args.GetPermissionCmd.PubKey, perm)
+		perm, err := a.GetPermission()
+		if err != nil {
+			fmt.Printf("Error getting Permission: %s\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("This relay has %s level access\n", perm)
 		os.Exit(0)
 
 	}

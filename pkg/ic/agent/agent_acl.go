@@ -28,16 +28,9 @@ func (b *Backend) RemoveUser(pubKey string) (err error) {
 	return nil
 }
 
-func (b *Backend) GetPermission(pubKey string) (err error) {
+func (b *Backend) GetPermission() (result string, err error) {
 	methodName := "get_permission"
-	args := []any{pubKey}
-	var result string
+	args := []any{}
 	err = b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
-	if err != nil {
-		return
-	} else if result != "success" {
-		err = log.E.Err("failed to get permission")
-		return
-	}
-	return nil
+	return
 }

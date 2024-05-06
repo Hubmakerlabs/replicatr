@@ -31,5 +31,5 @@ service : {
   clear_events: () -> (text);
   add_user : (text, bool) -> (text);
   remove_user : (text) -> (text);
-  get_permission : (text) -> (text) query;
+  get_permission : () -> (text) query;
 }
