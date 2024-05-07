@@ -57,8 +57,8 @@ pub fn is_owner() -> Result<(), String> {
     }
 }
 
-#[update(guard = "is_owner")]
-pub fn add_user(pub_key : String,perm : bool) -> String {
+
+pub fn add_user_acl(pub_key : String,perm : bool) -> String {
     let principal_res = string_to_principal(pub_key);
     if let Ok(principal) = principal_res {
         PERMISSIONS.with(|p| p.borrow_mut().insert(principal, perm));
@@ -68,8 +68,8 @@ pub fn add_user(pub_key : String,perm : bool) -> String {
     }
 }
 
-#[update(guard = "is_owner")]
-pub fn remove_user(pub_key : String) -> String{
+
+pub fn remove_user_acl(pub_key : String) -> String{
     
 
     let principal_res = string_to_principal(pub_key);
@@ -82,8 +82,8 @@ pub fn remove_user(pub_key : String) -> String{
 }
 
 
-#[query]
-pub fn get_permission() -> String {
+
+pub fn get_permission_acl() -> String {
     let principal: Principal 
     = caller();
     let permissions = PERMISSIONS.with(|p| p.borrow().get(&principal));

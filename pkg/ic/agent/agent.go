@@ -89,6 +89,20 @@ func (b *Backend) SaveCandidEvent(event Event) (result string, err error) {
 	return
 }
 
+func (b *Backend) DeleteCandidEvent(event Event) (result string, err error) {
+	methodName := "delete_event"
+	args := []any{event}
+	if err = b.Agent.Call(b.CanisterID, methodName, args,
+		[]any{&result}); chk.E(err) {
+		return
+	}
+	if len(result) > 0 {
+		return
+	}
+	err = log.E.Err("unexpected result format")
+	return
+}
+
 func (b *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
 	methodName := "get_events"
 	args := []any{*filter}
@@ -102,7 +116,7 @@ func (b *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
 }
 
 func (b *Backend) CountCandidEvent(filter *Filter) (int, error) {
-	methodName := "get_events_count"
+	methodName := "count_events"
 	args := []any{*filter}
 	// log.T.S(filter)
 	var result int
@@ -157,8 +171,18 @@ func (b *Backend) SaveEvent(e *event.T) (err error) {
 // DeleteEvent deletes an event matching the given event.
 // todo: not yet implemented, but there is already a backend function for this
 func (b *Backend) DeleteEvent(ev *event.T) (err error) {
-	log.W.Ln("delete events on IC not yet implemented")
-	// todo: if event is not found, return eventstore.ErrEventNotExists
+	select {
+	case <-b.Ctx.Done():
+		return
+	default:
+	}
+	var res string
+	if res, err = b.DeleteCandidEvent(EventToCandid(ev)); chk.E(err) {
+		return
+	}
+	if res != "success" {
+		err = log.E.Err("failed to delete event", ev.ToObject().String())
+	}
 	return
 }
 
