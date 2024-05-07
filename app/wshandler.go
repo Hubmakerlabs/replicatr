@@ -48,17 +48,11 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	ws.SetRealRemote(rr)
 	// NIP-42 challenge
 	ws.GenerateChallenge()
-	// query contexts can hold open for a long time and currently this means a lot
-	// of memory being marked owned while it is in fact idle... in future this
-	// memory usage will be examined and fixed but for now, 5 minutes per socket
-	// connection is more than long enough.
-	// todo: find out where resources are being retained unnecessarily and eliminate them
-	c, cancel := context.Timeout(
+	c, cancel := context.Cancel(
 		context.Value(
 			context.Bg(),
 			wsKey, ws,
 		),
-		time.Minute*5,
 	)
 	if len(rl.Whitelist) > 0 {
 		for i := range rl.Whitelist {
