@@ -146,7 +146,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			reason = err.Error()
 			if strings.HasPrefix(reason, auth.Required) {
 				log.I.Ln("requesting auth")
-				RequestAuth(c)
+				RequestAuth(c, env.Label())
 				ok = true
 			}
 			if strings.HasPrefix(reason, "duplicate") {
@@ -197,7 +197,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 				// fail everything if any filter is rejected
 				reason := err.Error()
 				if strings.HasPrefix(reason, auth.Required) {
-					RequestAuth(c)
+					RequestAuth(c, env.Label())
 				}
 				if strings.HasPrefix(reason, "blocked") {
 					return

@@ -10,6 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/kinder"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/pubkey"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
@@ -37,7 +38,7 @@ func (q query) String() string {
 type Results struct {
 	Ev  *event.T
 	TS  timestamp.T
-	Ser string
+	Ser *serial.T
 }
 
 // PrepareQueries analyses a filter and generates a set of query specs that produce

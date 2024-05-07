@@ -22,8 +22,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IConly"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/cache"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/number"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
@@ -124,20 +124,20 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			}
 		}
 	}
-	if args.ImportCmd != nil || args.ExportCmd != nil || args.Wipe != nil {
-		// if any of these commands have been invoked we are only using badger, and no GC
-		args.EventStore = "badger"
-		args.DBSizeLimit = 0
-	} else {
-		// set logging level if non-default was set in args
-		if args.LogLevel != "info" {
-			for i := range slog.LevelSpecs {
-				if slog.LevelSpecs[i].Name[:1] == strings.ToLower(args.LogLevel[:1]) {
-					slog.SetLogLevel(i)
-				}
+	// if args.ImportCmd != nil || args.ExportCmd != nil || args.Wipe != nil {
+	// 	// if any of these commands have been invoked we are only using badger, and no GC
+	// 	args.EventStore = "badger"
+	// 	args.DBSizeLimit = 0
+	// } else {
+	// 	// set logging level if non-default was set in args
+	if args.LogLevel != "info" {
+		for i := range slog.LevelSpecs {
+			if slog.LevelSpecs[i].Name[:1] == strings.ToLower(args.LogLevel[:1]) {
+				slog.SetLogLevel(i)
 			}
 		}
 	}
+	// }
 	runtime.GOMAXPROCS(args.MaxProcs)
 	inf := &relayinfo.T{Nips: nips}
 	var err error
@@ -152,8 +152,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	}
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
-	// inf := *relayinfo.NewInfo(&relayinfo.T{Nips: nips})
-	inf := &relayinfo.T{}
 	// generate a relay identity key if one wasn't given
 	if args.SecKey == "" {
 		args.SecKey = keys.GeneratePrivateKey()
@@ -179,6 +177,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			log.D.F("failed to load relay configuration: '%s'", err)
 			os.Exit(1)
 		}
+		log.I.Ln("loaded configuration from", configPath)
+		log.I.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
 		if args.Listen != "" {
@@ -224,99 +224,37 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.GCFrequency != 0 {
 			conf.GCFrequency = args.GCFrequency
 		}
-		if conf.Pubkey, err = keys.GetPublicKey(conf.SecKey); chk.E(err) {
+		if args.Pubkey != "" {
+			conf.Pubkey = args.Pubkey
 		}
 		if err = inf.Load(infoPath); chk.E(err) {
 			inf = GetInfo(&conf)
 			log.D.F("failed to load relay information document: '%s' "+
 				"deriving from config", err)
 		}
-	if err = conf.Load(configPath); chk.E(err) {
-		log.D.F("failed to load relay configuration: '%s'", err)
-		os.Exit(1)
-	}
-	log.I.Ln("loaded configuration from", configPath)
-	log.I.S(conf)
-	// if fields are empty, overwrite them with the cli args file
-	// versions
-	if args.Listen != "" {
-		conf.Listen = args.Listen
-	}
-	if args.Profile != "" {
-		conf.Profile = args.Profile
-	}
-	if args.Name != "" {
-		conf.Name = args.Name
-	}
-	if args.Description != "" {
-		conf.Description = args.Description
-	}
-	if args.Pubkey != "" {
-		conf.Pubkey = args.Pubkey
-	}
-	if args.Contact != "" {
-		conf.Contact = args.Contact
-	}
-	if args.Icon != "" {
-		conf.Icon = args.Icon
-	}
-	// CLI args on "separate" items add to the ones in the config
-	if len(args.Whitelist) != 0 {
-		conf.Whitelist = append(conf.Whitelist, args.Whitelist...)
-	}
-	if len(args.Owners) != 0 {
-		conf.Owners = append(conf.Owners, args.Owners...)
-	}
-	log.I.Ln("setting seckey", args.SecKey, conf.SecKey)
-	if args.SecKey != "" {
-		conf.SecKey = args.SecKey
-	}
-	// log.I.Ln(args.DBSizeLimit)
-	if args.DBSizeLimit != 0 {
-		conf.DBSizeLimit = args.DBSizeLimit
-	}
-	if args.DBLowWater != 0 {
-		conf.DBLowWater = args.DBLowWater
-	}
-	if args.DBHighWater != 0 {
-		conf.DBHighWater = args.DBHighWater
-	}
-	conf.EncodeCache = args.EncodeCache
-	if args.GCFrequency != 0 {
-		conf.GCFrequency = args.GCFrequency
-	}
-	if conf.Pubkey, err = keys.GetPublicKey(conf.SecKey); chk.E(err) {
-	}
-	if err = inf.Load(infoPath); chk.E(err) {
-		inf = GetInfo(&conf)
-		log.D.F("failed to load relay information document: '%s' "+
-			"deriving from config", err)
-	}
-	if args.AuthRequired {
-		conf.AuthRequired = true
-		inf.Limitation.AuthRequired = true
-	}
-	// initialize configuration with whatever has been read from the CLI.
-	if args.InitCfgCmd != nil {
-		if args.SecKey == "" {
-			// generate a relay identity key if one wasn't given
-			args.SecKey = keys.GeneratePrivateKey()
+		if args.AuthRequired {
+			conf.AuthRequired = true
+			inf.Limitation.AuthRequired = true
 		}
-		apputil.EnsureDir(configPath)
-		// get a default relayinfo.T
-		inf = GetInfo(&args)
-		if err = args.Save(configPath); chk.E(err) {
-			log.E.F("failed to write relay configuration: '%s'", err)
-			os.Exit(1)
-		}
-		if err = inf.Save(infoPath); chk.E(err) {
-			log.E.F("failed to write relay information document: '%s'", err)
-			os.Exit(1)
+		// initialize configuration with whatever has been read from the CLI.
+		if args.InitCfgCmd != nil {
+			if args.SecKey == "" {
+				// generate a relay identity key if one wasn't given
+				args.SecKey = keys.GeneratePrivateKey()
+			}
+			apputil.EnsureDir(configPath)
+			// get a default relayinfo.T
+			inf = GetInfo(&args)
+			if err = args.Save(configPath); chk.E(err) {
+				log.E.F("failed to write relay configuration: '%s'", err)
+				os.Exit(1)
+			}
+			if err = inf.Save(infoPath); chk.E(err) {
+				log.E.F("failed to write relay information document: '%s'", err)
+				os.Exit(1)
+			}
 		}
 	}
-	if args.Pubkey, err = keys.GetPublicKey(args.SecKey); chk.E(err) {
-	}
-
 	var wg sync.WaitGroup
 	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
 	encoder := cache.NewEncoder(c, args.EncodeCache, time.Second*30)
@@ -339,7 +277,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			log.E.F("Error creating identity: %s\n", err)
 			os.Exit(1)
 		}
-		log.I.F("Your Canister-Facing Relay Pubkey is:\n")
+		log.D.F("Your Canister-Facing Relay Pubkey is:\n")
 		publicKeyBase64 := base64.StdEncoding.EncodeToString(id.PublicKey())
 
 		fmt.Println(publicKeyBase64)
@@ -389,7 +327,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		os.Exit(0)
 
 	}
-	//add acl canister commands here
+	// add acl canister commands here
 
 	// create both structures in any case
 	var badgerDB *badger.Backend
