@@ -24,7 +24,7 @@ type RescanAC struct{}
 type PubKey struct{}
 type AddRelay struct {
 	PubKey string `arg:"-k,--pubkey" help:"public key of client to add"`
-	Admin  bool   `arg:"-a,--admin" default:"false" help:"set client as admin"`
+	Admin  bool   `arg:"--admin" default:"false" help:"set client as admin"`
 }
 type RemoveRelay struct {
 	PubKey string `arg:"-k,--pubkey" help:"public key of client to remove"`
