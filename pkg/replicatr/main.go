@@ -227,6 +227,12 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.Pubkey != "" {
 			conf.Pubkey = args.Pubkey
 		}
+		if args.CanisterAddr != "" {
+			conf.CanisterAddr = args.CanisterAddr
+		}
+		if args.CanisterId != "" {
+			conf.CanisterId = args.CanisterId
+		}
 		if err = inf.Load(infoPath); chk.E(err) {
 			inf = GetInfo(&conf)
 			log.D.F("failed to load relay information document: '%s' "+

@@ -18,8 +18,8 @@ mkdir -p "$TARGET_DIR"
 # Execute the Go command and capture the output
 # eventually change to
 #TODO 
-#pubkey=$(go run . pubkey --loglevel off)
-pubkey=$(go run . pubkey  -I bkyz2-fmaaa-aaaaa-qaaaq-cai -C http://127.0.0.1:46373/ -s 546c81c7390cf75ebf592b9627e95c4d21495766de56090b10b7a3f197c98d3b --loglevel off)
+
+pubkey=$(go run . pubkey   --loglevel off)
 
 # Check if the pubkey was successfully retrieved
 if [ -z "$pubkey" ]; then
