@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Hubmakerlabs/replicatr/cmd/ingestr/app"
+	"github.com/Hubmakerlabs/replicatr/cmd/vacuum/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
@@ -77,11 +77,12 @@ unable to read configuration file
 		fail()
 	}
 	args.SeckeyHex = nsecDecoded.(string)
-	if args.PubkeyHex, err = keys.GetPublicKey(args.SeckeyHex); chk.E(err) {
+	var pubKeyHex string
+	if pubKeyHex, err = keys.GetPublicKey(args.SeckeyHex); chk.E(err) {
 		fail()
 	}
 	var pkb []byte
-	if pkb, err = hex.Dec(args.PubkeyHex); chk.E(err) {
+	if pkb, err = hex.Dec(pubKeyHex); chk.E(err) {
 		fail()
 	}
 	var pk *ec.PublicKey
@@ -93,7 +94,7 @@ unable to read configuration file
 		fail()
 	}
 	log.I.F("will auth using nsec corresponding to %s", npub)
-	os.Exit(app.Ingest(&args))
+	os.Exit(app.Vacuum(&args))
 }
 
 func fail() {

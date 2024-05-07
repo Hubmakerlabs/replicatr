@@ -133,6 +133,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 	}
 	runtime.GOMAXPROCS(args.MaxProcs)
+	// inf := *relayinfo.NewInfo(&relayinfo.T{Nips: nips})
+	inf := &relayinfo.T{}
 	var err error
 	var dataDirBase string
 	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {
@@ -145,15 +147,76 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	}
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
-	// inf := *relayinfo.NewInfo(&relayinfo.T{Nips: nips})
-	inf := &relayinfo.T{}
-	// generate a relay identity key if one wasn't given
-	if args.SecKey == "" {
-		args.SecKey = keys.GeneratePrivateKey()
+	if err = conf.Load(configPath); chk.E(err) {
+		log.D.F("failed to load relay configuration: '%s'", err)
+		os.Exit(1)
+	}
+	log.I.Ln("loaded configuration from", configPath)
+	log.I.S(conf)
+	// if fields are empty, overwrite them with the cli args file
+	// versions
+	if args.Listen != "" {
+		conf.Listen = args.Listen
+	}
+	if args.Profile != "" {
+		conf.Profile = args.Profile
+	}
+	if args.Name != "" {
+		conf.Name = args.Name
+	}
+	if args.Description != "" {
+		conf.Description = args.Description
+	}
+	if args.Pubkey != "" {
+		conf.Pubkey = args.Pubkey
+	}
+	if args.Contact != "" {
+		conf.Contact = args.Contact
+	}
+	if args.Icon != "" {
+		conf.Icon = args.Icon
+	}
+	// CLI args on "separate" items add to the ones in the config
+	if len(args.Whitelist) != 0 {
+		conf.Whitelist = append(conf.Whitelist, args.Whitelist...)
+	}
+	if len(args.Owners) != 0 {
+		conf.Owners = append(conf.Owners, args.Owners...)
+	}
+	log.I.Ln("setting seckey", args.SecKey, conf.SecKey)
+	if args.SecKey != "" {
+		conf.SecKey = args.SecKey
+	}
+	// log.I.Ln(args.DBSizeLimit)
+	if args.DBSizeLimit != 0 {
+		conf.DBSizeLimit = args.DBSizeLimit
+	}
+	if args.DBLowWater != 0 {
+		conf.DBLowWater = args.DBLowWater
+	}
+	if args.DBHighWater != 0 {
+		conf.DBHighWater = args.DBHighWater
+	}
+	conf.EncodeCache = args.EncodeCache
+	if args.GCFrequency != 0 {
+		conf.GCFrequency = args.GCFrequency
+	}
+	if conf.Pubkey, err = keys.GetPublicKey(conf.SecKey); chk.E(err) {
+	}
+	if err = inf.Load(infoPath); chk.E(err) {
+		inf = GetInfo(&conf)
+		log.D.F("failed to load relay information document: '%s' "+
+			"deriving from config", err)
+	}
+	if args.AuthRequired {
+		conf.AuthRequired = true
+		inf.Limitation.AuthRequired = true
 	}
 	// initialize configuration with whatever has been read from the CLI.
 	if args.InitCfgCmd != nil {
-		if args.Pubkey, err = keys.GetPublicKey(args.SecKey); chk.E(err) {
+		if args.SecKey == "" {
+			// generate a relay identity key if one wasn't given
+			args.SecKey = keys.GeneratePrivateKey()
 		}
 		apputil.EnsureDir(configPath)
 		// get a default relayinfo.T
@@ -166,74 +229,14 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			log.E.F("failed to write relay information document: '%s'", err)
 			os.Exit(1)
 		}
-	} else {
-		if err = conf.Load(configPath); chk.E(err) {
-			log.D.F("failed to load relay configuration: '%s'", err)
-			os.Exit(1)
-		}
-		// if fields are empty, overwrite them with the cli args file
-		// versions
-		if args.Listen != "" {
-			conf.Listen = args.Listen
-		}
-		if args.Profile != "" {
-			conf.Profile = args.Profile
-		}
-		if args.Name != "" {
-			conf.Name = args.Name
-		}
-		if args.Description != "" {
-			conf.Description = args.Description
-		}
-		if args.Pubkey != "" {
-			conf.Pubkey = args.Pubkey
-		}
-		if args.Contact != "" {
-			conf.Contact = args.Contact
-		}
-		if args.Icon == "" {
-			conf.Icon = args.Icon
-		}
-		// CLI args on "separate" items add to the ones in the config
-		if len(args.Whitelist) == 0 {
-			conf.Whitelist = append(conf.Whitelist, args.Whitelist...)
-		}
-		if len(args.Owners) == 0 {
-			conf.Owners = append(conf.Owners, args.Owners...)
-		}
-		if args.SecKey == "" {
-			conf.SecKey = args.SecKey
-		}
-		// log.I.Ln(args.DBSizeLimit)
-		if args.DBSizeLimit != 0 {
-			conf.DBSizeLimit = args.DBSizeLimit
-		}
-		if args.DBLowWater != 0 {
-			conf.DBLowWater = args.DBLowWater
-		}
-		if args.DBHighWater != 0 {
-			conf.DBHighWater = args.DBHighWater
-		}
-		conf.EncodeCache = args.EncodeCache
-		if args.GCFrequency != 0 {
-			conf.GCFrequency = args.GCFrequency
-		}
-		if conf.Pubkey, err = keys.GetPublicKey(conf.SecKey); chk.E(err) {
-		}
-		if err = inf.Load(infoPath); chk.E(err) {
-			inf = GetInfo(&conf)
-			log.D.F("failed to load relay information document: '%s' "+
-				"deriving from config", err)
-		}
 	}
-	if args.AuthRequired {
-		conf.AuthRequired = true
-		inf.Limitation.AuthRequired = true
+	if args.Pubkey, err = keys.GetPublicKey(args.SecKey); chk.E(err) {
 	}
+
 	var wg sync.WaitGroup
 	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
 	encoder := cache.NewEncoder(c, args.EncodeCache, time.Second*30)
-	rl := app.NewRelay(c, cancel, inf, &args, encoder)
+	rl := app.NewRelay(c, cancel, inf, &conf, encoder)
 	var db eventstore.Store
 	// create both structures in any case
 	var badgerDB *badger.Backend

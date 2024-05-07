@@ -70,7 +70,9 @@ func NewEncoder(c context.T, maxCacheSize int,
 			case <-tick.C:
 				var total int
 				for i := range d.events {
+					d.mx.Lock()
 					total += len(d.events[i].JSON)
+					d.mx.Unlock()
 				}
 				log.W.Ln("total encode cache utilization:", total, "of", maxCacheSize,
 					"average buffer size:", d.average, "count of events:", len(d.events))
@@ -78,12 +80,14 @@ func NewEncoder(c context.T, maxCacheSize int,
 					// create list of cache by access time
 					var accessed accesses
 					for id := range d.events {
+						d.mx.Lock()
 						accessed = append(accessed,
 							access{
 								T:            id,
 								lastAccessed: d.events[id].lastAccessed,
 								size:         len(d.events[id].JSON),
 							})
+						d.mx.Unlock()
 					}
 					sort.Sort(accessed)
 					var last, size int

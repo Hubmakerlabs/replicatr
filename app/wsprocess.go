@@ -142,7 +142,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			err = rl.AddEvent(c, env.Event)
 		}
 		var reason string
-		if ok = !chk.E(err); !ok {
+		if err != nil {
 			reason = err.Error()
 			if strings.HasPrefix(reason, auth.Required) {
 				log.I.Ln("requesting auth")

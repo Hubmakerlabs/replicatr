@@ -8,10 +8,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscription"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
@@ -21,12 +19,7 @@ func Ingest(args *Config) int {
 	if args.Since == 0 {
 		args.Since = 1640305963
 	}
-	// if no kinds are given, use the default
-	if len(args.Kinds) == 0 {
-		args.Kinds = defaultKinds
-	}
-	log.I.F("ingesting events of kind %v with dates after %v from %s and sending to %s",
-		args.Kinds,
+	log.I.F("ingesting events of  with dates after %v from %s and sending to %s",
 		time.Unix(args.Since, 0),
 		args.DownloadRelay,
 		args.UploadRelay,
@@ -46,30 +39,20 @@ func Ingest(args *Config) int {
 	oldest := args.Since
 	now := time.Now().Unix()
 	var downAuthed, upAuthed bool
-	var increment = 60 * 60 * args.Interval
+	var increment = args.Interval
 	for i := oldest; i < now; i += increment {
 		// create the subscription to the download relay
 		var sub *subscription.T
 		since := timestamp.FromUnix(i).Ptr()
 		until := timestamp.FromUnix(i + increment - 1).Ptr()
-		authors := append(tag.T{args.PubkeyHex}, args.OtherPubkeys...)
-		pTags := filter.TagMap{"#p": authors}
 		f := filters.T{
 			{
-				Kinds:   args.Kinds,
-				Authors: tag.T{args.PubkeyHex},
-				Limit:   &args.Limit,
-				Since:   since,
-				Until:   until,
-			},
-			{
-				Kinds: args.Kinds,
-				Tags:  pTags,
 				Limit: &args.Limit,
 				Since: since,
 				Until: until,
 			},
 		}
+		log.I.Ln("query filter", f[0].ToObject().String())
 		if sub, err = downRelay.Subscribe(c, f); chk.D(err) {
 			// this could fail
 		}
@@ -147,7 +130,7 @@ func Ingest(args *Config) int {
 				}
 			}
 		}
-		time.Sleep(time.Duration(args.Pause) * time.Second)
+		time.Sleep(time.Duration(args.Pause) * time.Millisecond)
 	}
 	log.I.Ln("ingested", count, "events from", args.DownloadRelay,
 		"and sent to", args.UploadRelay)

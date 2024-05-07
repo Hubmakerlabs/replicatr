@@ -86,7 +86,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 			if saveErr := store(c, ev); chk.T(saveErr) {
 				switch {
 				case errors.Is(saveErr, eventstore.ErrDupEvent):
-					log.D.Ln(saveErr)
+					// log.D.Ln(saveErr)
 					return saveErr
 				default:
 					err = log.E.Err(normalize.Reason(saveErr.Error(), "error"))
