@@ -133,8 +133,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 	}
 	runtime.GOMAXPROCS(args.MaxProcs)
-	// inf := *relayinfo.NewInfo(&relayinfo.T{Nips: nips})
-	inf := &relayinfo.T{}
+	inf := &relayinfo.T{Nips: nips}
 	var err error
 	var dataDirBase string
 	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {

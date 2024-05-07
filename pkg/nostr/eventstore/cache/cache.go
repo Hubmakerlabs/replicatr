@@ -76,7 +76,7 @@ func NewEncoder(c context.T, maxCacheSize int,
 				}
 				log.W.Ln("total encode cache utilization:", total, "of", maxCacheSize,
 					"average buffer size:", d.average, "count of events:", len(d.events))
-				if total > d.average {
+				if total > maxCacheSize {
 					// create list of cache by access time
 					var accessed accesses
 					for id := range d.events {
