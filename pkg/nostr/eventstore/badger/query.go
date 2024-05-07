@@ -128,7 +128,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 								res := Results{Ev: ev, TS: timestamp.Now(), Ser: ser}
 								select {
 								case <-c.Done():
-									log.I.Ln("websocket closed")
+									// log.I.Ln("websocket closed")
 									return
 								case <-b.Ctx.Done():
 									log.I.Ln("backend context canceled")

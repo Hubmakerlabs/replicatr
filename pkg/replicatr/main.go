@@ -103,6 +103,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	arg.MustParse(&args)
 	os.Args = tmp
 	_ = debug.SetGCPercent(args.GCRatio)
+	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
 	if args.PProf {
 		if cpuProf, err := os.Create("cpu.pprof"); !chk.E(err) {
 			if err = pprof.StartCPUProfile(cpuProf); !chk.E(err) {

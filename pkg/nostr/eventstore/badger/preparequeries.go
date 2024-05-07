@@ -171,7 +171,7 @@ func PrepareQueries(f *filter.T) (
 	}
 	for i, q := range qs {
 		qs[i].start = binary.BigEndian.AppendUint64(q.searchPrefix, until)
-		qs[i].results = make(chan Results, 12)
+		qs[i].results = make(chan Results, 128)
 	}
 	// this is where we'll end the iteration
 	if f.Since != nil {

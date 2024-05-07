@@ -66,7 +66,7 @@ type Config struct {
 	LogLevel    string `arg:"--loglevel" default:"info" help:"set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)"`
 	PProf       bool   `arg:"--pprof" help:"enable CPU and memory profiling"`
 	EncodeCache int    `arg:"--encodecache" default:"10000000" help:"JSON encode cache size limit for GC"`
-	GCRatio     int    `arg:"--gcratio" default:"50" help:"set GC percentage for triggering GC sweeps"`
+	GCRatio     int    `arg:"--gcratio" default:"100" help:"set GC percentage for triggering GC sweeps"`
 }
 
 func (c *Config) Save(filename string) (err error) {

@@ -96,10 +96,11 @@ func NewEncoder(c context.T, maxCacheSize int,
 						}
 						size += accessed[last].size
 					}
-					if size < maxCacheSize {
+					if size <= maxCacheSize || len(accessed)-last == 0 {
 						continue gcLoop
 					}
-					log.I.F("pruning out %d bytes of %d of cached decoded events", total-size, total)
+					log.I.F("pruning out %d events making up %d bytes of %d of cached decoded events, will be %d bytes after",
+						len(accessed)-last, total-size, total, size)
 					for ; last < len(accessed); last++ {
 						// free the buffers so they go back to the pool
 						d.pool.Put(d.events[accessed[last].T].JSON)
