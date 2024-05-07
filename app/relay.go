@@ -105,7 +105,7 @@ type Relay struct {
 func (rl *Relay) AuthCheck(c context.T) {
 	if rl.Info.Limitation.AuthRequired {
 		// log.I.Ln("requesting auth")
-		RequestAuth(c)
+		RequestAuth(c, "connection")
 	}
 }
 
@@ -148,7 +148,7 @@ func NewRelay(c context.T, cancel context.F,
 		ACL:            &acl.T{},
 		Encoder:        encoder,
 	}
-	log.I.F("relay chat pubkey: %s %s", pubKey, npub)
+	log.I.F("relay chat pubkey: %s %s\n", pubKey, npub)
 	// populate ACL with owners to start
 	for _, owner := range r.Config.Owners {
 		if err = r.ACL.AddEntry(&acl.Entry{

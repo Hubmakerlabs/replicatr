@@ -7,14 +7,18 @@ use candid::export_service;
 use ic_cdk_macros::{query, update};
 use ic_stable_structures::StableBTreeMap;
 use ic_stable_structures::memory_manager::MemoryId;
+use crate::acl::{is_user};
 
 
-#[query]
+
+
+
+#[query(guard = "is_user")]
 fn test() -> String {
     "Hello, world!".to_string()
 }
 
-#[query]
+#[query(guard = "is_user")]
 fn _get_events() -> Vec<(String, Event)> {
     EVENTS.with(|events| {
         events
@@ -25,12 +29,12 @@ fn _get_events() -> Vec<(String, Event)> {
     })
 }
 
-#[query]
+#[query(guard = "is_user")]
 fn _get_events_count() -> u64 {
     EVENTS.with(|events| events.borrow().len() as u64)
 }
 
-#[update]
+#[update(guard = "is_user")]
 fn save_event(event: Event) -> String {
     let event_for_logging = event.clone();
     EVENTS.with(|events| {
@@ -41,7 +45,7 @@ fn save_event(event: Event) -> String {
     "success".to_string()
 }
 
-#[update]
+#[update(guard = "is_user")]
 fn save_events(events: Vec<Event>) -> String {
     let events_for_logging = events.clone();
     EVENTS.with(|events_map| {
@@ -54,7 +58,7 @@ fn save_events(events: Vec<Event>) -> String {
     "success".to_string()
 }
 
-#[update]
+#[update(guard = "is_user")]
 fn delete_event(id: String) -> String {
     let event_for_logging = id.clone();
     EVENTS.with(|events| {
@@ -66,7 +70,7 @@ fn delete_event(id: String) -> String {
     "success".to_string()
 }
 
-#[query]
+#[query(guard = "is_user")]
 fn get_events(filter: Filter) -> Vec<Event> {
     let result = EVENTS.with(|events| {
         events
@@ -82,7 +86,7 @@ fn get_events(filter: Filter) -> Vec<Event> {
     result
 }
 
-#[query]
+#[query(guard = "is_user")]
 fn get_events_count(filter: Filter) -> u64 {
     get_events(filter).len() as u64
 
@@ -95,7 +99,7 @@ pub fn __export_did_tmp_() -> String {
     __export_service()
 }
 
-#[update]
+#[update(guard = "is_user")]
 fn clear_events() -> String {
     EVENTS.with(|events| {
         // Replace the contents of `events` with a new, empty `StableBTreeMap`.
@@ -114,6 +118,7 @@ pub fn candid() {
     use std::env;
     use std::fs::write;
     use std::path::PathBuf;
+
 
     let dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let dir = dir.parent().unwrap().parent().unwrap().join("candid");

@@ -4,38 +4,13 @@ import (
 	"bytes"
 	"encoding/gob"
 	"os"
-	"sort"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	bdb "github.com/dgraph-io/badger/v4"
 )
-
-type ExportEntry struct {
-	idx          []byte
-	lastAccessed timestamp.T
-}
-
-type ExportEntries []ExportEntry
-
-// sort export entries the same way as the GC sorts them for pruning
-var _ sort.Interface = ExportEntries{}
-
-func (e ExportEntries) Len() int           { return len(e) }
-func (e ExportEntries) Less(i, j int) bool { return e[i].lastAccessed < e[j].lastAccessed }
-func (e ExportEntries) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
-
-func (e ExportEntries) Find(idx []byte) (ee *ExportEntry) {
-	for i := range e {
-		if bytes.Compare(e[i].idx, idx) == 0 {
-			return &e[i]
-		}
-	}
-	return
-}
 
 // Export prints the JSON of all events or writes them to a file.
 func (rl *Relay) Export(db *badger.Backend, filename string) {

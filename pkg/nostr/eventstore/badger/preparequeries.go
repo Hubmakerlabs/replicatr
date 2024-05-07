@@ -10,7 +10,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/kinder"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/pubkey"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
@@ -38,7 +37,7 @@ func (q query) String() string {
 type Results struct {
 	Ev  *event.T
 	TS  timestamp.T
-	Ser *serial.T
+	Ser string
 }
 
 // PrepareQueries analyses a filter and generates a set of query specs that produce
@@ -157,11 +156,9 @@ func PrepareQueries(f *filter.T) (
 		}
 		// log.T.S("kinds", qs)
 	default:
-		if len(qs) > 0 {
-			qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
-			ext = nil
-			// log.T.S("other", qs)
-		}
+		qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
+		ext = nil
+		// log.T.S("other", qs)
 	}
 	var until uint64 = math.MaxUint64
 	if f.Until != nil {

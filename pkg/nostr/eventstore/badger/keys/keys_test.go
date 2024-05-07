@@ -4,6 +4,7 @@ package keys_test
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"os"
 	"testing"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/minio/sha256-simd"
 	"lukechampine.com/frand"
 	"mleku.dev/git/ec/schnorr"
 	"mleku.dev/git/slog"
@@ -110,6 +110,8 @@ func TestElement(t *testing.T) {
 		// a createdat
 		ts := timestamp.Now()
 		vca := createdat.New(ts)
+		// a sizer
+		// n := uint32(frand.Uint64n(math.MaxUint32))
 		// write out values
 		b := keys.Write(vca)
 		// check that values decoded all correctly
@@ -118,11 +120,17 @@ func TestElement(t *testing.T) {
 		// read it in
 		keys.Read(b, vca2)
 		// check they match
+
 		if vca.Val != vca2.Val {
 			t.Logf("failed to decode correctly got %v expected %v", vca2.Val,
 				vca.Val)
 			failed = true
 		}
+		// if vs.Val != vs2.Val {
+		// 	t.Logf("failed to decode correctly got %v expected %v", vs2.Val,
+		// 		vs.Val)
+		// 	failed = true
+		// }
 	}
 	if failed {
 		t.FailNow()

@@ -11,4 +11,5 @@ type Config struct {
 	CanisterID   string `arg:"-i,--canisterid" default:"rpfa6-ryaaa-aaaap-qccvq-cai" json:"canister_id" help:"IC canister ID to use"`
 	Wipe         bool   `arg:"--wipe" default:"false" json:"-" help:"only wipe canister and badger"`
 	LogLevel     string `arg:"--loglevel" default:"info" help:"set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)"`
+	SecKey       string `arg:"-s,--seckey" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
 }

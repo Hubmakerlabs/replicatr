@@ -56,13 +56,12 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 			Reason: normalize.Reason(reason, auth.Required),
 		}))
 		// send out authorization request
-		log.I.Ln("requesting auth")
-		RequestAuth(c)
+		RequestAuth(c, "REQ")
 	out:
 		for {
 			select {
 			case <-ws.Authed:
-				log.I.Ln("user authed", ws.RealRemote(), ws.AuthPubKey())
+				log.I.Ln("user authed", ws.Origin())
 				break out
 			case <-c.Done():
 				log.D.Ln("context canceled while waiting for auth")
@@ -71,7 +70,7 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 				if ws.AuthPubKey() == "" {
 					return true,
 						log.I.Err("Authorization timeout from ",
-							ws.RealRemote()).Error()
+							ws.Origin()).Error()
 				}
 			}
 
@@ -91,7 +90,7 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 	parties := make(tag.T, len(receivers)+len(f.Authors))
 	copy(parties[:len(f.Authors)], f.Authors)
 	copy(parties[len(f.Authors):], receivers)
-	log.D.Ln(ws.RealRemote(), "parties", parties, "querant", ws.AuthPubKey())
+	log.D.Ln(ws.RealRemote(), "parties", parties, "querant", ws.Origin())
 	switch {
 	case ws.AuthPubKey() == "":
 		// not authenticated

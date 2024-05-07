@@ -23,7 +23,7 @@ func main() {
 	ctx, cancel := context.Cancel(context.Bg())
 
 	if args.Wipe {
-		app.CanisterCleanUp(args.CanisterID, args.CanisterAddr)
+		app.CanisterCleanUp(args.CanisterID, args.CanisterAddr, args.SecKey)
 		app.BadgerCleanUp()
 		os.Exit(1)
 	}
@@ -44,7 +44,7 @@ func main() {
 	}
 	time.Sleep(time.Second)
 	if !args.SkipSetup {
-		app.CanisterCleanUp(args.CanisterID, args.CanisterAddr)
+		app.CanisterCleanUp(args.CanisterID, args.CanisterAddr, args.SecKey)
 	}
 	// Set up WebSocket connection
 	wsURL := "ws://127.0.0.1:3334"
@@ -65,7 +65,7 @@ func main() {
 		log.F.F("event test failed: %v", err)
 	}
 	if !args.SkipSetup {
-		app.CanisterCleanUp(args.CanisterID, args.CanisterAddr)
+		app.CanisterCleanUp(args.CanisterID, args.CanisterAddr, args.SecKey)
 		app.BadgerCleanUp()
 	}
 }
