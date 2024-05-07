@@ -213,12 +213,16 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	case args.PubKeyCmd != nil:
 		secKeyBytes, err := hex.Dec(rl.Config.SecKey)
 		if err != nil {
+			log.E.F("Error decoding SecKey: %s\n", err)
 			return
 		}
 		privKey, _ := sec.PrivKeyFromBytes(sec.S256(), secKeyBytes)
 		id, err := identity.NewSecp256k1Identity(privKey)
-		chk.E(err)
-		fmt.Println("Your Canister-Facing Relay Pubkey is:")
+		if err != nil {
+			log.E.F("Error creating identity: %s\n", err)
+			os.Exit(1)
+		}
+		log.I.F("Your Canister-Facing Relay Pubkey is:\n")
 		publicKeyBase64 := base64.StdEncoding.EncodeToString(id.PublicKey())
 
 		fmt.Println(publicKeyBase64)
@@ -226,41 +230,42 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	case args.AddRelayCmd != nil:
 		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
 		if err != nil {
-			fmt.Printf("Error creating agent: %s\n", err)
+			log.E.F("Error creating agent: %s\n", err)
 			os.Exit(1)
 		}
 		err = a.AddUser(args.AddRelayCmd.PubKey, args.AddRelayCmd.Admin)
 		if err != nil {
-			fmt.Printf("Error adding user: %s\n", err)
+			log.E.F("Error adding user: %s\n", err)
 			os.Exit(1)
 		}
 		perm := "user"
 		if args.AddRelayCmd.Admin {
 			perm = "admin"
 		}
-		fmt.Printf("User %s added with %s level access\n", args.AddRelayCmd.PubKey, perm)
+		log.I.F("User %s added with %s level access\n", args.AddRelayCmd.PubKey, perm)
 		os.Exit(0)
 	case args.RemoveRelayCmd != nil:
 		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
 		if err != nil {
-			fmt.Printf("Error creating agent: %s\n", err)
+			log.E.F("Error creating agent: %s\n", err)
 			os.Exit(1)
 		}
 		err = a.RemoveUser(args.RemoveRelayCmd.PubKey)
 		if err != nil {
+			log.E.F("Error removing user: %s\n", err)
 			os.Exit(1)
 		}
-		fmt.Printf("User %s removed\n", args.RemoveRelayCmd.PubKey)
+		log.I.F("User %s removed\n", args.RemoveRelayCmd.PubKey)
 		os.Exit(0)
 	case args.GetPermissionCmd != nil:
 		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
 		if err != nil {
-			fmt.Printf("Error creating agent: %s\n", err)
+			log.E.F("Error creating agent: %s\n", err)
 			os.Exit(1)
 		}
 		perm, err := a.GetPermission()
 		if err != nil {
-			fmt.Printf("Error getting Permission: %s\n", err)
+			log.E.F("Error getting Permission: %s\n", err)
 			os.Exit(1)
 		}
 		fmt.Printf("This relay has %s level access\n", perm)

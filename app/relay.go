@@ -142,7 +142,7 @@ func NewRelay(c context.T, cancel context.F,
 		RelayNpub:      npub,
 		ACL:            &acl.T{},
 	}
-	log.I.F("relay chat pubkey: %s %s", pubKey, npub)
+	log.I.F("relay chat pubkey: %s %s\n", pubKey, npub)
 	// populate ACL with owners to start
 	for _, owner := range r.Config.Owners {
 		if err = r.ACL.AddEntry(&acl.Entry{

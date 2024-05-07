@@ -23,6 +23,7 @@
 !*.did
 !*.rs
 !*.toml
+!*.file
 # ...even if they are in subdirectories
 !*/
 !cmd/testnet/*
