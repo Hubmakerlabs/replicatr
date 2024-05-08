@@ -389,7 +389,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		// cancel()
 		os.Exit(0)
 	case args.ImportCmd != nil:
-		rl.Import(db, args.ImportCmd.FromFile, &wg)
+		rl.Import(db, args.ImportCmd.FromFile, &wg, args.ImportCmd.StartingFrom)
 		// cancel()
 		os.Exit(0)
 	case args.ExportCmd != nil:

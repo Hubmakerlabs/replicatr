@@ -14,7 +14,7 @@ import (
 
 // Import a collection of JSON events from stdin or from one or more files, line
 // structured JSON.
-func (rl *Relay) Import(db eventstore.Store, files []string, wg *sync.WaitGroup) {
+func (rl *Relay) Import(db eventstore.Store, files []string, wg *sync.WaitGroup, start int) {
 	wg.Add(1)
 	defer wg.Done()
 	log.D.Ln("running import subcommand on these files:", files)
@@ -25,6 +25,10 @@ func (rl *Relay) Import(db eventstore.Store, files []string, wg *sync.WaitGroup)
 		log.I.Ln("importing from file", files[i])
 		if fh, err = os.OpenFile(files[i], os.O_RDONLY, 0755); chk.D(err) {
 			continue
+		}
+		if start != 0 {
+			_, err = fh.Seek(int64(start), 0)
+			chk.E(err)
 		}
 		scanner := bufio.NewScanner(fh)
 		scanner.Buffer(buf, 500000000)
@@ -42,7 +46,7 @@ func (rl *Relay) Import(db eventstore.Store, files []string, wg *sync.WaitGroup)
 			if err = json.Unmarshal(b, ev); chk.E(err) {
 				continue
 			}
-			// log.I.Ln(counter, ev.ToObject().String())
+			log.I.Ln(counter, ev.ToObject().String())
 			if ev.Kind == kind.Deletion {
 				// this always returns "blocked: " whenever it returns an error
 				// if err = rl.handleDeleteRequest(context.Bg(), ev); chk.E(err) {

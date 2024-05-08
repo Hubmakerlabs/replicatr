@@ -15,7 +15,8 @@ type ExportCmd struct {
 }
 
 type ImportCmd struct {
-	FromFile []string `arg:"-f,--fromfile,separate" help:"read from files instead of stdin (can use flag repeatedly for multiple files)"`
+	FromFile     []string `arg:"-f,--fromfile,separate" help:"read from files instead of stdin (can use flag repeatedly for multiple files)"`
+	StartingFrom int      `arg:"--importfrom" help:"start scanning import file from this position in bytes"`
 }
 
 type InitCfg struct{}
