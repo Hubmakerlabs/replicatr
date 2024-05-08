@@ -262,15 +262,16 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 	}
 	var wg sync.WaitGroup
+	interrupt.AddHandler(func() {
+		cancel()
+		wg.Done()
+	})
 	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
 	encoder := cache.NewEncoder(c, args.EncodeCache, time.Second*30)
 	rl := app.NewRelay(c, cancel, inf, &conf, encoder)
 	var db eventstore.Store
 	// if we are wiping we don't want to init db normally
 	switch {
-	case args.Wipe != nil, args.ExportCmd != nil, args.ImportCmd != nil:
-		conf.DBSizeLimit = 0
-		args.LogLevel = "off"
 	case args.PubKeyCmd != nil:
 		secKeyBytes, err := hex.Dec(rl.Config.SecKey)
 		if err != nil {
@@ -384,6 +385,25 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			}
 		}
 	}
+	if args.Wipe != nil || args.ExportCmd != nil || args.ImportCmd != nil {
+		conf.DBSizeLimit = 0
+		// args.LogLevel = "off"
+	}
+	switch {
+	case args.Wipe != nil:
+		log.D.Ln("wiping database")
+		chk.E(rl.Wipe(badgerDB))
+		// cancel()
+		os.Exit(0)
+	case args.ImportCmd != nil:
+		rl.Import(db, args.ImportCmd.FromFile)
+		// cancel()
+		os.Exit(0)
+	case args.ExportCmd != nil:
+		rl.Export(badgerDB, args.ExportCmd.ToFile)
+		// cancel()
+		os.Exit(0)
+	}
 	rl.StoreEvent = append(rl.StoreEvent, rl.Chat)
 	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
 	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
@@ -404,10 +424,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		Addr:    args.Listen,
 		Handler: rl,
 	}
-	interrupt.AddHandler(func() {
-		cancel()
-		wg.Done()
-	})
 	go func() {
 		for {
 			select {
@@ -421,20 +437,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 	}()
 	wg.Add(1)
-	switch {
-	case args.Wipe != nil:
-		log.D.Ln("wiping database")
-		chk.E(rl.Wipe(badgerDB))
-		cancel()
-	case args.ImportCmd != nil:
-		if rl.Config.EventStore == "badger" {
-			rl.Import(badgerDB, args.ImportCmd.FromFile)
-		}
-	case args.ExportCmd != nil:
-		rl.Export(badgerDB, args.ExportCmd.ToFile)
-	default:
-		log.I.Ln("listening on", args.Listen)
-		chk.E(serv.ListenAndServe())
-	}
-
+	log.I.Ln("listening on", args.Listen)
+	chk.E(serv.ListenAndServe())
 }

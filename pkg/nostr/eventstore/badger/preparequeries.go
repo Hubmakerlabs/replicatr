@@ -157,8 +157,10 @@ func PrepareQueries(f *filter.T) (
 		}
 		// log.T.S("kinds", qs)
 	default:
-		qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
-		ext = nil
+		if len(qs) > 0 {
+			qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
+			ext = nil
+		}
 		// log.T.S("other", qs)
 	}
 	var until uint64 = math.MaxUint64

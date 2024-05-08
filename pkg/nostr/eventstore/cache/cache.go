@@ -69,26 +69,26 @@ func NewEncoder(c context.T, maxCacheSize int,
 				return
 			case <-tick.C:
 				var total int
+				d.mx.Lock()
 				for i := range d.events {
-					d.mx.Lock()
 					total += len(d.events[i].JSON)
-					d.mx.Unlock()
 				}
 				log.W.Ln("total encode cache utilization:", total, "of", maxCacheSize,
 					"average buffer size:", d.average, "count of events:", len(d.events))
+				d.mx.Unlock()
 				if total > maxCacheSize {
 					// create list of cache by access time
 					var accessed accesses
+					d.mx.Lock()
 					for id := range d.events {
-						d.mx.Lock()
 						accessed = append(accessed,
 							access{
 								T:            id,
 								lastAccessed: d.events[id].lastAccessed,
 								size:         len(d.events[id].JSON),
 							})
-						d.mx.Unlock()
 					}
+					d.mx.Unlock()
 					sort.Sort(accessed)
 					var last, size int
 					// count off the items in descending timestamp order until the size exceeds the
@@ -106,10 +106,12 @@ func NewEncoder(c context.T, maxCacheSize int,
 					log.I.F("pruning out %d events making up %d bytes of %d of cached decoded events, will be %d bytes after",
 						len(accessed)-last, total-size, total, size)
 					for ; last < len(accessed); last++ {
+						d.mx.Lock()
 						// free the buffers so they go back to the pool
 						d.pool.Put(d.events[accessed[last].T].JSON)
 						// delete the map entry of the expired event json
 						delete(d.events, accessed[last].T)
+						d.mx.Unlock()
 					}
 				}
 			}
