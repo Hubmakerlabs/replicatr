@@ -118,7 +118,10 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 		if _, err = b.Encoder.Put(ev, nil); chk.E(err) {
 			return
 		}
-		log.T.F("event saved %s", ev.ToObject().String())
+		j, ok := b.Encoder.Get(ev.ID)
+		if ok {
+			log.T.F("event saved %s", string(j))
+		}
 		return
 	}); chk.E(err) {
 		return

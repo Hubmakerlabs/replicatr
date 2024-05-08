@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"os"
+	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -13,8 +14,10 @@ import (
 
 // Import a collection of JSON events from stdin or from one or more files, line
 // structured JSON.
-func (rl *Relay) Import(db eventstore.Store, files []string) {
-	log.D.Ln("running export subcommand on these files:", files)
+func (rl *Relay) Import(db eventstore.Store, files []string, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
+	log.D.Ln("running import subcommand on these files:", files)
 	var err error
 	var fh *os.File
 	buf := make([]byte, rl.MaxMessageSize)
@@ -27,6 +30,11 @@ func (rl *Relay) Import(db eventstore.Store, files []string) {
 		scanner.Buffer(buf, 500000000)
 		var counter int
 		for scanner.Scan() {
+			select {
+			case <-rl.Ctx.Done():
+				return
+			default:
+			}
 			b := scanner.Bytes()
 			counter++
 			// log.I.Ln(counter, string(b))
@@ -41,7 +49,7 @@ func (rl *Relay) Import(db eventstore.Store, files []string) {
 				// 	continue
 				// }
 			} else {
-				log.D.Ln("adding event", counter, ev.ID)
+				// log.D.Ln("adding event", counter, ev.ID)
 				// this will also always return a prefixed reason
 				err = db.SaveEvent(context.Bg(), ev)
 			}

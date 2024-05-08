@@ -124,12 +124,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			}
 		}
 	}
-	// if args.ImportCmd != nil || args.ExportCmd != nil || args.Wipe != nil {
-	// 	// if any of these commands have been invoked we are only using badger, and no GC
-	// 	args.EventStore = "badger"
-	// 	args.DBSizeLimit = 0
-	// } else {
-	// 	// set logging level if non-default was set in args
+	// set logging level if non-default was set in args
 	if args.LogLevel != "info" {
 		for i := range slog.LevelSpecs {
 			if slog.LevelSpecs[i].Name[:1] == strings.ToLower(args.LogLevel[:1]) {
@@ -137,7 +132,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			}
 		}
 	}
-	// }
 	runtime.GOMAXPROCS(args.MaxProcs)
 	inf := &relayinfo.T{Nips: nips}
 	var err error
@@ -264,7 +258,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	var wg sync.WaitGroup
 	interrupt.AddHandler(func() {
 		cancel()
-		wg.Done()
 	})
 	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
 	encoder := cache.NewEncoder(c, args.EncodeCache, time.Second*30)
@@ -396,11 +389,11 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		// cancel()
 		os.Exit(0)
 	case args.ImportCmd != nil:
-		rl.Import(db, args.ImportCmd.FromFile)
+		rl.Import(db, args.ImportCmd.FromFile, &wg)
 		// cancel()
 		os.Exit(0)
 	case args.ExportCmd != nil:
-		rl.Export(badgerDB, args.ExportCmd.ToFile)
+		rl.Export(badgerDB, args.ExportCmd.ToFile, &wg)
 		// cancel()
 		os.Exit(0)
 	}

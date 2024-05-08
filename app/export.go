@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"os"
+	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
@@ -13,7 +14,9 @@ import (
 )
 
 // Export prints the JSON of all events or writes them to a file.
-func (rl *Relay) Export(db *badger.Backend, filename string) {
+func (rl *Relay) Export(db *badger.Backend, filename string, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
 	log.D.Ln("running export subcommand")
 	b := make([]byte, MaxMessageSize)
 	gob.Register(&event.T{})
@@ -33,6 +36,11 @@ func (rl *Relay) Export(db *badger.Backend, filename string) {
 		it := txn.NewIterator(bdb.IteratorOptions{Prefix: prf})
 		var ev *event.T
 		for it.Rewind(); it.ValidForPrefix(prf); it.Next() {
+			select {
+			case <-rl.Ctx.Done():
+				return
+			default:
+			}
 			// get the event
 			if b, err = it.Item().ValueCopy(b); chk.E(err) {
 				continue
