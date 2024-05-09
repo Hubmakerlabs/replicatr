@@ -15,33 +15,49 @@ type ExportCmd struct {
 }
 
 type ImportCmd struct {
-	FromFile []string `arg:"-f,--fromfile,separate" help:"read from files instead of stdin (can use flag repeatedly for multiple files)"`
+	FromFile     []string `arg:"-f,--fromfile,separate" help:"read from files instead of stdin (can use flag repeatedly for multiple files)"`
+	StartingFrom int      `arg:"--importfrom" help:"start scanning import file from this position in bytes"`
 }
 
 type InitCfg struct{}
 type WipeBDB struct{}
 type RescanAC struct{}
+type PubKey struct{}
+type AddRelay struct {
+	PubKey string `arg:"-k,--pubkey" help:"public key of client to add"`
+	Admin  bool   `arg:"--admin" default:"false" help:"set client as admin"`
+}
+type RemoveRelay struct {
+	PubKey string `arg:"-k,--pubkey" help:"public key of client to remove"`
+}
+
+type GetPermission struct {
+}
 
 type Config struct {
-	ExportCmd    *ExportCmd `arg:"subcommand:export" json:"-" help:"export database as line structured JSON"`
-	ImportCmd    *ImportCmd `arg:"subcommand:import" json:"-" help:"import data from line structured JSON"`
-	InitCfgCmd   *InitCfg   `arg:"subcommand:initcfg" json:"-" help:"initialize relay configuration files"`
-	Wipe         *WipeBDB   `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
-	Rescan       *RescanAC  `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
-	Listen       string     `arg:"-l,--listen" default:"0.0.0.0:3334" json:"listen" help:"network address to listen on"`
-	EventStore   string     `arg:"-e,--eventstore" default:"badger" json:"eventstore" help:"select event store backend [ic,badger,iconly]"`
-	CanisterAddr string     `arg:"-C,--canisteraddr" default:"https://icp0.io/" json:"canister_addr" help:"IC canister address to use (for local, use 127.0.0.1:46847)"`
-	CanisterId   string     `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
-	Profile      string     `arg:"-p,--profile" json:"-" default:"replicatr" help:"profile name to use for storage"`
-	Name         string     `arg:"-n,--name" json:"name" default:"replicatr relay" help:"name of relay for NIP-11"`
-	Description  string     `arg:"-d,--description" json:"description" help:"description of relay for NIP-11"`
-	Pubkey       string     `arg:"--pubkey" json:"pubkey" help:"public key of relay operator"`
-	Contact      string     `arg:"-c,--contact" json:"contact,omitempty" help:"non-nostr relay operator contact details"`
-	Icon         string     `arg:"-i,--icon" json:"icon" default:"https://i.nostr.build/n8vM.png" help:"icon to show on relay information pages"`
-	AuthRequired bool       `arg:"-a,--auth" json:"auth_required" default:"false" help:"NIP-42 authentication required for all access"`
-	Public       bool       `arg:"--public" json:"public" default:"true" help:"allow public read access to users not on ACL"`
-	Owners       []string   `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
-	SecKey       string     `arg:"-s,--seckey" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
+	ExportCmd        *ExportCmd     `arg:"subcommand:export" json:"-" help:"export database as line structured JSON"`
+	ImportCmd        *ImportCmd     `arg:"subcommand:import" json:"-" help:"import data from line structured JSON"`
+	InitCfgCmd       *InitCfg       `arg:"subcommand:initcfg" json:"-" help:"initialize relay configuration files"`
+	AddRelayCmd      *AddRelay      `arg:"subcommand:addrelay" json:"-" help:"add a relay to the cluster"`
+	PubKeyCmd        *PubKey        `arg:"subcommand:pubkey" json:"-" help:"print public key"`
+	RemoveRelayCmd   *RemoveRelay   `arg:"subcommand:removerelay" json:"-" help:"remove a relay from the cluster"`
+	GetPermissionCmd *GetPermission `arg:"subcommand:getpermission" json:"-" help:"get permission of a relay"`
+	Wipe             *WipeBDB       `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
+	Rescan           *RescanAC      `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
+	Listen           string         `arg:"-l,--listen" default:"0.0.0.0:3334" json:"listen" help:"network address to listen on"`
+	EventStore       string         `arg:"-e,--eventstore" default:"badger" json:"eventstore" help:"select event store backend [ic,badger,iconly]"`
+	CanisterAddr     string         `arg:"-C,--canisteraddr" default:"https://icp0.io/" json:"canister_addr" help:"IC canister address to use (for local, use 127.0.0.1:46847)"`
+	CanisterId       string         `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
+	Profile          string         `arg:"-p,--profile" json:"-" default:"replicatr" help:"profile name to use for storage"`
+	Name             string         `arg:"-n,--name" json:"name" default:"replicatr relay" help:"name of relay for NIP-11"`
+	Description      string         `arg:"-d,--description" json:"description" help:"description of relay for NIP-11"`
+	Pubkey           string         `arg:"--pubkey" json:"pubkey" help:"public key of relay operator"`
+	Contact          string         `arg:"-c,--contact" json:"contact,omitempty" help:"non-nostr relay operator contact details"`
+	Icon             string         `arg:"-i,--icon" json:"icon" default:"https://i.nostr.build/n8vM.png" help:"icon to show on relay information pages"`
+	AuthRequired     bool           `arg:"-a,--auth" json:"auth_required" default:"false" help:"NIP-42 authentication required for all access"`
+	Public           bool           `arg:"--public" json:"public" default:"true" help:"allow public read access to users not on ACL"`
+	Owners           []string       `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
+	SecKey           string         `arg:"-s,--seckey" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
 	// Whitelist permits ONLY inbound connections from specified IP addresses.
 	Whitelist []string `arg:"-w,--whitelist,separate" json:"ip_whitelist" help:"IP addresses that are only allowed to access"`
 	// AllowIPs is for bypassing authentication required for clients based on IP
@@ -65,6 +81,8 @@ type Config struct {
 	MaxProcs    int    `arg:"-m" json:"max_procs" default:"128" help:"maximum number of goroutines to use"`
 	LogLevel    string `arg:"--loglevel" default:"info" help:"set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)"`
 	PProf       bool   `arg:"--pprof" help:"enable CPU and memory profiling"`
+	EncodeCache int    `arg:"--encodecache" default:"10000000" help:"JSON encode cache size limit for GC"`
+	GCRatio     int    `arg:"--gcratio" default:"100" help:"set GC percentage for triggering GC sweeps"`
 }
 
 func (c *Config) Save(filename string) (err error) {
@@ -93,7 +111,7 @@ func (c *Config) Load(filename string) (err error) {
 	if b, err = os.ReadFile(filename); chk.E(err) {
 		return
 	}
-	// log.D.F("configuration\n%s", string(b))
+	log.D.F("configuration\n%s", string(b))
 	if err = json.Unmarshal(b, c); chk.E(err) {
 		return
 	}
