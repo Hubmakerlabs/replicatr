@@ -32,27 +32,24 @@ func Blower(args *Config) int {
 	var counter int
 	for scanner.Scan() {
 		counter++
-		// uc := context.Bg()
+		if counter <= args.Skip {
+			continue
+		}
 		ev := &event.T{}
 		b := scanner.Bytes()
-		// if err = json.Unmarshal(b, ev); chk.E(err) {
-		// 	continue
-		// }
 		if len(b) > app.MaxMessageSize {
 			log.I.Ln("message too long", string(b))
 			continue
 		}
 		log.I.F("%d\n%s\n%s", counter, string(b), ev.ToObject().String())
 		if err = <-upRelay.Write(eventenvelope.FromRawJSON("", b)); chk.E(err) {
-			// if err = upRelay.Publish(uc, ev); chk.E(err) {
-			// todo: this isn't working when there is an error of invalid unclosed quotes in events
-			// log.D.Ln(upAuthed)
 			if strings.Contains(err.Error(), "connection closed") {
 				if upRelay, err = client.Connect(c,
 					args.UploadRelay); chk.E(err) {
 					return 1
 				}
 			}
+			// todo: get authing working properly
 			// if !upAuthed {
 			// 	log.I.Ln("authing")
 			// 	// this can fail once
