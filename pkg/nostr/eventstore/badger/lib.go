@@ -11,7 +11,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/del"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/cache"
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/dgraph-io/badger/v4/options"
@@ -44,9 +43,6 @@ type Backend struct {
 	// GCFrequency is the frequency of checks of the current utilisation.
 	GCFrequency time.Duration
 	HasL2       bool
-	// Encoder maintains a pool of events that are recently decoded to avoid memory
-	// allocation and unnecessary work.
-	Encoder *cache.Encoder
 	// DB is the badger db interface
 	*badger.DB
 	// seq is the monotonic collision free index for raw event storage.
@@ -94,7 +90,6 @@ func GetBackend(
 		DBHighWater: hw,
 		GCFrequency: time.Duration(freq) * time.Second,
 		HasL2:       hasL2,
-		Encoder:     cache.NewEncoder(Ctx, maxCacheSize, time.Second*30),
 	}
 	return
 }

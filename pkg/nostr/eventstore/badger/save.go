@@ -112,19 +112,9 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 		if err = txn.Set(counterKey, val); chk.E(err) {
 			return
 		}
-		// store the json encoded form in the decoder cache
-		if _, err = b.Encoder.Put(ev, nil); chk.E(err) {
-			return
-		}
 		log.T.F("event saved")
 		return
 	}); chk.E(err) {
-		return
-	}
-	// store the json encoded form so it is ready to deliver for filter matches on
-	// subscriptions, now the DB tx is complete, as subscription filters may now
-	// match and require the JSON to send to a client.
-	if _, err = b.Encoder.Put(ev, nil); chk.E(err) {
 		return
 	}
 	return

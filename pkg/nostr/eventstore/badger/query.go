@@ -86,7 +86,6 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				}
 				for _, eventKey := range eventKeys {
 					var ev *event.T
-					var found bool
 					err = b.View(func(txn *badger.Txn) (err error) {
 						opts := badger.IteratorOptions{Reverse: true}
 						it := txn.NewIterator(opts)
@@ -137,23 +136,12 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 									return
 								default:
 								}
-								found = true
 								q2.results <- res
 							}
 						}
 						// close(q2.results)
 						return
 					})
-					// if event matched it will need to be encoded, we can do that now after the DB
-					// tx is finished. if only a stub was found the save function called by the L2
-					// will do this later after reviving the record.
-					if found {
-						// store in the cache so it's ready for other queries, and websocket code will
-						// also be able to use the encoded JSON immediately.
-						if _, err = b.Encoder.Put(ev, nil); chk.E(err) {
-							return
-						}
-					}
 				}
 				// log.I.Ln("closing results channel")
 				close(q2.results)
