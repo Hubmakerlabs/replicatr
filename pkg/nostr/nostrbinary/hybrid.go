@@ -42,7 +42,8 @@ func FromEventT(evt *event.T) (evb *Event, err error) {
 		err = errors.New("nil event")
 		return
 	}
-	evb = &Event{Kind: evt.Kind, Tags: evt.Tags, Content: evt.Content, CreatedAt: evt.CreatedAt}
+	evb = &Event{Kind: evt.Kind, Tags: evt.Tags,
+		Content: evt.Content, CreatedAt: evt.CreatedAt}
 	if len(evt.ID) != sha256.Size*2 {
 		err = fmt.Errorf("incorrect event ID len, got %d expected %d",
 			len(evt.ID), sha256.Size*2)
