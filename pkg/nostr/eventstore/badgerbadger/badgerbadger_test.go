@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -57,10 +58,10 @@ func TestBackend(t *testing.T) {
 	defer cancel()
 	// create L1 with cache management settings enabled
 	path1 := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
-	b1 := badger.GetBackend(c, &wg, path1, true, TotalSize/100, LW, HW, 2)
+	b1 := badger.GetBackend(c, &wg, path1, true, app.MaxMessageSize, TotalSize/100, LW, HW, 2)
 	// create L2 with no cache management
 	path2 := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
-	b2 := badger.GetBackend(c, &wg, path2, false, 0)
+	b2 := badger.GetBackend(c, &wg, path2, false, app.MaxMessageSize, 0)
 	// Respond to interrupt signal and clean up after interrupt or end of test.
 	interrupt.AddHandler(func() {
 		cancel()
