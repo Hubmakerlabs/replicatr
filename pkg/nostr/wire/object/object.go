@@ -44,8 +44,12 @@ func (t T) Bytes() []byte {
 	return t.Buffer().Bytes()
 }
 
-func (t T) Buffer() *bytes.Buffer {
-	buf := new(bytes.Buffer)
+func (t T) Buffer(b ...*bytes.Buffer) (buf *bytes.Buffer) {
+	if len(b) != 1 {
+		buf = new(bytes.Buffer)
+	} else {
+		buf = b[0]
+	}
 	_, _ = fmt.Fprint(buf, "{")
 	last := len(t) - 1
 

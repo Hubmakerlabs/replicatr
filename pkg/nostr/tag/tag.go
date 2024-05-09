@@ -80,7 +80,8 @@ func (t T) MarshalTo(dst []byte) []byte {
 		if i > 0 {
 			dst = append(dst, ',')
 		}
-		dst = append(dst, text.EscapeJSONStringAndWrap(s)...)
+
+		dst = append(dst, text.EscapeString([]byte{}, s)...)
 	}
 	dst = append(dst, ']')
 	return dst

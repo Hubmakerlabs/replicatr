@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
@@ -25,7 +26,14 @@ func New[V eventid.T | string](evID ...V) (p *T) {
 	if len(evID) < 1 || len(evID[0]) < 1 {
 		return &T{make([]byte, Len)}
 	}
-	b, err := hex.Dec(string(evID[0][:Len*2]))
+	evid := string(evID[0])
+	if len(evid) < 64 {
+		evid = strings.Repeat("0", 64-len(evid)) + evid
+	}
+	if len(evid) > 64 {
+		evid = evid[:64]
+	}
+	b, err := hex.Dec(evid[:Len*2])
 	if chk.E(err) {
 		return
 	}

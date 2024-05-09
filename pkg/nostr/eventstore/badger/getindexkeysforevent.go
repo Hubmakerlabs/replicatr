@@ -63,7 +63,9 @@ func GetIndexKeysForEvent(ev *event.T, ser *serial.T) (keyz [][]byte) {
 		}
 		firstIndex := slices.IndexFunc(ev.Tags,
 			func(ti tag.T) bool {
-				return len(t) >= 2 && ti[1] == t[1]
+				return len(t) >= 2 && len(ti) >= 2 &&
+					ti[1] ==
+						t[1]
 			})
 		if firstIndex != i {
 			// duplicate

@@ -2,13 +2,14 @@ package app
 
 import (
 	"bufio"
-	"encoding/json"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 )
 
@@ -31,14 +32,19 @@ func Blower(args *Config) int {
 	var counter int
 	for scanner.Scan() {
 		counter++
-		uc := context.Bg()
+		// uc := context.Bg()
 		ev := &event.T{}
 		b := scanner.Bytes()
-		if err = json.Unmarshal(b, ev); chk.E(err) {
+		// if err = json.Unmarshal(b, ev); chk.E(err) {
+		// 	continue
+		// }
+		if len(b) > app.MaxMessageSize {
+			log.I.Ln("message too long", string(b))
 			continue
 		}
-		log.I.Ln(counter, ev.ToObject().String())
-		if err = upRelay.Publish(uc, ev); chk.E(err) {
+		log.I.F("%d\n%s\n%s", counter, string(b), ev.ToObject().String())
+		if err = <-upRelay.Write(eventenvelope.FromRawJSON("", b)); chk.E(err) {
+			// if err = upRelay.Publish(uc, ev); chk.E(err) {
 			// todo: this isn't working when there is an error of invalid unclosed quotes in events
 			// log.D.Ln(upAuthed)
 			if strings.Contains(err.Error(), "connection closed") {
@@ -74,6 +80,7 @@ func Blower(args *Config) int {
 			// 	return 1
 			// }
 		}
+		time.Sleep(time.Millisecond * 20)
 	}
 	return 0
 }
