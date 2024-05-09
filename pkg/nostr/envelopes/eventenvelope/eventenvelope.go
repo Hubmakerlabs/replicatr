@@ -53,6 +53,7 @@ func FromRawJSON(si string, j []byte) (b []byte) {
 	buf.WriteString(`]`)
 	return buf.Bytes()
 }
+
 func (env *T) ToArray() (a array.T) {
 	a = make(array.T, 0, 3)
 	a = append(a, labels.EVENT)
@@ -115,9 +116,8 @@ func (env *T) Unmarshal(buf *text.Buffer) (err error) {
 	}
 	// allocate an event to unmarshal into
 	env.Event = &event.T{}
-	// log.I.Ln(string(eventObj))
 	if err = json.Unmarshal(eventObj, env.Event); chk.D(err) {
-		log.D.S(string(eventObj))
+		log.D.Ln(string(eventObj))
 		return
 	}
 	// technically we maybe should read ahead further to make sure the JSON closes

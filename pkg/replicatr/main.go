@@ -22,7 +22,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IConly"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/cache"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/number"
@@ -264,8 +263,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		wg.Done()
 	})
 	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
-	encoder := cache.NewEncoder(c, args.EncodeCache, time.Second*30)
-	rl := app.NewRelay(c, cancel, inf, &conf, encoder)
+	rl := app.NewRelay(c, cancel, inf, &conf)
 	var db eventstore.Store
 	// if we are wiping we don't want to init db normally
 	switch {
@@ -357,7 +355,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			DBLowWater:  args.DBLowWater,
 			DBHighWater: args.DBHighWater,
 			GCFrequency: time.Duration(args.GCFrequency) * time.Second,
-			Encoder:     encoder,
 		}
 	}
 	switch rl.Config.EventStore {

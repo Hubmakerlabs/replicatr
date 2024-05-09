@@ -1,3 +1,3 @@
-# vacuum
+# blower
 
-a tool to pull every possible event from a relay and feed it into another relay
+a tool to push events from a jsonl file up to a relay

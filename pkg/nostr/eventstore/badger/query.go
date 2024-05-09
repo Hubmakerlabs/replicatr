@@ -86,7 +86,6 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				}
 				for _, eventKey := range eventKeys {
 					var ev *event.T
-					var found bool
 					err = b.View(func(txn *badger.Txn) (err error) {
 						opts := badger.IteratorOptions{Reverse: true}
 						it := txn.NewIterator(opts)
@@ -126,37 +125,31 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 							// check if this matches the other filters that were not part of the index
 							if extraFilter == nil || extraFilter.Matches(ev) {
 								res := Results{Ev: ev, TS: timestamp.Now(), Ser: ser}
+								log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
+									ev.ToObject().String())
 								select {
 								case <-c.Done():
-									// log.I.Ln("websocket closed")
+									log.I.Ln("websocket closed")
 									return
 								case <-b.Ctx.Done():
 									log.I.Ln("backend context canceled")
 									return
 								default:
 								}
-								found = true
 								q2.results <- res
 							}
 						}
 						// close(q2.results)
 						return
 					})
-					// if event matched it will need to be encoded, we can do that now after the DB
-					// tx is finished. if only a stub was found the save function called by the L2
-					// will do this later after reviving the record.
-					if found {
-						// store in the cache so it's ready for other queries, and websocket code will
-						// also be able to use the encoded JSON immediately.
-						if _, err = b.Encoder.Put(ev, nil); chk.E(err) {
-							return
-						}
-					}
 				}
-				// drain the results channel so the goroutine terminates
+				// log.I.Ln("closing results channel")
 				close(q2.results)
+				// log.I.Ln("draining results channel")
 				for _ = range q2.results {
 				}
+				log.I.Ln("results channel clear",
+					text.Trunc(q2.queryFilter.ToObject().String()))
 			}()
 		}
 		// receive results and ensure we only return the most recent ones always
@@ -167,6 +160,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			q := q
 			evt, ok := <-q.results
 			if ok {
+				// log.T.F("adding event to queue [%s, %d]", evt.Ev.ID, evt.Ser.Uint64())
 				emitQueue = append(emitQueue,
 					&priority.QueryEvent{
 						T:     evt.Ev,

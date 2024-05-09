@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Hubmakerlabs/replicatr/cmd/vacuum/app"
+	"github.com/Hubmakerlabs/replicatr/cmd/blower/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"

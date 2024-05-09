@@ -3,11 +3,10 @@ package app
 import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
-	"github.com/fasthttp/websocket"
 )
 
 // BroadcastEvent emits an event to all listeners whose filters' match, skipping all filters and actions
@@ -47,22 +46,12 @@ func (rl *Relay) BroadcastEvent(ev *event.T) {
 			log.D.F("sending event to subscriber %v %s (%d %s)",
 				ws.RealRemote(), ws.AuthPubKey(),
 				ev.Kind,
-				kind.GetString(ev.Kind),
+				ev.Kind.Name(),
 			)
-			// this event should already be cached so we will use a different websocket
-			// write function.
-			j, ok := rl.Encoder.Get(ev.ID)
-			var err error
-			if !ok {
-				if j, err = rl.Encoder.Put(ev, nil); chk.E(err) {
-					return true
-				}
-			}
-			chk.E(ws.WriteMessage(websocket.TextMessage, eventenvelope.FromRawJSON(id, j)))
-			// chk.E(ws.WriteEnvelope(&eventenvelope.T{
-			// 	SubscriptionID: subscriptionid.T(id),
-			// 	Event:          ev},
-			// ))
+			chk.E(ws.WriteEnvelope(&eventenvelope.T{
+				SubscriptionID: subscriptionid.T(id),
+				Event:          ev},
+			))
 			return true
 		})
 		return true

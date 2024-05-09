@@ -77,9 +77,7 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 			}
 		})
 		// if it was a dupe, we are done.
-		if err != nil {
-			// j, _ := b.Encoder.Get(ev.ID)
-			// log.I.Ln("duplicate event:", string(j))
+		if chk.E(err) {
 			return
 		}
 		// if this is a restore, we are done, no need to cache the JSON, as it is not a
@@ -114,22 +112,9 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 		if err = txn.Set(counterKey, val); chk.E(err) {
 			return
 		}
-		// store the json encoded form in the decoder cache
-		if _, err = b.Encoder.Put(ev, nil); chk.E(err) {
-			return
-		}
-		j, ok := b.Encoder.Get(ev.ID)
-		if ok {
-			log.T.F("event saved %s", string(j))
-		}
+		log.T.F("event saved")
 		return
 	}); chk.E(err) {
-		return
-	}
-	// store the json encoded form so it is ready to deliver for filter matches on
-	// subscriptions, now the DB tx is complete, as subscription filters may now
-	// match and require the JSON to send to a client.
-	if _, err = b.Encoder.Put(ev, nil); chk.E(err) {
 		return
 	}
 	return
