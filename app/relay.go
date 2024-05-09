@@ -29,7 +29,7 @@ const (
 	PingPeriod          = 30 * time.Second
 	ReadBufferSize      = 4096
 	WriteBufferSize     = 4096
-	MaxMessageSize  int = 5120000 // ???
+	MaxMessageSize  int = 512000 // ???
 )
 
 // function types used in the relay state

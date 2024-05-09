@@ -45,7 +45,6 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		Authed:  make(chan struct{}),
 	}
 	ws.SetRealRemote(rr)
-
 	// NIP-42 challenge
 	ws.GenerateChallenge()
 	c, cancel := context.Cancel(

@@ -64,7 +64,7 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 // strategy is devised to filter out these events from database results.
 func (rl *Relay) OverrideDelete(c context.T, tgt, del *event.T) (ok bool,
 	msg string) {
-	log.T.Ln("running relay method")
+	log.T.Ln("overriding delete")
 	ok = false
 	return
 }
