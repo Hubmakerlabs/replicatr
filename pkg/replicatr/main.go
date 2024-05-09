@@ -1,10 +1,13 @@
 package replicatr
 
 import (
+	"encoding/base64"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"runtime/pprof"
 	"strings"
 	"sync"
@@ -13,17 +16,23 @@ import (
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
 	"github.com/Hubmakerlabs/replicatr/pkg/config/base"
+	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IConly"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/cache"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/number"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
+	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/alexflint/go-arg"
+	"github.com/aviate-labs/agent-go/identity"
+	sec "github.com/aviate-labs/secp256k1"
 	"mleku.dev/git/interrupt"
 	"mleku.dev/git/slog"
 )
@@ -99,6 +108,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	os.Args = osArgs
 	arg.MustParse(&args)
 	os.Args = tmp
+	_ = debug.SetGCPercent(args.GCRatio)
+	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
 	if args.PProf {
 		if cpuProf, err := os.Create("cpu.pprof"); !chk.E(err) {
 			if err = pprof.StartCPUProfile(cpuProf); !chk.E(err) {
@@ -113,21 +124,16 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			}
 		}
 	}
-	if args.ImportCmd != nil || args.ExportCmd != nil || args.Wipe != nil {
-		// if any of these commands have been invoked we are only using badger, and no GC
-		args.EventStore = "badger"
-		args.DBSizeLimit = 0
-	} else {
-		// set logging level if non-default was set in args
-		if args.LogLevel != "info" {
-			for i := range slog.LevelSpecs {
-				if slog.LevelSpecs[i].Name[:1] == strings.ToLower(args.LogLevel[:1]) {
-					slog.SetLogLevel(i)
-				}
+	// set logging level if non-default was set in args
+	if args.LogLevel != "info" {
+		for i := range slog.LevelSpecs {
+			if slog.LevelSpecs[i].Name[:1] == strings.ToLower(args.LogLevel[:1]) {
+				slog.SetLogLevel(i)
 			}
 		}
 	}
 	runtime.GOMAXPROCS(args.MaxProcs)
+	inf := &relayinfo.T{Nips: nips}
 	var err error
 	var dataDirBase string
 	if dataDirBase, err = os.UserHomeDir(); chk.E(err) {
@@ -140,8 +146,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	}
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
-	// inf := *relayinfo.NewInfo(&relayinfo.T{Nips: nips})
-	inf := &relayinfo.T{}
 	// generate a relay identity key if one wasn't given
 	if args.SecKey == "" {
 		args.SecKey = keys.GeneratePrivateKey()
@@ -161,11 +165,14 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			log.E.F("failed to write relay information document: '%s'", err)
 			os.Exit(1)
 		}
+		os.Exit(0)
 	} else {
 		if err = conf.Load(configPath); chk.E(err) {
 			log.D.F("failed to load relay configuration: '%s'", err)
 			os.Exit(1)
 		}
+		log.I.Ln("loaded configuration from", configPath)
+		log.I.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
 		if args.Listen != "" {
@@ -199,7 +206,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.SecKey == "" {
 			conf.SecKey = args.SecKey
 		}
-		// log.I.Ln(args.DBSizeLimit)
 		if args.DBSizeLimit != 0 {
 			conf.DBSizeLimit = args.DBSizeLimit
 		}
@@ -212,21 +218,121 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.GCFrequency != 0 {
 			conf.GCFrequency = args.GCFrequency
 		}
-		if conf.Pubkey, err = keys.GetPublicKey(conf.SecKey); chk.E(err) {
+		if args.Pubkey != "" {
+			conf.Pubkey = args.Pubkey
+		}
+		if args.Whitelist != nil {
+			conf.Whitelist = args.Whitelist
+		}
+		if args.CanisterAddr != "" {
+			conf.CanisterAddr = args.CanisterAddr
+		}
+		if args.CanisterId != "" {
+			conf.CanisterId = args.CanisterId
 		}
 		if err = inf.Load(infoPath); chk.E(err) {
 			inf = GetInfo(&conf)
 			log.D.F("failed to load relay information document: '%s' "+
 				"deriving from config", err)
 		}
-	}
-	if args.AuthRequired {
-		conf.AuthRequired = true
-		inf.Limitation.AuthRequired = true
+		if args.AuthRequired {
+			conf.AuthRequired = true
+			inf.Limitation.AuthRequired = true
+		}
+		// initialize configuration with whatever has been read from the CLI.
+		if args.InitCfgCmd != nil {
+			if args.SecKey == "" {
+				// generate a relay identity key if one wasn't given
+				args.SecKey = keys.GeneratePrivateKey()
+			}
+			apputil.EnsureDir(configPath)
+			// get a default relayinfo.T
+			inf = GetInfo(&args)
+			if err = args.Save(configPath); chk.E(err) {
+				log.E.F("failed to write relay configuration: '%s'", err)
+				os.Exit(1)
+			}
+			if err = inf.Save(infoPath); chk.E(err) {
+				log.E.F("failed to write relay information document: '%s'", err)
+				os.Exit(1)
+			}
+		}
 	}
 	var wg sync.WaitGroup
-	rl := app.NewRelay(c, cancel, inf, &args)
+	interrupt.AddHandler(func() {
+		cancel()
+		wg.Done()
+	})
+	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
+	encoder := cache.NewEncoder(c, args.EncodeCache, time.Second*30)
+	rl := app.NewRelay(c, cancel, inf, &conf, encoder)
 	var db eventstore.Store
+	// if we are wiping we don't want to init db normally
+	switch {
+	case args.PubKeyCmd != nil:
+		secKeyBytes, err := hex.Dec(rl.Config.SecKey)
+		if err != nil {
+			log.E.F("Error decoding SecKey: %s\n", err)
+			return
+		}
+		privKey, _ := sec.PrivKeyFromBytes(sec.S256(), secKeyBytes)
+		id, err := identity.NewSecp256k1Identity(privKey)
+		if err != nil {
+			log.E.F("Error creating identity: %s\n", err)
+			os.Exit(1)
+		}
+		log.D.F("Your Canister-Facing Relay Pubkey is:\n")
+		publicKeyBase64 := base64.StdEncoding.EncodeToString(id.PublicKey())
+
+		fmt.Println(publicKeyBase64)
+		os.Exit(0)
+	case args.AddRelayCmd != nil:
+		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
+		if err != nil {
+			log.E.F("Error creating agent: %s\n", err)
+			os.Exit(1)
+		}
+		err = a.AddUser(args.AddRelayCmd.PubKey, args.AddRelayCmd.Admin)
+		if err != nil {
+			log.E.F("Error adding user: %s\n", err)
+			os.Exit(1)
+		}
+		perm := "user"
+		if args.AddRelayCmd.Admin {
+			perm = "admin"
+		}
+		log.I.F("User %s added with %s level access\n", args.AddRelayCmd.PubKey, perm)
+		os.Exit(0)
+	case args.RemoveRelayCmd != nil:
+		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
+		if err != nil {
+			log.E.F("Error creating agent: %s\n", err)
+			os.Exit(1)
+		}
+		err = a.RemoveUser(args.RemoveRelayCmd.PubKey)
+		if err != nil {
+			log.E.F("Error removing user: %s\n", err)
+			os.Exit(1)
+		}
+		log.I.F("User %s removed\n", args.RemoveRelayCmd.PubKey)
+		os.Exit(0)
+	case args.GetPermissionCmd != nil:
+		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
+		if err != nil {
+			log.E.F("Error creating agent: %s\n", err)
+			os.Exit(1)
+		}
+		perm, err := a.GetPermission()
+		if err != nil {
+			log.E.F("Error getting Permission: %s\n", err)
+			os.Exit(1)
+		}
+		fmt.Printf("This relay has %s level access\n", perm)
+		os.Exit(0)
+
+	}
+	// add acl canister commands here
+
 	// create both structures in any case
 	var badgerDB *badger.Backend
 	var icDB *IConly.Backend
@@ -238,6 +344,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			CanisterAddr:    rl.Config.CanisterAddr,
 			CanisterId:      rl.Config.CanisterId,
 			PrivateCanister: false, // for future implementation
+			SecKey:          rl.Config.SecKey,
 		}
 	}
 	if eso == "ic" || eso == "badger" {
@@ -250,6 +357,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			DBLowWater:  args.DBLowWater,
 			DBHighWater: args.DBHighWater,
 			GCFrequency: time.Duration(args.GCFrequency) * time.Second,
+			Encoder:     encoder,
 		}
 	}
 	switch rl.Config.EventStore {
@@ -264,14 +372,47 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
+	// set logging level if non-default was set in args
+	if args.LogLevel != "info" {
+		for i := range slog.LevelSpecs {
+			if slog.LevelSpecs[i].Name[:1] == strings.
+				ToLower(args.LogLevel[:1]) {
+
+				slog.SetLogLevel(i)
+			}
+		}
+	}
+	if args.Wipe != nil || args.ExportCmd != nil || args.ImportCmd != nil {
+		conf.DBSizeLimit = 0
+		// args.LogLevel = "off"
+	}
+	switch {
+	case args.Wipe != nil:
+		log.D.Ln("wiping database")
+		chk.E(rl.Wipe(badgerDB))
+		// cancel()
+		os.Exit(0)
+	case args.ImportCmd != nil:
+		rl.Import(db, args.ImportCmd.FromFile, &wg, args.ImportCmd.StartingFrom)
+		// cancel()
+		os.Exit(0)
+	case args.ExportCmd != nil:
+		rl.Export(badgerDB, args.ExportCmd.ToFile, &wg)
+		// cancel()
+		os.Exit(0)
+	}
 	rl.StoreEvent = append(rl.StoreEvent, rl.Chat)
 	rl.StoreEvent = append(rl.StoreEvent, db.SaveEvent)
 	rl.QueryEvents = append(rl.QueryEvents, db.QueryEvents)
 	rl.CountEvents = append(rl.CountEvents, db.CountEvents)
 	rl.DeleteEvent = append(rl.DeleteEvent, db.DeleteEvent)
 	rl.OnConnect = append(rl.OnConnect, rl.AuthCheck)
+	rl.RejectFilter = append(rl.RejectFilter, app.NoSearchQueries)
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
+	// commenting out the override so GC will work
+	rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
+	rl.OverwriteFilter = append(rl.OverwriteFilter, app.LimitAuthorsAndIDs(20, 20))
 	// commenting out the override so GC will work
 	// rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	// run the chat ACL initialization
@@ -280,10 +421,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		Addr:    args.Listen,
 		Handler: rl,
 	}
-	interrupt.AddHandler(func() {
-		cancel()
-		wg.Done()
-	})
 	go func() {
 		for {
 			select {
@@ -297,20 +434,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 	}()
 	wg.Add(1)
-	switch {
-	case args.Wipe != nil:
-		log.D.Ln("wiping database")
-		chk.E(rl.Wipe(badgerDB))
-		cancel()
-	case args.ImportCmd != nil:
-		if rl.Config.EventStore == "badger" {
-			rl.Import(badgerDB, args.ImportCmd.FromFile)
-		}
-	case args.ExportCmd != nil:
-		rl.Export(badgerDB, args.ExportCmd.ToFile)
-	default:
-		log.I.Ln("listening on", args.Listen)
-		chk.E(serv.ListenAndServe())
-	}
-
+	log.I.Ln("listening on", args.Listen)
+	chk.E(serv.ListenAndServe())
 }

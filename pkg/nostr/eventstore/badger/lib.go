@@ -11,7 +11,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/del"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/cache"
+	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/dgraph-io/badger/v4"
+	"github.com/dgraph-io/badger/v4/options"
 	"mleku.dev/git/slog"
 )
 
@@ -41,6 +44,9 @@ type Backend struct {
 	// GCFrequency is the frequency of checks of the current utilisation.
 	GCFrequency time.Duration
 	HasL2       bool
+	// Encoder maintains a pool of events that are recently decoded to avoid memory
+	// allocation and unnecessary work.
+	Encoder *cache.Encoder
 	// DB is the badger db interface
 	*badger.DB
 	// seq is the monotonic collision free index for raw event storage.
@@ -61,6 +67,7 @@ func GetBackend(
 	WG *sync.WaitGroup,
 	path string,
 	hasL2 bool,
+	maxCacheSize int,
 	params ...int,
 ) (b *Backend) {
 	var sizeLimit, lw, hw, freq = 0, 86, 92, 60
@@ -87,12 +94,17 @@ func GetBackend(
 		DBHighWater: hw,
 		GCFrequency: time.Duration(freq) * time.Second,
 		HasL2:       hasL2,
+		Encoder:     cache.NewEncoder(Ctx, maxCacheSize, time.Second*30),
 	}
 	return
 }
 
 func (b *Backend) Init() (err error) {
-	if b.DB, err = badger.Open(badger.DefaultOptions(b.Path)); chk.E(err) {
+	opts := badger.DefaultOptions(b.Path)
+	opts.Compression = options.ZSTD
+	opts.BlockCacheSize = units.Gb
+	opts.BlockSize = units.Mb
+	if b.DB, err = badger.Open(opts); chk.E(err) {
 		return err
 	}
 	if b.seq, err = b.DB.GetSequence([]byte("events"), 1000); chk.E(err) {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/cache"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/fasthttp/websocket"
@@ -59,6 +60,7 @@ type WebSocket struct {
 	authPubKey   atomic.String
 	Authed       chan struct{}
 	OffenseCount atomic.Uint32 // when client does dumb stuff, increment this
+	Encoder      *cache.Encoder
 }
 
 // WriteMessage writes a message with a given websocket type specifier

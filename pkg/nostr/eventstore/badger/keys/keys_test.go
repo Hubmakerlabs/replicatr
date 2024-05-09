@@ -4,6 +4,7 @@ package keys_test
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"os"
 	"testing"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/minio/sha256-simd"
 	"lukechampine.com/frand"
 	"mleku.dev/git/ec/schnorr"
 	"mleku.dev/git/slog"

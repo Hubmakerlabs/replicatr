@@ -10,6 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/cache"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
@@ -92,6 +93,9 @@ type Relay struct {
 	Whitelist      []string // whitelist of allowed IPs for access
 	RelayPubHex    string
 	RelayNpub      string
+	// Encoder caches generated JSON to avoid memory usage duplication and wasted
+	// processing regenerating JSON from hot events.
+	Encoder *cache.Encoder
 	// ACL is the list of users and privileges on this relay
 	ACL *acl.T
 }
@@ -106,7 +110,8 @@ func (rl *Relay) AuthCheck(c context.T) {
 }
 
 func NewRelay(c context.T, cancel context.F,
-	inf *relayinfo.T, conf *base.Config) (r *Relay) {
+	inf *relayinfo.T, conf *base.Config,
+	encoder *cache.Encoder) (r *Relay) {
 
 	var maxMessageLength = MaxMessageSize
 	if inf.Limitation.MaxMessageLength > 0 {
@@ -141,6 +146,7 @@ func NewRelay(c context.T, cancel context.F,
 		RelayPubHex:    pubKey,
 		RelayNpub:      npub,
 		ACL:            &acl.T{},
+		Encoder:        encoder,
 	}
 	log.I.F("relay chat pubkey: %s %s", pubKey, npub)
 	// populate ACL with owners to start

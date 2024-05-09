@@ -5,6 +5,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"golang.org/x/exp/slices"
 )
 
@@ -39,7 +40,8 @@ func AntiSyncBots(c context.T, f *filter.T) (rej bool, msg string) {
 		"an author must be specified to get their kind:1 notes"
 }
 
-func NoSearchQueries(c context.T, f *filter.T) (reject bool, msg string) {
+func NoSearchQueries(c context.T, id subscriptionid.T,
+	f *filter.T) (reject bool, msg string) {
 	if f.Search != "" {
 		return true, "search is not supported"
 	}
@@ -60,6 +62,19 @@ func RemoveAllButKinds(k ...kind.T) OverwriteFilter {
 				}
 			}
 			f.Kinds = newKinds
+		}
+	}
+}
+
+func LimitAuthorsAndIDs(authors, ids int) OverwriteFilter {
+	return func(c context.T, f *filter.T) {
+		if len(f.Authors) > authors {
+			log.I.Ln("limiting authors to", authors)
+			f.Authors = f.Authors[:20]
+		}
+		if len(f.IDs) > ids {
+			log.I.Ln("limiting IDs to", ids)
+			f.IDs = f.IDs[:20]
 		}
 	}
 }
