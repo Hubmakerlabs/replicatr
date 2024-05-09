@@ -101,7 +101,7 @@ type Relay struct {
 func (rl *Relay) AuthCheck(c context.T) {
 	if rl.Info.Limitation.AuthRequired {
 		// log.I.Ln("requesting auth")
-		RequestAuth(c)
+		RequestAuth(c, "connection")
 	}
 }
 

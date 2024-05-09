@@ -56,8 +56,7 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 			Reason: normalize.Reason(reason, auth.Required),
 		}))
 		// send out authorization request
-		log.I.Ln("requesting auth")
-		RequestAuth(c)
+		RequestAuth(c, "REQ")
 	out:
 		for {
 			select {

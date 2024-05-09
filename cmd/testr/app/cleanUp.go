@@ -8,16 +8,16 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
 )
 
-func CanisterCleanUp(id string, addr string) error {
+func CanisterCleanUp(id string, addr string, SecKey string) error {
 	var b *agent.Backend
 	var err error
-	if b, err = agent.New(nil, id, addr); chk.E(err) {
+	if b, err = agent.New(nil, id, addr, SecKey); chk.E(err) {
 		return err
 	}
 
 	//clear all events from canister
 	var result string
-	if result, err = b.ClearEvents(nil); chk.E(err) {
+	if result, err = b.ClearEvents(); chk.E(err) {
 		return err
 	} else {
 		fmt.Printf("from canister %v: \"%v\"\n", id, result)

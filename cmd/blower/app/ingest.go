@@ -13,63 +13,58 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 )
 
-func Ingest(args *Config) int {
-	// there is no legitimate event with a time earlier than fiatjaf's first
-	// event so this is the boundary we set
-	if args.Since == 0 {
-		args.Since = 1640305963
-	}
-	log.I.F("ingesting events of  with dates after %v from %s and sending to %s",
-		time.Unix(args.Since, 0),
-		args.DownloadRelay,
-		args.UploadRelay,
-	)
+func Vacuum(args *Config) int {
 	c := context.Bg()
 	var err error
-	var downRelay, upRelay *client.T
-	if downRelay, err = client.Connect(c, args.DownloadRelay); chk.E(err) {
+	var upRelay *client.T
+	var downloadRelay string
+	var dl *client.T
+	if dl, err = client.Connect(c, args.DownloadRelay); chk.E(err) {
 		return 1
 	}
-	log.I.Ln("connected to download relay")
+	log.I.Ln("connected to download relay", downloadRelay)
 	if upRelay, err = client.Connect(c, args.UploadRelay); chk.E(err) {
 		return 1
 	}
-	log.I.Ln("connected to upload relay")
+	log.I.Ln("connected to upload relay", args.UploadRelay)
 	var count int
-	oldest := args.Since
 	now := time.Now().Unix()
 	var downAuthed, upAuthed bool
-	var increment = args.Interval
-	for i := oldest; i < now; i += increment {
-		// create the subscription to the download relay
+	var increment int64 = 60
+	for i := now; i > 1640305963; i -= increment {
+		log.I.Ln("create the subscription to the download relay")
 		var sub *subscription.T
 		since := timestamp.FromUnix(i).Ptr()
 		until := timestamp.FromUnix(i + increment - 1).Ptr()
+		limit := 500
 		f := filters.T{
 			{
-				Limit: &args.Limit,
+				Limit: &limit,
 				Since: since,
 				Until: until,
 			},
 		}
-		log.I.Ln("query filter", f[0].ToObject().String())
-		if sub, err = downRelay.Subscribe(c, f); chk.D(err) {
-			// this could fail
-		}
+		log.I.Ln("downAuthed", downAuthed)
 		if !downAuthed {
 			select {
-			case <-downRelay.AuthRequired:
+			case <-dl.AuthRequired:
 				log.T.Ln("authing to down relay")
-				if err = downRelay.Auth(c,
+				if err = dl.Auth(c,
 					func(evt *event.T) error { return evt.Sign(args.SeckeyHex) }); chk.D(err) {
 					return 1
 				}
 				downAuthed = true
 			case <-time.After(2 * time.Second):
 			}
-			if sub, err = downRelay.Subscribe(c, f,
+			log.I.Ln("creating download subscription")
+			if sub, err = dl.Subscribe(c, f,
 				subscription.WithLabel(fmt.Sprint(time.Now().Unix()))); chk.D(err) {
 				return 1
+			}
+			log.I.Ln("created download subscription")
+		} else {
+			if sub, err = dl.Subscribe(c, f); chk.D(err) {
+				// this could fail
 			}
 		}
 		if sub == nil {
@@ -130,9 +125,7 @@ func Ingest(args *Config) int {
 				}
 			}
 		}
-		time.Sleep(time.Duration(args.Pause) * time.Millisecond)
+		time.Sleep(time.Duration(args.Pause) * time.Millisecond * time.Second)
 	}
-	log.I.Ln("ingested", count, "events from", args.DownloadRelay,
-		"and sent to", args.UploadRelay)
 	return 0
 }
