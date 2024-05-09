@@ -12,7 +12,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/index"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/cache"
+	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/dgraph-io/badger/v4"
+	"github.com/dgraph-io/badger/v4/options"
 	"mleku.dev/git/slog"
 )
 
@@ -98,7 +100,11 @@ func GetBackend(
 }
 
 func (b *Backend) Init() (err error) {
-	if b.DB, err = badger.Open(badger.DefaultOptions(b.Path)); chk.E(err) {
+	opts := badger.DefaultOptions(b.Path)
+	opts.Compression = options.ZSTD
+	opts.BlockCacheSize = units.Gb
+	opts.BlockSize = units.Mb
+	if b.DB, err = badger.Open(opts); chk.E(err) {
 		return err
 	}
 	if b.seq, err = b.DB.GetSequence([]byte("events"), 1000); chk.E(err) {

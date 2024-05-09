@@ -221,6 +221,9 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.Pubkey != "" {
 			conf.Pubkey = args.Pubkey
 		}
+		if args.Whitelist != nil {
+			conf.Whitelist = args.Whitelist
+		}
 		if args.CanisterAddr != "" {
 			conf.CanisterAddr = args.CanisterAddr
 		}

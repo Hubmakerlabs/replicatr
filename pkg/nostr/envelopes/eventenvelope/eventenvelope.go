@@ -115,6 +115,7 @@ func (env *T) Unmarshal(buf *text.Buffer) (err error) {
 	}
 	// allocate an event to unmarshal into
 	env.Event = &event.T{}
+	// log.I.Ln(string(eventObj))
 	if err = json.Unmarshal(eventObj, env.Event); chk.D(err) {
 		log.D.S(string(eventObj))
 		return
