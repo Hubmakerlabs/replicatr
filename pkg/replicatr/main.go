@@ -258,6 +258,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	var wg sync.WaitGroup
 	interrupt.AddHandler(func() {
 		cancel()
+		wg.Done()
 	})
 	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
 	encoder := cache.NewEncoder(c, args.EncodeCache, time.Second*30)
