@@ -85,6 +85,8 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 					return
 				}
 				for _, eventKey := range eventKeys {
+					var ev *event.T
+					var found bool
 					err = b.View(func(txn *badger.Txn) (err error) {
 						opts := badger.IteratorOptions{Reverse: true}
 						it := txn.NewIterator(opts)
@@ -114,19 +116,18 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 								q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
 								return
 							}
-							var evt *event.T
-							if evt, err = nostrbinary.Unmarshal(v); chk.E(err) {
+							if ev, err = nostrbinary.Unmarshal(v); chk.E(err) {
 								continue
 							}
-							if evt == nil {
+							if ev == nil {
 								log.D.S("got nil event from", v)
 								return
 							}
 							// check if this matches the other filters that were not part of the index
-							if extraFilter == nil || extraFilter.Matches(evt) {
-								res := Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
+							if extraFilter == nil || extraFilter.Matches(ev) {
+								res := Results{Ev: ev, TS: timestamp.Now(), Ser: ser}
 								log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
-									evt.ToObject().String())
+									ev.ToObject().String())
 								select {
 								case <-c.Done():
 									log.I.Ln("websocket closed")
@@ -136,12 +137,23 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 									return
 								default:
 								}
+								found = true
 								q2.results <- res
 							}
 						}
 						// close(q2.results)
 						return
 					})
+					// if event matched it will need to be encoded, we can do that now after the DB
+					// tx is finished. if only a stub was found the save function called by the L2
+					// will do this later after reviving the record.
+					if found {
+						// store in the cache so it's ready for other queries, and websocket code will
+						// also be able to use the encoded JSON immediately.
+						if _, err = b.Encoder.Put(ev, nil); chk.E(err) {
+							return
+						}
+					}
 				}
 				// log.I.Ln("closing results channel")
 				close(q2.results)

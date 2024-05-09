@@ -17,8 +17,7 @@ const IndexGCSkip = 5
 // This function should be invoked as a goroutine, and will terminate when the
 // backend context is canceled.
 func (b *Backend) GarbageCollector() {
-	log.W.Ln("starting badger back-end garbage collector:")
-	log.I.F("max size %0.3f MB; "+
+	log.D.F("starting badger back-end garbage collector: max size %0.3f MB; "+
 		"high water %0.3f MB; "+
 		"low water %0.3f MB "+
 		"(MB = %d bytes) "+

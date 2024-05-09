@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -49,7 +50,7 @@ func TestGarbageCollector(t *testing.T) {
 	var wg sync.WaitGroup
 	defer cancel()
 	path := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
-	be := GetBackend(c, &wg, path, false, TotalSize/100, 86, 92, 2)
+	be := GetBackend(c, &wg, path, false, app.MaxMessageSize, TotalSize/100, 86, 92, 2)
 	if err = be.Init(); chk.E(err) {
 		t.Fatal(err)
 	}

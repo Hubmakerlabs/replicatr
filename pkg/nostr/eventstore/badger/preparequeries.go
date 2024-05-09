@@ -55,6 +55,11 @@ func PrepareQueries(f *filter.T) (
 		qs = make([]query, len(f.IDs))
 		for i, idHex := range f.IDs {
 			ih := id.New(idHex)
+			if ih == nil {
+				log.E.F("failed to decode event ID: %s", idHex)
+				// just ignore it, clients will be clients
+				continue
+			}
 			prf := index.Id.Key(ih)
 			// log.T.F("id prefix to search on %0x from key %0x", prf, ih.Val)
 			qs[i] = query{
@@ -73,7 +78,8 @@ func PrepareQueries(f *filter.T) (
 			for i, pubkeyHex := range f.Authors {
 				var pk *pubkey.T
 				if pk, err = pubkey.New(pubkeyHex); chk.E(err) {
-					return
+					// bogus filter, continue anyway
+					continue
 				}
 				sp := index.Pubkey.Key(pk)
 				// log.I.F("search only for authors %0x from pub key %0x", sp, pk.Val)
@@ -88,11 +94,13 @@ func PrepareQueries(f *filter.T) (
 			// if there is kinds as well, we are searching via the kind/pubkey prefixes
 			qs = make([]query, len(f.Authors)*len(f.Kinds))
 			i := 0
+		authors:
 			for _, pubkeyHex := range f.Authors {
 				for _, kind := range f.Kinds {
 					var pk *pubkey.T
 					if pk, err = pubkey.New(pubkeyHex); chk.E(err) {
-						return
+						// skip this dodgy thing
+						continue authors
 					}
 					ki := kinder.New(kind)
 					sp := index.PubkeyKind.Key(pk, ki)
@@ -125,7 +133,9 @@ func PrepareQueries(f *filter.T) (
 			for _, value := range values {
 				// get key prefix (with full length) and offset where to write the last parts
 				var prf []byte
-				prf, err = GetTagKeyPrefix(value)
+				if prf, err = GetTagKeyPrefix(value); chk.E(err) {
+					continue
+				}
 				// remove the last part to get just the prefix we want here
 				// log.T.F("search for tags from %0x", prf)
 				qs[i] = query{index: i, queryFilter: f, searchPrefix: prf}
