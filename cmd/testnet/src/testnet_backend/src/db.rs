@@ -3,11 +3,8 @@ use crate::{
     EVENTS,
     MEMORY_MANAGER
 };
-use candid::export_service;
-use ic_cdk_macros::{query, update};
 use ic_stable_structures::StableBTreeMap;
 use ic_stable_structures::memory_manager::MemoryId;
-use crate::acl::{is_user};
 
 
 
@@ -16,52 +13,55 @@ use crate::acl::{is_user};
 
 
 
-pub fn get_all_events_db() -> Vec<(String, Event)> {
-    EVENTS.with(|events| {
+
+pub fn get_all_events_db() -> Result<Vec<(String, Event)>,String> {
+    let e : Vec<(String, Event)>= EVENTS.with(|events| {
         events
             .borrow()
             .iter()
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect()
-    })
+    });
+    if e.is_empty(){
+        return Err("No events found".to_string());
+    }else{
+        return Ok(e);
+    }
 }
 
-pub fn count_all_events_db() -> u64 {
-    EVENTS.with(|events| events.borrow().len() as u64)
+pub fn count_all_events_db() -> Result<u64,String> {
+    Ok(EVENTS.with(|events| events.borrow().len() as u64))
 }
 
 
-pub fn save_event_db(event: Event) -> String {
-    let event_for_logging = event.clone();
+pub fn save_event_db(event: Event) -> Result<(),String> {
     EVENTS.with(|events| {
         events.borrow_mut().insert(event.id.clone(), event);
     });
-    "success".to_string()
+    Ok(())
 }
 
 
-pub fn save_events_db(events: Vec<Event>) -> String {
-    let events_for_logging = events.clone();
+pub fn save_events_db(events: Vec<Event>) -> Result<(),String> {
     EVENTS.with(|events_map| {
         for event in events {
             events_map.borrow_mut().insert(event.id.clone(), event);
         }
     });
-    "success".to_string()
+    Ok(())
 }
 
 
-pub fn delete_event_db(id: String) -> String {
-    let event_for_logging = id.clone();
+pub fn delete_event_db(id: String) -> Result<(),String> {
     EVENTS.with(|events| {
         events.borrow_mut().remove(&id);
     });
-    "success".to_string()
+    Ok(())
 }
 
 
-pub fn get_events_db(filter: Filter) -> Vec<Event> {
-    let result = EVENTS.with(|events| {
+pub fn get_events_db(filter: Filter) -> Result<Vec<Event>,String> {
+    let result : Vec<Event>= EVENTS.with(|events| {
         events
             .borrow()
             .iter()
@@ -69,22 +69,26 @@ pub fn get_events_db(filter: Filter) -> Vec<Event> {
             .map(|(_, event)| event.clone())
             .collect()
     });
-
-    // this only works on the local replica
-    ic_cdk::println!("Query Results: {:#?}", result);
-    result
+    if result.is_empty(){
+        return Err("No events found".to_string());
+    }else{
+        return Ok(result);
+    }
 }
 
 
-pub fn count_events_db(filter: Filter) -> u64 {
-    get_events_db(filter).len() as u64
+pub fn count_events_db(filter: Filter) -> Result<u64,String> {
+    match get_events_db(filter) {
+        Ok(events) => Ok(events.len() as u64),
+        Err(e) => Err(e),
+    }
 }
 
 
-pub fn clear_events_db() -> String {
+pub fn clear_events_db() -> Result<(),String> {
     EVENTS.with(|events| {
         // Replace the contents of `events` with a new, empty `StableBTreeMap`.
         *events.borrow_mut() = StableBTreeMap::init(MEMORY_MANAGER.with(|p| p.borrow().get(MemoryId::new(0))));
     });
-    "All events have been cleared".to_string()
+    Ok(())
 }

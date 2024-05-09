@@ -20,12 +20,11 @@ type Filter = record {
 type KeyValuePair = record { key : text; value : vec text };
 service : {
   __get_candid_interface_tmp_hack : () -> (text) query;
-  count_all_events : () -> (nat64) query;
-  count_events : (Filter) -> (nat64) query;
-  delete_event : (text) -> (text);
-  get_all_events : () -> (vec record { text; Event }) query;
-  get_events : (Filter) -> (vec Event) query;
-  save_event : (Event) -> (text);
-  save_events : (vec Event) -> (text);
-  test : () -> (text) query;
+  count_all_events : (int64) -> (nat64) query;
+  count_events : (Filter, int64) -> (nat64) query;
+  delete_event : (text, int64) -> (opt text);
+  get_all_events : (int64) -> (vec record { text; Event }) query;
+  get_events : (Filter, int64) -> (vec Event) query;
+  save_event : (Event, int64) -> (opt text);
+  save_events : (vec Event, int64) -> (opt text);
 }
