@@ -10,6 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/units"
 )
 
 func Blower(args *Config) int {
@@ -28,18 +29,19 @@ func Blower(args *Config) int {
 	buf := make([]byte, app.MaxMessageSize)
 	scanner := bufio.NewScanner(fh)
 	scanner.Buffer(buf, 500000000)
-	var counter int
+	var counter, position int
 	for scanner.Scan() {
 		counter++
+		b := scanner.Bytes()
+		position += len(b)
 		if counter <= args.Skip {
 			continue
 		}
-		b := scanner.Bytes()
 		if len(b) > app.MaxMessageSize {
 			log.I.Ln("message too long", string(b))
 			continue
 		}
-		log.I.F("%d\n%s", counter, string(b))
+		log.I.F("%s\n%d %0.6f Gb", string(b), counter, float64(position)/float64(units.Gb))
 		if err = <-upRelay.Write(eventenvelope.FromRawJSON("", b)); chk.E(err) {
 			if strings.Contains(err.Error(), "connection closed") {
 				if upRelay, err = client.Connect(c,
