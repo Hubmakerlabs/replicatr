@@ -76,6 +76,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	}
 	var en enveloper.I
 	if en, _, err = envelopes.ProcessEnvelope(msg); log.E.Chk(err) {
+		// todo: work on this kind of mischief ban stuff
 		// if en == nil {
 		// 	log.E.F("nil envelope label: ignoring message\n%s", string(msg))
 		// 	ws.OffenseCount.Inc()
