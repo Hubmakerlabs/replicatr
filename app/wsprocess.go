@@ -21,7 +21,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
-	"github.com/fasthttp/websocket"
 	"github.com/minio/sha256-simd"
 )
 
@@ -247,13 +246,11 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			return
 		} else {
 			log.E.Ln("user sent bogus auth response")
-			chk.E(ws.WriteMessage(
-				websocket.TextMessage, (&okenvelope.T{
-					ID:     env.Event.ID,
-					OK:     false,
-					Reason: "error: failed to authenticate"}).
-					Bytes(),
-			))
+			chk.E(ws.WriteEnvelope(&okenvelope.T{
+				ID:     env.Event.ID,
+				OK:     false,
+				Reason: "error: failed to authenticate"}),
+			)
 		}
 	}
 	return
