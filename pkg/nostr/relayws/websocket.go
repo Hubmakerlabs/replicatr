@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
@@ -75,6 +76,7 @@ func (ws *WebSocket) write(t MessageType, b []byte) (err error) {
 	if len(b) != 0 {
 		log.T.F("sending message to %s %s\n%s", ws.RealRemote(), ws.AuthPubKey(), string(b))
 	}
+	chk.E(ws.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5)))
 	chk.E(ws.Conn.WriteMessage(int(t), b))
 	return
 }
@@ -107,6 +109,7 @@ func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 		string(rawJSON),
 		// ),
 		loc)
+	chk.E(ws.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5)))
 	chk.E(ws.Conn.WriteMessage(int(TextMessage), rawJSON))
 	return
 }

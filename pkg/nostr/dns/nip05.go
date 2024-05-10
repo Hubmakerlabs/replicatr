@@ -20,6 +20,8 @@ type (
 	key2RelaysMap map[string][]string
 )
 
+// WellKnownResponse is the standard format of the JSON file hosted at a given
+// URL with the path /.well-known/nostr.json
 type WellKnownResponse struct {
 	Names  name2KeyMap   `json:"names"`  // NIP-05
 	Relays key2RelaysMap `json:"relays"` // NIP-35
@@ -79,6 +81,8 @@ func QueryIdentifier(c context.T, username string) (pp *pointers.Profile,
 	}, nil
 }
 
+// NormalizeIdentifier trims off the _@ prefix for how a NIP-05 identifier
+// should be shown in a user interface.
 func NormalizeIdentifier(username string) string {
 	if strings.HasPrefix(username, "_@") {
 		return username[2:]

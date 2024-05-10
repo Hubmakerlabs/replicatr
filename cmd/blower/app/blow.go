@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
@@ -29,6 +30,7 @@ func Blower(args *Config) int {
 	scanner := bufio.NewScanner(fh)
 	scanner.Buffer(buf, 500000000)
 	var counter, position int
+	var start int64
 	for scanner.Scan() {
 		counter++
 		b := scanner.Bytes()
@@ -40,10 +42,19 @@ func Blower(args *Config) int {
 		// 	log.E.Ln("message too long", string(b))
 		// 	continue
 		// }
-		log.I.F("%d : size: %6d bytes, position: %0.6f Gb", counter, len(b), float64(position)/float64(units.Gb))
-		for err = <-upRelay.Write(eventenvelope.FromRawJSON("", b)); chk.E(err); {
+		if start == 0 {
+			start = time.Now().Unix()
+		}
+		log.I.F("%d : size: %6d bytes, position: %0.6f Gb",
+			counter, len(b), float64(position)/float64(units.Gb),
+		)
+		for err = <-upRelay.Write(eventenvelope.FromRawJSON("", b)); err != nil; {
+			if strings.Contains(err.Error(), "failed to flush writer") {
+				return 0
+			}
 			if strings.Contains(err.Error(), "connection closed") {
 				upRelay.Close()
+				upRelay.Connection.Conn.Close()
 				if upRelay, err = client.Connect(c,
 					args.UploadRelay); chk.E(err) {
 					return 1
@@ -77,6 +88,7 @@ func Blower(args *Config) int {
 			// 	return 1
 			// }
 		}
+		// time.Sleep(time.Second)
 	}
 	return 0
 }

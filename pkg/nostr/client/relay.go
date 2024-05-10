@@ -52,6 +52,7 @@ type T struct {
 	ConnectionError         error
 	connectionContext       context.T // will be canceled when connection closes
 	connectionContextCancel context.F
+	done                    sync.Once
 
 	challenge                     string // NIP-42 challenge, only keep the last
 	AuthRequired                  chan struct{}
@@ -254,6 +255,9 @@ func (r *T) Connect(c context.T) (err error) {
 					return
 				}
 			case wr := <-r.writeQueue:
+				if wr.msg == nil {
+					return
+				}
 				// all write requests will go through this to prevent races
 				if err = r.Connection.WriteMessage(wr.msg); err != nil {
 					wr.answer <- err
@@ -360,14 +364,14 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 }
 
 // Write queues a message to be sent to the relay.
-func (r *T) Write(msg []byte) <-chan error {
-	ch := make(chan error)
+func (r *T) Write(msg []byte) (ch chan error) {
+	ch = make(chan error)
 	select {
 	case r.writeQueue <- writeRequest{msg: msg, answer: ch}:
 	case <-r.connectionContext.Done():
-		go func() { ch <- fmt.Errorf("connection closed") }()
+		ch <- fmt.Errorf("connection closed")
 	}
-	return ch
+	return
 }
 
 // Publish sends an "EVENT" command to the relay r as in NIP-01 and waits for an
@@ -575,5 +579,5 @@ func (r *T) Close() error {
 
 	r.connectionContextCancel()
 	r.connectionContextCancel = nil
-	return r.Connection.Close()
+	return r.Connection.Conn.Close()
 }
