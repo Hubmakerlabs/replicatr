@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/gobwas/httphead"
 	"github.com/gobwas/ws"
@@ -83,7 +84,7 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (connecti
 			return fw
 		})
 	}
-	writer := wsutil.NewWriter(conn, state, ws.OpText)
+	writer := wsutil.NewWriterSize(conn, state, ws.OpText, app.MaxMessageSize)
 	writer.SetExtensions(&msgState)
 	connection = &C{
 		Conn:              conn,

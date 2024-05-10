@@ -15,7 +15,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
-	"github.com/fasthttp/websocket"
+	"github.com/gorilla/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
 	"mleku.dev/git/atomic"
 )
@@ -27,9 +27,9 @@ const (
 	WriteWait           = 10 * time.Second
 	PongWait            = 60 * time.Second
 	PingPeriod          = 30 * time.Second
-	ReadBufferSize      = 65536
-	WriteBufferSize     = 65536
-	MaxMessageSize  int = 4 * units.Mb
+	ReadBufferSize      = 4096
+	WriteBufferSize     = 4096
+	MaxMessageSize  int = 128 * units.Kb
 )
 
 // function types used in the relay state

@@ -6,7 +6,6 @@ require (
 	github.com/alexflint/go-arg v1.4.3
 	github.com/aviate-labs/agent-go v0.3.4
 	github.com/dgraph-io/badger/v4 v4.2.0
-	github.com/fasthttp/websocket v1.5.8
 	github.com/fiatjaf/eventstore v0.3.13
 	github.com/fiatjaf/generic-ristretto v0.0.1
 	github.com/gobwas/httphead v0.1.0

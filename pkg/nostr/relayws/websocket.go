@@ -13,7 +13,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/fasthttp/websocket"
+	"github.com/gorilla/websocket"
 	"mleku.dev/git/atomic"
 	"mleku.dev/git/slog"
 )

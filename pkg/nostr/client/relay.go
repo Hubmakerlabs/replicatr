@@ -209,11 +209,9 @@ func (r *T) Connect(c context.T) (err error) {
 	if r.connectionContext == nil || r.Subscriptions == nil {
 		return fmt.Errorf("relay must be initialized with a call to NewRelay()")
 	}
-
 	if r.url == "" {
 		return fmt.Errorf("invalid relay URL '%s'", r.URL())
 	}
-
 	if _, ok := c.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		var cancel context.F
@@ -226,10 +224,8 @@ func (r *T) Connect(c context.T) (err error) {
 		return fmt.Errorf("error opening websocket to '%s': %w", r.URL(), err)
 	}
 	r.Connection = conn
-
 	// ping every 29 seconds
 	ticker := time.NewTicker(29 * time.Second)
-
 	// to be used when the connection is closed
 	go func() {
 		<-r.connectionContext.Done()

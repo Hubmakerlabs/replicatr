@@ -7,7 +7,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
-	"github.com/fasthttp/websocket"
+	"github.com/gorilla/websocket"
 )
 
 // HandleWebsocket is a http handler that accepts and manages websocket
@@ -20,6 +20,8 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 		log.E.F("failed to upgrade websocket: %v", err)
 		return
 	}
+	conn.SetReadLimit(int64(MaxMessageSize))
+	conn.EnableWriteCompression(true)
 	rl.clients.Store(conn, struct{}{})
 	ticker := time.NewTicker(rl.PingPeriod)
 

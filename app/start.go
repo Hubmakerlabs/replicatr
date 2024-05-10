@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
-	"github.com/fasthttp/websocket"
+	"github.com/gorilla/websocket"
 	"github.com/rs/cors"
 )
 

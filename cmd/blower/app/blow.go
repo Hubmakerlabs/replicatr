@@ -38,7 +38,7 @@ func Blower(args *Config) int {
 			continue
 		}
 		if len(b) > app.MaxMessageSize {
-			log.I.Ln("message too long", string(b))
+			log.E.Ln("message too long", string(b))
 			continue
 		}
 		log.I.F("%d : size: %6d bytes, position: %0.6f Gb", counter, len(b), float64(position)/float64(units.Gb))
@@ -48,8 +48,8 @@ func Blower(args *Config) int {
 					args.UploadRelay); chk.E(err) {
 					return 1
 				}
-				// give some time for debugging this
-				// time.Sleep(3 * time.Second)
+				// give some time for debugging this and relay to get its shit together
+				time.Sleep(time.Second)
 			}
 			// todo: get authing working properly
 			// if !upAuthed {
@@ -79,7 +79,7 @@ func Blower(args *Config) int {
 			// 	return 1
 			// }
 		}
-		time.Sleep(time.Millisecond * 2)
+		time.Sleep(time.Millisecond * 10)
 	}
 	return 0
 }

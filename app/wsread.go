@@ -6,7 +6,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
-	"github.com/fasthttp/websocket"
+	"github.com/gorilla/websocket"
 )
 
 type readParams struct {
@@ -40,7 +40,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		p.kill()
 		return
 	}
-	p.conn.SetReadLimit(rl.MaxMessageSize)
+	p.conn.SetReadLimit(int64(MaxMessageSize))
 	chk.E(p.conn.SetReadDeadline(time.Now().Add(rl.PongWait)))
 	p.conn.SetPongHandler(func(string) (err error) {
 		err = p.conn.SetReadDeadline(time.Now().Add(rl.PongWait))
