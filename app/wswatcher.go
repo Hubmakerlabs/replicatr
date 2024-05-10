@@ -6,7 +6,6 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
-	"github.com/fasthttp/websocket"
 )
 
 type watcherParams struct {
@@ -41,8 +40,7 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 					p.ws.RealRemote())
 				return
 			}
-			if err = p.ws.WriteMessage(websocket.PingMessage,
-				nil); log.T.Chk(err) {
+			if err = p.ws.Ping(); log.T.Chk(err) {
 				if !strings.HasSuffix(err.Error(),
 					"use of closed network connection") {
 					log.T.F("error writing ping: %v; closing websocket", err)

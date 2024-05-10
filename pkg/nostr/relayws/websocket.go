@@ -61,8 +61,15 @@ type WebSocket struct {
 	OffenseCount atomic.Uint32 // when client does dumb stuff, increment this
 }
 
-// WriteMessage writes a message with a given websocket type specifier
-func (ws *WebSocket) WriteMessage(t MessageType, b []byte) (err error) {
+func (ws *WebSocket) Pong() (err error) {
+	return ws.write(websocket.PongMessage, nil)
+}
+func (ws *WebSocket) Ping() (err error) {
+	return ws.write(websocket.PingMessage, nil)
+}
+
+// write writes a message with a given websocket type specifier
+func (ws *WebSocket) write(t MessageType, b []byte) (err error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
 	if len(b) != 0 {
@@ -72,9 +79,9 @@ func (ws *WebSocket) WriteMessage(t MessageType, b []byte) (err error) {
 	return
 }
 
-// WriteTextMessage writes a message with a given websocket type specifier
+// WriteTextMessage writes a text (binary?) message
 func (ws *WebSocket) WriteTextMessage(b []byte) (err error) {
-	return ws.WriteMessage(websocket.TextMessage, b)
+	return ws.write(websocket.TextMessage, b)
 }
 
 // WriteEnvelope writes a message with a given websocket type specifier

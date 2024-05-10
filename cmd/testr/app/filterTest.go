@@ -64,7 +64,7 @@ func queryRelay(c *websocket.Conn, filter nostr.Filter) ([]nostr.Event, error) {
 	// if err != nil {
 	// 	return nil, err
 	// }
-	// err = c.WriteMessage(websocket.TextMessage, jsonData)
+	// err = c.WriteTextMessage(jsonData)
 	// if err != nil {
 	// 	return nil, err
 	// }

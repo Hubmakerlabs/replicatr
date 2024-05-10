@@ -68,11 +68,10 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 				log.E.F("unexpected close error from %s: %v",
 					p.ws.RealRemote(), err)
 			}
-			// p.kill()
 			return
 		}
 		if typ == websocket.PingMessage {
-			chk.E(p.ws.WriteMessage(websocket.PongMessage, nil))
+			chk.E(p.ws.Pong())
 			continue
 		}
 		strMsg := string(message)
@@ -80,8 +79,6 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 			strMsg = strMsg[:256]
 		}
 		if err = rl.wsProcessMessages(message, p.c, p.kill, p.ws); chk.E(err) {
-			// p.kill()
-			// return
 		}
 	}
 }
