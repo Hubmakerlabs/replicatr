@@ -9,7 +9,7 @@ import (
 )
 
 func TestEncodeNpub(t *testing.T) {
-	npub, err := EncodePublicKey("3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d")
+	npub, err := HexToNpub("3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d")
 	if err != nil {
 		t.Errorf("shouldn't error: %s", err)
 	}
@@ -19,7 +19,7 @@ func TestEncodeNpub(t *testing.T) {
 }
 
 func TestEncodeNsec(t *testing.T) {
-	nsec, err := EncodePrivateKey("3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d")
+	nsec, err := HexToNsec("3bf0c63fcb93463407af97a5e5ee64fa883d107ef9e558472c4eb9aaaefa459d")
 	if err != nil {
 		t.Errorf("shouldn't error: %s", err)
 	}

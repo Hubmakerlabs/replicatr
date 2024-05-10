@@ -148,34 +148,6 @@ func Decode(bech32string string) (prefix string, value any, err error) {
 	return prefix, data, fmt.Errorf("unknown tag %s", prefix)
 }
 
-var EncodePrivateKey = EncodeSecretKey
-
-func EncodeSecretKey(privateKeyHex string) (nsec string, err error) {
-	var b []byte
-	if b, err = hex.Dec(privateKeyHex); chk.D(err) {
-		err = fmt.Errorf("failed to decode private key hex: %w", err)
-		return
-	}
-	var bits5 []byte
-	if bits5, err = bech32.ConvertBits(b, 8, 5, true); chk.D(err) {
-		return
-	}
-	return bech32.Encode(NsecHRP, bits5)
-}
-
-func EncodePublicKey(publicKeyHex string) (s string, err error) {
-	var b []byte
-	if b, err = hex.Dec(publicKeyHex); chk.D(err) {
-		err = log.E.Err("failed to decode public key hex: %w", err)
-		return
-	}
-	var bits5 []byte
-	if bits5, err = bech32.ConvertBits(b, 8, 5, true); chk.D(err) {
-		return "", err
-	}
-	return bech32.Encode(NpubHRP, bits5)
-}
-
 func EncodeNote(eventIDHex string) (s string, err error) {
 	var b []byte
 	if b, err = hex.Dec(eventIDHex); chk.D(err) {
