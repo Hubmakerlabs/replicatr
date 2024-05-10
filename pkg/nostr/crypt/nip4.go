@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"encoding/base64"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"lukechampine.com/frand"
 	"mleku.dev/git/ec/secp256k1"
 	"mleku.dev/git/slog"
 )
@@ -36,7 +36,8 @@ func ComputeSharedSecret(sec, pub string) (secret []byte, err error) {
 	var s *secp256k1.SecretKey
 	var p *secp256k1.PublicKey
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
-	if pub[:bech32encoding.Bech32HRPLen] == bech32encoding.PubHRP {
+
+	if strings.HasPrefix(pub, bech32encoding.PubHRP) {
 		if p, err = bech32encoding.NpubToPublicKey(pub); chk.D(err) {
 			return
 		}
@@ -46,7 +47,7 @@ func ComputeSharedSecret(sec, pub string) (secret []byte, err error) {
 		}
 	}
 	// if the first 4 chars are a Bech32 HRP try to decode as Bech32
-	if sec[:bech32encoding.Bech32HRPLen] == bech32encoding.SecHRP {
+	if strings.HasPrefix(sec, bech32encoding.SecHRP) {
 		if s, err = bech32encoding.NsecToSecretKey(sec); chk.D(err) {
 			return
 		}
@@ -69,11 +70,7 @@ func GenerateSharedSecret(s *secp256k1.SecretKey, p *secp256k1.PublicKey) []byte
 func Encrypt(message string, key []byte) (string, error) {
 	// block size is 16 bytes
 	iv := make([]byte, 16)
-	// can probably use a less expensive lib since IV has to only be unique; not
-	// perfectly random; math/rand? ed: https://github.com/lukechampine/frand
-	// but this is not high volume throughput and only one good IV is needed per
-	// 4gb of data at most.
-	if _, err := rand.Read(iv); err != nil {
+	if _, err := frand.Read(iv); err != nil {
 		return "", fmt.Errorf("error creating initization vector: %w", err)
 	}
 	// automatically picks aes-256 based on key length (32 bytes)
