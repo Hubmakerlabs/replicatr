@@ -326,7 +326,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 		perm, err := a.GetPermission()
 		if err != nil {
-			log.E.F("Error getting Permission: %s\n", err)
+			log.E.F("%s\n", err)
 			os.Exit(1)
 		}
 		fmt.Printf("This relay has %s level access\n", perm)

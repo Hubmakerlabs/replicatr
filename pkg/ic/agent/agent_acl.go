@@ -4,7 +4,7 @@ import "time"
 
 func (b *Backend) AddUser(pubKey string, perm bool) (err error) {
 	methodName := "add_user"
-	args := []any{pubKey, perm, time.Now().Unix()}
+	args := []any{pubKey, perm, time.Now().UnixNano()}
 	var result *string
 	err = b.Agent.Call(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
@@ -18,7 +18,7 @@ func (b *Backend) AddUser(pubKey string, perm bool) (err error) {
 
 func (b *Backend) RemoveUser(pubKey string) (err error) {
 	methodName := "remove_user"
-	args := []any{pubKey, time.Now().Unix()}
+	args := []any{pubKey, time.Now().UnixNano()}
 	var result *string
 	err = b.Agent.Call(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
@@ -32,7 +32,7 @@ func (b *Backend) RemoveUser(pubKey string) (err error) {
 
 func (b *Backend) GetPermission() (result string, err error) {
 	methodName := "get_permission"
-	args := []any{time.Now().Unix()}
+	args := []any{time.Now().UnixNano()}
 	err = b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
 		return "", err

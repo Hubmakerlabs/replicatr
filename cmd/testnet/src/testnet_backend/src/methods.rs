@@ -169,7 +169,7 @@ pub fn get_permission(timestamp: i64) -> String {
     let result: String;
     match acl::get_permission_acl(){
         Ok(permission) => result = permission,
-        Err(e) => ic_cdk::trap(&format!("Error: {}", e))
+        Err(e) => ic_cdk::trap(&format!("Permission: {}", e))
     };
     result
 }
@@ -177,7 +177,7 @@ pub fn get_permission(timestamp: i64) -> String {
 fn valid_timestamp(timestamp: i64) -> bool {
     let current_time = api::time() as i64; // Convert current_time to i64
     let diff = (timestamp - current_time).abs();
-    if diff > 30 {
+    if diff > 30_000_000_000 {
         return false;
     }
     true

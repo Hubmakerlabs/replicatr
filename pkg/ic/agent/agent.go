@@ -79,7 +79,7 @@ func (b *Backend) SaveCandidEvent(event Event) (err error) {
 
 	methodName := "save_event"
 	var result *string
-	args := []any{event, time.Now().Unix()}
+	args := []any{event, time.Now().UnixNano()}
 	err = b.Agent.Call(b.CanisterID, methodName, args,
 		[]any{&result})
 	if err == nil && result != nil {
@@ -90,7 +90,7 @@ func (b *Backend) SaveCandidEvent(event Event) (err error) {
 
 func (b *Backend) DeleteCandidEvent(event Event) (err error) {
 	methodName := "delete_event"
-	args := []any{event, time.Now().Unix()}
+	args := []any{event, time.Now().UnixNano()}
 	var result *string
 	err = b.Agent.Call(b.CanisterID, methodName, args,
 		[]any{&result})
@@ -102,7 +102,7 @@ func (b *Backend) DeleteCandidEvent(event Event) (err error) {
 
 func (b *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
 	methodName := "get_events"
-	args := []any{*filter, time.Now().Unix()}
+	args := []any{*filter, time.Now().UnixNano()}
 	var result []Event
 	err := b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
@@ -113,7 +113,7 @@ func (b *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
 
 func (b *Backend) CountCandidEvent(filter *Filter) (int, error) {
 	methodName := "count_events"
-	args := []any{*filter, time.Now().Unix()}
+	args := []any{*filter, time.Now().UnixNano()}
 	var result int
 	err := b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
@@ -125,7 +125,7 @@ func (b *Backend) CountCandidEvent(filter *Filter) (int, error) {
 func (b *Backend) ClearCandidEvents() (err error) {
 	methodName := "clear_events"
 	var result *string
-	args := []any{}
+	args := []any{time.Now().UnixNano()}
 	err = b.Agent.Call(b.CanisterID, methodName, args, []any{&result})
 
 	if err == nil && result != nil {
