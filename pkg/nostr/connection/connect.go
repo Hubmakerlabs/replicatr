@@ -39,8 +39,9 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (connecti
 			wsflate.DefaultParameters.Option(),
 		},
 	}
-	conn, _, hs, err := dialer.Dial(c, url)
-	if chk.D(err) {
+	var conn net.Conn
+	var hs ws.Handshake
+	if conn, _, hs, err = dialer.Dial(c, url); chk.D(err) {
 		return nil, fmt.Errorf("failed to dial: %w", err)
 	}
 	enableCompression := false
@@ -57,7 +58,6 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (connecti
 	var msgState wsflate.MessageState
 	if enableCompression {
 		msgState.SetCompressed(true)
-
 		flateReader = wsflate.NewReader(nil, func(r io.Reader) wsflate.Decompressor {
 			return flate.NewReader(r)
 		})
@@ -75,14 +75,15 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (connecti
 	// writer
 	var flateWriter *wsflate.Writer
 	if enableCompression {
-		flateWriter = wsflate.NewWriter(nil, func(w io.Writer) wsflate.Compressor {
-			var fw *flate.Writer
-			fw, err = flate.NewWriter(w, 4)
-			if chk.D(err) {
-				log.E.F("Failed to create flate writer: %v", err)
-			}
-			return fw
-		})
+		flateWriter = wsflate.NewWriter(nil,
+			func(w io.Writer) wsflate.Compressor {
+				var fw *flate.Writer
+				fw, err = flate.NewWriter(w, 4)
+				if chk.D(err) {
+					log.E.F("Failed to create flate writer: %v", err)
+				}
+				return fw
+			})
 	}
 	writer := wsutil.NewWriterSize(conn, state, ws.OpText, app.MaxMessageSize)
 	writer.SetExtensions(&msgState)
