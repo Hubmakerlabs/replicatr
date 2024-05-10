@@ -42,7 +42,7 @@ func Blower(args *Config) int {
 			continue
 		}
 		log.I.F("%d %0.6f Gb", counter, float64(position)/float64(units.Gb))
-		if err = <-upRelay.Write(eventenvelope.FromRawJSON("", b)); chk.E(err) {
+		for err = <-upRelay.Write(eventenvelope.FromRawJSON("", b)); chk.E(err); {
 			if strings.Contains(err.Error(), "connection closed") {
 				if upRelay, err = client.Connect(c,
 					args.UploadRelay); chk.E(err) {
@@ -77,7 +77,7 @@ func Blower(args *Config) int {
 			// 	return 1
 			// }
 		}
-		time.Sleep(time.Millisecond * 20)
+		time.Sleep(time.Millisecond * 2)
 	}
 	return 0
 }
