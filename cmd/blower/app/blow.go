@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
@@ -37,19 +36,18 @@ func Blower(args *Config) int {
 		if counter <= args.Skip {
 			continue
 		}
-		if len(b) > app.MaxMessageSize {
-			log.E.Ln("message too long", string(b))
-			continue
-		}
+		// if len(b) > app.MaxMessageSize {
+		// 	log.E.Ln("message too long", string(b))
+		// 	continue
+		// }
 		log.I.F("%d : size: %6d bytes, position: %0.6f Gb", counter, len(b), float64(position)/float64(units.Gb))
 		for err = <-upRelay.Write(eventenvelope.FromRawJSON("", b)); chk.E(err); {
 			if strings.Contains(err.Error(), "connection closed") {
+				upRelay.Close()
 				if upRelay, err = client.Connect(c,
 					args.UploadRelay); chk.E(err) {
 					return 1
 				}
-				// give some time for debugging this and relay to get its shit together
-				time.Sleep(time.Second)
 			}
 			// todo: get authing working properly
 			// if !upAuthed {
@@ -79,7 +77,6 @@ func Blower(args *Config) int {
 			// 	return 1
 			// }
 		}
-		time.Sleep(time.Millisecond * 10)
 	}
 	return 0
 }
