@@ -30,63 +30,11 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 			}
 		}
 	}
-	// var ch chan *event.T
-	// defer close(ch)
-	if ev.Kind.IsEphemeral() {
-		log.D.Ln("ephemeral event")
-		// do not store ephemeral events
-	} else {
-		// todo: we are not deleting replaceables, only returning one for each match
-		// todo: deleting them is racy, they will simply expire from the cache eventually
-		//
-		// if ev.Kind.IsReplaceable() {
-		// 	log.D.Ln("replaceable event")
-		// 	// replaceable event, delete before storing
-		// 	for i, query := range rl.QueryEvents {
-		// 		log.D.Ln("running query", i)
-		// 		ch, err = query(c, &filter.T{
-		// 			Authors: tag.T{ev.PubKey},
-		// 			Kinds:   kinds.T{ev.Kind},
-		// 		})
-		// 		if chk.E(err) {
-		// 			continue
-		// 		}
-		// 		if previous := <-ch; previous != nil && isOlder(previous, ev) {
-		// 			for _, del := range rl.DeleteEvent {
-		// 				log.D.Chk(del(c, previous))
-		// 			}
-		// 		}
-		// 	}
-		// 	log.D.Ln("finished replaceable event")
-		// } else if ev.Kind.IsParameterizedReplaceable() {
-		// 	log.D.Ln("parameterized replaceable event")
-		// 	// parameterized replaceable event, delete before storing
-		// 	d := ev.Tags.GetFirst([]string{"d", ""})
-		// 	if d != nil {
-		// 		for _, query := range rl.QueryEvents {
-		// 			if ch, err = query(c, &filter.T{
-		// 				Authors: tag.T{ev.PubKey},
-		// 				Kinds:   kinds.T{ev.Kind},
-		// 				Tags:    filter.TagMap{"d": []string{d.Value()}},
-		// 			}); chk.E(err) {
-		// 				continue
-		// 			}
-		// 			if previous := <-ch; previous != nil && isOlder(previous, ev) {
-		// 				for _, del := range rl.DeleteEvent {
-		// 					chk.E(del(c, previous))
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		// }
-		// log.D.Ln("storing event")
-		// store
+	if !ev.Kind.IsEphemeral() {
 		for _, store := range rl.StoreEvent {
-			// log.T.Ln("running event store function", i, ev.ToObject().String())
 			if saveErr := store(c, ev); chk.T(saveErr) {
 				switch {
 				case errors.Is(saveErr, eventstore.ErrDupEvent):
-					// log.D.Ln(saveErr)
 					return saveErr
 				default:
 					err = log.E.Err(normalize.Reason(saveErr.Error(), "error"))

@@ -73,7 +73,6 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 							ws.RealRemote()).Error()
 				}
 			}
-
 		}
 	}
 	// if the user has now authed we can check if they have privileges
