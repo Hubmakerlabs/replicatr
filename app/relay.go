@@ -14,6 +14,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
+	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
 	"mleku.dev/git/atomic"
@@ -26,9 +27,9 @@ const (
 	WriteWait           = 10 * time.Second
 	PongWait            = 60 * time.Second
 	PingPeriod          = 30 * time.Second
-	ReadBufferSize      = 8192
-	WriteBufferSize     = 8192
-	MaxMessageSize  int = 524288
+	ReadBufferSize      = 65536
+	WriteBufferSize     = 65536
+	MaxMessageSize  int = 4 * units.Mb
 )
 
 // function types used in the relay state
@@ -115,7 +116,7 @@ func NewRelay(c context.T, cancel context.F,
 	pubKey, err := keys.GetPublicKey(conf.SecKey)
 	chk.E(err)
 	var npub string
-	npub, err = bech32encoding.EncodePublicKey(pubKey)
+	npub, err = bech32encoding.HexToNpub(pubKey)
 	chk.E(err)
 	inf.Software = Software
 	inf.Version = Version

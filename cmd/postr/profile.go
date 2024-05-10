@@ -56,7 +56,7 @@ func Profile(cCtx *cli.Context) (err error) {
 		return err
 	}
 	var npub string
-	if npub, err = bech32encoding.EncodePublicKey(pub); chk.D(err) {
+	if npub, err = bech32encoding.HexToNpub(pub); chk.D(err) {
 		return err
 	}
 	fmt.Printf(

@@ -134,14 +134,13 @@ func (ae *T) DeleteEntry(pub string) (err error) {
 		ae.Lock()
 		defer ae.Unlock()
 		var counter int
-		// The most efficient way to remove the entry is to iterate it and keep
-		// a second counter that skips the deleted entry and copies all other
-		// entries in order. when the item is found, the counter is not
-		// increased, but the iteration continues so all entries are shifted
-		// back one after the delete point. this is much the same as what would
-		// be done if an append operation is done with the before and after
-		// segments but simplifies the API for find by not needing an index. The
-		// difference being that this does not require optimization by the
+		// The most efficient way to remove the entry is to iterate it and keep a second
+		// counter that skips the deleted entry and copies all other entries in order.
+		// when the item is found, the counter is not increased, but the iteration
+		// continues so all entries are shifted back one after the delete point. this is
+		// much the same as what would be done if an append operation is done with the
+		// before and after segments but simplifies the API for find by not needing an
+		// index. The difference being that this does not require optimization by the
 		// compiler.
 		for _, v := range ae.entries {
 			if v.Pubkey != pub {
@@ -213,8 +212,8 @@ func (ae *T) FromEvent(ev *event.T) (e *Entry, err error) {
 	if previous != nil {
 		e.Created = previous.Created
 	}
-	// Role requires converting the string back to a number... the strings must
-	// be exactly as in the list RoleStrings. Also there must be a role.
+	// Role requires converting the string back to a number... the strings must be
+	// exactly as in the list RoleStrings. Also there must be a role.
 	pTags := ev.Tags.GetAll("p")
 	if len(pTags) != 1 {
 		err = log.E.Err("other than 1 p tag found: %d %v", len(pTags), pTags)

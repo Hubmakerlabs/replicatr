@@ -56,7 +56,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		var message []byte
 		typ, message, err = p.conn.ReadMessage()
 		if err != nil {
-			log.I.F("%s from %s", err, p.ws.RealRemote())
+			log.I.F("%s from %s, %d bytes message", err, p.ws.RealRemote(), len(message))
 			if websocket.IsUnexpectedCloseError(
 				err,
 				websocket.CloseNormalClosure,    // 1000

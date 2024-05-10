@@ -29,7 +29,7 @@ type ProfileMetadata struct {
 }
 
 func (p ProfileMetadata) Npub() string {
-	v, err := bech32encoding.EncodePublicKey(p.PubKey)
+	v, err := bech32encoding.HexToNpub(p.PubKey)
 	log.D.Chk(err)
 	return v
 }
