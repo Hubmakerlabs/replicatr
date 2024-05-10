@@ -26,9 +26,9 @@ const (
 	WriteWait           = 10 * time.Second
 	PongWait            = 60 * time.Second
 	PingPeriod          = 30 * time.Second
-	ReadBufferSize      = 4096
-	WriteBufferSize     = 4096
-	MaxMessageSize  int = 262144
+	ReadBufferSize      = 8192
+	WriteBufferSize     = 8192
+	MaxMessageSize  int = 524288
 )
 
 // function types used in the relay state

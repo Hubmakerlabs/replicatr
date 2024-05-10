@@ -387,15 +387,15 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	case args.Wipe != nil:
 		log.D.Ln("wiping database")
 		chk.E(rl.Wipe(badgerDB))
-		// cancel()
+		cancel()
 		os.Exit(0)
 	case args.ImportCmd != nil:
 		rl.Import(db, args.ImportCmd.FromFile, &wg, args.ImportCmd.StartingFrom)
-		// cancel()
+		cancel()
 		os.Exit(0)
 	case args.ExportCmd != nil:
 		rl.Export(badgerDB, args.ExportCmd.ToFile, &wg)
-		// cancel()
+		cancel()
 		os.Exit(0)
 	}
 	rl.StoreEvent = append(rl.StoreEvent, rl.Chat)
@@ -409,11 +409,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	rl.RejectFilter = append(rl.RejectFilter, app.NoEmptyFilters)
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
-	// commenting out the override so GC will work
 	// rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	rl.OverwriteFilter = append(rl.OverwriteFilter, app.LimitAuthorsAndIDs(20, 20))
-	// commenting out the override so GC will work
-	// rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	// run the chat ACL initialization
 	rl.Init()
 	serv := http.Server{

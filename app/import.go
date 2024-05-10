@@ -41,7 +41,6 @@ func (rl *Relay) Import(db eventstore.Store, files []string, wg *sync.WaitGroup,
 			}
 			b := scanner.Bytes()
 			counter++
-			// log.I.Ln(counter, string(b))
 			ev := &event.T{}
 			if err = json.Unmarshal(b, ev); chk.E(err) {
 				continue
@@ -49,44 +48,10 @@ func (rl *Relay) Import(db eventstore.Store, files []string, wg *sync.WaitGroup,
 			log.I.Ln(counter, ev.ToObject().String())
 			if ev.Kind == kind.Deletion {
 				// this always returns "blocked: " whenever it returns an error
-				// if err = rl.handleDeleteRequest(context.Bg(), ev); chk.E(err) {
-				// 	continue
-				// }
 			} else {
-				// log.D.Ln("adding event", counter, ev.ID)
 				// this will also always return a prefixed reason
 				err = db.SaveEvent(context.Bg(), ev)
 			}
-
-			// evb := ev.ToCanonical().Bytes()
-			// hash := sha256.Sum256(evb)
-			// id := hex.Enc(hash[:])
-			// if id != ev.ID.String() {
-			// 	log.D.F("id mismatch got %s, expected %s", id, ev.ID.String())
-			// 	continue
-			// }
-			// log.D.Ln("ID was valid")
-			// // check signature
-			// var ok bool
-			// if ok, err = ev.CheckSignature(); chk.E(err) {
-			// 	log.E.F("error: failed to verify signature: %v", err)
-			// 	continue
-			// } else if !ok {
-			// 	log.E.Ln("invalid: signature is invalid")
-			// 	return
-			// }
-			// log.D.Ln("signature was valid")
-			// if ev.Kind == kind.Deletion {
-			// 	// this always returns "blocked: " whenever it returns an error
-			// 	// if err = rl.handleDeleteRequest(context.Bg(), ev); chk.E(err) {
-			// 	// 	continue
-			// 	// }
-			// } else {
-			// 	log.D.Ln("adding event", ev.ID)
-			// 	// this will also always return a prefixed reason
-			// 	err = db.SaveEvent(context.Bg(), ev)
-			// }
-			// chk.E(err)
 		}
 		chk.D(fh.Close())
 	}
