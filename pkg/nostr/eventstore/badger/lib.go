@@ -99,6 +99,8 @@ func (b *Backend) Init() (err error) {
 	opts.Compression = options.ZSTD
 	opts.BlockCacheSize = units.Gb
 	opts.BlockSize = units.Mb
+	opts.CompactL0OnClose = true
+	opts.LmaxCompaction = true
 	if b.DB, err = badger.Open(opts); chk.E(err) {
 		return err
 	}
