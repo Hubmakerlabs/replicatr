@@ -19,9 +19,8 @@ const Required = "auth-required"
 
 // CreateUnsigned creates an event which should be sent via an "AUTH" command.
 // If the authentication succeeds, the user will be authenticated as pubkey.
-func CreateUnsigned(challenge, pubkey, relayURL string) event.T {
-	return event.T{
-		PubKey:    pubkey,
+func CreateUnsigned(challenge, relayURL string) *event.T {
+	return &event.T{
 		CreatedAt: timestamp.Now(),
 		Kind:      kind.ClientAuthentication,
 		Tags:      tags.T{{"relay", relayURL}, {"challenge", challenge}},

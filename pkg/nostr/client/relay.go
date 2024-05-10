@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/connection"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes"
@@ -24,13 +25,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/subscriptionoption"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscription"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/puzpuzpuz/xsync/v2"
@@ -148,7 +145,7 @@ func ConnectWithAuth(c context.T, url, sec string,
 				return
 			}
 			authed = true
-		case <-time.After(2 * time.Second):
+		case <-time.After(5 * time.Second):
 		}
 		if authed {
 			log.T.Ln("authed to relay")
@@ -382,20 +379,11 @@ func (r *T) Publish(c context.T, ev *event.T) error {
 // Auth sends an "AUTH" command client->relay as in NIP-42 and waits for an OK
 // response.
 func (r *T) Auth(c context.T, sign func(ev *event.T) error) error {
-	log.I.Ln("sending auth to relay", r.URL())
-	authEvent := &event.T{
-		CreatedAt: timestamp.Now(),
-		Kind:      kind.ClientAuthentication,
-		Tags: tags.T{
-			tag.T{"relay", r.URL()},
-			tag.T{"challenge", r.challenge},
-		},
-		Content: "",
-	}
+	log.I.Ln("sending auth response to relay", r.URL())
+	authEvent := auth.CreateUnsigned(r.challenge, r.URL())
 	if err := sign(authEvent); chk.D(err) {
 		return fmt.Errorf("error signing auth event: %w", err)
 	}
-
 	return r.publish(c, authEvent.ID.String(),
 		&authenvelope.Response{Event: authEvent})
 }

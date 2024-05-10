@@ -50,7 +50,7 @@ func main() {
 			}); chk.D(err) {
 			os.Exit(1)
 		}
-	case <-time.After(2 * time.Second):
+	case <-time.After(5 * time.Second):
 		log.E.Ln("failed to auth")
 	}
 }

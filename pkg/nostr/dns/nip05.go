@@ -25,8 +25,10 @@ type WellKnownResponse struct {
 	Relays key2RelaysMap `json:"relays"` // NIP-35
 }
 
-func QueryIdentifier(c context.T, fullname string) (pp *pointers.Profile, err error) {
-	spl := strings.Split(fullname, "@")
+func QueryIdentifier(c context.T, username string) (pp *pointers.Profile,
+	err error) {
+
+	spl := strings.Split(username, "@")
 	var name, domain string
 	switch len(spl) {
 	case 1:
@@ -77,9 +79,9 @@ func QueryIdentifier(c context.T, fullname string) (pp *pointers.Profile, err er
 	}, nil
 }
 
-func NormalizeIdentifier(fullname string) string {
-	if strings.HasPrefix(fullname, "_@") {
-		return fullname[2:]
+func NormalizeIdentifier(username string) string {
+	if strings.HasPrefix(username, "_@") {
+		return username[2:]
 	}
-	return fullname
+	return username
 }
