@@ -45,7 +45,8 @@ pub fn count_all_events(timestamp: i64) -> u64 {
 #[update(guard = "is_user")]
 pub fn save_event(event: Event,timestamp: i64) -> Option<String> {
     if !valid_timestamp(timestamp){
-        ic_cdk::trap(&format!("{} is an invalid timestamp", timestamp));
+        let e = format!("{} is an invalid timestamp", timestamp);
+        ic_cdk::trap(&e);
     }
     if let Err(e) = db::save_event_db(event){
         ic_cdk::trap(&format!("Error: {}", e));
