@@ -72,6 +72,11 @@ func (ws *WebSocket) WriteMessage(t MessageType, b []byte) (err error) {
 	return
 }
 
+// WriteTextMessage writes a message with a given websocket type specifier
+func (ws *WebSocket) WriteTextMessage(b []byte) (err error) {
+	return ws.WriteMessage(websocket.TextMessage, b)
+}
+
 // WriteEnvelope writes a message with a given websocket type specifier
 func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 	ws.mutex.Lock()
