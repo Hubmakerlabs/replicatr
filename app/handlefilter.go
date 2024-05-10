@@ -15,7 +15,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 )
 
 type handleFilterParams struct {
@@ -50,7 +49,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// run the functions to query events (generally just one, but we might be
 	// fetching stuff from multiple places)
 	// 		h.eose.Add(len(rl.QueryEvents))
-	for i, query := range rl.QueryEvents {
+	for _, query := range rl.QueryEvents {
 		h.eose.Add(1)
 		var ch event.C
 		// start up event receiver before running query on this channel
@@ -61,7 +60,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 				kindStrings = append(kindStrings, kind.GetString(ks))
 			}
 		}
-		log.T.Ln("query", i, kindStrings, text.Trunc(h.f.ToObject().String()))
+		// log.T.Ln("query", i, kindStrings, text.Trunc(h.f.ToObject().String()))
 		if ch, err = query(h.c, h.f); chk.E(err) {
 			h.ws.OffenseCount.Inc()
 			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))

@@ -112,7 +112,7 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 		if err = txn.Set(counterKey, val); chk.E(err) {
 			return
 		}
-		log.T.F("event saved")
+		// log.T.F("event saved")
 		return
 	}); chk.E(err) {
 		return

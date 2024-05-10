@@ -148,8 +148,8 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				// log.I.Ln("draining results channel")
 				for _ = range q2.results {
 				}
-				log.I.Ln("results channel clear",
-					text.Trunc(q2.queryFilter.ToObject().String()))
+				// log.I.Ln("results channel clear",
+				// 	text.Trunc(q2.queryFilter.ToObject().String()))
 			}()
 		}
 		// receive results and ensure we only return the most recent ones always

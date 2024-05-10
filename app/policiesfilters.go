@@ -9,21 +9,27 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// NoComplexFilters disallows filters with more than 2 tags.
-func NoComplexFilters(c context.T, f *filter.T) (rej bool, msg string) {
+// NoComplexFilters disallows filters with more than 3 tags or total of 6 of kinds and tags in sum..
+func NoComplexFilters(c context.T, id subscriptionid.T, f *filter.T) (rej bool, msg string) {
 	items := len(f.Tags) + len(f.Kinds)
-	if items > 4 && len(f.Tags) > 2 {
+	if items > 6 && len(f.Tags) > 3 {
 		return true, "too many things to filter for"
 	}
 	return false, ""
 }
 
 // NoEmptyFilters disallows filters that don't have at least a tag, a kind, an
-// author or an id.
-func NoEmptyFilters(c context.T, f *filter.T) (reject bool, msg string) {
+// author or an id, or since or until.
+func NoEmptyFilters(c context.T, id subscriptionid.T, f *filter.T) (reject bool, msg string) {
 	cf := len(f.Kinds) + len(f.IDs) + len(f.Authors)
 	for _, tagItems := range f.Tags {
 		cf += len(tagItems)
+	}
+	if f.Since != nil {
+		cf++
+	}
+	if f.Until != nil {
+		cf++
 	}
 	if cf == 0 {
 		return true, "can't handle empty filters"

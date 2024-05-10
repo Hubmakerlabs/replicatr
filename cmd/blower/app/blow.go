@@ -41,7 +41,7 @@ func Blower(args *Config) int {
 			log.I.Ln("message too long", string(b))
 			continue
 		}
-		log.I.F("%s\n%d %0.6f Gb", string(b), counter, float64(position)/float64(units.Gb))
+		log.I.F("%d %0.6f Gb", counter, float64(position)/float64(units.Gb))
 		if err = <-upRelay.Write(eventenvelope.FromRawJSON("", b)); chk.E(err) {
 			if strings.Contains(err.Error(), "connection closed") {
 				if upRelay, err = client.Connect(c,
