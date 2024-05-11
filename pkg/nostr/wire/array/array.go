@@ -53,3 +53,8 @@ func (t T) Buffer() *bytes.Buffer {
 	_, _ = fmt.Fprint(buf, "]")
 	return buf
 }
+
+func (t T) MarshalJSON() (b []byte, err error) {
+	b = t.Buffer().Bytes()
+	return
+}

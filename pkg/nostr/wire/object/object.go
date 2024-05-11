@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"mleku.dev/git/slog"
 )
@@ -36,14 +37,6 @@ func NewKV(k string, v interface{}) KV { return KV{Key: k, Value: v} }
 
 type T []KV
 
-func (t T) String() string {
-	return t.Buffer().String()
-}
-
-func (t T) Bytes() []byte {
-	return t.Buffer().Bytes()
-}
-
 func (t T) Buffer(b ...*bytes.Buffer) (buf *bytes.Buffer) {
 	if len(b) != 1 {
 		buf = new(bytes.Buffer)
@@ -56,6 +49,7 @@ func (t T) Buffer(b ...*bytes.Buffer) (buf *bytes.Buffer) {
 	var ok bool
 	var str string
 	var ts time.Time
+	var tagsList tags.T
 	for i := range t {
 		// keys can have `.omitempty` after them and if present, the field is
 		// omitted if it is a zero or nil value.
@@ -98,11 +92,33 @@ func (t T) Buffer(b ...*bytes.Buffer) (buf *bytes.Buffer) {
 		_, _ = fmt.Fprint(buf, "\"", key, "\":")
 		// add the value
 		if str, ok = t[i].Value.(string); ok {
-			buf.Write(text.EscapeJSONStringAndWrap(str))
+			v := text.EscapeJSONStringAndWrap(str)
+			buf.Write(v)
 		} else if reflect.TypeOf(t[i].Value).Kind() == reflect.String {
-			buf.Write(text.EscapeJSONStringAndWrap(reflect.ValueOf(t[i].Value).String()))
+			v := text.EscapeJSONStringAndWrap(reflect.ValueOf(t[i].Value).String())
+			buf.Write(v)
 		} else if ts, ok = t[i].Value.(time.Time); ok {
 			_, _ = fmt.Fprint(buf, ts.Unix())
+		} else if tagsList, ok = t[i].Value.(tags.T); ok {
+			tagsListLast := len(tagsList) - 1
+			_, _ = fmt.Fprint(buf, "[")
+			for tagList, te := range tagsList {
+				tagLast := len(te) - 1
+				_, _ = fmt.Fprint(buf, "[")
+				for tagElement, t := range te {
+					v := text.EscapeJSONStringAndWrap(t)
+					buf.Write(v)
+					if tagElement < tagLast {
+						_, _ = fmt.Fprint(buf, ",")
+					} else {
+						_, _ = fmt.Fprint(buf, "]")
+					}
+				}
+				if tagList < tagsListLast {
+					_, _ = fmt.Fprint(buf, ",")
+				}
+			}
+			_, _ = fmt.Fprint(buf, "]")
 		} else {
 			_, _ = fmt.Fprint(buf, t[i].Value)
 		}
@@ -113,6 +129,10 @@ func (t T) Buffer(b ...*bytes.Buffer) (buf *bytes.Buffer) {
 	_, _ = fmt.Fprint(buf, "}")
 	return buf
 }
+
+func (t T) String() string                     { return t.Buffer().String() }
+func (t T) Bytes() []byte                      { return t.Buffer().Bytes() }
+func (t T) MarshalJSON() (b []byte, err error) { return t.Buffer().Bytes(), nil }
 
 // sort.Interface implementation
 

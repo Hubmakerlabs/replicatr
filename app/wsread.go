@@ -77,7 +77,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		if len(strMsg) > 256 {
 			strMsg = strMsg[:256]
 		}
-		if err = rl.wsProcessMessages(message, p.c, p.kill, p.ws); chk.E(err) {
+		if err = rl.wsProcessMessages(message, p.c, p.kill, p.ws); err != nil {
 		}
 	}
 }

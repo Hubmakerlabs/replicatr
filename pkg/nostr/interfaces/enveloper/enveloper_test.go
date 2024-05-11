@@ -42,7 +42,7 @@ func TestEnveloper(t *testing.T) {
 			t.Fatal(err)
 		}
 		marshaled := string(b)
-		log.D.Ln("marshaled  ", marshaled)
+		log.D.Ln("marshaled   ", marshaled)
 		var env enveloper.I
 		env, _, err = envelopes.ProcessEnvelope(b)
 		if err != nil {
@@ -52,7 +52,7 @@ func TestEnveloper(t *testing.T) {
 		log.I.Ln("marshaling")
 		um, err = json.Marshal(env)
 		unmarshaled := string(um)
-		log.D.Ln("unmarshaled", unmarshaled)
+		log.D.Ln("unmarshaled ", unmarshaled)
 		if marshaled != unmarshaled {
 			t.Log("marshal/unmarshal mangled.")
 			t.Log("got:     ", unmarshaled)

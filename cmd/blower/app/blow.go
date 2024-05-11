@@ -2,6 +2,7 @@ package app
 
 import (
 	"bufio"
+	"encoding/json"
 	"os"
 	"strings"
 	"time"
@@ -10,7 +11,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
+	"github.com/minio/sha256-simd"
 )
 
 func Blower(args *Config) int {
@@ -45,7 +49,22 @@ func Blower(args *Config) int {
 		if start == 0 {
 			start = time.Now().Unix()
 		}
-		log.I.F("%d : size: %6d bytes, position: %0.6f Gb",
+		ev := &event.T{}
+		if err = json.Unmarshal(b, ev); chk.E(err) {
+			continue
+		}
+		// if string(b) != ev.ToObject().String() {
+		// 	log.W.Ln("mismatch between original and encoded/decoded")
+		// continue
+		// }
+		can := ev.ToCanonical().Bytes()
+		id := sha256.Sum256(can)
+		idh := hex.Enc(id[:])
+		if idh != string(ev.ID) {
+			log.W.Ln("mismatch between original and encoded/decoded", hex.Enc(id[:]), string(ev.ID))
+			continue
+		}
+		log.I.F("%d : size: %6d bytes, position: %0.6f Gb", // \n%s\n%s",
 			counter, len(b), float64(position)/float64(units.Gb),
 		)
 		for err = <-upRelay.Write(eventenvelope.FromRawJSON("", b)); err != nil; {

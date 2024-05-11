@@ -19,7 +19,7 @@ var D = []*event.T{
 			"f8340b2bde651576b75af61aa26c80e13c65029f00f7f64004eece679bf7059f",
 		}},
 		// this invalidates the signature
-		Content: "you say yes, I say {[no}]",
+		Content: "you say \"\"yes, I say {[no}]",
 		Sig: "ed08d2dd5b0f7b6a3cdc74643d4adee3158ddede9cc848e8cd97630c097001ac" +
 			"c2d052d2d3ec2b7ac4708b2314b797106d1b3c107322e61b5e5cc2116e099b79",
 	},

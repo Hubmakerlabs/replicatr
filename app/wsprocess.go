@@ -20,6 +20,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/minio/sha256-simd"
 )
@@ -52,10 +53,11 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			len(msg), ws.RealRemote(), ws.AuthPubKey())
 		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			OK: false,
-			Reason: fmt.Sprintf(
-				"invalid: relay limit disallows messages larger than %d bytes,"+
-					" this message is %d bytes",
-				rl.Info.Limitation.MaxMessageLength, len(msg)),
+			Reason: normalize.Reason(okenvelope.Invalid.S(),
+				fmt.Sprintf(
+					"relay limit disallows messages larger than %d "+
+						"bytes, this message is %d bytes",
+					rl.Info.Limitation.MaxMessageLength, len(msg))),
 		}))
 		return
 	}
@@ -83,10 +85,9 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		// 	return
 		// }
 		chk.E(ws.WriteEnvelope(&okenvelope.T{
-			ID: "invalid",
-			OK: false,
-			Reason: fmt.Sprint(
-				err.Error()),
+			ID:     "invalid",
+			OK:     false,
+			Reason: normalize.Reason(okenvelope.Invalid.S(), err.Error()),
 		}))
 		return
 	}

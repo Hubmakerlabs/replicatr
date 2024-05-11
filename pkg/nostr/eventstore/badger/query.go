@@ -125,8 +125,8 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 							// check if this matches the other filters that were not part of the index
 							if extraFilter == nil || extraFilter.Matches(ev) {
 								res := Results{Ev: ev, TS: timestamp.Now(), Ser: ser}
-								log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
-									ev.ToObject().String())
+								// log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
+								// 	ev.ToObject().String())
 								select {
 								case <-c.Done():
 									log.I.Ln("websocket closed")

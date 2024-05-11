@@ -18,6 +18,8 @@ var log, chk = slog.New(os.Stderr)
 
 type Reason string
 
+func (r Reason) S() string { return string(r) }
+
 const (
 	PoW         Reason = "pow"
 	Duplicate   Reason = "duplicate"

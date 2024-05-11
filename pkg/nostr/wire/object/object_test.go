@@ -11,8 +11,10 @@ import (
 
 var literal = T{
 	{"1", "aoeu"},
-	{"3", time.Now()},
-	{"sorta normal", 0.333},
+	{"3", time.Now().Unix()},
+	{"1", "aoeu"},
+	{"3", time.Now().Unix()},
+	{"4", "{\"key\":\"value\"},[\"element1\",2]"},
 }
 
 // Event is redefined here to avoid a dependency.
@@ -59,7 +61,7 @@ func TestObject(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(string(b))
-	t.Log(literal)
+	t.Log(literal.String())
 }
 
 func TestEventToObject(t *testing.T) {

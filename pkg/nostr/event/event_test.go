@@ -15,6 +15,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/davecgh/go-spew/spew"
 	"mleku.dev/git/ec/secp256k1"
 	"mleku.dev/git/slog"
 )
@@ -37,12 +38,29 @@ func GetTestKeyPair() (sec *secp256k1.SecretKey,
 }
 
 var (
-	TestEventContent = []string{
-		`This event contains { braces } and [ brackets ] that must be properly 
-handled, as well as a line break, a dangling space and a 
-	tab.`,
+	TestEvents = []string{
+		`{"id":"ed89902da916be56f598af0114384d4f878fa17612d99590fb848d74def7e0b7","pubkey":"8fe53b37518e3dbe9bab26d912292001d8b882de9456b7b08b615f912dc8bf4a","created_at":1709853586,"kind":9735,"tags":[["p","22f7161f76e075b9e0a250a447884ac09b04b636effd7c703a92394ed3fb39e8"],["e","d47916eec6fc51aae8f7d5792cbb2f7a4eca4cddc1a91b5f46460799c1345486"],["bolt11","lnbc210n1pj75judpp5gcag9vwctv2snc08vxa4xxegpvjyjhfn0mn9wg7sj39866vgswvshp5ac0xy9vx9csn5h0s8vjv8klvptsvpuspgg60zf9gwn6tyz9cmfescqzpuxqyz5vqsp5ya8v9arwyep46s9pdlxejefrrcp5qg36vtksqyu3q59hav32ekrq9qyyssq0s8pfn8pu5c8g8kg3rxa650nthdknhka228y2q6ud52d3g6nhv3h5kwt4k7mzegvl7mt3g57lyusgk4t0yy5mnhywlulxyl5jlsx7usp0rc3g0"],["description","{\"id\":\"e5d361a724caaa94af693d2892d6a30237d7281039085a2c9fdec711f8dfd498\",\"pubkey\":\"af387a6c488c5484088ba715dbb42b55ce72b475e1e2b86be791b24b8d51e215\",\"created_at\":1709853580,\"kind\":9734,\"tags\":[[\"p\",\"22f7161f76e075b9e0a250a447884ac09b04b636effd7c703a92394ed3fb39e8\"],[\"e\",\"d47916eec6fc51aae8f7d5792cbb2f7a4eca4cddc1a91b5f46460799c1345486\"],[\"amount\",\"21000\"],[\"relays\",\"wss://relay.nostr.info\",\"wss://nostr.zebedee.cloud\",\"wss://nostr.orangepill.dev\",\"wss://nostr.bitcoiner.social\",\"wss://relay.damus.io\",\"wss://nostr-relay.wlvs.space\",\"wss://relay.snort.social\",\"wss://nostr-pub.semisol.dev\",\"wss://relay.current.fyi\",\"wss://eden.nostr.land\",\"wss://brb.io\"]],\"content\":\"Onward 🫡\",\"sig\":\"cfb67577444da108b1cca6866af1fe007bdad25b009deea9641a98e47b55bda799a31e4f372ed3c82c25181b7e56d866c2adb6d9305bb827982b1aa40b036260\"}"],["preimage","6ada9db8ff695cc22fea7248c2f7f46f83b06c9485db06d26ad0dbbef726d141"]],"content":"{\"key\":\"value\"}","sig":"c3c35e4f39c03711ace2f52122a6b7717f916e94725e5a3ff738525fc876c7ba17bc85470c7365e8997421202818fab26a5356eac59a1bc545292558d1ca7efb"}`,
 	}
 )
+
+func TestEscaping(t *testing.T) {
+	for _, evt := range TestEvents {
+		t.Log(evt)
+		ev := &event.T{}
+		err := json.Unmarshal([]byte(evt), ev)
+		if err != nil {
+			t.Error(err)
+		}
+		t.Log(spew.Sdump(ev))
+		t.Log(ev.ToObject().String())
+		var j []byte
+		if j, err = json.Marshal(ev); chk.E(err) {
+			t.Error(err)
+		}
+
+		t.Log(string(j))
+	}
+}
 
 func GenTextNote(sk *secp256k1.SecretKey, replyID,
 	relayURL string) (note string, err error) {

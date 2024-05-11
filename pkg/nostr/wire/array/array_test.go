@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-var literal = T{"1", "aoeu", "3", time.Now(), "sorta normal", 0.333}
+var literal = T{"1", "aoeu", "3", time.Now().Unix(), "{\"key\":\"value\"},[\"element1\",2]", 0.333}
 
 func TestArray(t *testing.T) {
 	var b []byte

@@ -77,7 +77,7 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 			}
 		})
 		// if it was a dupe, we are done.
-		if chk.E(err) {
+		if err != nil {
 			return
 		}
 		// if this is a restore, we are done, no need to cache the JSON, as it is not a
@@ -112,7 +112,7 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 		if err = txn.Set(counterKey, val); chk.E(err) {
 			return
 		}
-		// log.T.F("event saved")
+		log.T.F("event saved %s", ev.ID)
 		return
 	}); chk.E(err) {
 		return
