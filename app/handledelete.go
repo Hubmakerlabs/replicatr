@@ -1,6 +1,8 @@
 package app
 
 import (
+	"fmt"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -46,8 +48,8 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 					}
 				} else {
 					// fail and stop here
-					err = log.E.Err("blocked: %s", msg)
-					log.E.Ln(err)
+					err = fmt.Errorf("blocked: %s", msg)
+					// log.E.Ln(err)
 					return
 				}
 				// don't try to query this same event again
@@ -64,7 +66,7 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 // strategy is devised to filter out these events from database results.
 func (rl *Relay) OverrideDelete(c context.T, tgt, del *event.T) (ok bool,
 	msg string) {
-	log.T.Ln("overriding delete")
+	// log.T.Ln("overriding delete")
 	ok = false
 	return
 }

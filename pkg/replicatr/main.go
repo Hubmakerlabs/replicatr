@@ -108,7 +108,10 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	arg.MustParse(&args)
 	os.Args = tmp
 	_ = debug.SetGCPercent(args.GCRatio)
-	runtime.GOMAXPROCS(runtime.NumCPU() * 4)
+	runtime.GOMAXPROCS(args.MaxProcs)
+	log.I.Ln("starting", AppName)
+	debug.SetMemoryLimit(args.MemLimit)
+	log.I.Ln("memlimit:", debug.SetMemoryLimit(args.MemLimit)/units.Mb, "Mb")
 	if args.PProf {
 		if cpuProf, err := os.Create("cpu.pprof"); !chk.E(err) {
 			if err = pprof.StartCPUProfile(cpuProf); !chk.E(err) {
@@ -131,7 +134,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			}
 		}
 	}
-	runtime.GOMAXPROCS(args.MaxProcs)
 	inf := &relayinfo.T{Nips: nips}
 	var err error
 	var dataDirBase string
@@ -171,7 +173,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			os.Exit(1)
 		}
 		log.I.Ln("loaded configuration from", configPath)
-		log.I.S(conf)
+		// log.I.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
 		if args.Listen != "" {
@@ -409,7 +411,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	rl.RejectFilter = append(rl.RejectFilter, app.NoEmptyFilters)
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
-	// rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
+	rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	rl.OverwriteFilter = append(rl.OverwriteFilter, app.LimitAuthorsAndIDs(20, 20))
 	// run the chat ACL initialization
 	rl.Init()

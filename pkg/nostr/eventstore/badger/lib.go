@@ -96,11 +96,11 @@ func GetBackend(
 
 func (b *Backend) Init() (err error) {
 	opts := badger.DefaultOptions(b.Path)
-	opts.Compression = options.ZSTD
-	opts.BlockCacheSize = units.Gb
-	opts.BlockSize = units.Mb
-	opts.CompactL0OnClose = true
-	opts.LmaxCompaction = true
+	opts.Compression = options.None
+	opts.BlockCacheSize = 8 * units.Gb
+	// opts.BlockSize = units.Mb
+	// opts.CompactL0OnClose = true
+	// opts.LmaxCompaction = true
 	if b.DB, err = badger.Open(opts); chk.E(err) {
 		return err
 	}
@@ -113,9 +113,12 @@ func (b *Backend) Init() (err error) {
 	if b.MaxLimit == 0 {
 		b.MaxLimit = DefaultMaxLimit
 	}
-	if b.DBSizeLimit > 0 {
-		go b.GarbageCollector()
-	}
+	// if b.DBSizeLimit > 0 {
+	// 	go b.GarbageCollector()
+	// } else {
+	// 	b.EventGCCount()
+	// go b.IndexGCCount()
+	// }
 	return nil
 }
 

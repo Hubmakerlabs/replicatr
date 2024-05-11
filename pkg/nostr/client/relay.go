@@ -366,10 +366,14 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 // Write queues a message to be sent to the relay.
 func (r *T) Write(msg []byte) (ch chan error) {
 	ch = make(chan error)
+	timeout := time.After(time.Second * 5)
 	select {
 	case r.writeQueue <- writeRequest{msg: msg, answer: ch}:
 	case <-r.connectionContext.Done():
 		ch <- fmt.Errorf("connection closed")
+	case <-timeout:
+		ch <- fmt.Errorf("write timed out")
+		return
 	}
 	return
 }

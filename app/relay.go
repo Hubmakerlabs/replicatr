@@ -24,9 +24,9 @@ var Version = "v0.0.1"
 var Software = "https://github.com/Hubmakerlabs/replicatr"
 
 const (
-	WriteWait           = 10 * time.Second
-	PongWait            = 60 * time.Second
-	PingPeriod          = 30 * time.Second
+	WriteWait           = 3 * time.Second
+	PongWait            = 6 * time.Second
+	PingPeriod          = 3 * time.Second
 	ReadBufferSize      = 4096
 	WriteBufferSize     = 4096
 	MaxMessageSize  int = 4 * units.Mb

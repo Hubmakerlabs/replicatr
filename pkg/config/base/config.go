@@ -78,11 +78,12 @@ type Config struct {
 	// if it breaches DBHighWater to prune it back to DBLowWater percentage
 	// of DBSizeLimit in minutes.
 	GCFrequency int    `arg:"-G,--gcfreq" json:"gc_frequency" default:"60" help:"frequency in seconds to check if database needs garbage collection"`
-	MaxProcs    int    `arg:"-m" json:"max_procs" default:"128" help:"maximum number of goroutines to use"`
+	MaxProcs    int    `arg:"--maxprocs" json:"max_procs" default:"128" help:"maximum number of goroutines to use"`
 	LogLevel    string `arg:"--loglevel" default:"info" help:"set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)"`
 	PProf       bool   `arg:"--pprof" help:"enable CPU and memory profiling"`
 	EncodeCache int    `arg:"--encodecache" default:"10000000" help:"JSON encode cache size limit for GC"`
 	GCRatio     int    `arg:"--gcratio" default:"100" help:"set GC percentage for triggering GC sweeps"`
+	MemLimit    int64  `arg:"--memlimit" default:"500000000" help:"set memory limit on process to constrain memory usage"`
 }
 
 func (c *Config) Save(filename string) (err error) {
@@ -111,7 +112,7 @@ func (c *Config) Load(filename string) (err error) {
 	if b, err = os.ReadFile(filename); chk.E(err) {
 		return
 	}
-	log.D.F("configuration\n%s", string(b))
+	// log.D.F("configuration\n%s", string(b))
 	if err = json.Unmarshal(b, c); chk.E(err) {
 		return
 	}

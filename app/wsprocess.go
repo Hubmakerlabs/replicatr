@@ -160,11 +160,11 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		} else {
 			ok = true
 		}
-		chk.E(ws.WriteEnvelope(&okenvelope.T{
+		ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,
 			OK:     ok,
 			Reason: reason,
-		}))
+		})
 	case *countenvelope.Request:
 		if rl.CountEvents == nil {
 			chk.E(ws.WriteEnvelope(&closedenvelope.T{

@@ -16,6 +16,7 @@ import (
 )
 
 func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) {
+	log.I.Ln("running event GC count")
 	key := make([]byte, index.Len+serial.Len)
 	// first find all the non-pruned events.
 	if err = b.DB.View(func(txn *badger.Txn) (err error) {
@@ -24,6 +25,7 @@ func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) 
 			Prefix: prf,
 		})
 		for it.Rewind(); it.ValidForPrefix(prf); it.Next() {
+			log.I.Ln("event GC search for events")
 			item := it.Item()
 			item.KeyCopy(key)
 			ser := serial.FromKey(key)
@@ -63,6 +65,7 @@ func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) 
 					break
 				}
 			}
+			log.I.Ln("event GC scan for freshness")
 		}
 		it.Close()
 		return

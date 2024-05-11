@@ -38,11 +38,13 @@ func (s SortPruned) Less(i, j int) bool { return s[i].accessed < s[j].accessed }
 func (s SortPruned) Swap(i, j int)      {}
 
 func (b *Backend) IndexGCCount() (serials IndexMap, err error) {
+	log.I.Ln("running index GC count")
 	serials = make(IndexMap)
 	if err = b.DB.View(func(txn *badger.Txn) (err error) {
 		it := txn.NewIterator(badger.IteratorOptions{})
 		defer it.Close()
 		for it.Rewind(); it.Valid(); it.Next() {
+			log.I.Ln("index GC iterate")
 			item := it.Item()
 			k := item.KeyCopy(nil)
 			if len(k) < serial.Len {
