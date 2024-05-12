@@ -260,10 +260,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 	}
 	var wg sync.WaitGroup
-	interrupt.AddHandler(func() {
-		cancel()
-		wg.Done()
-	})
 	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
 	rl := app.NewRelay(c, cancel, inf, &conf)
 	var db eventstore.Store
@@ -371,6 +367,10 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		log.E.F("unable to start database: '%s'", err)
 		os.Exit(1)
 	}
+	interrupt.AddHandler(func() {
+		cancel()
+		wg.Done()
+	})
 	// set logging level if non-default was set in args
 	if args.LogLevel != "info" {
 		for i := range slog.LevelSpecs {

@@ -98,27 +98,31 @@ func (b *Backend) Init() (err error) {
 	opts := badger.DefaultOptions(b.Path)
 	opts.Compression = options.None
 	opts.BlockCacheSize = 8 * units.Gb
-	// opts.BlockSize = units.Mb
-	// opts.CompactL0OnClose = true
-	// opts.LmaxCompaction = true
+	opts.BlockSize = units.Mb
+	opts.CompactL0OnClose = true
+	opts.LmaxCompaction = true
+	opts.Compression = options.ZSTD
+	log.I.Ln("opening badger event store")
 	if b.DB, err = badger.Open(opts); chk.E(err) {
 		return err
 	}
+	log.I.Ln("getting event store sequence index")
 	if b.seq, err = b.DB.GetSequence([]byte("events"), 1000); chk.E(err) {
 		return err
 	}
+	log.I.Ln("running migrations")
 	if err = b.runMigrations(); chk.E(err) {
 		return log.E.Err("error running migrations: %w", err)
 	}
 	if b.MaxLimit == 0 {
 		b.MaxLimit = DefaultMaxLimit
 	}
-	// if b.DBSizeLimit > 0 {
-	// 	go b.GarbageCollector()
-	// } else {
-	// 	b.EventGCCount()
-	// go b.IndexGCCount()
-	// }
+	if b.DBSizeLimit > 0 {
+		go b.GarbageCollector()
+	} else {
+		go b.EventGCCount()
+		// go b.IndexGCCount()
+	}
 	return nil
 }
 

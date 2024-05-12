@@ -88,9 +88,6 @@ const (
 	// Counter is the eventid.T prefix, value stores the average time of access
 	// (average of all access timestamps) and the size of the record.
 	//
-	// Size is set to 0 if record data has been pruned as a flag marking a pruned
-	// record.
-	//
-	//   [ 9 ][ 16 byte eventid.T prefix ][ 8 bytes Serial ]
+	//   [ 9 ][ 8 bytes Serial ] : value: [ 8 bytes timestamp ]
 	Counter P = 9
 )
