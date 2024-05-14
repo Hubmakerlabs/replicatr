@@ -22,6 +22,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IConly"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badgerbadger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/number"
@@ -41,7 +42,9 @@ var (
 	Version = "v0.0.1"
 )
 
-var args, conf base.Config
+var conf, args base.Config
+
+// var args = base.GetDefaultConfig()
 
 var nips = number.List{
 	relayinfo.BasicProtocol.Number,                  // NIP1 events, envelopes and filters
@@ -156,7 +159,11 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.Pubkey, err = keys.GetPublicKey(args.SecKey); chk.E(err) {
 		}
 		apputil.EnsureDir(configPath)
-		// get a default relayinfo.T
+		// reload the args to default
+		args = *base.GetDefaultConfig()
+		// overlay what is present on the commandline
+		arg.MustParse(&args)
+		// derive the info from the state of the config
 		inf = GetInfo(&args)
 		if err = args.Save(configPath); chk.E(err) {
 			log.E.F("failed to write relay configuration: '%s'", err)
@@ -240,23 +247,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			conf.AuthRequired = true
 			inf.Limitation.AuthRequired = true
 		}
-		// initialize configuration with whatever has been read from the CLI.
-		if args.InitCfgCmd != nil {
-			if args.SecKey == "" {
-				// generate a relay identity key if one wasn't given
-				args.SecKey = keys.GeneratePrivateKey()
-			}
-			apputil.EnsureDir(configPath)
-			// get a default relayinfo.T
-			inf = GetInfo(&args)
-			if err = args.Save(configPath); chk.E(err) {
-				log.E.F("failed to write relay configuration: '%s'", err)
-				os.Exit(1)
-			}
-			if err = inf.Save(infoPath); chk.E(err) {
-				log.E.F("failed to write relay information document: '%s'", err)
-				os.Exit(1)
-			}
+		if args.EventStore != "badger" || args.EventStore != "" {
+			conf.EventStore = args.EventStore
 		}
 	}
 	var wg sync.WaitGroup
@@ -333,6 +325,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	var badgerDB *badger.Backend
 	var icDB *IConly.Backend
 	eso := rl.Config.EventStore
+	log.W.Ln("eso", eso)
 	if eso == "ic" || eso == "iconly" {
 		icDB = &IConly.Backend{
 			Ctx:             c,
@@ -343,25 +336,41 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			SecKey:          rl.Config.SecKey,
 		}
 	}
-	if eso == "ic" || eso == "badger" {
+	if eso == "ic" || eso == "badger" || eso == "badgerbadger" {
 		badgerDB = &badger.Backend{
-			Ctx:         c,
-			WG:          &wg,
-			Path:        dataDir,
-			MaxLimit:    inf.Limitation.MaxLimit,
-			DBSizeLimit: args.DBSizeLimit,
-			DBLowWater:  args.DBLowWater,
-			DBHighWater: args.DBHighWater,
-			GCFrequency: time.Duration(args.GCFrequency) * time.Second,
+			Ctx:            c,
+			WG:             &wg,
+			Path:           dataDir,
+			MaxLimit:       inf.Limitation.MaxLimit,
+			DBSizeLimit:    conf.DBSizeLimit,
+			DBLowWater:     conf.DBLowWater,
+			DBHighWater:    conf.DBHighWater,
+			GCFrequency:    time.Duration(conf.GCFrequency) * time.Second,
+			BlockCacheSize: 8 * units.Gb,
 		}
 	}
-	switch rl.Config.EventStore {
+	switch eso {
 	case "iconly":
 		db = icDB
 	case "ic":
 		db = IC.GetBackend(c, &wg, badgerDB, icDB)
 	case "badger":
 		db = badgerDB
+		wg.Add(1)
+		interrupt.AddHandler(func() {
+			badgerDB.DB.Flatten(8)
+			wg.Done()
+		})
+	case "badgerbadger":
+		log.W.Ln("using badger testing L2")
+		b2 := badger.GetBackend(c, &wg, filepath.Join(badgerDB.Path, "l2"),
+			false, 8*units.Gb, app.MaxMessageSize, 0)
+		db = badgerbadger.GetBackend(c, &wg, badgerDB, b2)
+		interrupt.AddHandler(func() {
+			badgerDB.DB.Flatten(8)
+			b2.DB.Flatten(8)
+			wg.Done()
+		})
 	}
 	if err = db.Init(); chk.E(err) {
 		log.E.F("unable to start database: '%s'", err)
@@ -371,16 +380,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		cancel()
 		wg.Done()
 	})
-	// set logging level if non-default was set in args
-	if args.LogLevel != "info" {
-		for i := range slog.LevelSpecs {
-			if slog.LevelSpecs[i].Name[:1] == strings.
-				ToLower(args.LogLevel[:1]) {
-
-				slog.SetLogLevel(i)
-			}
-		}
-	}
 	if args.Wipe != nil || args.ExportCmd != nil || args.ImportCmd != nil {
 		conf.DBSizeLimit = 0
 		// args.LogLevel = "off"
@@ -416,7 +415,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	// run the chat ACL initialization
 	rl.Init()
 	serv := http.Server{
-		Addr:    args.Listen,
+		Addr:    conf.Listen,
 		Handler: rl,
 	}
 	go func() {

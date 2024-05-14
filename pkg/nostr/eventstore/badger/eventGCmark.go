@@ -22,7 +22,7 @@ func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) 
 	overallStart := time.Now()
 	key := make([]byte, index.Len+serial.Len)
 	prf := []byte{byte(index.Event)}
-	_, counters := b.DB.EstimateSize([]byte{index.Counter.Byte()})
+	_, counters := b.DB.EstimateSize([]byte{index.Counter.B()})
 	log.I.F("estimate of number of events %d (%d bytes)", int(float64(counters)/22.398723239), counters)
 	stream := b.DB.NewStream()
 	stream.Prefix = prf
@@ -46,11 +46,11 @@ func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) 
 	if err = stream.Orchestrate(b.Ctx); chk.E(err) {
 		return
 	}
-	log.I.F("counted %d unpruned events in %v", len(countItems),
+	log.I.F("counted %d unpruned and %d pruned events in %v", len(countItems),
 		time.Now().Sub(started))
 	// second get the datestamps of the items
 	stream = b.DB.NewStream()
-	stream.Prefix = []byte{index.Counter.Byte()}
+	stream.Prefix = []byte{index.Counter.B()}
 	v := make([]byte, createdat.Len)
 	countFresh := make(count.Freshes, 0, totalCounter)
 	stream.ChooseKey = func(item *badger.Item) (b bool) {
@@ -86,7 +86,8 @@ func (b *Backend) EventGCCount() (countItems count.Items, total int, err error) 
 		}
 	}
 	total = countItems.Total()
-	log.D.F("%d records; total size of data %0.6f MB %0.3f KB high water %0.3f Mb computed in %v",
+	log.D.F("%d records; total size of data %0.6f MB %0.3f KB "+
+		"high water %0.3f Mb computed in %v",
 		len(countItems),
 		float64(total)/units.Mb, float64(total)/units.Kb,
 		float64(b.DBHighWater*b.DBSizeLimit/100)/units.Mb,

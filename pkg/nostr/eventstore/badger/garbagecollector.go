@@ -9,8 +9,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
 )
 
-const IndexGCSkip = 5
-
 // GarbageCollector starts up a ticker that runs a check on space utilisation
 // and when it exceeds the high-water mark, prunes back to the low-water mark.
 //
@@ -21,35 +19,17 @@ func (b *Backend) GarbageCollector() {
 		"high water %0.3f MB; "+
 		"low water %0.3f MB "+
 		"(MB = %d bytes) "+
-		"event GC check frequency %v, index GC frequency %v",
+		"GC check frequency %v",
 		float32(b.DBSizeLimit)/units.Mb,
 		float32(b.DBHighWater*b.DBSizeLimit/100)/units.Mb,
 		float32(b.DBLowWater*b.DBSizeLimit/100)/units.Mb,
 		units.Mb,
-		b.GCFrequency, b.GCFrequency*IndexGCSkip,
+		b.GCFrequency,
 	)
 	var err error
-	if err = b.EventGCRun(); chk.E(err) {
+	if err = b.GCRun(); chk.E(err) {
 	}
-	if b.HasL2 {
-		indexGCticker := time.NewTicker(b.GCFrequency * IndexGCSkip)
-		go func() {
-		out:
-			for {
-				select {
-				case <-b.Ctx.Done():
-					log.W.Ln("stopping index GC ticker")
-					break out
-				case <-indexGCticker.C:
-					log.T.Ln("running index GC")
-					if err = b.IndexGCRun(); chk.E(err) {
-					}
-				}
-			}
-
-		}()
-	}
-	eventGCticker := time.NewTicker(b.GCFrequency)
+	GCticker := time.NewTicker(b.GCFrequency)
 	// force sync to disk every so often, this might be normally about 10 minutes.
 	syncTicker := time.NewTicker(b.GCFrequency * 10)
 out:
@@ -58,15 +38,27 @@ out:
 		case <-b.Ctx.Done():
 			log.W.Ln("stopping event GC ticker")
 			break out
-		case <-eventGCticker.C:
+		case <-GCticker.C:
 			log.T.Ln("running event GC")
-			if err = b.EventGCRun(); chk.E(err) {
+			if err = b.GCRun(); chk.E(err) {
 			}
 		case <-syncTicker.C:
 			chk.E(b.DB.Sync())
 		}
 	}
 	log.I.Ln("closing badger event store garbage collector")
+}
+
+func (b *Backend) GCRun() (err error) {
+	log.I.Ln("running GC mark")
+	var pruneEvents, pruneIndexes DelItems
+	if pruneEvents, pruneIndexes, err = b.GCMark(); chk.E(err) {
+		return
+	}
+	_, _ = pruneEvents, pruneIndexes
+	log.I.Ln("running GC sweep")
+
+	return
 }
 
 func (b *Backend) EventGCRun() (err error) {

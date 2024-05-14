@@ -30,7 +30,7 @@ func (rl *Relay) Export(db *badger.Backend, filename string, wg *sync.WaitGroup)
 	} else {
 		fh = os.Stdout
 	}
-	prf := []byte{index.Event.Byte()}
+	prf := []byte{index.Event.B()}
 	// first gather the last accessed timestamps
 	chk.E(db.View(func(txn *bdb.Txn) (err error) {
 		it := txn.NewIterator(bdb.IteratorOptions{Prefix: prf})

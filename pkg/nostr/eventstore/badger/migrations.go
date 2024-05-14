@@ -13,7 +13,7 @@ func (b *Backend) runMigrations() (err error) {
 	return b.Update(func(txn *badger.Txn) (err error) {
 		var version uint16
 		var item *badger.Item
-		item, err = txn.Get([]byte{index.Version.Byte()})
+		item, err = txn.Get([]byte{index.Version.B()})
 		if errors.Is(err, badger.ErrKeyNotFound) {
 			version = 0
 		} else if chk.E(err) {
@@ -32,7 +32,7 @@ func (b *Backend) runMigrations() (err error) {
 		if version < 3 {
 			// if there is any data in the relay we will stop and notify the user,
 			// otherwise we just set version to 3 and proceed
-			prefix := []byte{index.Id.Byte()}
+			prefix := []byte{index.Id.B()}
 			it := txn.NewIterator(badger.IteratorOptions{
 				PrefetchValues: true,
 				PrefetchSize:   100,
@@ -67,5 +67,5 @@ func (b *Backend) runMigrations() (err error) {
 func (b *Backend) bumpVersion(txn *badger.Txn, version uint16) error {
 	buf := make([]byte, 2)
 	binary.BigEndian.PutUint16(buf, version)
-	return txn.Set([]byte{index.Version.Byte()}, buf)
+	return txn.Set([]byte{index.Version.B()}, buf)
 }

@@ -41,8 +41,9 @@ type Backend struct {
 	// exceeded.
 	DBHighWater int
 	// GCFrequency is the frequency of checks of the current utilisation.
-	GCFrequency time.Duration
-	HasL2       bool
+	GCFrequency    time.Duration
+	HasL2          bool
+	BlockCacheSize int
 	// DB is the badger db interface
 	*badger.DB
 	// seq is the monotonic collision free index for raw event storage.
@@ -63,7 +64,7 @@ func GetBackend(
 	WG *sync.WaitGroup,
 	path string,
 	hasL2 bool,
-	maxCacheSize int,
+	blockCacheSize int,
 	params ...int,
 ) (b *Backend) {
 	var sizeLimit, lw, hw, freq = 0, 86, 92, 60
@@ -81,28 +82,30 @@ func GetBackend(
 		sizeLimit = params[0]
 	}
 	b = &Backend{
-		Ctx:         Ctx,
-		WG:          WG,
-		Path:        path,
-		MaxLimit:    DefaultMaxLimit,
-		DBSizeLimit: sizeLimit,
-		DBLowWater:  lw,
-		DBHighWater: hw,
-		GCFrequency: time.Duration(freq) * time.Second,
-		HasL2:       hasL2,
+		Ctx:            Ctx,
+		WG:             WG,
+		Path:           path,
+		MaxLimit:       DefaultMaxLimit,
+		DBSizeLimit:    sizeLimit,
+		DBLowWater:     lw,
+		DBHighWater:    hw,
+		GCFrequency:    time.Duration(freq) * time.Second,
+		HasL2:          hasL2,
+		BlockCacheSize: blockCacheSize,
 	}
 	return
 }
 
 func (b *Backend) Init() (err error) {
+	log.I.Ln("opening badger event store at", b.Path)
 	opts := badger.DefaultOptions(b.Path)
 	opts.Compression = options.None
-	opts.BlockCacheSize = 8 * units.Gb
+	opts.BlockCacheSize = int64(b.BlockCacheSize)
 	opts.BlockSize = units.Mb
 	opts.CompactL0OnClose = true
 	opts.LmaxCompaction = true
 	opts.Compression = options.ZSTD
-	log.I.Ln("opening badger event store")
+	opts.Logger = logger{0, b.Path}
 	if b.DB, err = badger.Open(opts); chk.E(err) {
 		return err
 	}
@@ -120,7 +123,7 @@ func (b *Backend) Init() (err error) {
 	if b.DBSizeLimit > 0 {
 		go b.GarbageCollector()
 	} else {
-		go b.EventGCCount()
+		go b.GCCount()
 		// go b.IndexGCCount()
 	}
 	return nil

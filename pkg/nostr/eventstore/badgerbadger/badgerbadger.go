@@ -26,8 +26,12 @@ var _ eventstore.Store = (*Backend)(nil)
 // GetBackend returns a l2.Backend that combines two differently configured
 // backends... the settings need to be configured in the badger.Backend data
 // structure before calling this.
-func GetBackend(c context.T, wg *sync.WaitGroup, L1 *badger.Backend,
-	L2 *badger.Backend) (es eventstore.Store) {
+func GetBackend(
+	c context.T,
+	wg *sync.WaitGroup,
+	L1 *badger.Backend,
+	L2 *badger.Backend,
+) (es eventstore.Store) {
 	es = &l2.Backend{Ctx: c, WG: wg, L1: L1, L2: L2}
 	return
 }

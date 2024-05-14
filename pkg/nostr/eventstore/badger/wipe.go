@@ -6,16 +6,16 @@ import (
 
 func (b *Backend) Wipe() (err error) {
 	if err = b.DB.DropPrefix([][]byte{
-		{index.Event.Byte()},
-		{index.CreatedAt.Byte()},
-		{index.Id.Byte()},
-		{index.Kind.Byte()},
-		{index.Pubkey.Byte()},
-		{index.PubkeyKind.Byte()},
-		{index.Tag.Byte()},
-		{index.Tag32.Byte()},
-		{index.TagAddr.Byte()},
-		{index.Counter.Byte()},
+		{index.Event.B()},
+		{index.CreatedAt.B()},
+		{index.Id.B()},
+		{index.Kind.B()},
+		{index.Pubkey.B()},
+		{index.PubkeyKind.B()},
+		{index.Tag.B()},
+		{index.Tag32.B()},
+		{index.TagAddr.B()},
+		{index.Counter.B()},
 	}...); chk.E(err) {
 		return
 	}

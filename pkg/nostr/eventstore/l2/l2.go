@@ -177,6 +177,7 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 // delete an event, but this is not processed here, it must be done in a
 // previous step.
 func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
+	// delete the events
 	err = errors.Join(b.L1.DeleteEvent(c, ev), b.L2.DeleteEvent(c, ev))
 	return
 }

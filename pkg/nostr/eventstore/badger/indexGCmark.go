@@ -59,7 +59,7 @@ func (b *Backend) IndexGCCount() (serials IndexMap, err error) {
 			}
 			serials[uSer].keySize += uint16(len(k))
 			serials[uSer].valSize += uint32(item.ValueSize())
-			if k[0] == index.Counter.Byte() {
+			if k[0] == index.Counter.B() {
 				var v []byte
 				if v, err = item.ValueCopy(nil); chk.E(err) {
 					continue
