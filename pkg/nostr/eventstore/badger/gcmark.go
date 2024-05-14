@@ -41,8 +41,9 @@ func (b *Backend) GCMark() (pruneEvents, pruneIndexes DelItems, err error) {
 			}
 			pruneEvents = append(pruneEvents, unpruned[lastIndex].Serial)
 		}
-		log.D.F("found %d events to prune, which will bring current utilization down to %0.3f Gb",
-			lastIndex, float64(uTotal-cumulative)/units.Gb)
+		log.D.F("found %d events to prune, which will bring current "+
+			"utilization down to %0.3f Gb %s",
+			lastIndex, float64(uTotal-cumulative)/units.Gb, b.Path)
 	}
 	if b.HasL2 && pTotal < hw {
 		// run index GC mark

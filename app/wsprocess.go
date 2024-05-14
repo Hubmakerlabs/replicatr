@@ -38,6 +38,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		err = log.E.Err("client keeps sending wrong req envelopes")
 		return
 	}
+	// log.I.F("websocket receive message\n%s\n%s %s", string(msg), ws.RealRemote(), ws.AuthPubKey())
 	strMsg := string(msg)
 	if ws.OffenseCount.Load() > IgnoreAfter {
 		if len(strMsg) > 256 {

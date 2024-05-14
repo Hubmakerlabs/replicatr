@@ -37,7 +37,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 	if deny {
 		log.T.F("denying access to '%s': dropping message",
 			p.ws.RealRemote())
-		p.kill()
+		// p.kill()
 		return
 	}
 	p.conn.SetReadLimit(int64(MaxMessageSize))

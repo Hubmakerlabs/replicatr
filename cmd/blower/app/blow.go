@@ -72,7 +72,7 @@ func Blower(args *Config) int {
 		}
 	retry:
 		for {
-			retry := time.After(time.Second * 3)
+			retry := time.After(time.Second)
 			ch := upRelay.Write(eventenvelope.FromRawJSON("", b))
 			select {
 			case err = <-ch:
@@ -94,10 +94,10 @@ func Blower(args *Config) int {
 					break retry
 				}
 			case <-retry:
+				log.W.Ln("retrying")
 				upRelay.Close()
 				upRelay.Connection.Conn.Close()
-				if upRelay, err = client.Connect(c,
-					args.UploadRelay); chk.E(err) {
+				if upRelay, err = client.Connect(c, args.UploadRelay); chk.E(err) {
 					return 1
 				}
 				continue retry
@@ -134,6 +134,11 @@ func Blower(args *Config) int {
 			counter, len(b), float64(position)/float64(units.Gb),
 			float64(position)/float64(totalSize)*100,
 		)
+		upRelay.Close()
+		upRelay.Connection.Conn.Close()
+		if upRelay, err = client.Connect(c, args.UploadRelay); chk.E(err) {
+			return 1
+		}
 	}
 	return 0
 }

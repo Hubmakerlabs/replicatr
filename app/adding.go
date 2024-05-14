@@ -31,8 +31,9 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		}
 	}
 	if !ev.Kind.IsEphemeral() {
+		// log.I.Ln("adding event")
 		for _, store := range rl.StoreEvent {
-			if saveErr := store(c, ev); saveErr != nil {
+			if saveErr := store(c, ev); chk.E(saveErr) {
 				switch {
 				case errors.Is(saveErr, eventstore.ErrDupEvent):
 					return saveErr
@@ -46,6 +47,8 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		for _, ons := range rl.OnEventSaved {
 			ons(c, ev)
 		}
+	} else {
+		log.I.Ln("ephemeral event")
 	}
 	for _, ovw := range rl.OverwriteResponseEvent {
 		ovw(c, ev)

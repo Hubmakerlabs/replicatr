@@ -364,7 +364,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	case "badgerbadger":
 		log.W.Ln("using badger testing L2")
 		b2 := badger.GetBackend(c, &wg, filepath.Join(badgerDB.Path, "l2"),
-			false, 8*units.Gb, app.MaxMessageSize, 0)
+			false, 8*units.Gb, 0)
 		db = badgerbadger.GetBackend(c, &wg, badgerDB, b2)
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)

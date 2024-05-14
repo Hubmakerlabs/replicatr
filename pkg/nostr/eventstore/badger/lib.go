@@ -109,13 +109,13 @@ func (b *Backend) Init() (err error) {
 	if b.DB, err = badger.Open(opts); chk.E(err) {
 		return err
 	}
-	log.I.Ln("getting event store sequence index")
+	log.I.Ln("getting event store sequence index", b.Path)
 	if b.seq, err = b.DB.GetSequence([]byte("events"), 1000); chk.E(err) {
 		return err
 	}
-	log.I.Ln("running migrations")
+	log.I.Ln("running migrations", b.Path)
 	if err = b.runMigrations(); chk.E(err) {
-		return log.E.Err("error running migrations: %w", err)
+		return log.E.Err("error running migrations: %w; %s", err, b.Path)
 	}
 	if b.MaxLimit == 0 {
 		b.MaxLimit = DefaultMaxLimit

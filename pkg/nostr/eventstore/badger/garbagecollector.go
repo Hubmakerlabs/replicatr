@@ -19,12 +19,13 @@ func (b *Backend) GarbageCollector() {
 		"high water %0.3f MB; "+
 		"low water %0.3f MB "+
 		"(MB = %d bytes) "+
-		"GC check frequency %v",
+		"GC check frequency %v %s",
 		float32(b.DBSizeLimit)/units.Mb,
 		float32(b.DBHighWater*b.DBSizeLimit/100)/units.Mb,
 		float32(b.DBLowWater*b.DBSizeLimit/100)/units.Mb,
 		units.Mb,
 		b.GCFrequency,
+		b.Path,
 	)
 	var err error
 	if err = b.GCRun(); chk.E(err) {
@@ -39,7 +40,7 @@ out:
 			log.W.Ln("stopping event GC ticker")
 			break out
 		case <-GCticker.C:
-			log.T.Ln("running event GC")
+			log.T.Ln("running event GC", b.Path)
 			if err = b.GCRun(); chk.E(err) {
 			}
 		case <-syncTicker.C:
@@ -50,13 +51,13 @@ out:
 }
 
 func (b *Backend) GCRun() (err error) {
-	log.I.Ln("running GC mark")
+	log.I.Ln("running GC mark", b.Path)
 	var pruneEvents, pruneIndexes DelItems
 	if pruneEvents, pruneIndexes, err = b.GCMark(); chk.E(err) {
 		return
 	}
 	_, _ = pruneEvents, pruneIndexes
-	log.I.Ln("running GC sweep")
+	log.T.Ln("running GC sweep", b.Path)
 
 	return
 }

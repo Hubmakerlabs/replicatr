@@ -29,12 +29,12 @@ const CounterLen = KeyLen + createdat.Len
 func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 	prunedTotal int, err error) {
 
-	log.I.Ln("running event GC count")
+	log.T.Ln("running event GC count", b.Path)
 	overallStart := time.Now()
 	prf := []byte{byte(index.Event)}
 	_, counters := b.DB.EstimateSize([]byte{index.Counter.B()})
-	log.I.F("estimate of number of events %d (%d bytes)",
-		int(float64(counters)/22.398723239), counters)
+	log.D.F("estimate of number of events %d (%d bytes) %s",
+		int(float64(counters)/22.398723239), counters, b.Path)
 	evStream := b.DB.NewStream()
 	evStream.Prefix = prf
 	var countMx sync.Mutex
@@ -65,8 +65,8 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 	if err = evStream.Orchestrate(b.Ctx); chk.E(err) {
 		return
 	}
-	log.I.F("counted %d events, %d pruned events in %v", len(unpruned),
-		len(pruned), time.Now().Sub(started))
+	log.D.F("counted %d events, %d pruned events in %v %s", len(unpruned),
+		len(pruned), time.Now().Sub(started), b.Path)
 	var unprunedBySerial, prunedBySerial count.ItemsBySerial
 	unprunedBySerial = count.ItemsBySerial(unpruned)
 	sort.Sort(unprunedBySerial)
@@ -97,8 +97,8 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 	sort.Sort(countFresh)
 	if b.HasL2 {
 		// if there is L2 we are marking pruned indexes as well
-		log.I.F("counted %d pruned events in %v", len(pruned),
-			time.Now().Sub(pruneStarted))
+		log.I.F("counted %d pruned events in %v %s", len(pruned),
+			time.Now().Sub(pruneStarted), b.Path)
 		prunedBySerial = count.ItemsBySerial(pruned)
 		sort.Sort(prunedBySerial)
 	}
@@ -159,11 +159,12 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 	up := float64(unprunedTotal)
 	log.D.F("%d complete records; "+
 		"total size of event data %0.6f Gb "+
-		"high water %0.3f Mb computed in %v",
+		"high water %0.6f Gb computed in %v %s",
 		len(unpruned),
 		up/units.Gb,
-		float64(b.DBHighWater*b.DBSizeLimit/100)/units.Mb,
+		float64(b.DBHighWater*b.DBSizeLimit/100)/units.Gb,
 		time.Now().Sub(overallStart),
+		b.Path,
 	)
 	if b.HasL2 {
 		prunedTotal = pruned.Total()
@@ -172,10 +173,10 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 		if b.HasL2 {
 			log.D.F("%d pruned records; "+
 				"total size of pruned event index data %0.6f Gb; "+
-				"headroom %0.3f",
+				"headroom %0.3f %s",
 				len(pruned),
 				p/units.Gb,
-				float64(headroom)/units.Mb,
+				float64(headroom)/units.Mb, b.Path,
 			)
 		}
 	}

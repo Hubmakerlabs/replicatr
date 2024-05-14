@@ -17,7 +17,7 @@ type watcherParams struct {
 
 func (rl *Relay) websocketWatcher(p watcherParams) {
 	var err error
-	defer p.kill()
+	// defer p.kill()
 	for {
 		select {
 		case <-rl.Ctx.Done():
@@ -45,6 +45,7 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 					"use of closed network connection") {
 					log.T.F("error writing ping: %v; closing websocket", err)
 				}
+				p.kill()
 				return
 			}
 		}
