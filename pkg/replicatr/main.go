@@ -363,13 +363,14 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		})
 	case "badgerbadger":
 		log.W.Ln("using badger testing L2")
+		badgerDB.HasL2 = true
 		b2 := badger.GetBackend(c, &wg, filepath.Join(badgerDB.Path, "l2"),
 			false, 8*units.Gb, 0)
 		db = badgerbadger.GetBackend(c, &wg, badgerDB, b2)
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
 			b2.DB.Flatten(8)
-			wg.Done()
+			// wg.Done()
 		})
 	}
 	if err = db.Init(); chk.E(err) {
@@ -411,7 +412,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
 	rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
-	rl.OverwriteFilter = append(rl.OverwriteFilter, app.LimitAuthorsAndIDs(20, 20))
+	// rl.OverwriteFilter = append(rl.OverwriteFilter, app.LimitAuthorsAndIDs(20, 20))
 	// run the chat ACL initialization
 	rl.Init()
 	serv := http.Server{

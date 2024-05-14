@@ -41,19 +41,15 @@ type Status int
 var subscriptionIDCounter atomic.Int32
 
 type T struct {
-	closeMutex sync.Mutex
-
-	url           string
-	RequestHeader http.Header // e.g. for origin header
-
-	Connection    *connection.C
-	Subscriptions *xsync.MapOf[string, *subscription.T]
-
-	ConnectionError         error
-	connectionContext       context.T // will be canceled when connection closes
-	connectionContextCancel context.F
-	done                    sync.Once
-
+	closeMutex                    sync.Mutex
+	url                           string
+	RequestHeader                 http.Header // e.g. for origin header
+	Connection                    *connection.C
+	Subscriptions                 *xsync.MapOf[string, *subscription.T]
+	ConnectionError               error
+	ConnectionContext             context.T // will be canceled when connection closes
+	ConnectionContextCancel       context.F
+	done                          sync.Once
 	challenge                     string // NIP-42 challenge, only keep the last
 	AuthRequired                  chan struct{}
 	notices                       chan string // NIP-01 NOTICEs
@@ -81,8 +77,8 @@ func NewRelay(c context.T, url string, opts ...Option) *T {
 	ctx, cancel := context.Cancel(c)
 	r := &T{
 		url:                           normalize.URL(url),
-		connectionContext:             ctx,
-		connectionContextCancel:       cancel,
+		ConnectionContext:             ctx,
+		ConnectionContextCancel:       cancel,
 		Subscriptions:                 xsync.NewMapOf[*subscription.T](),
 		okCallbacks:                   xsync.NewMapOf[func(bool, string)](),
 		writeQueue:                    make(chan writeRequest),
@@ -190,10 +186,10 @@ func (r *T) String() string {
 }
 
 // Context retrieves the context that is associated with this relay connection.
-func (r *T) Context() context.T { return r.connectionContext }
+func (r *T) Context() context.T { return r.ConnectionContext }
 
 // IsConnected returns true if the connection to this relay seems to be active.
-func (r *T) IsConnected() bool { return r.connectionContext.Err() == nil }
+func (r *T) IsConnected() bool { return r.ConnectionContext.Err() == nil }
 
 // Connect tries to establish a websocket connection to r.URL. If the context
 // expires before the connection is complete, an error is returned. Once
@@ -204,7 +200,7 @@ func (r *T) IsConnected() bool { return r.connectionContext.Err() == nil }
 // pass a custom context to the underlying relay connection, use NewRelay() and
 // then Relay.Connect().
 func (r *T) Connect(c context.T) (err error) {
-	if r.connectionContext == nil || r.Subscriptions == nil {
+	if r.ConnectionContext == nil || r.Subscriptions == nil {
 		return fmt.Errorf("relay must be initialized with a call to NewRelay()")
 	}
 	if r.url == "" {
@@ -226,7 +222,7 @@ func (r *T) Connect(c context.T) (err error) {
 	ticker := time.NewTicker(29 * time.Second)
 	// to be used when the connection is closed
 	go func() {
-		<-r.connectionContext.Done()
+		<-r.ConnectionContext.Done()
 		// close these things when the connection is closed
 		if r.notices != nil {
 			close(r.notices)
@@ -263,7 +259,7 @@ func (r *T) Connect(c context.T) (err error) {
 					wr.answer <- err
 				}
 				close(wr.answer)
-			case <-r.connectionContext.Done():
+			case <-r.ConnectionContext.Done():
 				// stop here
 				return
 			}
@@ -280,7 +276,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 	var err error
 	for {
 		buf.Reset()
-		if err = conn.ReadMessage(r.connectionContext, buf); err != nil {
+		if err = conn.ReadMessage(r.ConnectionContext, buf); err != nil {
 			r.ConnectionError = err
 			chk.D(r.Close())
 			break
@@ -369,7 +365,7 @@ func (r *T) Write(msg []byte) (ch chan error) {
 	timeout := time.After(time.Second * 5)
 	select {
 	case r.writeQueue <- writeRequest{msg: msg, answer: ch}:
-	case <-r.connectionContext.Done():
+	case <-r.ConnectionContext.Done():
 		ch <- fmt.Errorf("connection closed")
 	case <-timeout:
 		ch <- fmt.Errorf("write timed out")
@@ -439,7 +435,7 @@ func (r *T) publish(c context.T, id string, env enveloper.I) error {
 				return err
 			}
 			return c.Err()
-		case <-r.connectionContext.Done():
+		case <-r.ConnectionContext.Done():
 			// this is caused when we lose connectivity
 			return err
 		}
@@ -577,11 +573,11 @@ func (r *T) Close() error {
 	r.closeMutex.Lock()
 	defer r.closeMutex.Unlock()
 
-	if r.connectionContextCancel == nil {
+	if r.ConnectionContextCancel == nil {
 		return fmt.Errorf("relay not connected")
 	}
 
-	r.connectionContextCancel()
-	r.connectionContextCancel = nil
+	r.ConnectionContextCancel()
+	r.ConnectionContextCancel = nil
 	return r.Connection.Conn.Close()
 }

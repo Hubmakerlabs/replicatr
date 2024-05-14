@@ -105,7 +105,7 @@ func (b *Backend) Init() (err error) {
 	opts.CompactL0OnClose = true
 	opts.LmaxCompaction = true
 	opts.Compression = options.ZSTD
-	opts.Logger = logger{0, b.Path}
+	// opts.Logger = logger{0, b.Path}
 	if b.DB, err = badger.Open(opts); chk.E(err) {
 		return err
 	}

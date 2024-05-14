@@ -115,14 +115,16 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 	prunedMap := make(map[uint64]int, len(prunedBySerial))
 	for i := range countFresh {
 		// populate freshness of unpruned item
-		if countFresh[i].Serial == unprunedBySerial[unprunedCursor].Serial {
+		if len(unprunedBySerial) > i && countFresh[i].Serial ==
+			unprunedBySerial[unprunedCursor].Serial {
 			// add the counter record to the size
 			unprunedBySerial[unprunedCursor].Size += CounterLen
 			unprunedBySerial[unprunedCursor].Freshness = countFresh[i].Freshness
 			unprunedCursor++
 			// if there is no L2 we should not see any here anyway
-		} else if b.HasL2 && len(prunedBySerial) <= unprunedCursor {
-			if countFresh[i].Serial == prunedBySerial[unprunedCursor].Serial {
+		} else if b.HasL2 && len(prunedBySerial) > 0 && len(prunedBySerial) < prunedCursor {
+			if countFresh[i].Serial ==
+				prunedBySerial[prunedCursor].Serial {
 				// populate freshness of pruned item
 				ps := prunedBySerial[prunedCursor]
 				// add the counter record to the size
@@ -173,10 +175,10 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 		if b.HasL2 {
 			log.D.F("%d pruned records; "+
 				"total size of pruned event index data %0.6f Gb; "+
-				"headroom %0.3f %s",
+				"headroom %0.6f Gb %s",
 				len(pruned),
 				p/units.Gb,
-				float64(headroom)/units.Mb, b.Path,
+				float64(headroom)/units.Gb, b.Path,
 			)
 		}
 	}

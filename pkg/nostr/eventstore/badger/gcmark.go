@@ -45,11 +45,12 @@ func (b *Backend) GCMark() (pruneEvents, pruneIndexes DelItems, err error) {
 			"utilization down to %0.3f Gb %s",
 			lastIndex, float64(uTotal-cumulative)/units.Gb, b.Path)
 	}
-	if b.HasL2 && pTotal < hw {
+	if b.HasL2 && pTotal > hw {
 		// run index GC mark
 		sort.Sort(pruned)
 		var lastIndex int
-		space := headroom
+		// we want to remove the oldest indexes until at or below the index low water mark.
+		space := pTotal
 		// count the number of events until the low water mark
 		for lastIndex = range pruned {
 			if space < lw {
@@ -58,7 +59,7 @@ func (b *Backend) GCMark() (pruneEvents, pruneIndexes DelItems, err error) {
 			space -= int(pruned[lastIndex].Size)
 		}
 		log.D.F("deleting %d indexes using %d bytes to bring pruned index size to %d",
-			lastIndex+1, headroom-space, space)
+			lastIndex+1, space, pTotal-space)
 		for i := range pruned {
 			if i > lastIndex {
 				break

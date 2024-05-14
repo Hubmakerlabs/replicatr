@@ -39,7 +39,7 @@ func New(ser []byte) (p *T) {
 // FromKey expects the last Len bytes of the given slice to be the serial.
 func FromKey(k []byte) (p *T) {
 	if len(k) < Len {
-		panic("cannot get a serial without at least 8 bytes")
+		panic(fmt.Sprintf("cannot get a serial without at least 8 bytes %x", k))
 	}
 	key := make([]byte, Len)
 	copy(key, k[len(k)-Len:])
