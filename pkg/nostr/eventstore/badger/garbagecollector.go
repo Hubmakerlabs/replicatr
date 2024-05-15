@@ -1,11 +1,8 @@
 package badger
 
 import (
-	"encoding/binary"
-	"fmt"
 	"time"
 
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/del"
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
 )
 
@@ -61,40 +58,6 @@ func (b *Backend) GCRun() (err error) {
 		return
 	}
 	if err = b.GCSweep(pruneEvents, pruneIndexes); chk.E(err) {
-		return
-	}
-	return
-}
-
-func (b *Backend) EventGCRun() (err error) {
-	var deleteItems del.Items
-	if deleteItems, err = b.EventGCMark(); chk.E(err) {
-		return
-	}
-	if len(deleteItems) < 1 {
-		return
-	}
-	var delList string
-	for i := range deleteItems {
-		if i != 0 {
-			delList += ", "
-		}
-		delList += fmt.Sprint(binary.BigEndian.Uint64(deleteItems[i]))
-	}
-	// log.I.Ln("pruning:", delList)
-	if err = b.EventGCSweep(deleteItems); chk.E(err) {
-		return
-	}
-	// b.EventGCCount()
-	return
-}
-
-func (b *Backend) IndexGCRun() (err error) {
-	var toDelete []uint64
-	if toDelete, err = b.IndexGCMark(); chk.E(err) {
-		return
-	}
-	if err = b.IndexGCSweep(toDelete); chk.E(err) {
 		return
 	}
 	return
