@@ -13,7 +13,11 @@ import (
 func (b *Backend) GCSweep(evs, idxs DelItems) (err error) {
 	// first we must gather all the indexes of the relevant events
 	batch := b.DB.NewWriteBatch()
+	defer batch.Cancel()
 	started := time.Now()
+	go func() {
+
+	}()
 	stream := b.DB.NewStream()
 	// get all the event indexes to delete/prune
 	stream.Prefix = []byte{index.Event.B()}
@@ -62,35 +66,42 @@ func (b *Backend) GCSweep(evs, idxs DelItems) (err error) {
 	if len(idxs) > 0 && b.HasL2 {
 		log.I.Ln("pruning indexes")
 		for _, prf := range index.FilterPrefixes {
-			stream.Prefix = prf
-			stream.ChooseKey = func(item *badger.Item) (bo bool) {
-				key := item.KeyCopy(nil)
-				ser := serial.FromKey(key).Uint64()
-				var found bool
-				for _, idx := range idxs {
-					if idx == ser {
-						found = true
-						break
+			go func() {
+				stream := b.DB.NewStream()
+				stream.Prefix = prf
+				stream.ChooseKey = func(item *badger.Item) (bo bool) {
+					if item.IsDeletedOrExpired() {
+						return
 					}
-				}
-				if !found {
+					key := item.KeyCopy(nil)
+					ser := serial.FromKey(key).Uint64()
+					var found bool
+					for _, idx := range idxs {
+						if idx == ser {
+							found = true
+							break
+						}
+					}
+					if !found {
+						return
+					}
+					log.I.F("deleting index %x %d", prf, ser)
+					if err = batch.Delete(key); chk.E(err) {
+						return
+					}
 					return
 				}
-				if err = batch.Delete(key); chk.E(err) {
+				if err = stream.Orchestrate(b.Ctx); chk.E(err) {
 					return
 				}
-				return
-			}
-			if err = stream.Orchestrate(b.Ctx); chk.E(err) {
-				return
-			}
+			}()
 		}
+
 	}
+	log.I.Ln("flushing batch")
 	if err = batch.Flush(); chk.E(err) {
 		return
 	}
 	log.I.Ln("completed sweep in", time.Now().Sub(started), b.Path)
-	// wb := b.DB.NewWriteBatch()
-	_ = started
 	return
 }

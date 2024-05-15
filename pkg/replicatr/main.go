@@ -347,7 +347,10 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			DBHighWater:    conf.DBHighWater,
 			GCFrequency:    time.Duration(conf.GCFrequency) * time.Second,
 			BlockCacheSize: 8 * units.Gb,
+			LogLevel:       slog.GetLogLevel(),
 		}
+		// disable manually for now
+		badgerDB.LogLevel = slog.Off
 	}
 	switch eso {
 	case "iconly":
@@ -366,6 +369,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		badgerDB.HasL2 = true
 		b2 := badger.GetBackend(c, &wg, filepath.Join(badgerDB.Path, "l2"),
 			false, 8*units.Gb, 0)
+		b2.LogLevel = badgerDB.LogLevel
 		db = badgerbadger.GetBackend(c, &wg, badgerDB, b2)
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)

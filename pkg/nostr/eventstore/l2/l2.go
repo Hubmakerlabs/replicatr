@@ -73,6 +73,9 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				// }
 				return
 			case ev := <-saveChan:
+				if ev == nil {
+					continue
+				}
 				log.T.F("reviving event %s in L1", ev.ID)
 				chk.T(b.L1.SaveEvent(c, ev))
 				// saveEvents = append(saveEvents, ev)

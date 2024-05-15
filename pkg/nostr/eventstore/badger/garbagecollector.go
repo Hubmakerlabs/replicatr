@@ -40,7 +40,7 @@ out:
 			log.W.Ln("stopping event GC ticker")
 			break out
 		case <-GCticker.C:
-			log.T.Ln("running event GC", b.Path)
+			// log.T.Ln("running GC", b.Path)
 			if err = b.GCRun(); chk.E(err) {
 			}
 		case <-syncTicker.C:

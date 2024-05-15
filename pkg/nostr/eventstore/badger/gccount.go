@@ -29,12 +29,9 @@ const CounterLen = KeyLen + createdat.Len
 func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 	prunedTotal int, err error) {
 
-	log.T.Ln("running event GC count", b.Path)
+	// log.T.Ln("running GC count", b.Path)
 	overallStart := time.Now()
 	prf := []byte{byte(index.Event)}
-	_, counters := b.DB.EstimateSize([]byte{index.Counter.B()})
-	log.D.F("estimate of number of events %d (%d bytes) %s",
-		int(float64(counters)/22.398723239), counters, b.Path)
 	evStream := b.DB.NewStream()
 	evStream.Prefix = prf
 	var countMx sync.Mutex
@@ -71,7 +68,7 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 	unprunedBySerial = count.ItemsBySerial(unpruned)
 	sort.Sort(unprunedBySerial)
 	var countFresh count.Freshes
-	pruneStarted := time.Now()
+	// pruneStarted := time.Now()
 	counterStream := b.DB.NewStream()
 	counterStream.Prefix = []byte{index.Counter.B()}
 	v := make([]byte, createdat.Len)
@@ -97,8 +94,8 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 	sort.Sort(countFresh)
 	if b.HasL2 {
 		// if there is L2 we are marking pruned indexes as well
-		log.I.F("counted %d pruned events in %v %s", len(pruned),
-			time.Now().Sub(pruneStarted), b.Path)
+		// log.I.F("counted %d pruned events in %v %s", len(pruned),
+		// 	time.Now().Sub(pruneStarted), b.Path)
 		prunedBySerial = count.ItemsBySerial(pruned)
 		sort.Sort(prunedBySerial)
 	}

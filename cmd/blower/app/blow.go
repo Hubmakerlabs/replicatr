@@ -135,7 +135,7 @@ func Blower(args *Config) int {
 				float64(position)/float64(totalSize)*100,
 			)
 		}(rb, counter)
-		time.Sleep(time.Second / 50)
+		time.Sleep(time.Second / 33)
 	}
 	return 0
 }

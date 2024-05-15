@@ -55,25 +55,25 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 			wsKey, ws,
 		),
 	)
-	if len(rl.Whitelist) > 0 {
-		for i := range rl.Whitelist {
-			if rr == rl.Whitelist[i] {
-				log.T.Ln("whitelisted inbound connection from", rr)
-			}
-		}
-	} else {
-		log.T.Ln("inbound connection from", rr)
-	}
+	// if len(rl.Whitelist) > 0 {
+	// 	for i := range rl.Whitelist {
+	// 		if rr == rl.Whitelist[i] {
+	// 			log.T.Ln("whitelisted inbound connection from", rr)
+	// 		}
+	// 	}
+	// } else {
+	// 	log.T.Ln("inbound connection from", rr)
+	// }
 	kill := func() {
-		if len(rl.Whitelist) > 0 {
-			for i := range rl.Whitelist {
-				if rr == rl.Whitelist[i] {
-					log.T.Ln("disconnecting whitelisted client from", rr)
-				}
-			}
-		} else {
-			log.T.Ln("disconnecting from", rr)
-		}
+		// if len(rl.Whitelist) > 0 {
+		// 	for i := range rl.Whitelist {
+		// 		if rr == rl.Whitelist[i] {
+		// 			log.T.Ln("disconnecting whitelisted client from", rr)
+		// 		}
+		// 	}
+		// } else {
+		// 	log.T.Ln("disconnecting from", rr)
+		// }
 		for _, onDisconnect := range rl.OnDisconnect {
 			onDisconnect(c)
 		}

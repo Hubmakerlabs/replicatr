@@ -54,7 +54,7 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 			if it.ValidForPrefix(evKey) {
 				if it.Item().ValueSize() != sha256.Size {
 					// not a stub, we already have it
-					log.I.Ln(" duplicate event", ev.ID)
+					// log.I.Ln(" duplicate event", ev.ID)
 					return eventstore.ErrDupEvent
 				}
 				// we only need to restore the event binary and write the access counter key
@@ -114,7 +114,7 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 		if err = txn.Set(counterKey, val); chk.E(err) {
 			return
 		}
-		log.T.F("event saved %s", ev.ID)
+		// log.T.F("event saved %s", ev.ID)
 		return
 	}); chk.E(err) {
 		return

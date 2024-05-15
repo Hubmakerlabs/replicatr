@@ -36,14 +36,14 @@ func (rl *Relay) websocketWatcher(p watcherParams) {
 				deny = false
 			}
 			if deny {
-				log.T.F("denying access to '%s': dropping message",
-					p.ws.RealRemote())
+				// log.T.F("denying access to '%s': dropping message",
+				// 	p.ws.RealRemote())
 				return
 			}
-			if err = p.ws.Ping(); log.T.Chk(err) {
+			if err = p.ws.Ping(); err != nil {
 				if !strings.HasSuffix(err.Error(),
 					"use of closed network connection") {
-					log.T.F("error writing ping: %v; closing websocket", err)
+					// log.T.F("error writing ping: %v; closing websocket", err)
 				}
 				p.kill()
 				return

@@ -35,8 +35,8 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		deny = false
 	}
 	if deny {
-		log.T.F("denying access to '%s': dropping message",
-			p.ws.RealRemote())
+		// log.T.F("denying access to '%s': dropping message",
+		// 	p.ws.RealRemote())
 		// p.kill()
 		return
 	}
@@ -56,7 +56,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 		var message []byte
 		typ, message, err = p.conn.ReadMessage()
 		if err != nil {
-			log.I.F("%s from %s, %d bytes message", err, p.ws.RealRemote(), len(message))
+			// log.I.F("%s from %s, %d bytes message", err, p.ws.RealRemote(), len(message))
 			if websocket.IsUnexpectedCloseError(
 				err,
 				websocket.CloseNormalClosure,    // 1000
