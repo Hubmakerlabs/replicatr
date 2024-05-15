@@ -16,7 +16,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/minio/sha256-simd"
 )
@@ -24,6 +23,7 @@ import (
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
 	ch = make(event.C)
 
+	// log.I.Ln("QueryEvents", f.ToObject().String())
 	var queries []query
 	var extraFilter *filter.T
 	since := uint64(math.MaxInt64)
@@ -41,13 +41,17 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 		limit = *f.Limit
 	}
 	go func() {
-		defer close(ch)
-		defer close(accessChan)
+		defer func() {
+			close(ch)
+			close(accessChan)
+			// log.I.Ln("query goroutine terminated")
+		}()
 		// actually iterate
 		for _, q1 := range queries {
+			// log.I.Ln("query", q1.queryFilter.ToObject().String())
 			select {
 			case <-c.Done():
-				log.I.Ln("websocket closed")
+				// log.I.Ln("websocket closed")
 				return
 			case <-b.Ctx.Done():
 				log.I.Ln("backend context canceled")
@@ -55,110 +59,117 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			default:
 			}
 			q2 := q1
-			go func() {
-				var eventKeys [][]byte
-				err := b.View(func(txn *badger.Txn) (err error) {
-					// iterate only through keys and in reverse order
+			// go func() {
+			// log.I.Ln("scanning database for", q2.queryFilter.ToObject().String())
+			var eventKeys [][]byte
+			err := b.View(func(txn *badger.Txn) (err error) {
+				// iterate only through keys and in reverse order
+				opts := badger.IteratorOptions{Reverse: true}
+				it := txn.NewIterator(opts)
+				defer it.Close()
+				for it.Seek(q2.start); it.ValidForPrefix(q2.searchPrefix); it.Next() {
+					item := it.Item()
+					k := item.KeyCopy(nil)
+					if !q2.skipTS {
+						createdAt := createdat.FromKey(k)
+						if createdAt.Val.U64() < since {
+							break
+						}
+					}
+					ser := serial.FromKey(k)
+					eventKeys = append(eventKeys, index.Event.Key(ser))
+				}
+				return
+			})
+			// log.I.Ln("done scanning database", q2.queryFilter.ToObject().String())
+			if err != nil {
+				close(q2.results)
+				for _ = range q2.results {
+				}
+				// log.I.Ln("query results channel clear",
+				// 	text.Trunc(q2.queryFilter.ToObject().String()))
+				return
+			}
+			// log.I.Ln("got eventKeys", eventKeys)
+			for _, eventKey := range eventKeys {
+				var ev *event.T
+				err = b.View(func(txn *badger.Txn) (err error) {
 					opts := badger.IteratorOptions{Reverse: true}
 					it := txn.NewIterator(opts)
 					defer it.Close()
-					for it.Seek(q2.start); it.ValidForPrefix(q2.searchPrefix); it.Next() {
+					for it.Seek(eventKey); it.ValidForPrefix(eventKey); it.Next() {
 						item := it.Item()
-						k := item.KeyCopy(nil)
-						if !q2.skipTS {
-							createdAt := createdat.FromKey(k)
-							if createdAt.Val.U64() < since {
-								break
-							}
+						var v []byte
+						if v, err = item.ValueCopy(nil); chk.E(err) {
+							continue
 						}
-						ser := serial.FromKey(k)
-						eventKeys = append(eventKeys, index.Event.Key(ser))
+						ser := serial.FromKey(item.KeyCopy(nil))
+						if len(v) == sha256.Size {
+							// this is a stub entry that indicates an L2 needs to be accessed for it, so we
+							// populate only the event.T.ID and return the result.
+							evt := &event.T{}
+							log.T.F("found event stub %0x must seek in L2", v)
+							evt.ID, _ = eventid.New(hex.Enc(v))
+							select {
+							case <-c.Done():
+								// log.I.Ln("websocket closed")
+								return
+							case <-b.Ctx.Done():
+								log.I.Ln("backend context canceled")
+								return
+							default:
+							}
+							q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
+							return
+						}
+						if ev, err = nostrbinary.Unmarshal(v); chk.E(err) {
+							continue
+						}
+						if ev == nil {
+							log.D.S("got nil event from", v)
+							return
+						}
+						// check if this matches the other filters that were not part of the index
+						if extraFilter == nil || extraFilter.Matches(ev) {
+							res := Results{Ev: ev, TS: timestamp.Now(), Ser: ser}
+							// log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
+							// 	ev.ToObject().String())
+							select {
+							case <-c.Done():
+								// log.I.Ln("websocket closed")
+								return
+							case <-b.Ctx.Done():
+								log.I.Ln("backend context canceled")
+								return
+							default:
+							}
+							q2.results <- res
+						}
 					}
+					// close(q2.results)
 					return
 				})
-				if err != nil {
-					close(q2.results)
-					for _ = range q2.results {
-					}
-					log.I.Ln("query results channel clear",
-						text.Trunc(q2.queryFilter.ToObject().String()))
-					return
-				}
-				for _, eventKey := range eventKeys {
-					var ev *event.T
-					err = b.View(func(txn *badger.Txn) (err error) {
-						opts := badger.IteratorOptions{Reverse: true}
-						it := txn.NewIterator(opts)
-						defer it.Close()
-						for it.Seek(eventKey); it.ValidForPrefix(eventKey); it.Next() {
-							item := it.Item()
-							var v []byte
-							if v, err = item.ValueCopy(nil); chk.E(err) {
-								continue
-							}
-							ser := serial.FromKey(item.KeyCopy(nil))
-							if len(v) == sha256.Size {
-								// this is a stub entry that indicates an L2 needs to be accessed for it, so we
-								// populate only the event.T.ID and return the result.
-								evt := &event.T{}
-								log.T.F("found event stub %0x must seek in L2", v)
-								evt.ID, _ = eventid.New(hex.Enc(v))
-								select {
-								case <-c.Done():
-									log.I.Ln("websocket closed")
-									return
-								case <-b.Ctx.Done():
-									log.I.Ln("backend context canceled")
-									return
-								default:
-								}
-								q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
-								return
-							}
-							if ev, err = nostrbinary.Unmarshal(v); chk.E(err) {
-								continue
-							}
-							if ev == nil {
-								log.D.S("got nil event from", v)
-								return
-							}
-							// check if this matches the other filters that were not part of the index
-							if extraFilter == nil || extraFilter.Matches(ev) {
-								res := Results{Ev: ev, TS: timestamp.Now(), Ser: ser}
-								// log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
-								// 	ev.ToObject().String())
-								select {
-								case <-c.Done():
-									// log.I.Ln("websocket closed")
-									return
-								case <-b.Ctx.Done():
-									log.I.Ln("backend context canceled")
-									return
-								default:
-								}
-								q2.results <- res
-							}
-						}
-						// close(q2.results)
-						return
-					})
-				}
-				// log.I.Ln("closing results channel")
-				close(q2.results)
-				// log.I.Ln("draining results channel")
-				for _ = range q2.results {
-				}
-				// log.I.Ln("results channel clear",
-				// 	text.Trunc(q2.queryFilter.ToObject().String()))
-			}()
+			}
+			// q2.results <- Results{}
+			// log.I.Ln("closing results channel")
+			close(q2.results)
+			// log.I.Ln("draining results channel")
+			// for _ = range q2.results {
+			// }
+			// log.I.Ln("results channel clear",
+			// 	text.Trunc(q2.queryFilter.ToObject().String()))
+			// }()
 		}
+		// log.I.Ln("finished queries loop", queries)
 		// receive results and ensure we only return the most recent ones always
 		emittedEvents := 0
 		// first pass
 		emitQueue := make(priority.Queue, 0, len(queries)+limit)
 		for _, q := range queries {
+			// log.I.Ln(q.queryFilter.ToObject().String())
 			q := q
 			evt, ok := <-q.results
+			// log.I.Ln("received result", ok)
 			if ok {
 				// log.T.F("adding event to queue [%s, %d]", evt.Ev.ID, evt.Ser.Uint64())
 				emitQueue = append(emitQueue,
@@ -169,8 +180,10 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 					})
 			}
 		}
+		// log.I.Ln("len emitQueue")
 		// queue may be empty here if we have literally nothing
 		if len(emitQueue) == 0 {
+			// log.I.Ln("emit queue empty")
 			return
 		}
 		heap.Init(&emitQueue)
@@ -200,6 +213,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				// log.D.Ln("emitted the limit amount of events", limit)
 				break
 			}
+			// log.I.Ln("fetching new event from queue")
 			// fetch a new one from query results and replace the previous one with it
 			if evt, ok := <-queries[latest.Query].results; ok {
 				emitQueue[0].T = evt.Ev
@@ -210,6 +224,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				heap.Remove(&emitQueue, 0)
 				// check if the list is empty and end
 				if len(emitQueue) == 0 {
+					// log.I.Ln("event results queue finished")
 					break
 				}
 			}
@@ -217,7 +232,8 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 		if chk.E(err) {
 			log.D.F("badger: query txn error: %s", err)
 		}
+		// log.I.Ln("query complete")
 	}()
-
+	// log.I.Ln("passing results channel back to caller")
 	return ch, nil
 }

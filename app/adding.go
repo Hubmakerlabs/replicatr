@@ -12,6 +12,7 @@ import (
 // AddEvent sends an event through then normal add pipeline, as if it was
 // received from a websocket.
 func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
+	// log.I.Ln("adding event")
 	if ev == nil {
 		err = errors.New("error: event is nil")
 		log.E.Ln(err)
@@ -31,7 +32,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		}
 	}
 	if !ev.Kind.IsEphemeral() {
-		// log.I.Ln("adding event")
+		// log.I.Ln("adding event", ev.ToObject().String())
 		for _, store := range rl.StoreEvent {
 			if saveErr := store(c, ev); saveErr != nil {
 				switch {
@@ -43,12 +44,14 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 					return
 				}
 			}
+			// log.I.Ln("added event", ev.ID)
 		}
 		for _, ons := range rl.OnEventSaved {
 			ons(c, ev)
 		}
+		// log.I.Ln("saved event", ev.ID)
 	} else {
-		// log.I.Ln("ephemeral event")
+		log.I.Ln("ephemeral event")
 	}
 	for _, ovw := range rl.OverwriteResponseEvent {
 		ovw(c, ev)

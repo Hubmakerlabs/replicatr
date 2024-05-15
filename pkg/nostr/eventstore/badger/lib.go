@@ -105,16 +105,16 @@ func (b *Backend) Init() (err error) {
 	opts.BlockSize = units.Mb
 	opts.CompactL0OnClose = true
 	opts.LmaxCompaction = true
-	opts.Compression = options.ZSTD
+	// opts.Compression = options.ZSTD
 	opts.Logger = logger{b.LogLevel, b.Path}
 	if b.DB, err = badger.Open(opts); chk.E(err) {
 		return err
 	}
-	log.I.Ln("getting event store sequence index", b.Path)
+	log.T.Ln("getting event store sequence index", b.Path)
 	if b.seq, err = b.DB.GetSequence([]byte("events"), 1000); chk.E(err) {
 		return err
 	}
-	log.I.Ln("running migrations", b.Path)
+	log.T.Ln("running migrations", b.Path)
 	if err = b.runMigrations(); chk.E(err) {
 		return log.E.Err("error running migrations: %w; %s", err, b.Path)
 	}

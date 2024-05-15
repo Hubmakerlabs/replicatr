@@ -87,6 +87,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	var evMx sync.Mutex
 	errs := []error{err1, err2}
 	go func() {
+		defer close(ch)
 	out:
 		for {
 			select {

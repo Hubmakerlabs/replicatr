@@ -325,7 +325,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	var badgerDB *badger.Backend
 	var icDB *IConly.Backend
 	eso := rl.Config.EventStore
-	log.W.Ln("eso", eso)
 	if eso == "ic" || eso == "iconly" {
 		icDB = &IConly.Backend{
 			Ctx:             c,
@@ -436,6 +435,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 	}()
 	wg.Add(1)
-	log.I.Ln("listening on", args.Listen)
+	log.I.Ln("listening on", conf.Listen)
 	chk.E(serv.ListenAndServe())
 }
