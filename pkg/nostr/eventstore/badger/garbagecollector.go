@@ -51,7 +51,7 @@ out:
 }
 
 func (b *Backend) GCRun() (err error) {
-	log.I.Ln("running GC mark", b.Path)
+	log.T.Ln("running GC", b.Path)
 	var pruneEvents, pruneIndexes DelItems
 	if pruneEvents, pruneIndexes, err = b.GCMark(); chk.E(err) {
 		return
@@ -60,7 +60,6 @@ func (b *Backend) GCRun() (err error) {
 		log.I.Ln("GC sweep unnecessary")
 		return
 	}
-	log.T.Ln("running GC sweep", b.Path)
 	if err = b.GCSweep(pruneEvents, pruneIndexes); chk.E(err) {
 		return
 	}

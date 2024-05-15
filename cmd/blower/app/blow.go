@@ -67,7 +67,7 @@ func Blower(args *Config) int {
 			}
 			var u *client.T
 			if u, err = client.Connect(c, args.UploadRelay); chk.E(err) {
-				return
+				os.Exit(1)
 			}
 			defer u.ConnectionContextCancel()
 		retry:
@@ -135,7 +135,7 @@ func Blower(args *Config) int {
 				float64(position)/float64(totalSize)*100,
 			)
 		}(rb, counter)
-		time.Sleep(time.Second / 33)
+		time.Sleep(time.Second / 20)
 	}
 	return 0
 }

@@ -32,7 +32,7 @@ func GetBackend(
 	L1 *badger.Backend,
 	L2 *badger.Backend,
 ) (es eventstore.Store) {
-	log.I.S(L1, L2)
+	// log.I.S(L1, L2)
 	es = &l2.Backend{Ctx: c, WG: wg, L1: L1, L2: L2}
 	return
 }

@@ -4,9 +4,7 @@ import (
 	"sort"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/count"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
-	"github.com/minio/sha256-simd"
 )
 
 type DelItems []uint64
@@ -18,34 +16,28 @@ type DelItems []uint64
 func (b *Backend) GCMark() (pruneEvents, pruneIndexes DelItems, err error) {
 	var unpruned, pruned count.Items
 	var uTotal, pTotal int
-	headroom := b.DBSizeLimit * (100 - b.DBHighWater) / 100
-	lw, hw := headroom*b.DBLowWater/100, headroom*b.DBHighWater/100
 	if unpruned, pruned, uTotal, pTotal, err = b.GCCount(); chk.E(err) {
 		return
 	}
-	trigger := b.DBHighWater * b.DBSizeLimit / 100
-	if uTotal > trigger {
+	hw, lw := b.GetEventHeadroom()
+	if uTotal > hw {
 		// run event GC mark
 		sort.Sort(unpruned)
-		pruneOff := uTotal - b.DBLowWater*b.DBSizeLimit/100
+		pruneOff := uTotal - lw
 		var cumulative, lastIndex int
 		for lastIndex = range unpruned {
 			if cumulative > pruneOff {
 				break
 			}
-			// if there is an L2 the ID and key remain
-			if b.HasL2 {
-				cumulative += int(unpruned[lastIndex].Size) - sha256.Size
-			} else {
-				cumulative += int(unpruned[lastIndex].Size) + serial.Len + 1
-			}
+			cumulative += int(unpruned[lastIndex].Size)
 			pruneEvents = append(pruneEvents, unpruned[lastIndex].Serial)
 		}
 		log.D.F("found %d events to prune, which will bring current "+
 			"utilization down to %0.6f Gb %s",
-			lastIndex, float64(uTotal-cumulative)/units.Gb, b.Path)
+			lastIndex-1, float64(uTotal-cumulative)/units.Gb, b.Path)
 	}
-	if b.HasL2 && pTotal > hw {
+	l2hw, l2lw := b.GetIndexHeadroom()
+	if b.HasL2 && pTotal > l2hw {
 		// run index GC mark
 		sort.Sort(pruned)
 		var lastIndex int
@@ -53,13 +45,13 @@ func (b *Backend) GCMark() (pruneEvents, pruneIndexes DelItems, err error) {
 		space := pTotal
 		// count the number of events until the low water mark
 		for lastIndex = range pruned {
-			if space < lw {
+			if space < l2lw {
 				break
 			}
 			space -= int(pruned[lastIndex].Size)
 		}
 		log.D.F("deleting %d indexes using %d bytes to bring pruned index size to %d",
-			lastIndex+1, space, pTotal-space)
+			lastIndex+1, pTotal-l2lw, space)
 		for i := range pruned {
 			if i > lastIndex {
 				break

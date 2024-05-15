@@ -37,6 +37,9 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 	var countMx sync.Mutex
 	var totalCounter int
 	evStream.ChooseKey = func(item *badger.Item) (b bool) {
+		if item.IsDeletedOrExpired() {
+			return
+		}
 		key := make([]byte, index.Len+serial.Len)
 		item.KeyCopy(key)
 		ser := serial.FromKey(key)
@@ -57,13 +60,13 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 		countMx.Unlock()
 		return
 	}
-	started := time.Now()
+	// started := time.Now()
 	// run in a background thread to parallelise all the streams
 	if err = evStream.Orchestrate(b.Ctx); chk.E(err) {
 		return
 	}
-	log.D.F("counted %d events, %d pruned events in %v %s", len(unpruned),
-		len(pruned), time.Now().Sub(started), b.Path)
+	// log.D.F("counted %d events, %d pruned events in %v %s", len(unpruned),
+	// 	len(pruned), time.Now().Sub(started), b.Path)
 	var unprunedBySerial, prunedBySerial count.ItemsBySerial
 	unprunedBySerial = count.ItemsBySerial(unpruned)
 	sort.Sort(unprunedBySerial)
@@ -154,6 +157,7 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 			}(fp)
 		}
 	}
+	hw, _ := b.GetEventHeadroom()
 	unprunedTotal = unpruned.Total()
 	up := float64(unprunedTotal)
 	log.D.F("%d complete records; "+
@@ -161,23 +165,36 @@ func (b *Backend) GCCount() (unpruned, pruned count.Items, unprunedTotal,
 		"high water %0.6f Gb computed in %v %s",
 		len(unpruned),
 		up/units.Gb,
-		float64(b.DBHighWater*b.DBSizeLimit/100)/units.Gb,
+		float64(hw)/units.Gb,
 		time.Now().Sub(overallStart),
 		b.Path,
 	)
 	if b.HasL2 {
+		l2hw, _ := b.GetIndexHeadroom()
 		prunedTotal = pruned.Total()
-		headroom := b.DBSizeLimit * (100 - b.DBHighWater) / 100
 		p := float64(prunedTotal)
 		if b.HasL2 {
 			log.D.F("%d pruned records; "+
 				"total size of pruned event index data %0.6f Gb; "+
-				"headroom %0.6f Gb %s",
+				"pruned index high water %0.6f Gb %s computed in %v %s",
 				len(pruned),
 				p/units.Gb,
-				float64(headroom)/units.Gb, b.Path,
+				float64(l2hw)/units.Gb, b.Path,
+				time.Now().Sub(overallStart),
+				b.Path,
 			)
 		}
 	}
 	return
+}
+
+func (b *Backend) GetIndexHeadroom() (hw, lw int) {
+	limit := b.DBSizeLimit - b.DBSizeLimit*b.DBHighWater/100
+	return limit * b.DBHighWater / 100,
+		limit * b.DBLowWater / 100
+}
+
+func (b *Backend) GetEventHeadroom() (hw, lw int) {
+	return b.DBSizeLimit * b.DBHighWater / 100,
+		b.DBSizeLimit * b.DBLowWater / 100
 }
