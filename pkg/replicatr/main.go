@@ -117,15 +117,23 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	log.I.Ln("memlimit:", debug.SetMemoryLimit(args.MemLimit)/units.Mb, "Mb")
 	if args.PProf {
 		if cpuProf, err := os.Create("cpu.pprof"); !chk.E(err) {
+			defer func() {
+				log.I.Ln("stopping cpu profiler")
+				pprof.StopCPUProfile()
+				log.I.Ln("closing cpu profile log")
+				chk.E(cpuProf.Close())
+			}()
 			if err = pprof.StartCPUProfile(cpuProf); !chk.E(err) {
-				interrupt.AddHandler(func() {
-					pprof.StopCPUProfile()
+				defer func() {
+					log.I.Ln("writing heap profile")
 					if heapProf, err := os.Create("heap.pprof"); !chk.E(err) {
+						log.I.Ln("writing heap profile")
 						if err = pprof.WriteHeapProfile(heapProf); !chk.E(err) {
-							chk.E(cpuProf.Close())
+							log.I.Ln("closing heap profile")
+							chk.E(heapProf.Close())
 						}
 					}
-				})
+				}()
 			}
 		}
 	}
@@ -247,7 +255,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			conf.AuthRequired = true
 			inf.Limitation.AuthRequired = true
 		}
-		if args.EventStore != "badger" || args.EventStore != "" {
+		if !(args.EventStore == "badger" || args.EventStore == "") {
 			conf.EventStore = args.EventStore
 		}
 	}
@@ -349,7 +357,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			LogLevel:       slog.GetLogLevel(),
 		}
 		// disable manually for now
-		badgerDB.LogLevel = slog.Off
+		// badgerDB.LogLevel = slog.Off
 	}
 	switch eso {
 	case "iconly":
@@ -361,6 +369,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		wg.Add(1)
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
+			badgerDB.DB.Close()
 			wg.Done()
 		})
 	case "badgerbadger":
@@ -373,7 +382,9 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
 			b2.DB.Flatten(8)
-			// wg.Done()
+			badgerDB.DB.Close()
+			b2.DB.Close()
+			wg.Done()
 		})
 	}
 	if err = db.Init(); chk.E(err) {
