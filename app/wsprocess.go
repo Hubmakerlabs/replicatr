@@ -184,7 +184,6 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}))
 	case *reqenvelope.T:
 		wg := sync.WaitGroup{}
-		wg.Add(len(env.Filters))
 		// a context just for the "stored events" request handler
 		reqCtx, cancelReqCtx := context.CancelCause(c)
 		// expose subscription id in the context

@@ -26,6 +26,7 @@ type handleFilterParams struct {
 }
 
 func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
+	h.eose.Add(1)
 	defer h.eose.Done()
 	// overwrite the filter (for example, to eliminate some kinds or that we
 	// know we don't support)
@@ -65,66 +66,67 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 			continue
 		}
 		go func(ch event.C) {
-			for ev := range ch {
-				// if the event is nil the rest of this loop will panic
-				// accessing the nonexistent event's fields
-				if ev == nil {
-					continue
-				}
-				for _, ovw := range rl.OverwriteResponseEvent {
-					ovw(h.c, ev)
-				}
-				if kinds.IsPrivileged(ev.Kind) && rl.Info.Limitation.AuthRequired {
-					var allow bool
-					for _, v := range rl.Config.AllowIPs {
-						if h.ws.RealRemote() == v {
-							allow = true
-							break
-						}
+			for {
+				select {
+				case ev := <-ch:
+					// if the event is nil the rest of this loop will panic
+					// accessing the nonexistent event's fields
+					if ev == nil {
+						return
 					}
-					if h.ws.AuthPubKey() == "" && !allow {
-						log.D.Ln("not broadcasting privileged event to",
-							h.ws.RealRemote(), "not authenticated")
-						continue
+					for _, ovw := range rl.OverwriteResponseEvent {
+						ovw(h.c, ev)
 					}
-					if !allow {
-						// check the filter first
-						receivers, _ := h.f.Tags["p"]
-						receivers2, _ := h.f.Tags["#p"]
-						parties := make(tag.T,
-							len(receivers)+len(receivers2)+len(h.f.Authors))
-						copy(parties[:len(h.f.Authors)], h.f.Authors)
-						copy(parties[len(h.f.Authors):], receivers)
-						copy(parties[len(h.f.Authors)+len(receivers):],
-							receivers2)
-						// then check the event
-						parties = tag.T{ev.PubKey}
-						pTags := ev.Tags.GetAll("p")
-						for i := range pTags {
-							parties = append(parties, pTags[i][1])
+					if kinds.IsPrivileged(ev.Kind) && rl.Info.Limitation.AuthRequired {
+						var allow bool
+						for _, v := range rl.Config.AllowIPs {
+							if h.ws.RealRemote() == v {
+								allow = true
+								break
+							}
 						}
-						if !parties.Contains(h.ws.AuthPubKey()) &&
-							rl.Info.Limitation.AuthRequired {
+						if h.ws.AuthPubKey() == "" && !allow {
 							log.D.Ln("not broadcasting privileged event to",
-								h.ws.RealRemote(), h.ws.AuthPubKey(),
-								"not party to event")
-							return
+								h.ws.RealRemote(), "not authenticated")
+							continue
+						}
+						if !allow {
+							// check the filter first
+							receivers, _ := h.f.Tags["p"]
+							receivers2, _ := h.f.Tags["#p"]
+							parties := make(tag.T,
+								len(receivers)+len(receivers2)+len(h.f.Authors))
+							copy(parties[:len(h.f.Authors)], h.f.Authors)
+							copy(parties[len(h.f.Authors):], receivers)
+							copy(parties[len(h.f.Authors)+len(receivers):],
+								receivers2)
+							// then check the event
+							parties = tag.T{ev.PubKey}
+							pTags := ev.Tags.GetAll("p")
+							for i := range pTags {
+								parties = append(parties, pTags[i][1])
+							}
+							if !parties.Contains(h.ws.AuthPubKey()) &&
+								rl.Info.Limitation.AuthRequired {
+								log.D.Ln("not broadcasting privileged event to",
+									h.ws.RealRemote(), h.ws.AuthPubKey(),
+									"not party to event")
+								return
+							}
 						}
 					}
+					chk.E(h.ws.WriteEnvelope(&eventenvelope.T{
+						SubscriptionID: h.id,
+						Event:          ev,
+					}))
+				case <-rl.Ctx.Done():
+					log.T.Ln("shutting down")
+					return
+				case <-h.c.Done():
+					return
 				}
-				chk.E(h.ws.WriteEnvelope(&eventenvelope.T{
-					SubscriptionID: h.id,
-					Event:          ev,
-				}))
 			}
 		}(ch)
-		select {
-		case <-rl.Ctx.Done():
-			log.T.Ln("shutting down")
-			return
-		default:
-		}
-
 	}
 	return nil
 }

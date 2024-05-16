@@ -44,7 +44,8 @@ type Backend struct {
 	GCFrequency    time.Duration
 	HasL2          bool
 	BlockCacheSize int
-	LogLevel       int // use the numbers from slog via the constants
+	InitLogLevel   int
+	Logger         *logger
 	// DB is the badger db interface
 	*badger.DB
 	// seq is the monotonic collision free index for raw event storage.
@@ -106,7 +107,8 @@ func (b *Backend) Init() (err error) {
 	opts.CompactL0OnClose = true
 	opts.LmaxCompaction = true
 	// opts.Compression = options.ZSTD
-	opts.Logger = logger{b.LogLevel, b.Path}
+	b.Logger = NewLogger(b.InitLogLevel, b.Path)
+	opts.Logger = b.Logger
 	if b.DB, err = badger.Open(opts); chk.E(err) {
 		return err
 	}

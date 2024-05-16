@@ -16,7 +16,6 @@ func (rl *Relay) handleDeleteRequest(c context.T, evt *event.T) (err error) {
 	// log.I.Ln("event delete", evt.ToObject().String())
 	// event deletion -- nip-09
 	go func() {
-
 		for _, t := range evt.Tags {
 			if len(t) >= 2 && t[0] == "e" {
 				// log.I.Ln("delete event tag", t)

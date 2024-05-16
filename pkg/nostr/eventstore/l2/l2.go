@@ -49,6 +49,27 @@ func (b *Backend) Close() {
 	return
 }
 
+func (b *Backend) SaveLoop(c context.T, saveChan event.C) {
+	// var saveEvents []*event.T
+	for {
+		select {
+		case <-c.Done():
+			// for _, ev := range saveEvents {
+			// 	log.I.F("reviving event %s in L1", ev.ID)
+			// 	chk.E(b.L1.SaveEvent(c, ev))
+			// }
+			return
+		case ev := <-saveChan:
+			if ev == nil {
+				continue
+			}
+			log.T.F("reviving event %s in L1", ev.ID)
+			chk.T(b.L1.SaveEvent(c, ev))
+			// saveEvents = append(saveEvents, ev)
+		}
+	}
+}
+
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
 	ch = make(event.C)
 	// Both calls are async so fire them off at the same time
@@ -62,26 +83,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	// after the query context is canceled.
 	saveChan := make(event.C)
 	evMap := make(map[*eventid.T]struct{})
-	go func() {
-		// var saveEvents []*event.T
-		for {
-			select {
-			case <-c.Done():
-				// for _, ev := range saveEvents {
-				// 	log.I.F("reviving event %s in L1", ev.ID)
-				// 	chk.E(b.L1.SaveEvent(c, ev))
-				// }
-				return
-			case ev := <-saveChan:
-				if ev == nil {
-					continue
-				}
-				log.T.F("reviving event %s in L1", ev.ID)
-				chk.T(b.L1.SaveEvent(c, ev))
-				// saveEvents = append(saveEvents, ev)
-			}
-		}
-	}()
+	go b.SaveLoop(c, saveChan)
 	// Events should not be duplicated in the return to the client, so a
 	// mutex and eventid.T map will indicate if an event has already been returned.
 	var evMx sync.Mutex
@@ -113,26 +115,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				// reference to an event but does not have possession of the event.
 				if ev1.Sig == "" && ev1.ID != "" {
 					// spawn a query to fetch the event ID from the L2
-					go func(ev1 *event.T) {
-						log.T.F("retrieving event %s from L2", ev1.ID)
-						ch3, err3 := b.L2.QueryEvents(c,
-							&filter.T{IDs: tag.T{ev1.ID.String()}})
-						chk.E(err3)
-					out2:
-						for {
-							select {
-							case <-c.Done():
-								// if context is closed, break out
-								break out2
-							case ev3 := <-ch3:
-								ch <- ev3
-								// need to queue up the event to restore the event and counter records
-								saveChan <- ev3
-								// there can only be one
-								break out2
-							}
-						}
-					}(ev1)
+					go b.Revive(ev1, c, ch, saveChan)
 				} else {
 					// first to find should send
 					ch <- ev1
@@ -159,6 +142,27 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	}()
 	err = errors.Join(errs...)
 	return
+}
+
+func (b *Backend) Revive(ev1 *event.T, c context.T, ch, saveChan event.C) {
+	log.T.F("retrieving event %s from L2", ev1.ID)
+	ch3, err3 := b.L2.QueryEvents(c,
+		&filter.T{IDs: tag.T{ev1.ID.String()}})
+	chk.E(err3)
+out2:
+	for {
+		select {
+		case <-c.Done():
+			// if context is closed, break out
+			break out2
+		case ev3 := <-ch3:
+			ch <- ev3
+			// need to queue up the event to restore the event and counter records
+			saveChan <- ev3
+			// there can only be one
+			break out2
+		}
+	}
 }
 
 func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
