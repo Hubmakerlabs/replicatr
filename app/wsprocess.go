@@ -192,6 +192,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		// handle each filter separately -- dispatching events as they're loaded
 		// from databases
 		for _, f := range env.Filters {
+			wg.Add(1)
 			err = rl.handleFilter(handleFilterParams{
 				reqCtx,
 				env.SubscriptionID,
