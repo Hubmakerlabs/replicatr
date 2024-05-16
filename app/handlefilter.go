@@ -66,14 +66,17 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 			continue
 		}
 		go func(ch event.C) {
+		out:
 			for {
 				select {
 				case ev := <-ch:
 					// if the event is nil the rest of this loop will panic
 					// accessing the nonexistent event's fields
 					if ev == nil {
-						return
+						log.I.Ln("query result channel closed")
+						break out
 					}
+					log.I.Ln("received result", ev.ToObject().String())
 					for _, ovw := range rl.OverwriteResponseEvent {
 						ovw(h.c, ev)
 					}
@@ -121,10 +124,20 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					}))
 				case <-rl.Ctx.Done():
 					log.T.Ln("shutting down")
-					return
+					break out
 				case <-h.c.Done():
-					return
+					log.T.Ln("query context done")
+					break out
 				}
+				for ev := range ch {
+					if ev == nil {
+						log.I.Ln("all events drained from handleFilter")
+						return
+					}
+					log.I.Ln("drained event", ev.ToObject().String())
+				}
+				log.I.Ln("closing result channel for filter", h.f.ToObject().String())
+				close(ch)
 			}
 		}(ch)
 	}

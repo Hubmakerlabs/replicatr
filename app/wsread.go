@@ -73,10 +73,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 			chk.E(p.ws.Pong())
 			continue
 		}
-		strMsg := string(message)
-		if len(strMsg) > 256 {
-			strMsg = strMsg[:256]
-		}
+		log.I.Ln("received message", string(message), p.ws.RealRemote())
 		if err = rl.wsProcessMessages(message, p.c, p.kill, p.ws); err != nil {
 		}
 	}

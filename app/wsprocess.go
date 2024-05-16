@@ -191,6 +191,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		// handle each filter separately -- dispatching events as they're loaded
 		// from databases
 		for _, f := range env.Filters {
+			wg.Add(1)
 			err = rl.handleFilter(handleFilterParams{
 				reqCtx,
 				env.SubscriptionID,
@@ -238,6 +239,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			}
 			log.I.Ln("user authenticated", pubkey)
 			ws.SetAuthPubKey(pubkey)
+			log.I.Ln("closing auth chan")
 			close(ws.Authed)
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,

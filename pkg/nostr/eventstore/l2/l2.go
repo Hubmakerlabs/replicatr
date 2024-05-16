@@ -8,6 +8,7 @@ import (
 	"errors"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -50,101 +51,166 @@ func (b *Backend) Close() {
 }
 
 func (b *Backend) SaveLoop(c context.T, saveChan event.C) {
-	// var saveEvents []*event.T
 	for {
 		select {
+		case <-b.Ctx.Done():
+			return
 		case <-c.Done():
-			// for _, ev := range saveEvents {
-			// 	log.I.F("reviving event %s in L1", ev.ID)
-			// 	chk.E(b.L1.SaveEvent(c, ev))
-			// }
 			return
 		case ev := <-saveChan:
 			if ev == nil {
-				continue
+				return
 			}
 			log.T.F("reviving event %s in L1", ev.ID)
 			chk.T(b.L1.SaveEvent(c, ev))
-			// saveEvents = append(saveEvents, ev)
 		}
 	}
 }
 
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
-	ch = make(event.C)
+	ch = make(event.C, 6)
+	var startGroup sync.WaitGroup
 	// Both calls are async so fire them off at the same time
+	startGroup.Add(1)
 	ch1, err1 := b.L1.QueryEvents(c, f)
+	startGroup.Add(1)
 	ch2, err2 := b.L2.QueryEvents(c, f)
+	errs := []error{err1, err2}
 	// Start up a goroutine to catch evMap that need to be synced back after being
 	// pruned and then match a search and pulled from the L2.
 	//
 	// It is necessary to use a second goroutine for this because handling the
 	// returns to the caller are more important. Thus the save operation is done
 	// after the query context is canceled.
-	saveChan := make(event.C)
-	evMap := make(map[*eventid.T]struct{})
+	saveChan := make(event.C, 12)
+	evMap := make(map[eventid.T]struct{})
 	go b.SaveLoop(c, saveChan)
 	// Events should not be duplicated in the return to the client, so a
 	// mutex and eventid.T map will indicate if an event has already been returned.
 	var evMx sync.Mutex
-	errs := []error{err1, err2}
+	var wg sync.WaitGroup
 	go func() {
-		defer close(ch)
-	out:
-		for {
-			select {
-			case <-c.Done():
-				// if context is closed, break out
-				break out
-			case ev1 := <-ch1:
-				if ev1 == nil {
-					// log.W.Ln("nil event")
-					break
-				}
-				evMx.Lock()
-				// no point in storing it if it is already found.
-				// log.I.Ln(evMap)
-				_, ok := evMap[&ev1.ID]
-				if ok {
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
+			startGroup.Done()
+		out:
+			for {
+				select {
+				case <-c.Done():
+					// if context is closed, break out
+					log.I.Ln("query context done")
+					break out
+				case <-b.Ctx.Done():
+					log.I.Ln("backend context done")
+					break out
+				case ev1 := <-ch1:
+					if ev1 == nil {
+						// this means the channel has closed
+						return
+					}
+					evMx.Lock()
+					// no point in storing it if it is already found.
+					// log.I.Ln(evMap)
+					_, ok := evMap[ev1.ID]
+					if ok {
+						evMx.Unlock()
+						log.I.Ln("layer 2 already returned")
+						continue
+					}
+					evMap[ev1.ID] = struct{}{}
 					evMx.Unlock()
-					continue
+					// if the event is missing a signature, we can ascertain that the L1 has found a
+					// reference to an event but does not have possession of the event.
+					if ev1.Sig != "" || ev1.ID == "" {
+						// first to find should send
+						log.I.Ln("sending event from l1")
+						ch <- ev1
+					} else {
+						// spawn a query to fetch the event ID from the L2
+						go b.Revive(ev1, c, ch, saveChan, &wg)
+					}
 				}
-				evMap[&ev1.ID] = struct{}{}
-				evMx.Unlock()
-				// if the event is missing a signature, we can ascertain that the L1 has found a
-				// reference to an event but does not have possession of the event.
-				if ev1.Sig == "" && ev1.ID != "" {
-					// spawn a query to fetch the event ID from the L2
-					go b.Revive(ev1, c, ch, saveChan)
-				} else {
-					// first to find should send
-					ch <- ev1
-				}
-			case ev2 := <-ch2:
-				if ev2 == nil {
-					// log.W.Ln("nil event")
-					break
-				}
-				evMx.Lock()
-				// no point in storing it if it is already found.
-				// log.I.Ln(evMap)
-				_, ok := evMap[&ev2.ID]
-				if ok {
-					evMx.Unlock()
-					continue
-				}
-				evMap[&ev2.ID] = struct{}{}
-				evMx.Unlock()
-				// first to find should send
-				ch <- ev2
 			}
-		}
+			log.I.Ln("l1 query complete")
+		}()
+		go func() {
+			wg.Add(1)
+			defer wg.Done()
+			startGroup.Done()
+		out:
+			for {
+				select {
+				case <-c.Done():
+					// if context is closed, break out
+					log.I.Ln("query context done")
+					break out
+				case <-b.Ctx.Done():
+					log.I.Ln("backend context done")
+					break out
+				case ev2 := <-ch2:
+					if ev2 == nil {
+						// this means the channel has closed
+						return
+					}
+					evMx.Lock()
+					// no point in storing it if it is already found.
+					// log.I.Ln(evMap)
+					_, ok := evMap[ev2.ID]
+					if ok {
+						evMx.Unlock()
+						log.I.Ln("layer 1 already returned")
+						continue
+					}
+					evMap[ev2.ID] = struct{}{}
+					evMx.Unlock()
+					// first to find should send
+					log.I.Ln("sending event from l2")
+					ch <- ev2
+				}
+			}
+			log.I.Ln("l2 query complete")
+		}()
 	}()
+	startGroup.Wait()
+	log.I.Ln("both layers have started query")
+	// wait for both layers to terminate
+	wg.Wait()
+	timeout := time.After(time.Second / 100)
+drain:
+	for {
+		select {
+		case ev := <-ch:
+			if ev == nil {
+				break drain
+			}
+			log.I.Ln("event got stuck", ev.ToObject().String())
+		case <-timeout:
+			log.I.Ln("timeout draining")
+			break drain
+		}
+	}
+	log.I.Ln("canceling query context")
+	c.Done()
+	log.I.Ln("closing event results channel")
+out:
+	for {
+		select {
+		case ev := <-ch:
+			log.I.Ln("drained event", ev.ToObject().String())
+		default:
+			break out
+		}
+	}
+	// close(ch)
+	// close(saveChan)
 	err = errors.Join(errs...)
 	return
 }
 
-func (b *Backend) Revive(ev1 *event.T, c context.T, ch, saveChan event.C) {
+func (b *Backend) Revive(ev1 *event.T, c context.T, ch, saveChan event.C, wg *sync.WaitGroup) {
+	wg.Add(1)
+	defer wg.Done()
 	log.T.F("retrieving event %s from L2", ev1.ID)
 	ch3, err3 := b.L2.QueryEvents(c,
 		&filter.T{IDs: tag.T{ev1.ID.String()}})

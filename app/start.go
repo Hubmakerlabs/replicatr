@@ -34,6 +34,7 @@ func (rl *Relay) Start(host string, port int,
 	}
 	// notify caller that we're starting
 	for _, s := range started {
+		log.I.Ln("closing started chans")
 		close(s)
 	}
 	if err = rl.httpServer.Serve(ln); errors.Is(err, http.ErrServerClosed) {
