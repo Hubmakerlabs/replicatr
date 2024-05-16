@@ -75,8 +75,10 @@ func (b *Backend) CountEvents(c context.T, f *filter.T) (count int, err error) {
 				return
 			})
 			chk.E(err)
+			log.I.Ln("closing results chan")
 			close(q.results)
-			for _ = range q.results {
+			for res := range q.results {
+				log.I.Ln("closing results chan", res.Ev.ToObject().String())
 			}
 			log.T.Ln("count results channel clear",
 				text.Trunc(q.queryFilter.ToObject().String()))

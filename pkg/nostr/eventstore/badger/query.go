@@ -3,7 +3,6 @@ package badger
 import (
 	"container/heap"
 	"math"
-	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -32,9 +31,8 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 		return
 	}
 	accessChan := make(chan *AccessEvent)
-	var txMx sync.Mutex
 	// start up the access counter
-	go b.AccessLoop(c, &txMx, accessChan)
+	go b.AccessLoop(c, accessChan)
 	// max number of events we'll return
 	limit := b.MaxLimit
 	if f.Limit != nil && *f.Limit > 0 && *f.Limit < limit {
@@ -42,7 +40,9 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	}
 	go func() {
 		defer func() {
+			log.T.Ln("closing query chan", f.ToObject().String(), b.Path)
 			close(ch)
+			log.T.Ln("closing access chan", f.ToObject().String(), b.Path)
 			close(accessChan)
 			// log.I.Ln("query goroutine terminated")
 		}()
@@ -169,7 +169,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			// log.I.Ln(q.queryFilter.ToObject().String())
 			q := q
 			evt, ok := <-q.results
-			// log.I.Ln("received result", ok)
+			log.I.Ln("received result", ok, evt)
 			if ok {
 				// log.T.F("adding event to queue [%s, %d]", evt.Ev.ID, evt.Ser.Uint64())
 				emitQueue = append(emitQueue,
@@ -202,11 +202,14 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			}
 			// emit latest event in queue
 			latest := emitQueue[0]
+			log.T.Ln("sending result", latest.T.ToObject().String(), b.Path)
+			ch <- latest.T
+			log.T.Ln("sent result", latest.T.ToObject().String(), b.Path)
 			// send ID to be incremented for access
 			ae := MakeAccessEvent(latest.T.ID, latest.Ser)
-			// log.T.Ln("sending access event", ae)
+			log.T.Ln("sending access event", ae, b.Path)
 			accessChan <- ae
-			ch <- latest.T
+			log.T.Ln("sent access event", ae, b.Path)
 			// stop when reaching limit
 			emittedEvents++
 			if emittedEvents == limit {

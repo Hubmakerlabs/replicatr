@@ -53,15 +53,13 @@ func (b *Backend) SaveLoop(c context.T, saveChan event.C) {
 	// var saveEvents []*event.T
 	for {
 		select {
+		case <-b.Ctx.Done():
+			return
 		case <-c.Done():
-			// for _, ev := range saveEvents {
-			// 	log.I.F("reviving event %s in L1", ev.ID)
-			// 	chk.E(b.L1.SaveEvent(c, ev))
-			// }
 			return
 		case ev := <-saveChan:
 			if ev == nil {
-				continue
+				return
 			}
 			log.T.F("reviving event %s in L1", ev.ID)
 			chk.T(b.L1.SaveEvent(c, ev))
@@ -86,31 +84,31 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	go b.SaveLoop(c, saveChan)
 	// Events should not be duplicated in the return to the client, so a
 	// mutex and eventid.T map will indicate if an event has already been returned.
-	var evMx sync.Mutex
 	errs := []error{err1, err2}
 	go func() {
 		defer close(ch)
-	out:
+		// get results from the first, first.
+	out1:
 		for {
 			select {
 			case <-c.Done():
 				// if context is closed, break out
-				break out
+				return
+			case <-b.Ctx.Done():
+				// if backend shutting down quit
+				return
 			case ev1 := <-ch1:
 				if ev1 == nil {
 					// log.W.Ln("nil event")
-					break
+					break out1
 				}
-				evMx.Lock()
 				// no point in storing it if it is already found.
 				// log.I.Ln(evMap)
 				_, ok := evMap[&ev1.ID]
 				if ok {
-					evMx.Unlock()
 					continue
 				}
 				evMap[&ev1.ID] = struct{}{}
-				evMx.Unlock()
 				// if the event is missing a signature, we can ascertain that the L1 has found a
 				// reference to an event but does not have possession of the event.
 				if ev1.Sig == "" && ev1.ID != "" {
@@ -120,21 +118,32 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 					// first to find should send
 					ch <- ev1
 				}
+			}
+		}
+		// anything that comes from the second, that we already got from the first,
+		// don't return it as it already has been.
+	out2:
+		for {
+			select {
+			case <-c.Done():
+				// if context is closed, break out
+				return
+			case <-b.Ctx.Done():
+				// if backend shutting down quit
+				return
 			case ev2 := <-ch2:
 				if ev2 == nil {
 					// log.W.Ln("nil event")
-					break
+					break out2
 				}
-				evMx.Lock()
 				// no point in storing it if it is already found.
 				// log.I.Ln(evMap)
 				_, ok := evMap[&ev2.ID]
 				if ok {
-					evMx.Unlock()
+					log.I.Ln("L1 already found", ev2.ID)
 					continue
 				}
 				evMap[&ev2.ID] = struct{}{}
-				evMx.Unlock()
 				// first to find should send
 				ch <- ev2
 			}

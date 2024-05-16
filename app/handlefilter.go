@@ -74,6 +74,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					if ev == nil {
 						return
 					}
+					log.I.Ln("received result", ev.ToObject().String())
 					for _, ovw := range rl.OverwriteResponseEvent {
 						ovw(h.c, ev)
 					}

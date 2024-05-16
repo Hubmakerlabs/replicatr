@@ -354,7 +354,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			DBHighWater:    conf.DBHighWater,
 			GCFrequency:    time.Duration(conf.GCFrequency) * time.Second,
 			BlockCacheSize: 8 * units.Gb,
-			InitLogLevel:   slog.GetLogLevel(),
+			// InitLogLevel:   slog.Off,
+			InitLogLevel: slog.GetLogLevel(),
 		}
 	}
 	switch eso {

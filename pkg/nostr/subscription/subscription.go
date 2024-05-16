@@ -85,6 +85,7 @@ func (sub *T) Start() {
 	// do this so we don't have the possibility of closing the Events channel
 	// and then trying to send to it
 	sub.mu.Lock()
+	log.I.Ln("closing subscription events chan", sub.Filters.String())
 	close(sub.Events)
 	sub.mu.Unlock()
 }

@@ -184,6 +184,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		}))
 	case *reqenvelope.T:
 		wg := sync.WaitGroup{}
+		wg.Add(len(env.Filters))
 		// a context just for the "stored events" request handler
 		reqCtx, cancelReqCtx := context.CancelCause(c)
 		// expose subscription id in the context
@@ -238,6 +239,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			}
 			log.I.Ln("user authenticated", pubkey)
 			ws.SetAuthPubKey(pubkey)
+			log.I.Ln("closing auth chan")
 			close(ws.Authed)
 			chk.E(ws.WriteEnvelope(&okenvelope.T{
 				ID: env.Event.ID,

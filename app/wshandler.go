@@ -24,8 +24,6 @@ func (rl *Relay) HandleWebsocket(w http.ResponseWriter, r *http.Request) {
 	conn.EnableWriteCompression(true)
 	rl.clients.Store(conn, struct{}{})
 	ticker := time.NewTicker(rl.PingPeriod)
-
-	chk.E(err)
 	rem := r.Header.Get("X-Forwarded-For")
 	splitted := strings.Split(rem, " ")
 	var rr string

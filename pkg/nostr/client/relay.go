@@ -225,6 +225,7 @@ func (r *T) Connect(c context.T) (err error) {
 		<-r.ConnectionContext.Done()
 		// close these things when the connection is closed
 		if r.notices != nil {
+			log.I.Ln("closing notices chan")
 			close(r.notices)
 		}
 		// stop the ticker
@@ -258,6 +259,7 @@ func (r *T) Connect(c context.T) (err error) {
 				if err = r.Connection.WriteMessage(wr.msg); err != nil {
 					wr.answer <- err
 				}
+				log.I.Ln("closing write queue answer chan")
 				close(wr.answer)
 			case <-r.ConnectionContext.Done():
 				// stop here
@@ -285,7 +287,9 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 		message := buf.Bytes()
 		log.T.F("{%s} received %v", r.URL(), string(message))
 		var envelope enveloper.I
-		envelope, _, err = envelopes.ProcessEnvelope(message)
+		if envelope, _, err = envelopes.ProcessEnvelope(message); chk.E(err) {
+			continue
+		}
 		if envelope == nil {
 			continue
 		}
@@ -301,6 +305,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 		case *authenvelope.Challenge:
 			r.challenge = env.Challenge
 			log.D.Ln("challenge", r.challenge)
+			log.I.Ln("closing auth required chan")
 			close(r.AuthRequired)
 		case *eventenvelope.T:
 			if env.SubscriptionID == "" {
