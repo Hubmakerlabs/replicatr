@@ -51,7 +51,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			// log.I.Ln("query", q1.queryFilter.ToObject().String())
 			select {
 			case <-c.Done():
-				// log.I.Ln("websocket closed")
+				log.T.Ln("websocket closed")
 				return
 			case <-b.Ctx.Done():
 				log.I.Ln("backend context canceled")
@@ -59,106 +59,106 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			default:
 			}
 			q2 := q1
-			// go func() {
-			// log.I.Ln("scanning database for", q2.queryFilter.ToObject().String())
-			var eventKeys [][]byte
-			err := b.View(func(txn *badger.Txn) (err error) {
-				// iterate only through keys and in reverse order
-				opts := badger.IteratorOptions{Reverse: true}
-				it := txn.NewIterator(opts)
-				defer it.Close()
-				for it.Seek(q2.start); it.ValidForPrefix(q2.searchPrefix); it.Next() {
-					item := it.Item()
-					k := item.KeyCopy(nil)
-					if !q2.skipTS {
-						createdAt := createdat.FromKey(k)
-						if createdAt.Val.U64() < since {
-							break
-						}
-					}
-					ser := serial.FromKey(k)
-					eventKeys = append(eventKeys, index.Event.Key(ser))
-				}
-				return
-			})
-			// log.I.Ln("done scanning database", q2.queryFilter.ToObject().String())
-			if err != nil {
-				close(q2.results)
-				for _ = range q2.results {
-				}
-				// log.I.Ln("query results channel clear",
-				// 	text.Trunc(q2.queryFilter.ToObject().String()))
-				return
-			}
-			// log.I.Ln("got eventKeys", eventKeys)
-			for _, eventKey := range eventKeys {
-				var ev *event.T
-				err = b.View(func(txn *badger.Txn) (err error) {
+			go func() {
+				// log.I.Ln("scanning database for", q2.queryFilter.ToObject().String())
+				var eventKeys [][]byte
+				err := b.View(func(txn *badger.Txn) (err error) {
+					// iterate only through keys and in reverse order
 					opts := badger.IteratorOptions{Reverse: true}
 					it := txn.NewIterator(opts)
 					defer it.Close()
-					for it.Seek(eventKey); it.ValidForPrefix(eventKey); it.Next() {
+					for it.Seek(q2.start); it.ValidForPrefix(q2.searchPrefix); it.Next() {
 						item := it.Item()
-						var v []byte
-						if v, err = item.ValueCopy(nil); chk.E(err) {
-							continue
-						}
-						ser := serial.FromKey(item.KeyCopy(nil))
-						if len(v) == sha256.Size {
-							// this is a stub entry that indicates an L2 needs to be accessed for it, so we
-							// populate only the event.T.ID and return the result.
-							evt := &event.T{}
-							log.T.F("found event stub %0x must seek in L2", v)
-							evt.ID, _ = eventid.New(hex.Enc(v))
-							select {
-							case <-c.Done():
-								// log.I.Ln("websocket closed")
-								return
-							case <-b.Ctx.Done():
-								log.I.Ln("backend context canceled")
-								return
-							default:
+						k := item.KeyCopy(nil)
+						if !q2.skipTS {
+							createdAt := createdat.FromKey(k)
+							if createdAt.Val.U64() < since {
+								break
 							}
-							q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
-							return
 						}
-						if ev, err = nostrbinary.Unmarshal(v); chk.E(err) {
-							continue
-						}
-						if ev == nil {
-							log.D.S("got nil event from", v)
-							return
-						}
-						// check if this matches the other filters that were not part of the index
-						if extraFilter == nil || extraFilter.Matches(ev) {
-							res := Results{Ev: ev, TS: timestamp.Now(), Ser: ser}
-							// log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
-							// 	ev.ToObject().String())
-							select {
-							case <-c.Done():
-								// log.I.Ln("websocket closed")
-								return
-							case <-b.Ctx.Done():
-								log.I.Ln("backend context canceled")
-								return
-							default:
-							}
-							q2.results <- res
-						}
+						ser := serial.FromKey(k)
+						eventKeys = append(eventKeys, index.Event.Key(ser))
 					}
-					// close(q2.results)
 					return
 				})
-			}
-			// q2.results <- Results{}
-			// log.I.Ln("closing results channel")
-			close(q2.results)
-			// log.I.Ln("draining results channel")
-			// for _ = range q2.results {
-			// }
-			// log.I.Ln("results channel clear",
-			// 	text.Trunc(q2.queryFilter.ToObject().String()))
-			// }()
+				// log.I.Ln("done scanning database", q2.queryFilter.ToObject().String())
+				if err != nil {
+					close(q2.results)
+					for _ = range q2.results {
+					}
+					// log.I.Ln("query results channel clear",
+					// 	text.Trunc(q2.queryFilter.ToObject().String()))
+					return
+				}
+				// log.I.Ln("got eventKeys", eventKeys)
+				for _, eventKey := range eventKeys {
+					var ev *event.T
+					err = b.View(func(txn *badger.Txn) (err error) {
+						opts := badger.IteratorOptions{Reverse: true}
+						it := txn.NewIterator(opts)
+						defer it.Close()
+						for it.Seek(eventKey); it.ValidForPrefix(eventKey); it.Next() {
+							item := it.Item()
+							var v []byte
+							if v, err = item.ValueCopy(nil); chk.E(err) {
+								continue
+							}
+							ser := serial.FromKey(item.KeyCopy(nil))
+							if len(v) == sha256.Size {
+								// this is a stub entry that indicates an L2 needs to be accessed for it, so we
+								// populate only the event.T.ID and return the result.
+								evt := &event.T{}
+								log.T.F("found event stub %0x must seek in L2", v)
+								evt.ID, _ = eventid.New(hex.Enc(v))
+								select {
+								case <-c.Done():
+									// log.I.Ln("websocket closed")
+									return
+								case <-b.Ctx.Done():
+									log.I.Ln("backend context canceled")
+									return
+								default:
+								}
+								q2.results <- Results{Ev: evt, TS: timestamp.Now(), Ser: ser}
+								return
+							}
+							if ev, err = nostrbinary.Unmarshal(v); chk.E(err) {
+								continue
+							}
+							if ev == nil {
+								log.D.S("got nil event from", v)
+								return
+							}
+							// check if this matches the other filters that were not part of the index
+							if extraFilter == nil || extraFilter.Matches(ev) {
+								res := Results{Ev: ev, TS: timestamp.Now(), Ser: ser}
+								// log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
+								// 	ev.ToObject().String())
+								select {
+								case <-c.Done():
+									// log.I.Ln("websocket closed")
+									return
+								case <-b.Ctx.Done():
+									log.I.Ln("backend context canceled")
+									return
+								default:
+								}
+								q2.results <- res
+							}
+						}
+						// close(q2.results)
+						return
+					})
+				}
+				// q2.results <- Results{}
+				// log.I.Ln("closing results channel")
+				close(q2.results)
+				// log.I.Ln("draining results channel")
+				// for _ = range q2.results {
+				// }
+				// log.I.Ln("results channel clear",
+				// 	text.Trunc(q2.queryFilter.ToObject().String()))
+			}()
 		}
 		// log.I.Ln("finished queries loop", queries)
 		// receive results and ensure we only return the most recent ones always

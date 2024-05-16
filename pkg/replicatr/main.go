@@ -110,10 +110,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	os.Args = osArgs
 	arg.MustParse(&args)
 	os.Args = tmp
-	_ = debug.SetGCPercent(args.GCRatio)
-	runtime.GOMAXPROCS(args.MaxProcs)
-	log.I.Ln("starting", AppName)
-	debug.SetMemoryLimit(args.MemLimit)
 	log.I.Ln("memlimit:", debug.SetMemoryLimit(args.MemLimit)/units.Mb, "Mb")
 	if args.PProf {
 		if cpuProf, err := os.Create("cpu.pprof"); !chk.E(err) {
@@ -258,9 +254,24 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if !(args.EventStore == "badger" || args.EventStore == "") {
 			conf.EventStore = args.EventStore
 		}
+		if args.MemLimit > 0 {
+			conf.MemLimit = args.MemLimit
+		}
+		if args.GCRatio > 0 {
+			conf.GCRatio = args.GCRatio
+		}
+		if args.MaxProcs > 0 {
+			conf.MaxProcs = args.MaxProcs
+		}
 	}
+	_ = debug.SetGCPercent(conf.GCRatio)
+	runtime.GOMAXPROCS(conf.MaxProcs)
+	log.I.Ln("starting", AppName)
+	if conf.MemLimit > 0 {
+		debug.SetMemoryLimit(conf.MemLimit)
+	}
+
 	var wg sync.WaitGroup
-	log.D.Ln("setting JSON encoder cache size to", float32(args.EncodeCache)/float32(units.Mb), "Mb")
 	rl := app.NewRelay(c, cancel, inf, &conf)
 	var db eventstore.Store
 	// if we are wiping we don't want to init db normally

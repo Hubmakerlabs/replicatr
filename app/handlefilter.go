@@ -129,15 +129,6 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					log.T.Ln("query context done")
 					break out
 				}
-				for ev := range ch {
-					if ev == nil {
-						log.I.Ln("all events drained from handleFilter")
-						return
-					}
-					log.I.Ln("drained event", ev.ToObject().String())
-				}
-				log.I.Ln("closing result channel for filter", h.f.ToObject().String())
-				close(ch)
 			}
 		}(ch)
 	}

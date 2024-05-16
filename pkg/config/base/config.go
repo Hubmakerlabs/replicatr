@@ -49,7 +49,6 @@ func GetDefaultConfig() *Config {
 		GCFrequency:  300,
 		MaxProcs:     128,
 		LogLevel:     "info",
-		EncodeCache:  10000000,
 		GCRatio:      100,
 		MemLimit:     500000000,
 	}
@@ -102,7 +101,6 @@ type Config struct {
 	MaxProcs    int    `arg:"--maxprocs" json:"max_procs"  help:"maximum number of goroutines to use"`                                              // default:"128"
 	LogLevel    string `arg:"--loglevel"  help:"set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)"` // default:"info"
 	PProf       bool   `arg:"--pprof" help:"enable CPU and memory profiling"`
-	EncodeCache int    `arg:"--encodecache"  help:"JSON encode cache size limit for GC"`                // default:"10000000"
 	GCRatio     int    `arg:"--gcratio"  help:"set GC percentage for triggering GC sweeps"`             // default:"100"
 	MemLimit    int64  `arg:"--memlimit"  help:"set memory limit on process to constrain memory usage"` // default:"500000000"
 }
