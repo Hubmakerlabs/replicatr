@@ -36,7 +36,7 @@ type GetPermission struct {
 
 func GetDefaultConfig() *Config {
 	return &Config{
-		Listen:       "0.0.0.0:3334",
+		Listen:       []string{"0.0.0.0:3334"},
 		EventStore:   "badger",
 		CanisterAddr: "https://icp0.io/",
 		Profile:      "replicatr",
@@ -64,7 +64,7 @@ type Config struct {
 	GetPermissionCmd *GetPermission `arg:"subcommand:getpermission" json:"-" help:"get permission of a relay"`
 	Wipe             *WipeBDB       `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
 	Rescan           *RescanAC      `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
-	Listen           string         `arg:"-l,--listen"  json:"listen" help:"network address to listen on"`                                             // default:"0.0.0.0:3334"
+	Listen           []string       `arg:"-l,--listen,separate"  json:"listen" help:"network address to listen on"`                                    // default:"[0.0.0.0:3334]"
 	EventStore       string         `arg:"-e,--eventstore"  json:"eventstore" help:"select event store backend [ic,badger,iconly]"`                    // default:"badger"
 	CanisterAddr     string         `arg:"-C,--canisteraddr"  json:"canister_addr" help:"IC canister address to use (for local, use 127.0.0.1:46847)"` // default:"https://icp0.io/"
 	CanisterId       string         `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`

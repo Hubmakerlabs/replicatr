@@ -28,7 +28,7 @@ import (
 const IgnoreAfter = 16
 
 func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
-	kill func(), ws *relayws.WebSocket) (err error) {
+	kill func(), ws *relayws.WebSocket, serviceURL string) (err error) {
 
 	if len(msg) == 0 {
 		err = log.E.Err("empty message, probably dropped connection")
@@ -38,7 +38,8 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		err = log.E.Err("client keeps sending wrong req envelopes")
 		return
 	}
-	// log.I.F("websocket receive message\n%s\n%s %s", string(msg), ws.RealRemote(), ws.AuthPubKey())
+	// log.I.F("websocket receive message\n%s\n%s %s",
+	//  string(msg), ws.RealRemote(), ws.AuthPubKey())
 	strMsg := string(msg)
 	if ws.OffenseCount.Load() > IgnoreAfter {
 		if len(strMsg) > 256 {
@@ -233,7 +234,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		RemoveListenerId(ws, env.T.String())
 	case *authenvelope.Response:
 		log.T.Ln("received auth response")
-		wsBaseUrl := strings.Replace(rl.ServiceURL.Load(), "http", "ws", 1)
+		wsBaseUrl := strings.Replace(serviceURL, "http", "ws", 1)
 		var ok bool
 		var pubkey string
 		if pubkey, ok, err = auth.Validate(env.Event, ws.Challenge(),

@@ -40,9 +40,9 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 	}
 	go func() {
 		defer func() {
-			log.T.Ln("closing query chan", f.ToObject().String(), b.Path)
+			// log.T.Ln("closing query chan", f.ToObject().String(), b.Path)
 			close(ch)
-			log.T.Ln("closing access chan", f.ToObject().String(), b.Path)
+			// log.T.Ln("closing access chan", f.ToObject().String(), b.Path)
 			close(accessChan)
 			// log.I.Ln("query goroutine terminated")
 		}()

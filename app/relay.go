@@ -17,7 +17,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/gorilla/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
-	"mleku.dev/git/atomic"
 )
 
 var Version = "v0.0.1"
@@ -55,7 +54,6 @@ type Relay struct {
 	Ctx                    context.T
 	WG                     *sync.WaitGroup
 	Cancel                 context.F
-	ServiceURL             atomic.String
 	RejectEvent            []RejectEvent
 	RejectFilter           []RejectFilter
 	RejectCountFilter      []RejectFilter

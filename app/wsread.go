@@ -10,11 +10,12 @@ import (
 )
 
 type readParams struct {
-	c    context.T
-	kill func()
-	ws   *relayws.WebSocket
-	conn *websocket.Conn
-	r    *http.Request
+	c          context.T
+	kill       func()
+	ws         *relayws.WebSocket
+	conn       *websocket.Conn
+	r          *http.Request
+	serviceURL string
 }
 
 func (rl *Relay) websocketReadMessages(p readParams) {
@@ -74,7 +75,7 @@ func (rl *Relay) websocketReadMessages(p readParams) {
 			continue
 		}
 		// log.I.Ln("received message", string(message), p.ws.RealRemote())
-		if err = rl.wsProcessMessages(message, p.c, p.kill, p.ws); err != nil {
+		if err = rl.wsProcessMessages(message, p.c, p.kill, p.ws, p.serviceURL); err != nil {
 		}
 	}
 }

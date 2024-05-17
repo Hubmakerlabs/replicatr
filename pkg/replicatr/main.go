@@ -186,7 +186,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		// log.I.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
-		if args.Listen != "" {
+		if len(args.Listen) > 0 {
 			conf.Listen = args.Listen
 		}
 		if args.Profile != "" {
@@ -437,19 +437,32 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
 	// run the chat ACL initialization
 	rl.Init()
-	serv := http.Server{
-		Addr:    conf.Listen,
-		Handler: rl,
+	var servs []http.Server
+	for i := range conf.Listen {
+		serv := http.Server{
+			Addr:    conf.Listen[i],
+			Handler: rl,
+		}
+		servs = append(servs, serv)
 	}
 	go func() {
 		select {
 		case <-rl.Ctx.Done():
-			chk.E(serv.Close())
+			for i := range servs {
+				chk.E(servs[i].Close())
+
+			}
 		}
 		wg.Wait()
 		log.I.Ln("relay now cleanly shut down")
 	}()
-	wg.Add(1)
 	log.I.Ln("listening on", conf.Listen)
-	chk.E(serv.ListenAndServe())
+	for i := range servs {
+		go func() {
+			wg.Add(1)
+			chk.E(servs[i].ListenAndServe())
+			wg.Done()
+		}()
+	}
+	wg.Wait()
 }
