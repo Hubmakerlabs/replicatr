@@ -53,7 +53,7 @@ func Blower(args *Config) int {
 			// 	select {
 			// 	case <-upRelay.AuthRequired:
 			// 		log.T.Ln("authing to up relay")
-			// 		if err = upRelay.Auth(c,
+			// 		if err = upRelay.IsAuthed(c,
 			// 			func(evt *event.T) error {
 			// 				return evt.Sign(args.SeckeyHex)
 			// 			}); chk.D(err) {

@@ -94,6 +94,9 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	}
 	switch env := en.(type) {
 	case *eventenvelope.T:
+		if !rl.IsAuthed(c, "EVENT") {
+			return
+		}
 		// reject old dated events according to nip11
 		if env.Event.CreatedAt <= rl.Info.Limitation.Oldest {
 			log.D.F("rejecting event with date: %s %s %s",
@@ -161,12 +164,15 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		} else {
 			ok = true
 		}
-		ws.WriteEnvelope(&okenvelope.T{
+		chk.E(ws.WriteEnvelope(&okenvelope.T{
 			ID:     env.Event.ID,
 			OK:     ok,
 			Reason: reason,
-		})
+		}))
 	case *countenvelope.Request:
+		if !rl.IsAuthed(c, "COUNT") {
+			return
+		}
 		if rl.CountEvents == nil {
 			chk.E(ws.WriteEnvelope(&closedenvelope.T{
 				ID:     env.ID,
@@ -183,6 +189,9 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			Count: total,
 		}))
 	case *reqenvelope.T:
+		if !rl.IsAuthed(c, "REQ") {
+			return
+		}
 		wg := sync.WaitGroup{}
 		wg.Add(len(env.Filters))
 		// a context just for the "stored events" request handler

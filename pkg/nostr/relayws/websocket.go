@@ -44,7 +44,7 @@ const (
 )
 
 // WebSocket is a wrapper around a fasthttp/websocket with mutex locking and
-// NIP-42 Auth support
+// NIP-42 IsAuthed support
 type WebSocket struct {
 	Conn         *websocket.Conn
 	remote       atomic.String

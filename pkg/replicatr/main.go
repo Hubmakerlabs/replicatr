@@ -435,7 +435,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	rl.RejectFilter = append(rl.RejectFilter, rl.FilterPrivileged)
 	rl.RejectCountFilter = append(rl.RejectCountFilter, rl.FilterPrivileged)
 	rl.OverrideDeletion = append(rl.OverrideDeletion, rl.OverrideDelete)
-	// rl.OverwriteFilter = append(rl.OverwriteFilter, app.LimitAuthorsAndIDs(20, 20))
 	// run the chat ACL initialization
 	rl.Init()
 	serv := http.Server{

@@ -169,7 +169,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			// log.I.Ln(q.queryFilter.ToObject().String())
 			q := q
 			evt, ok := <-q.results
-			log.I.Ln("received result", ok, evt)
+			// log.I.Ln("received result", ok, evt)
 			if ok {
 				// log.T.F("adding event to queue [%s, %d]", evt.Ev.ID, evt.Ser.Uint64())
 				emitQueue = append(emitQueue,

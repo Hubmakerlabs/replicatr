@@ -124,7 +124,7 @@ var (
 	NIP94                          = FileMetadata
 	HTTPFileStorageIntegration     = NIP{"HTTP File Storage Integration", 96}
 	NIP96                          = HTTPFileStorageIntegration
-	HTTPAuth                       = NIP{"HTTP Auth", 98}
+	HTTPAuth                       = NIP{"HTTP IsAuthed", 98}
 	NIP98                          = HTTPAuth
 	ClassifiedListings             = NIP{"Classified Listings", 99}
 	NIP99                          = ClassifiedListings

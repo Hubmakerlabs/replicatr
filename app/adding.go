@@ -12,7 +12,9 @@ import (
 // AddEvent sends an event through then normal add pipeline, as if it was
 // received from a websocket.
 func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
-	// log.I.Ln("adding event")
+	if !rl.IsAuthed(c, "add event") {
+		return
+	}
 	if ev == nil {
 		err = errors.New("error: event is nil")
 		log.E.Ln(err)

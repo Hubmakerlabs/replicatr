@@ -107,7 +107,7 @@ func Blower(args *Config) int {
 			// 	select {
 			// 	case <-upRelay.AuthRequired:
 			// 		log.T.Ln("authing to up relay")
-			// 		if err = upRelay.Auth(c,
+			// 		if err = upRelay.IsAuthed(c,
 			// 			func(evt *event.T) error {
 			// 				return evt.Sign(args.SeckeyHex)
 			// 			}); chk.D(err) {
@@ -128,9 +128,9 @@ func Blower(args *Config) int {
 			// 	return 1
 			// }
 		}
-		log.I.F("%d %6d bytes %0.6fGb %0.3f %s",
+		log.I.F("%d %6d bytes %0.6fGb %0.3f done %s",
 			counter, len(b), float64(position)/float64(units.Gb),
-			float64(position)/float64(totalSize)*100,
+			float64(position)/float64(totalSize),
 			ev.ID.String(),
 		)
 		// }(rb, counter)

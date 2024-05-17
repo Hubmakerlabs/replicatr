@@ -38,13 +38,16 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 		log.E.Ln(err)
 		return
 	}
+	if !rl.IsAuthed(h.c, "filter") {
+		return
+	}
 	// then check if we'll reject this filter (we apply this after overwriting
 	// because we may, for example, remove some things from the incoming filters
 	// that we know we don't support, and then if the end result is an empty
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(h.c, h.id, h.f); rej {
-			return log.D.Err("%s", normalize.Reason(msg, "blocked"))
+			return log.D.Err("%s %s", normalize.Reason(msg, "blocked"), h.ws.AuthPubKey())
 		}
 	}
 	// run the functions to query events (generally just one, but we might be

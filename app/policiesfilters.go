@@ -31,6 +31,9 @@ func NoEmptyFilters(c context.T, id subscriptionid.T, f *filter.T) (reject bool,
 	if f.Until != nil {
 		cf++
 	}
+	if f.Limit != nil {
+		cf++
+	}
 	if cf == 0 {
 		return true, "can't handle empty filters"
 	}

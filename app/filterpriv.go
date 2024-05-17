@@ -1,14 +1,9 @@
 package app
 
 import (
-	"time"
-
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/auth"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/closedenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kinds"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 )
@@ -41,48 +36,10 @@ func (rl *Relay) FilterPrivileged(c context.T, id subscriptionid.T,
 		return
 	}
 	// check if the request filter kinds are privileged
-	privileged := kinds.IsPrivileged(f.Kinds...)
-	// if access requires auth, check that auth is present.
-	if (privileged && authRequired) && ws.AuthPubKey() == "" {
-		var reason string
-		if privileged {
-			reason = "this relay only sends privileged events to parties to the event"
-		} else if authRequired {
-			reason = "this relay requires authentication for all access"
-		}
-		log.I.Ln(reason)
-		chk.E(ws.WriteEnvelope(&closedenvelope.T{
-			ID:     id,
-			Reason: normalize.Reason(reason, auth.Required),
-		}))
-		// send out authorization request
-		RequestAuth(c, "REQ")
-	out:
-		for {
-			select {
-			case <-ws.Authed:
-				log.I.Ln("user authed", ws.RealRemote(), ws.AuthPubKey())
-				break out
-			case <-c.Done():
-				log.D.Ln("context canceled while waiting for auth")
-				break out
-			case <-time.After(5 * time.Second):
-				if ws.AuthPubKey() == "" {
-					return true,
-						log.I.Err("Authorization timeout from ",
-							ws.RealRemote()).Error()
-				}
-			}
-		}
+	if !kinds.IsPrivileged(f.Kinds...) {
+		return
 	}
-	// if the user has now authed we can check if they have privileges
-	if authRequired && ws.AuthPubKey() == "" {
-		// acl enabled but no pubkey, unauthorized
-		log.I.Ln("waited for auth but none came")
-		return true, "Unauthorized"
-	}
-	if !privileged {
-		// no ACL in force and not a privileged message type, accept
+	if !rl.IsAuthed(c, "privileged") {
 		return
 	}
 	receivers, _ := f.Tags["#p"]
