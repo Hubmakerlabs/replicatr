@@ -51,7 +51,10 @@ func GetBackend(c context.T, wg *sync.WaitGroup, L1 *badger.Backend,
 //
 // required params are address, canister ID and the badger event store size
 // limit (which can be 0)
-func (b *Backend) Init() (err error) { return b.Backend.Init() }
+func (b *Backend) Init() (err error) {
+	log.I.Ln("initializing badger/IC hybrid event store")
+	return b.Backend.Init()
+}
 
 // Close the connection to the database.
 // IC is a request/response API authing at each request.

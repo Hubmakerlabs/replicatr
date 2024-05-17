@@ -155,17 +155,15 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		log.W.Ln("******* configuration missing, creating new one at", configPath,
 			"- ensure that it is to as you require")
 	}
-	// generate a relay identity key if one wasn't given
-	if args.SecKey == "" {
-		args.SecKey = keys.GeneratePrivateKey()
-	}
 	// initialize configuration with whatever has been read from the CLI.
 	if args.InitCfgCmd != nil {
-		if args.Pubkey, err = keys.GetPublicKey(args.SecKey); chk.E(err) {
-		}
 		apputil.EnsureDir(configPath)
 		// reload the args to default
 		args = *base.GetDefaultConfig()
+		// generate a relay identity key if one wasn't given
+		args.SecKey = keys.GeneratePrivateKey()
+		if args.Pubkey, err = keys.GetPublicKey(args.SecKey); chk.E(err) {
+		}
 		// overlay what is present on the commandline
 		arg.MustParse(&args)
 		// derive the info from the state of the config
@@ -185,7 +183,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			os.Exit(1)
 		}
 		log.I.Ln("loaded configuration from", configPath)
-		// log.I.S(conf)
 		// if fields are empty, overwrite them with the cli args file
 		// versions
 		if len(args.Listen) > 0 {
@@ -216,7 +213,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if len(args.Owners) == 0 {
 			conf.Owners = append(conf.Owners, args.Owners...)
 		}
-		if args.SecKey == "" {
+		if args.SecKey != "" {
 			conf.SecKey = args.SecKey
 		}
 		if args.DBSizeLimit != 0 {
@@ -252,7 +249,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			conf.AuthRequired = true
 			inf.Limitation.AuthRequired = true
 		}
-		if args.EventStore == "" {
+		if args.EventStore != "" {
 			conf.EventStore = args.EventStore
 		}
 		if args.MemLimit > 0 {
@@ -265,6 +262,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			conf.MaxProcs = args.MaxProcs
 		}
 	}
+	log.I.Ln(conf.SecKey)
 	_ = debug.SetGCPercent(conf.GCRatio)
 	runtime.GOMAXPROCS(conf.MaxProcs)
 	log.I.Ln("starting", AppName)
@@ -373,7 +371,14 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	case "iconly":
 		db = icDB
 	case "ic":
+		wg.Add(2)
 		db = IC.GetBackend(c, &wg, badgerDB, icDB)
+		interrupt.AddHandler(func() {
+			// badgerDB.DB.Flatten(8)
+			// b2.DB.Flatten(8)
+			badgerDB.DB.Close()
+			wg.Done()
+		})
 	case "badger":
 		db = badgerDB
 		wg.Add(1)

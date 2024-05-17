@@ -16,6 +16,7 @@ import (
 )
 
 func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
+	log.I.Ln("saving event to badger", ev.ToObject().String())
 	// make sure Close waits for this to complete
 	b.WG.Add(1)
 	defer b.WG.Done()
