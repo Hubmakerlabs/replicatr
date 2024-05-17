@@ -112,7 +112,6 @@ func (env *T) Unmarshal(buf *text.Buffer) (err error) {
 	// contain paired brackets, braces and quotes.
 	var eventObj []byte
 	if eventObj, err = buf.ReadEnclosed(); chk.D(err) {
-		fmt.Println(string(buf.Buf))
 		return
 	}
 	// allocate an event to unmarshal into

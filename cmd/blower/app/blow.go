@@ -83,10 +83,10 @@ func Blower(args *Config) int {
 				break retry
 			}
 			log.E.Ln(err.Error())
-			if strings.Contains(err.Error(), "failed to flush writer") {
+			switch {
+			case strings.Contains(err.Error(), "failed to flush writer"):
 				return 1
-			}
-			if strings.Contains(err.Error(), "connection closed") {
+			case strings.Contains(err.Error(), "connection closed"):
 				// upRelay.Close()
 				// upRelay.Connection.Conn.Close()
 				upRelay.ConnectionContextCancel()
@@ -94,6 +94,8 @@ func Blower(args *Config) int {
 					args.UploadRelay, args.SeckeyHex); chk.E(err) {
 					break retry
 				}
+			default:
+				break retry
 			}
 			// if err != nil {
 			// 	break retry

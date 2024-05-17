@@ -296,7 +296,7 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 		}
 
 		message := buf.Bytes()
-		log.I.F("{%s} received %v", r.URL(), string(message))
+		// log.I.F("{%s} received %v", r.URL(), string(message))
 		var envelope enveloper.I
 		if envelope, _, err = envelopes.ProcessEnvelope(message); chk.E(err) {
 			log.I.Ln(string(message))
@@ -417,8 +417,8 @@ func (r *T) Auth(c context.T, sign func(ev *event.T) error) error {
 func (r *T) publish(c context.T, id string, env enveloper.I) (err error) {
 	var cancel context.F
 	if _, ok := c.Deadline(); !ok {
-		// if no timeout is set, force it to 7 seconds
-		c, cancel = context.Timeout(c, 7*time.Second)
+		// if no timeout is set, force it to 4 seconds
+		c, cancel = context.Timeout(c, 4*time.Second)
 		defer cancel()
 	} else {
 		// otherwise make the context cancellable so we can stop everything upon
