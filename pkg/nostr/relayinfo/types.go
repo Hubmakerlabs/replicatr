@@ -265,7 +265,7 @@ type T struct {
 	Software       string      `json:"software"`
 	Version        string      `json:"version"`
 	Limitation     Limits      `json:"limitation"`
-	Retention      object.T    `json:"retention"`
+	Retention      []object.T  `json:"retention"`
 	RelayCountries tag.T       `json:"relay_countries"`
 	LanguageTags   tag.T       `json:"language_tags"`
 	Tags           tag.T       `json:"tags"`

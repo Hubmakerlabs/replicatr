@@ -40,7 +40,7 @@ func Blower(args *Config) int {
 	var counter, position int
 	var start int64
 	var u *client.T
-	if u, err = client.Connect(c, args.UploadRelay); chk.E(err) {
+	if u, err = client.ConnectWithAuth(c, args.UploadRelay, args.SeckeyHex); chk.E(err) {
 		os.Exit(1)
 	}
 	defer u.ConnectionContextCancel()
@@ -85,8 +85,8 @@ func Blower(args *Config) int {
 				// upRelay.Close()
 				// upRelay.Connection.Conn.Close()
 				upRelay.ConnectionContextCancel()
-				if upRelay, err = client.Connect(c,
-					args.UploadRelay); chk.E(err) {
+				if upRelay, err = client.ConnectWithAuth(c,
+					args.UploadRelay, args.SeckeyHex); chk.E(err) {
 					break retry
 				}
 			}

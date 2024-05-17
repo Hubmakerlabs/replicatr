@@ -3,6 +3,7 @@ package relayinfo
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -50,11 +51,21 @@ func Fetch(c context.T, u string) (info *T, err error) {
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
-
+	var b []byte
+	b, err = io.ReadAll(resp.Body)
+	log.I.Ln(string(b))
+	// var inf any
+	// if err = json.NewDecoder(resp.Body).Decode(info); err != nil {
+	// 	return nil, fmt.Errorf("invalid json: %w", err)
+	// }
+	// log.I.S(inf)
 	info = &T{}
-	if err = json.NewDecoder(resp.Body).Decode(info); err != nil {
-		return nil, fmt.Errorf("invalid json: %w", err)
+	if err = json.Unmarshal(b, info); chk.E(err) {
+		return
 	}
+	// if err = json.NewDecoder(resp.Body).Decode(info); err != nil {
+	// 	return nil, fmt.Errorf("invalid json: %w", err)
+	// }
 
 	return info, nil
 }

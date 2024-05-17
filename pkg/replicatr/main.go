@@ -90,7 +90,7 @@ func GetInfo(args *base.Config) *relayinfo.T {
 			RestrictedWrites: args.AuthRequired,
 			MaxSubscriptions: 50,
 		},
-		Retention:      object.T{},
+		Retention:      []object.T{},
 		RelayCountries: tag.T{},
 		LanguageTags:   tag.T{},
 		Tags:           tag.T{},

@@ -44,7 +44,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 					return
 				}
 			}
-			log.I.Ln("added event", ev.ID)
+			log.I.Ln("added event", ev.ID, "for", GetAuthed(c))
 		}
 		for _, ons := range rl.OnEventSaved {
 			ons(c, ev)
