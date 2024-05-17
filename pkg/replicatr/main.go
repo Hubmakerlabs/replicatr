@@ -216,7 +216,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if len(args.Owners) == 0 {
 			conf.Owners = append(conf.Owners, args.Owners...)
 		}
-		if args.SecKey == "" {
+		if args.SecKey != "" {
 			conf.SecKey = args.SecKey
 		}
 		if args.DBSizeLimit != 0 {

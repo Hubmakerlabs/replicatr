@@ -8,6 +8,7 @@ import (
 	"errors"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -16,6 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"mleku.dev/git/slog"
 )
 
@@ -40,6 +42,41 @@ func (b *Backend) Init() (err error) {
 	if err = b.L2.Init(); chk.E(err) {
 		return
 	}
+
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		last := timestamp.Now()
+	out:
+		for {
+			select {
+			case <-b.Ctx.Done():
+				b.Close()
+				return
+			case <-ticker.C:
+				until := timestamp.Now()
+				var ch event.C
+				if ch, err = b.L2.QueryEvents(b.Ctx, &filter.T{Since: last.Ptr(), Until: until.Ptr()}); chk.E(err) {
+					continue out
+				}
+				last = until
+				go func() {
+					for {
+						select {
+						case <-b.Ctx.Done():
+							b.Close()
+							return
+						case ev := <-ch:
+							if ev == nil {
+								return
+							} else {
+								chk.T(b.L1.SaveEvent(b.Ctx, ev))
+							}
+						}
+					}
+				}()
+			}
+		}
+	}()
 	return
 }
 
