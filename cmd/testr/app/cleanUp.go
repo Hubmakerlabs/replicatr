@@ -17,7 +17,7 @@ func CanisterCleanUp(id string, addr string, SecKey string) error {
 
 	//clear all events from canister
 	var result string
-	if result, err = b.ClearEvents(); chk.E(err) {
+	if err = b.ClearEvents(); chk.E(err) {
 		return err
 	} else {
 		fmt.Printf("from canister %v: \"%v\"\n", id, result)

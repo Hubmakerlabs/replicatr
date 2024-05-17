@@ -1,6 +1,6 @@
 
 
-use std::{cell::{Ref, RefCell}, rc::Rc};
+
 
 use candid::Principal;
 use ic_cdk::caller;
@@ -9,11 +9,8 @@ use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine};
 
 use crate::{PERMISSIONS,owner::OWNER};
 
-use ic_cdk_macros::{query, update,init};
-use ic_stable_structures::{
-    memory_manager::{MemoryId, MemoryManager, VirtualMemory},
-    DefaultMemoryImpl, StableBTreeMap,
-};
+use ic_cdk_macros::init;
+
 
 
 
@@ -57,45 +54,47 @@ pub fn is_owner() -> Result<(), String> {
     }
 }
 
-#[update(guard = "is_owner")]
-pub fn add_user(pub_key : String,perm : bool) -> String {
+
+pub fn add_user_acl(pub_key : String,perm : bool) -> Result<(),String> {
     let principal_res = string_to_principal(pub_key);
-    if let Ok(principal) = principal_res {
-        PERMISSIONS.with(|p| p.borrow_mut().insert(principal, perm));
-        "success".to_string()
-    } else {
-        principal_res.err().unwrap()
+    match principal_res {
+        Ok(principal) => {
+            PERMISSIONS.with(|p| p.borrow_mut().insert(principal, perm));
+            Ok(())
+        },
+        Err(e) => Err(e),
     }
 }
 
-#[update(guard = "is_owner")]
-pub fn remove_user(pub_key : String) -> String{
+
+pub fn remove_user_acl(pub_key : String) -> Result<(),String>{
     
 
     let principal_res = string_to_principal(pub_key);
-    if let Ok(principal) = principal_res {
-        PERMISSIONS.with(|p| p.borrow_mut().remove(&principal));
-        "success".to_string()
-    } else {
-        principal_res.err().unwrap()
+    match principal_res {
+        Ok(principal) => {
+            PERMISSIONS.with(|p| p.borrow_mut().remove(&principal));
+            Ok(())
+        },
+        Err(e) => Err(e),
     }
 }
 
 
-#[query]
-pub fn get_permission() -> String {
+
+pub fn get_permission_acl() -> Result<String,String> {
     let principal: Principal 
     = caller();
     let permissions = PERMISSIONS.with(|p| p.borrow().get(&principal));
-    if let Some(permission) = permissions {
-        if permission == true {
-            "Owner".to_string()
+    match permissions {
+        Some(permission) => if permission == true {
+            Ok("Owner".to_string())
         } else {
-            "User".to_string()
-        }
-    } else {
-        "Unauthorized/Error".to_string()
+            Ok("User".to_string())
+        },
+        None => Err("Unauthorized".to_string()),
     }
+
 }
 #[init]
 pub fn init() {

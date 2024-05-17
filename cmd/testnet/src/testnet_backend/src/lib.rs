@@ -15,6 +15,7 @@ pub mod methods;
 pub mod structs;
 pub mod acl;
 pub mod owner;
+pub mod db;
 
 pub type Memory = VirtualMemory<DefaultMemoryImpl>;
 pub type StorageRef<K, V> = RefCell<StableBTreeMap<K, V, Memory>>;

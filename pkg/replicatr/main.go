@@ -133,7 +133,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 	}
 	// set logging level if non-default was set in args
-	if args.LogLevel != "info" {
+	if args.LogLevel != "" {
 		for i := range slog.LevelSpecs {
 			if slog.LevelSpecs[i].Name[:1] == strings.ToLower(args.LogLevel[:1]) {
 				slog.SetLogLevel(i)
@@ -148,11 +148,13 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	}
 	dataDir := filepath.Join(dataDirBase, args.Profile)
 	log.D.F("using profile directory: %s", dataDir)
-	if !apputil.FileExists(dataDir) {
-		args.InitCfgCmd = &base.InitCfg{}
-	}
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
+	if _, serr := os.Stat(configPath); serr != nil {
+		args.InitCfgCmd = &base.InitCfg{}
+		log.W.Ln("******* configuration missing, creating new one at", configPath,
+			"- ensure that it is to as you require")
+	}
 	// generate a relay identity key if one wasn't given
 	if args.SecKey == "" {
 		args.SecKey = keys.GeneratePrivateKey()
@@ -250,7 +252,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			conf.AuthRequired = true
 			inf.Limitation.AuthRequired = true
 		}
-		if !(args.EventStore == "badger" || args.EventStore == "") {
+		if args.EventStore == "" {
 			conf.EventStore = args.EventStore
 		}
 		if args.MemLimit > 0 {
@@ -329,7 +331,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		}
 		perm, err := a.GetPermission()
 		if err != nil {
-			log.E.F("Error getting Permission: %s\n", err)
+			log.E.F("%s\n", err)
 			os.Exit(1)
 		}
 		fmt.Printf("This relay has %s level access\n", perm)

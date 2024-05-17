@@ -1,13 +1,15 @@
 package agent
 
+import "time"
+
 func (b *Backend) AddUser(pubKey string, perm bool) (err error) {
 	methodName := "add_user"
-	args := []any{pubKey, perm}
-	var result string
+	args := []any{pubKey, perm, time.Now().UnixNano()}
+	var result *string
 	err = b.Agent.Call(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
 		return
-	} else if result != "success" {
+	} else if result != nil {
 		err = log.E.Err("failed to add user")
 		return
 	}
@@ -16,12 +18,12 @@ func (b *Backend) AddUser(pubKey string, perm bool) (err error) {
 
 func (b *Backend) RemoveUser(pubKey string) (err error) {
 	methodName := "remove_user"
-	args := []any{pubKey}
-	var result string
+	args := []any{pubKey, time.Now().UnixNano()}
+	var result *string
 	err = b.Agent.Call(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
 		return
-	} else if result != "success" {
+	} else if result != nil {
 		err = log.E.Err("failed to remove user")
 		return
 	}
@@ -30,7 +32,10 @@ func (b *Backend) RemoveUser(pubKey string) (err error) {
 
 func (b *Backend) GetPermission() (result string, err error) {
 	methodName := "get_permission"
-	args := []any{}
+	args := []any{time.Now().UnixNano()}
 	err = b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
-	return
+	if err != nil {
+		return "", err
+	}
+	return result, nil
 }

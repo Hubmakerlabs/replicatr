@@ -64,9 +64,9 @@ type Config struct {
 	GetPermissionCmd *GetPermission `arg:"subcommand:getpermission" json:"-" help:"get permission of a relay"`
 	Wipe             *WipeBDB       `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
 	Rescan           *RescanAC      `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
-	Listen           []string       `arg:"-l,--listen,separate"  json:"listen" help:"network address to listen on"`                                    // default:"[0.0.0.0:3334]"
-	EventStore       string         `arg:"-e,--eventstore"  json:"eventstore" help:"select event store backend [ic,badger,iconly]"`                    // default:"badger"
-	CanisterAddr     string         `arg:"-C,--canisteraddr"  json:"canister_addr" help:"IC canister address to use (for local, use 127.0.0.1:46847)"` // default:"https://icp0.io/"
+	Listen           []string       `arg:"-l,--listen,separate" json:"listen" help:"network address to listen on"`
+	EventStore       string         `arg:"-e,--eventstore" json:"eventstore" help:"select event store backend [ic,badger,iconly]"`
+	CanisterAddr     string         `arg:"-C,--canisteraddr" json:"canister_addr" help:"IC canister address to use (for local, use http://127.0.0.1:<port number>)"`
 	CanisterId       string         `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
 	Profile          string         `arg:"-p,--profile" json:"-"  help:"profile name to use for storage"` // default:"replicatr"
 	Name             string         `arg:"-n,--name" json:"name"  help:"name of relay for NIP-11"`        // default:"replicatr relay"
@@ -87,22 +87,22 @@ type Config struct {
 	AllowIPs []string `arg:"-A,--allow,separate" json:"allow_ip" help:"IP addresses that are always allowed to access"`
 	// DBSizeLimit configures a target maximum size to maintain the local
 	// event store cache at, in megabytes (1,000,000 bytes).
-	DBSizeLimit int `arg:"-S,--sizelimit" json:"db_size_limit"  help:"set the maximum size of the badger event store in bytes"` // default:"0"
+	DBSizeLimit int `arg:"-S,--sizelimit" json:"db_size_limit" help:"set the maximum size of the badger event store in bytes"` // default:"0"
 	// DBLowWater is the proportion of the DBSizeLimit to prune the database
 	// down to when performing a garbage collection run.
-	DBLowWater int `arg:"-L,--lowwater" json:"db_low_water"  help:"set target percentage for database size during garbage collection"` // default:"86"
+	DBLowWater int `arg:"-L,--lowwater" json:"db_low_water" help:"set target percentage for database size during garbage collection"` // default:"86"
 	// DBHighWater is the proportion of the DBSizeLimit at which a garbage
 	// collection run is triggered.
-	DBHighWater int `arg:"-H,--highwater" json:"db_high_water"  help:"set garbage collection trigger percentage for database size during garbage collection"` // default:"92"
+	DBHighWater int `arg:"-H,--highwater" json:"db_high_water" help:"set garbage collection trigger percentage for database size during garbage collection"` // default:"92"
 	// GCFrequency is the frequency to run a check on the database size and
 	// if it breaches DBHighWater to prune it back to DBLowWater percentage
 	// of DBSizeLimit in minutes.
-	GCFrequency int    `arg:"-G,--gcfreq" json:"gc_frequency"  help:"frequency in seconds to check if database needs garbage collection"`           // default:"300"
-	MaxProcs    int    `arg:"--maxprocs" json:"max_procs"  help:"maximum number of goroutines to use"`                                              // default:"128"
+	GCFrequency int    `arg:"-G,--gcfreq" json:"gc_frequency" help:"frequency in seconds to check if database needs garbage collection"`           // default:"300"
+	MaxProcs    int    `arg:"--maxprocs" json:"max_procs" help:"maximum number of goroutines to use"`                                              // default:"128"
 	LogLevel    string `arg:"--loglevel"  help:"set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)"` // default:"info"
 	PProf       bool   `arg:"--pprof" help:"enable CPU and memory profiling"`
-	GCRatio     int    `arg:"--gcratio"  help:"set GC percentage for triggering GC sweeps"`             // default:"100"
-	MemLimit    int64  `arg:"--memlimit"  help:"set memory limit on process to constrain memory usage"` // default:"500000000"
+	GCRatio     int    `arg:"--gcratio" help:"set GC percentage for triggering GC sweeps"`             // default:"100"
+	MemLimit    int64  `arg:"--memlimit" help:"set memory limit on process to constrain memory usage"` // default:"500000000"
 }
 
 func (c *Config) Save(filename string) (err error) {

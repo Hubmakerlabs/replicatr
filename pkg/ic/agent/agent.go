@@ -5,11 +5,11 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	agent_go "github.com/aviate-labs/agent-go"
 	"github.com/aviate-labs/agent-go/identity"
 	"github.com/aviate-labs/agent-go/principal"
+
+	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	sec "github.com/aviate-labs/secp256k1"
@@ -75,24 +75,34 @@ func New(c context.T, cid, canAddr, secKey string) (a *Backend, err error) {
 	return
 }
 
-func (b *Backend) SaveCandidEvent(event Event) (result string, err error) {
+func (b *Backend) SaveCandidEvent(event Event) (err error) {
+
 	methodName := "save_event"
-	args := []any{event}
-	if err = b.Agent.Call(b.CanisterID, methodName, args,
-		[]any{&result}); chk.E(err) {
-		return
+	var result *string
+	args := []any{event, time.Now().UnixNano()}
+	err = b.Agent.Call(b.CanisterID, methodName, args,
+		[]any{&result})
+	if err == nil && result != nil {
+		err = log.E.Err("Unable to Store Event")
 	}
-	if len(result) > 0 {
-		return
+	return
+}
+
+func (b *Backend) DeleteCandidEvent(event Event) (err error) {
+	methodName := "delete_event"
+	args := []any{event, time.Now().UnixNano()}
+	var result *string
+	err = b.Agent.Call(b.CanisterID, methodName, args,
+		[]any{&result})
+	if err == nil && result != nil {
+		err = log.E.Err("Unable to Delete Event")
 	}
-	err = log.E.Err("unexpected result format")
 	return
 }
 
 func (b *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
 	methodName := "get_events"
-	args := []any{*filter}
-	// log.T.S(filter)
+	args := []any{*filter, time.Now().UnixNano()}
 	var result []Event
 	err := b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
@@ -102,9 +112,8 @@ func (b *Backend) GetCandidEvent(filter *Filter) ([]Event, error) {
 }
 
 func (b *Backend) CountCandidEvent(filter *Filter) (int, error) {
-	methodName := "get_events_count"
-	args := []any{*filter}
-	// log.T.S(filter)
+	methodName := "count_events"
+	args := []any{*filter, time.Now().UnixNano()}
 	var result int
 	err := b.Agent.Query(b.CanisterID, methodName, args, []any{&result})
 	if err != nil {
@@ -113,76 +122,15 @@ func (b *Backend) CountCandidEvent(filter *Filter) (int, error) {
 	return result, err
 }
 
-func (b *Backend) QueryEvents(f *filter.T) (ch event.C, err error) {
-
-	if f == nil {
-		err = log.E.Err("nil filter for query")
-		return
-	}
-	var candidEvents []Event
-	if candidEvents, err = b.GetCandidEvent(FilterToCandid(f)); chk.E(err) {
-		return
-	}
-	log.I.Ln("got", len(candidEvents), "events")
-	for i, e := range candidEvents {
-		select {
-		case <-b.Ctx.Done():
-			return
-		default:
-		}
-		log.I.Ln("sending event", i)
-		ch <- CandidToEvent(&e)
-	}
-	log.I.Ln("done sending events")
-	return
-}
-
-func (b *Backend) SaveEvent(e *event.T) (err error) {
-	select {
-	case <-b.Ctx.Done():
-		return
-	default:
-	}
-	var res string
-	if res, err = b.SaveCandidEvent(EventToCandid(e)); chk.E(err) {
-		return
-	}
-	if res != "success" {
-		// this is unlikely to happen but since it could.
-		err = log.E.Err("failed to store event", e.ToObject().String())
-	}
-	return
-}
-
-// DeleteEvent deletes an event matching the given event.
-// todo: not yet implemented, but there is already a backend function for this
-func (b *Backend) DeleteEvent(ev *event.T) (err error) {
-	log.W.Ln("delete events on IC not yet implemented")
-	// todo: if event is not found, return eventstore.ErrEventNotExists
-	return
-}
-
-// CountEvents counts how many events match the filter in the IC.
-// todo: use the proper count events API call in the canister
-func (b *Backend) CountEvents(f *filter.T) (count int, err error) {
-	if f == nil {
-		err = log.E.Err("nil filter for count query")
-		return
-	}
-	count, err = b.CountCandidEvent(FilterToCandid(f))
-	return
-}
-
-func (b *Backend) ClearEvents() (result string, err error) {
+func (b *Backend) ClearCandidEvents() (err error) {
 	methodName := "clear_events"
-	args := []any{}
-	if err = b.Agent.Call(b.CanisterID, methodName, args, []any{&result}); chk.E(err) {
-		return "", err
+	var result *string
+	args := []any{time.Now().UnixNano()}
+	err = b.Agent.Call(b.CanisterID, methodName, args, []any{&result})
+
+	if err == nil && result != nil {
+		err = log.E.Err("Unable to Clear Events")
 	}
 
-	if len(result) == 0 {
-		return "", log.E.Err("unexpected result format from clear_events")
-	}
-
-	return result, nil
+	return
 }
