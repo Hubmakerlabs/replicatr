@@ -174,7 +174,6 @@ func (sub *T) Sub(_ context.T, f filters.T) {
 // Fire sends the "REQ" command to the relay.
 func (sub *T) Fire() error {
 	id := sub.GetID()
-
 	var reqb []byte
 	if sub.CountResult == nil {
 		reqb, _ = (&reqenvelope.T{
@@ -188,7 +187,6 @@ func (sub *T) Fire() error {
 		}).MarshalJSON()
 	}
 	log.D.F("{%s} sending %v", sub.Relay.URL(), string(reqb))
-
 	sub.live.Store(true)
 	if err := <-sub.Relay.Write(reqb); err != nil {
 		sub.Cancel()

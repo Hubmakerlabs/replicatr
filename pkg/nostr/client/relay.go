@@ -21,6 +21,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/okenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
@@ -52,6 +53,8 @@ type T struct {
 	done                          sync.Once
 	challenge                     string // NIP-42 challenge, only keep the last
 	AuthRequired                  chan struct{}
+	AuthEventID                   eventid.T
+	Authed                        chan struct{}
 	notices                       chan string // NIP-01 NOTICEs
 	okCallbacks                   *xsync.MapOf[string, func(bool, string)]
 	writeQueue                    chan writeRequest
@@ -84,6 +87,7 @@ func NewRelay(c context.T, url string, opts ...Option) *T {
 		writeQueue:                    make(chan writeRequest),
 		subscriptionChannelCloseQueue: make(chan *subscription.T),
 		AuthRequired:                  make(chan struct{}),
+		Authed:                        make(chan struct{}),
 	}
 
 	for _, opt := range opts {
@@ -115,11 +119,11 @@ func Connect(c context.T, url string, opts ...Option) (*T, error) {
 func ConnectWithAuth(c context.T, url, sec string,
 	opts ...Option) (rl *T, err error) {
 
-	var inf *relayinfo.T
-	if inf, err = relayinfo.Fetch(c, url); chk.E(err) {
+	if rl, err = Connect(c, url, opts...); chk.E(err) {
 		return
 	}
-	if rl, err = Connect(c, url, opts...); chk.E(err) {
+	var inf *relayinfo.T
+	if inf, err = relayinfo.Fetch(c, url); chk.E(err) {
 		return
 	}
 	// if NIP-11 doesn't say auth-required, we are done
@@ -130,6 +134,7 @@ func ConnectWithAuth(c context.T, url, sec string,
 	// the auth challenge without being prompted by a req envelope but fuck them.
 	// auth-required in nip-11 should mean auth on connect. period.
 	authed := false
+out:
 	for i := 0; i < 2; i++ {
 		// but just in case, we will do this twice if need be. The first try may
 		// time out because the relay waits for a req, or because the auth
@@ -138,15 +143,22 @@ func ConnectWithAuth(c context.T, url, sec string,
 		case <-rl.AuthRequired:
 			log.T.Ln("authing to relay")
 			if err = rl.Auth(c,
-				func(evt *event.T) error { return evt.Sign(sec) }); chk.D(err) {
+				func(evt *event.T) (err error) {
+					if err = evt.Sign(sec); chk.E(err) {
+						return
+					}
+					rl.AuthEventID = evt.ID
+					return
+				}); chk.E(err) {
 				return
 			}
-			authed = true
 		case <-time.After(5 * time.Second):
+		case <-rl.Authed:
+			log.T.Ln("authed to relay", rl.AuthEventID)
+			authed = true
 		}
 		if authed {
-			log.T.Ln("authed to relay")
-			break
+			break out
 		}
 		// to trigger this if auth wasn't immediately demanded, send out a dummy
 		// empty req.
@@ -304,8 +316,8 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 		case *authenvelope.Challenge:
 			r.challenge = env.Challenge
 			log.D.Ln("challenge", r.challenge)
-			log.I.Ln("closing auth required chan")
-			close(r.AuthRequired)
+			log.I.Ln("signalling auth required")
+			r.AuthRequired <- struct{}{}
 		case *eventenvelope.T:
 			if env.SubscriptionID == "" {
 				continue
@@ -353,6 +365,9 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 				s.CountResult <- env.Count
 			}
 		case *okenvelope.T:
+			if env.ID == r.AuthEventID {
+				close(r.Authed)
+			}
 			if okCallback, exist := r.okCallbacks.Load(env.ID.String()); exist {
 				okCallback(env.OK, env.Reason)
 			} else {
@@ -392,6 +407,7 @@ func (r *T) Auth(c context.T, sign func(ev *event.T) error) error {
 	if err := sign(authEvent); chk.D(err) {
 		return fmt.Errorf("error signing auth event: %w", err)
 	}
+	r.AuthEventID = authEvent.ID
 	return r.publish(c, authEvent.ID.String(),
 		&authenvelope.Response{Event: authEvent})
 }

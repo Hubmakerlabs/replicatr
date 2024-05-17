@@ -44,7 +44,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(h.c, h.id, h.f); rej {
-			return log.D.Err(normalize.Reason(msg, "blocked"))
+			return log.D.Err("%s", normalize.Reason(msg, "blocked"))
 		}
 	}
 	// run the functions to query events (generally just one, but we might be

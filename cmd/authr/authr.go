@@ -4,12 +4,10 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"mleku.dev/git/ec/secp256k1"
 	"mleku.dev/git/slog"
 )
@@ -37,20 +35,8 @@ func main() {
 	}
 	c := context.Bg()
 	var rl *client.T
-	if rl, err = client.Connect(c, u.String()); chk.E(err) {
+	if rl, err = client.ConnectWithAuth(c, u.String(), secKeyHex); chk.E(err) {
 		os.Exit(1)
 	}
-	log.I.Ln("connected to download relay")
-	select {
-	case <-rl.AuthRequired:
-		log.T.Ln("authing to down relay")
-		if err = rl.Auth(c,
-			func(evt *event.T) error {
-				return evt.Sign(secKeyHex)
-			}); chk.D(err) {
-			os.Exit(1)
-		}
-	case <-time.After(5 * time.Second):
-		log.E.Ln("failed to auth")
-	}
+	log.I.Ln("connected to relay with auth", rl.AuthEventID)
 }
