@@ -3,6 +3,7 @@ package app
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -58,6 +59,10 @@ func Blower(args *Config) int {
 		copy(rb, b)
 		ev := &event.T{}
 		if err = json.Unmarshal(b, ev); chk.E(err) {
+			continue
+		}
+		if string(b) != ev.ToObject().String() {
+			fmt.Printf("invalid JSON:\n%s\n%s\n", string(b), ev.ToObject().String())
 			continue
 		}
 		can := ev.ToCanonical().Bytes()

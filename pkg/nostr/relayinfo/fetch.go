@@ -53,7 +53,7 @@ func Fetch(c context.T, u string) (info *T, err error) {
 	defer resp.Body.Close()
 	var b []byte
 	b, err = io.ReadAll(resp.Body)
-	log.I.Ln(string(b))
+	// log.I.Ln(string(b))
 	// var inf any
 	// if err = json.NewDecoder(resp.Body).Decode(info); err != nil {
 	// 	return nil, fmt.Errorf("invalid json: %w", err)

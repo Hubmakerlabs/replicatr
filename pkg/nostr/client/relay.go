@@ -296,9 +296,10 @@ func (r *T) MessageReadLoop(conn *connection.C) {
 		}
 
 		message := buf.Bytes()
-		log.T.F("{%s} received %v", r.URL(), string(message))
+		log.I.F("{%s} received %v", r.URL(), string(message))
 		var envelope enveloper.I
 		if envelope, _, err = envelopes.ProcessEnvelope(message); chk.E(err) {
+			log.I.Ln(string(message))
 			continue
 		}
 		if envelope == nil {
