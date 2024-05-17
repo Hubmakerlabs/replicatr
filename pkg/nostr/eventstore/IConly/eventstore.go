@@ -2,6 +2,7 @@ package IConly
 
 import (
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
@@ -32,6 +33,7 @@ var _ eventstore.Store = (*Backend)(nil)
 
 // Init  connects to the configured IC canister.
 func (b *Backend) Init() (err error) {
+	log.I.Ln("initializing IC backend")
 	if b.CanisterAddr == "" || b.CanisterId == "" {
 		return log.E.Err("missing required canister parameters, got addr: \"%s\" and id: \"%s\"",
 			b.CanisterAddr, b.CanisterId)
@@ -62,12 +64,13 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 //
 // This is asynchronous, it will never return an error.
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
-	ch = make(event.C)
-	go func() {
-		log.D.Ln("querying IC with filter", f.ToObject().String())
-		if ch, err = b.IC.QueryEvents(f); chk.E(err) {
+	log.D.Ln("querying IC with filter", f.ToObject().String())
+	if ch, err = b.IC.QueryEvents(f); err != nil {
+		split := strings.Split(err.Error(), "Error:")
+		if len(split) == 3 {
+			log.E.Ln(split[2])
 		}
-	}()
+	}
 	return
 }
 

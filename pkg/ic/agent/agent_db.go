@@ -1,31 +1,39 @@
 package agent
 
 import (
+	"strings"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 )
 
 func (b *Backend) QueryEvents(f *filter.T) (ch event.C, err error) {
-
-	if f == nil {
-		err = log.E.Err("nil filter for query")
-		return
-	}
-	var candidEvents []Event
-	if candidEvents, err = b.GetCandidEvent(FilterToCandid(f)); chk.E(err) {
-		return
-	}
-	log.I.Ln("got", len(candidEvents), "events")
-	for i, e := range candidEvents {
-		select {
-		case <-b.Ctx.Done():
+	ch = make(event.C)
+	go func() {
+		if f == nil {
+			err = log.E.Err("nil filter for query")
 			return
-		default:
 		}
-		log.I.Ln("sending event", i)
-		ch <- CandidToEvent(&e)
-	}
-	log.I.Ln("done sending events")
+		var candidEvents []Event
+		if candidEvents, err = b.GetCandidEvent(FilterToCandid(f)); err != nil {
+			split := strings.Split(err.Error(), "Error:")
+			if len(split) == 2 {
+				log.E.F("IC error: %s", split[1])
+			}
+			return
+		}
+		log.I.Ln("got", len(candidEvents), "events")
+		for i, e := range candidEvents {
+			select {
+			case <-b.Ctx.Done():
+				return
+			default:
+			}
+			log.I.Ln("sending event", i)
+			ch <- CandidToEvent(&e)
+		}
+		log.I.Ln("done sending events")
+	}()
 	return
 }
 
