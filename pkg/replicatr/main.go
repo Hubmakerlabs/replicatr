@@ -110,7 +110,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	os.Args = osArgs
 	arg.MustParse(&args)
 	os.Args = tmp
-	log.I.Ln("memlimit:", debug.SetMemoryLimit(args.MemLimit)/units.Mb, "Mb")
 	if args.PProf {
 		if cpuProf, err := os.Create("cpu.pprof"); !chk.E(err) {
 			defer func() {
@@ -270,7 +269,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	if conf.MemLimit > 0 {
 		debug.SetMemoryLimit(conf.MemLimit)
 	}
-
 	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, inf, &conf)
 	var db eventstore.Store
@@ -391,8 +389,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		b2.InitLogLevel = badgerDB.InitLogLevel
 		db = badgerbadger.GetBackend(c, &wg, badgerDB, b2)
 		interrupt.AddHandler(func() {
-			badgerDB.DB.Flatten(8)
-			b2.DB.Flatten(8)
+			// badgerDB.DB.Flatten(8)
+			// b2.DB.Flatten(8)
 			badgerDB.DB.Close()
 			b2.DB.Close()
 			wg.Done()
@@ -445,16 +443,12 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		Handler: rl,
 	}
 	go func() {
-		for {
-			select {
-			case <-rl.Ctx.Done():
-				chk.E(serv.Close())
-				return
-			default:
-			}
-			wg.Wait()
-			log.I.Ln("relay now cleanly shut down")
+		select {
+		case <-rl.Ctx.Done():
+			chk.E(serv.Close())
 		}
+		wg.Wait()
+		log.I.Ln("relay now cleanly shut down")
 	}()
 	wg.Add(1)
 	log.I.Ln("listening on", conf.Listen)

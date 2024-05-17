@@ -10,7 +10,6 @@ import (
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
-	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
@@ -70,36 +69,37 @@ func Blower(args *Config) int {
 		}
 	retry:
 		for {
-			retry := time.After(time.Second)
-			ch := u.Write(eventenvelope.FromRawJSON("", b))
-			select {
-			case err = <-ch:
-				if err == nil {
+			// retry := time.After(time.Second)
+			// ch := u.Write(eventenvelope.FromRawJSON("", b))
+			err = u.Publish(c, ev)
+			// select {
+			// case err = <-ch:
+			if err == nil {
+				break retry
+			}
+			log.E.Ln(err.Error())
+			if strings.Contains(err.Error(), "failed to flush writer") {
+				return 1
+			}
+			if strings.Contains(err.Error(), "connection closed") {
+				// upRelay.Close()
+				// upRelay.Connection.Conn.Close()
+				upRelay.ConnectionContextCancel()
+				if upRelay, err = client.Connect(c,
+					args.UploadRelay); chk.E(err) {
 					break retry
-				}
-				log.E.Ln(err.Error())
-				if strings.Contains(err.Error(), "failed to flush writer") {
-					return 1
-				}
-				if strings.Contains(err.Error(), "connection closed") {
-					// upRelay.Close()
-					// upRelay.Connection.Conn.Close()
-					upRelay.ConnectionContextCancel()
-					if upRelay, err = client.Connect(c,
-						args.UploadRelay); chk.E(err) {
-						continue retry
-					}
-				}
-				if err != nil {
-					break retry
-				}
-			case <-retry:
-				u.ConnectionContextCancel()
-				log.I.Ln("reconnecting")
-				if u, err = client.Connect(c, args.UploadRelay); chk.E(err) {
-					return 1
 				}
 			}
+			// if err != nil {
+			// 	break retry
+			// }
+			// case <-retry:
+			// 	u.ConnectionContextCancel()
+			// 	log.I.Ln("reconnecting")
+			// 	if u, err = client.Connect(c, args.UploadRelay); chk.E(err) {
+			// 		return 1
+			// 	}
+			// }
 			// }
 			// if !upAuthed {
 			// 	log.I.Ln("authing")
@@ -134,7 +134,7 @@ func Blower(args *Config) int {
 			ev.ID.String(),
 		)
 		// }(rb, counter)
-		// time.Sleep(time.Second)
+		// time.Sleep(time.Second / 20)
 	}
 	return 0
 }

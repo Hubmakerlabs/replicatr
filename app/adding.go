@@ -44,7 +44,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 					return
 				}
 			}
-			// log.I.Ln("added event", ev.ID)
+			log.I.Ln("added event", ev.ID)
 		}
 		for _, ons := range rl.OnEventSaved {
 			ons(c, ev)
@@ -52,6 +52,7 @@ func (rl *Relay) AddEvent(c context.T, ev *event.T) (err error) {
 		// log.I.Ln("saved event", ev.ID)
 	} else {
 		log.I.Ln("ephemeral event")
+		return
 	}
 	for _, ovw := range rl.OverwriteResponseEvent {
 		ovw(c, ev)

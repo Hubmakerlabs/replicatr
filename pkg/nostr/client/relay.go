@@ -259,7 +259,6 @@ func (r *T) Connect(c context.T) (err error) {
 				if err = r.Connection.WriteMessage(wr.msg); err != nil {
 					wr.answer <- err
 				}
-				log.I.Ln("closing write queue answer chan")
 				close(wr.answer)
 			case <-r.ConnectionContext.Done():
 				// stop here
@@ -398,10 +397,8 @@ func (r *T) Auth(c context.T, sign func(ev *event.T) error) error {
 }
 
 // publish can be used both for EVENT and for AUTH
-func (r *T) publish(c context.T, id string, env enveloper.I) error {
-	var err error
+func (r *T) publish(c context.T, id string, env enveloper.I) (err error) {
 	var cancel context.F
-
 	if _, ok := c.Deadline(); !ok {
 		// if no timeout is set, force it to 7 seconds
 		c, cancel = context.Timeout(c, 7*time.Second)
@@ -412,7 +409,6 @@ func (r *T) publish(c context.T, id string, env enveloper.I) error {
 		c, cancel = context.Cancel(c)
 		defer cancel()
 	}
-
 	// listen for an OK callback
 	gotOk := false
 	r.okCallbacks.Store(id, func(ok bool, reason string) {
@@ -423,15 +419,13 @@ func (r *T) publish(c context.T, id string, env enveloper.I) error {
 		cancel()
 	})
 	defer r.okCallbacks.Delete(id)
-
 	// publish event
 	var enb []byte
 	enb, err = env.MarshalJSON()
-	log.T.F("{%s} sending %v", r.URL(), string(enb))
+	// log.T.F("{%s} sending %v", r.URL(), string(enb))
 	if err = <-r.Write(enb); err != nil {
 		return err
 	}
-
 	for {
 		select {
 		case <-c.Done():

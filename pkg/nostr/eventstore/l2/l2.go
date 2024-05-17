@@ -113,7 +113,7 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 				// reference to an event but does not have possession of the event.
 				if ev1.Sig == "" && ev1.ID != "" {
 					// spawn a query to fetch the event ID from the L2
-					go b.Revive(ev1, c, ch, saveChan)
+					b.Revive(ev1, c, ch, saveChan)
 				} else {
 					// first to find should send
 					ch <- ev1
@@ -158,18 +158,17 @@ func (b *Backend) Revive(ev1 *event.T, c context.T, ch, saveChan event.C) {
 	ch3, err3 := b.L2.QueryEvents(c,
 		&filter.T{IDs: tag.T{ev1.ID.String()}})
 	chk.E(err3)
-out2:
 	for {
 		select {
 		case <-c.Done():
 			// if context is closed, break out
-			break out2
+			return
 		case ev3 := <-ch3:
 			ch <- ev3
 			// need to queue up the event to restore the event and counter records
 			saveChan <- ev3
 			// there can only be one
-			break out2
+			return
 		}
 	}
 }

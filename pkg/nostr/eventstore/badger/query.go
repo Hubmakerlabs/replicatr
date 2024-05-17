@@ -134,15 +134,15 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 								res := Results{Ev: ev, TS: timestamp.Now(), Ser: ser}
 								// log.W.F("key %d val %s", serial.FromKey(item.KeyCopy(nil)).Uint64(),
 								// 	ev.ToObject().String())
-								select {
-								case <-c.Done():
-									// log.I.Ln("websocket closed")
-									return
-								case <-b.Ctx.Done():
-									log.I.Ln("backend context canceled")
-									return
-								default:
-								}
+								// select {
+								// case <-c.Done():
+								// 	// log.I.Ln("websocket closed")
+								// 	return
+								// case <-b.Ctx.Done():
+								// 	log.I.Ln("backend context canceled")
+								// 	return
+								// default:
+								// }
 								q2.results <- res
 							}
 						}
