@@ -396,8 +396,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		b2.InitLogLevel = badgerDB.InitLogLevel
 		db = badgerbadger.GetBackend(c, &wg, badgerDB, b2)
 		interrupt.AddHandler(func() {
-			// badgerDB.DB.Flatten(8)
-			// b2.DB.Flatten(8)
+			badgerDB.DB.Flatten(8)
+			b2.DB.Flatten(8)
 			badgerDB.DB.Close()
 			b2.DB.Close()
 			wg.Done()
