@@ -76,7 +76,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 					// if the event is nil the rest of this loop will panic
 					// accessing the nonexistent event's fields
 					if ev == nil {
-						log.I.Ln("query result channel closed")
+						// log.T.Ln("query result channel closed")
 						break out
 					}
 					log.I.Ln("received result", ev.ToObject().String())
