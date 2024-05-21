@@ -24,6 +24,8 @@ TARGET_DIR="./cmd/canister/src/replicatr/src"
 # Ensure the target directory exists
 mkdir -p "$TARGET_DIR"
 
+cd "$DFX_DIR"
+
 # Build the project
 dfx build
 
