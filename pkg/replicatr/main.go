@@ -151,7 +151,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	log.D.F("using profile directory: %s", dataDir)
 	infoPath := filepath.Join(dataDir, "info.json")
 	configPath := filepath.Join(dataDir, "config.json")
-	if _, serr := os.Stat(configPath); serr != nil {
+	if _, serr := os.Stat(configPath); serr != nil && args.InitCfgCmd == nil {
 		args.InitCfgCmd = &base.InitCfg{}
 		log.W.Ln("******* configuration missing, creating new one at", configPath,
 			"- ensure that it is to as you require")
@@ -444,13 +444,13 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	// run the chat ACL initialization
 	rl.Init()
 	var servs []http.Server
-	for i := range conf.Listen {
-		serv := http.Server{
-			Addr:    conf.Listen[i],
-			Handler: rl,
-		}
-		servs = append(servs, serv)
+	// for i := range conf.Listen {
+	serv := http.Server{
+		Addr:    conf.Listen,
+		Handler: rl,
 	}
+	servs = append(servs, serv)
+	// }
 	go func() {
 		select {
 		case <-rl.Ctx.Done():

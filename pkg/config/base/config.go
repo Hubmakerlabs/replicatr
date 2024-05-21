@@ -36,7 +36,7 @@ type GetPermission struct {
 
 func GetDefaultConfig() *Config {
 	return &Config{
-		Listen:       []string{"0.0.0.0:3334"},
+		Listen:       "0.0.0.0:3334",
 		EventStore:   "badger",
 		CanisterAddr: "https://icp0.io/",
 		Profile:      "replicatr",
@@ -64,12 +64,12 @@ type Config struct {
 	GetPermissionCmd *GetPermission `arg:"subcommand:getpermission" json:"-" help:"get permission of a relay"`
 	Wipe             *WipeBDB       `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
 	Rescan           *RescanAC      `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
-	Listen           []string       `arg:"-l,--listen,separate" json:"listen" help:"network address to listen on"`
+	Listen           string         `arg:"-l,--listen" json:"listen" help:"network address to listen on"`
 	EventStore       string         `arg:"-e,--eventstore" json:"eventstore" help:"select event store backend [ic,badger,iconly]"`
 	CanisterAddr     string         `arg:"-C,--canisteraddr" json:"canister_addr" help:"IC canister address to use (for local, use http://127.0.0.1:<port number>)"`
 	CanisterId       string         `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
-	Profile          string         `arg:"-p,--profile" json:"-"  help:"profile name to use for storage"` // default:"replicatr"
-	Name             string         `arg:"-n,--name" json:"name"  help:"name of relay for NIP-11"`        // default:"replicatr relay"
+	Profile          string         `arg:"-p,--profile" default:"replicatr" json:"-"  help:"profile name to use for storage"` // default:"replicatr"
+	Name             string         `arg:"-n,--name" json:"name"  help:"name of relay for NIP-11"`                            // default:"replicatr relay"
 	Description      string         `arg:"-d,--description" json:"description" help:"description of relay for NIP-11"`
 	Pubkey           string         `arg:"--pubkey" json:"pubkey" help:"public key of relay operator"`
 	Contact          string         `arg:"-c,--contact" json:"contact,omitempty" help:"non-nostr relay operator contact details"`
@@ -97,8 +97,8 @@ type Config struct {
 	// GCFrequency is the frequency to run a check on the database size and
 	// if it breaches DBHighWater to prune it back to DBLowWater percentage
 	// of DBSizeLimit in minutes.
-	GCFrequency int    `arg:"-G,--gcfreq" json:"gc_frequency" help:"frequency in seconds to check if database needs garbage collection"`           // default:"300"
-	MaxProcs    int    `arg:"--maxprocs" json:"max_procs" help:"maximum number of goroutines to use"`                                              // default:"128"
+	GCFrequency int    `arg:"-G,--gcfreq" json:"gc_frequency" help:"frequency in seconds to check if database needs garbage collection"`            // default:"300"
+	MaxProcs    int    `arg:"--maxprocs" json:"max_procs" help:"maximum number of goroutines to use"`                                               // default:"128"
 	LogLevel    string `arg:"--loglevel"  help:"set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)"` // default:"info"
 	PProf       bool   `arg:"--pprof" help:"enable CPU and memory profiling"`
 	GCRatio     int    `arg:"--gcratio" help:"set GC percentage for triggering GC sweeps"`             // default:"100"
