@@ -30,6 +30,7 @@
 .dfx
 target
 node_modules
+canister_ids.json
 # !cmd/testnet/src/
 # !cmd/testnet/src/**/*
 
