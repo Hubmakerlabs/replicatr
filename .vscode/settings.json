@@ -1,0 +1,4 @@
+{"rust-analyzer.linkedProjects": [
+    "cmd/canister/src/replicatr/Cargo.toml"
+  ]
+}

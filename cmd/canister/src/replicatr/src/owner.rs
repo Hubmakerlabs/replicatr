@@ -1,1 +1,1 @@
-pub static OWNER: &str = "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEbPua87rDiL+mLHQi4nW8A+kiZhX9TKZSyG65+TlSb8HHgYUGOusXfDo3UntMAJduljQ4DPzKmvt1pqKXxjCEQg==";
+pub static OWNER: &str = "";
