@@ -74,10 +74,11 @@ func (b *Backend) SaveEvent(c context.T, ev *event.T) (err error) {
 					return
 				}
 				return
-			} else {
-				log.I.Ln("pruned duplicate event", ev.ID)
-				return eventstore.ErrDupEvent
+				// } else {
+				// 	log.I.Ln("pruned duplicate event", ev.ID)
+				// return eventstore.ErrDupEvent
 			}
+			return
 		})
 		// if it was a dupe, we are done.
 		if err != nil {

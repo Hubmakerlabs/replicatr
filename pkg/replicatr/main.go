@@ -110,6 +110,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	os.Args = osArgs
 	arg.MustParse(&args)
 	os.Args = tmp
+	var wg sync.WaitGroup
 	if args.PProf {
 		if cpuProf, err := os.Create("cpu.pprof"); !chk.E(err) {
 			defer func() {
@@ -269,7 +270,6 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	if conf.MemLimit > 0 {
 		debug.SetMemoryLimit(conf.MemLimit)
 	}
-	var wg sync.WaitGroup
 	rl := app.NewRelay(c, cancel, inf, &conf)
 	var db eventstore.Store
 	// if we are wiping we don't want to init db normally
@@ -374,10 +374,9 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		wg.Add(2)
 		db = IC.GetBackend(c, &wg, badgerDB, icDB)
 		interrupt.AddHandler(func() {
-			// badgerDB.DB.Flatten(8)
-			// b2.DB.Flatten(8)
+			badgerDB.DB.Flatten(8)
 			badgerDB.DB.Close()
-			wg.Done()
+			// wg.Done()
 		})
 	case "badger":
 		db = badgerDB
@@ -385,7 +384,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
 			badgerDB.DB.Close()
-			wg.Done()
+			// wg.Done()
 		})
 	case "badgerbadger":
 		log.W.Ln("using badger testing L2")
@@ -396,11 +395,11 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		b2.InitLogLevel = badgerDB.InitLogLevel
 		db = badgerbadger.GetBackend(c, &wg, badgerDB, b2)
 		interrupt.AddHandler(func() {
-			// badgerDB.DB.Flatten(8)
-			// b2.DB.Flatten(8)
+			badgerDB.DB.Flatten(8)
 			badgerDB.DB.Close()
+			b2.DB.Flatten(8)
 			b2.DB.Close()
-			wg.Done()
+			// wg.Done()
 		})
 	}
 	if err = db.Init(); chk.E(err) {

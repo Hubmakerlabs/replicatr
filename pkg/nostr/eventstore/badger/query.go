@@ -20,7 +20,7 @@ import (
 )
 
 func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
-	ch = make(event.C)
+	ch = make(event.C, 1)
 
 	// log.I.Ln("QueryEvents", f.ToObject().String())
 	var queries []query
@@ -202,14 +202,14 @@ func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) 
 			}
 			// emit latest event in queue
 			latest := emitQueue[0]
-			log.T.Ln("sending result", latest.T.ToObject().String(), b.Path)
+			// log.T.Ln("sending result", latest.T.ToObject().String(), b.Path)
 			ch <- latest.T
-			log.T.Ln("sent result", latest.T.ToObject().String(), b.Path)
+			// log.T.Ln("sent result", latest.T.ToObject().String(), b.Path)
 			// send ID to be incremented for access
 			ae := MakeAccessEvent(latest.T.ID, latest.Ser)
-			log.T.Ln("sending access event", ae, b.Path)
+			// log.T.Ln("sending access event", ae, b.Path)
 			accessChan <- ae
-			log.T.Ln("sent access event", ae, b.Path)
+			// log.T.Ln("sent access event", ae, b.Path)
 			// stop when reaching limit
 			emittedEvents++
 			if emittedEvents == limit {

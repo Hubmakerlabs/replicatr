@@ -3,12 +3,17 @@ package relayws
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/gorilla/websocket"
 	"mleku.dev/git/atomic"
 	"mleku.dev/git/slog"
@@ -84,25 +89,25 @@ func (ws *WebSocket) WriteTextMessage(b []byte) (err error) {
 func (ws *WebSocket) WriteEnvelope(env enveloper.I) (err error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
-	// var file string
-	// var line int
-	// _, file, line, _ = runtime.Caller(1)
-	// loc := fmt.Sprintf("%s:%d", file, line)
-	// var evkind string
-	// var ek kind.T
-	// if env.Label() == labels.EVENT {
-	// 	ek = env.(*eventenvelope.T).Event.Kind
-	// 	evkind = kind.GetString(ek)
-	// }
+	var file string
+	var line int
+	_, file, line, _ = runtime.Caller(1)
+	loc := fmt.Sprintf("%s:%d", file, line)
+	var evkind string
+	var ek kind.T
+	if env.Label() == labels.EVENT {
+		ek = env.(*eventenvelope.T).Event.Kind
+		evkind = kind.GetString(ek)
+	}
 	rawJSON := env.ToArray().Bytes()
-	// log.D.F("sending message to %s %s %s %s %s",
-	// 	ws.RealRemote(),
-	// 	ws.AuthPubKey(),
-	// 	evkind,
-	// 	// text.Trunc(
-	// 	string(rawJSON),
-	// 	// ),
-	// 	loc)
+	log.D.F("sending message to %s %s %s %s %s",
+		ws.RealRemote(),
+		ws.AuthPubKey(),
+		evkind,
+		// text.Trunc(
+		string(rawJSON),
+		// ),
+		loc)
 	chk.E(ws.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5)))
 	return ws.Conn.WriteMessage(int(TextMessage), rawJSON)
 }
