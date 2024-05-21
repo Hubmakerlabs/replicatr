@@ -1,9 +1,0 @@
-{
-  "canisters": {
-    "testnet_backend": {
-      "candid": "candid/testnet_backend.did",
-      "package": "testnet_backend",
-      "type": "rust"
-    }
-  }
-}

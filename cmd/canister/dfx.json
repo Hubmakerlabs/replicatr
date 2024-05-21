@@ -1,0 +1,9 @@
+{
+  "canisters": {
+    "replicatr": {
+      "candid": "candid/replicatr.did",
+      "package": "replicatr",
+      "type": "rust"
+    }
+  }
+}

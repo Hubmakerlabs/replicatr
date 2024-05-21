@@ -10,7 +10,7 @@ if [ ! -f 'marker.file' ]; then
 fi
 
 # Define the target directory for the Rust source file relative to the current directory
-TARGET_DIR="./cmd/testnet/src/testnet_backend/src"
+TARGET_DIR="./cmd/testnet/src/replicatr/src"
 
 # Ensure the target directory exists
 mkdir -p "$TARGET_DIR"
