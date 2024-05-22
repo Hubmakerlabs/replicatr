@@ -2,7 +2,7 @@
 
 ![logo](doc/logo.png)
 
-replicatr is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr)
+`replicatr` is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr)
 
 * Supports most applicable NIPs: 1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40, 42
 * Websocket compression: permessage-deflate with optional sliding window, when supported by clients
@@ -16,9 +16,9 @@ replicatr is a relay for the [nostr protocol](https://github.com/nostr-protocol/
 
 The most original feature of replicatr is it's  [Internet Computer](https://internetcomputer.org/docs/current/home) integration allowing for quick and seamless inter-relay synchronization. This is achieved by defining relay clusters, an interconnected group of relays that're given authorization by a replicatr canister owner to utilize the canister's synchronization tooling to achieve consistency across the cluster.
 
-Click here** to learn more about the problem this solves.
+> Click here** to learn more about the problem this solves.
 
-Click here** to learn more about the synchronization architecture.
+> Click here** to learn more about the synchronization architecture.
 
 ## Usage
 
@@ -37,7 +37,7 @@ chmod +x pkg/ic/setup/owner.sh
 ./pkg/ic/setup/owner.sh
 ```
    
-(This will initialize your relay and deploy a replicatr canister on the Internet Computer with your relay as the specified owner.)
+> This will initialize your relay and deploy a replicatr canister on the Internet Computer with your relay as the specified owner.
 	     
 	     
 #### To setup as a Minion/Secondary Owner  relay (and join a preexisting cluster):
@@ -50,7 +50,7 @@ chmod +x pkg/ic/setup/owner.sh
 `go run . pubkey`
 5. Send the resulting pubkey to the canister owner and wait for them to grant you user/owner level access
 
-To learn more about canister permissions, click here**.
+> To learn more about canister permissions, click here**.
 
 ### Running The Relay
 
@@ -58,4 +58,4 @@ Here is how to run the relay:
 ```
 go run . -<flags> <args>
 ```
-(add flags to configure the relay as needed or run without any flags to use defaults. Click here** to view customizable parameters and configuration details)
+> add flags to configure the relay as needed or run without any flags to use defaults. Click here** to view customizable parameters and configuration details
