@@ -25,10 +25,13 @@ Works with Linux, Apple, and WSL
  - [ ] To setup an Owner relay(and start your own cluster):
 	1. Clone the repo and ensure golang is installed.
 	2. Ensure [dfx](https://internetcomputer.org/docs/current/developer-docs/getting-started/install/) is installed in the repo root directory with a nonzero [cycle balance](https://support.dfinity.org/hc/en-us/articles/5946641657108-What-is-a-cycles-wallet).
-	3. From the root directory, run the initialization script:\
-	`chmod +x pkg/ic/setup/owner.sh`\
-	`./pkg/ic/setup/owner.sh`\
-	(This will initialize your relay and deploy a replicatr canister on the Internet Computer with your relay as the specified owner.)
+	3. From the root directory, run the initialization script:
+
+```	
+chmod +x pkg/ic/setup/owner.sh
+./pkg/ic/setup/owner.sh
+```
+(This will initialize your relay and deploy a replicatr canister on the Internet Computer with your relay as the specified owner.)
 	     
 	     
 - [ ] To setup as a Minion/Secondary Owner  relay(and join a preexisting cluster):
@@ -41,3 +44,10 @@ Works with Linux, Apple, and WSL
 	 5. Send the resulting pubkey to the canister owner and wait for them to grant you user/owner level access
 
 To learn more about canister permissions, click here**.
+### Running The Relay
+
+Here is how to run the relay:
+```
+ go run . -<flags> <args>
+ ```
+ (add flags to configure the relay as needed or run without any flags to use defaults. Click here** to view customizable parameters and configuration details)
