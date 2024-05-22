@@ -24,11 +24,11 @@ type WipeBDB struct{}
 type RescanAC struct{}
 type PubKey struct{}
 type AddRelay struct {
-	PubKey string `arg:"-k,--pubkey" help:"public key of client to add"`
+	PubKey string `arg:"--addpubkey" help:"public key of client to add"`
 	Admin  bool   `arg:"--admin"  help:"set client as admin"`
 }
 type RemoveRelay struct {
-	PubKey string `arg:"-k,--pubkey" help:"public key of client to remove"`
+	PubKey string `arg:"--removepubkey" help:"public key of client to remove"`
 }
 
 type GetPermission struct {
