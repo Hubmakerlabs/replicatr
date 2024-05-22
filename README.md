@@ -1,4 +1,5 @@
 # Replicatr
+
 ![logo](doc/logo.png)
 
 replicatr is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr)
@@ -20,34 +21,41 @@ Click here** to learn more about the problem this solves.
 Click here** to learn more about the synchronization architecture.
 
 ## Usage
-### Setup
-Works with Linux, Apple, and WSL
-#### To setup an Owner relay(and start your own cluster):
-	1. Clone the repo and ensure golang (v1.20+) is installed.
-	2. Ensure [dfx](https://internetcomputer.org/docs/current/developer-docs/getting-started/install/) is installed in the repo root directory with a nonzero [cycle balance](https://support.dfinity.org/hc/en-us/articles/5946641657108-What-is-a-cycles-wallet).
-	3. From the root directory, run the initialization script:
 
-```	
+### Setup
+
+Works with Linux, MacOS, and WSL
+
+#### To setup an Owner relay (and start your own cluster):
+
+1. Clone the repo and ensure golang (v1.20+) is installed.
+2. Ensure [dfx](https://internetcomputer.org/docs/current/developer-docs/getting-started/install/) is installed in the repo root directory with a nonzero [cycle balance](https://support.dfinity.org/hc/en-us/articles/5946641657108-What-is-a-cycles-wallet).
+3. From the root directory, run the initialization script:
+
+```
 chmod +x pkg/ic/setup/owner.sh
 ./pkg/ic/setup/owner.sh
 ```
+   
 (This will initialize your relay and deploy a replicatr canister on the Internet Computer with your relay as the specified owner.)
 	     
 	     
-#### To setup as a Minion/Secondary Owner  relay(and join a preexisting cluster):
-	 1. Identify the a relay cluster you would like to join and ask the owner for their canister-id and if you can join.
-	 2. Clone the repo and ensure golang (v1.20+) is installed
-	 3. Run the following command from the root directory to initialize the relay with the previously obtained canister-id:\
-	 `go run .  initcfg -I <canister-id>`
-	 4. Run the following command to obtain your canister-facing relay pubkey:\
-	 `go run . pubkey`
-	 5. Send the resulting pubkey to the canister owner and wait for them to grant you user/owner level access
+#### To setup as a Minion/Secondary Owner  relay (and join a preexisting cluster):
+
+1. Identify the a relay cluster you would like to join and ask the owner for their canister-id and if you can join.
+2. Clone the repo and ensure golang (v1.20+) is installed
+3. Run the following command from the root directory to initialize the relay with the previously obtained canister-id:\
+`go run .  initcfg -I <canister-id>`
+4. Run the following command to obtain your canister-facing relay pubkey:\
+`go run . pubkey`
+5. Send the resulting pubkey to the canister owner and wait for them to grant you user/owner level access
 
 To learn more about canister permissions, click here**.
+
 ### Running The Relay
 
 Here is how to run the relay:
 ```
- go run . -<flags> <args>
- ```
- (add flags to configure the relay as needed or run without any flags to use defaults. Click here** to view customizable parameters and configuration details)
+go run . -<flags> <args>
+```
+(add flags to configure the relay as needed or run without any flags to use defaults. Click here** to view customizable parameters and configuration details)
