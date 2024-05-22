@@ -1,4 +1,8 @@
-![strfry logo](doc/logo.jpg)
+
+
+<p align="center">
+  <img src="doc/logo.jpg" />
+</p>
 
 ## [nostr](https://nostr.com/) [layer2](#what-is-layer2) relay
 
