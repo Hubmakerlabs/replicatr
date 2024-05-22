@@ -1,4 +1,4 @@
-# replicatr
+![strfry logo](doc/logo.jpg)
 
 ## [nostr](https://nostr.com/) [layer2](#what-is-layer2) relay
 
