@@ -1,7 +1,7 @@
 
 
 <p align="center">
-  <img src="doc/logo.jpg" />
+  <img src="doc/logo.png" />
 </p>
 
 replicatr is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr)
