@@ -40,7 +40,7 @@ chmod +x pkg/ic/setup/owner.sh
 > This will initialize your relay and deploy a replicatr canister on the Internet Computer with your relay as the specified owner.
 	     
 	     
-#### To setup as a Minion/Secondary Owner  relay (and join a preexisting cluster):
+#### To setup as a Minion/Secondary-Owner  relay (and join a preexisting cluster):
 
 1. Identify the a relay cluster you would like to join and ask the owner for their canister-id and if you can join.
 2. Clone the repo and ensure golang (v1.20+) is installed
