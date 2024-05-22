@@ -23,7 +23,7 @@ Click here** to learn more about the synchronization architecture.
 ### Setup
 Works with Linux, Apple, and WSL
  - [ ] To setup an Owner relay(and start your own cluster):
-	1. Clone the repo and ensure golang is installed.
+	1. Clone the repo and ensure golang (v1.20+) is installed.
 	2. Ensure [dfx](https://internetcomputer.org/docs/current/developer-docs/getting-started/install/) is installed in the repo root directory with a nonzero [cycle balance](https://support.dfinity.org/hc/en-us/articles/5946641657108-What-is-a-cycles-wallet).
 	3. From the root directory, run the initialization script:
 
@@ -36,7 +36,7 @@ chmod +x pkg/ic/setup/owner.sh
 	     
 - [ ] To setup as a Minion/Secondary Owner  relay(and join a preexisting cluster):
 	 1. Identify the a relay cluster you would like to join and ask the owner for their canister-id and if you can join.
-	 2. Clone the repo and ensure golang is installed
+	 2. Clone the repo and ensure golang (v1.20+) is installed
 	 3. Run the following command from the root directory to initialize the relay with the previously obtained canister-id:\
 	 `go run .  initcfg -I <canister-id>`
 	 4. Run the following command to obtain your canister-facing relay pubkey:\
