@@ -286,7 +286,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			log.E.F("Error creating identity: %s\n", err)
 			os.Exit(1)
 		}
-		log.D.F("Your Canister-Facing Relay Pubkey is:\n")
+		log.I.F("Your Canister-Facing Relay Pubkey is:\n")
 		publicKeyBase64 := base64.StdEncoding.EncodeToString(id.PublicKey())
 
 		fmt.Println(publicKeyBase64)
