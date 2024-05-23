@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"mleku.dev/git/slog"
 )
 
@@ -36,21 +38,23 @@ type GetPermission struct {
 
 func GetDefaultConfig() *Config {
 	return &Config{
-		Listen:       "0.0.0.0:3334",
-		EventStore:   "badger",
-		CanisterAddr: "https://icp0.io/",
-		Profile:      "replicatr",
-		Name:         "replicatr relay",
-		Icon:         "https://i.nostr.build/n8vM.png",
-		AuthRequired: false,
-		Public:       true,
-		DBLowWater:   86,
-		DBHighWater:  92,
-		GCFrequency:  300,
-		MaxProcs:     128,
-		LogLevel:     "info",
-		GCRatio:      100,
-		MemLimit:     500000000,
+		Listen:        "0.0.0.0:3334",
+		EventStore:    "badger",
+		CanisterAddr:  "https://icp0.io/",
+		Profile:       "replicatr",
+		Name:          "replicatr relay",
+		Icon:          "https://i.nostr.build/n8vM.png",
+		AuthRequired:  false,
+		Public:        true,
+		DBLowWater:    86,
+		DBHighWater:   92,
+		GCFrequency:   300,
+		MaxProcs:      128,
+		LogLevel:      "info",
+		GCRatio:       100,
+		MemLimit:      500000000,
+		PollFrequency: 5 * time.Second,
+		PollOverlap:   4,
 	}
 }
 
@@ -103,6 +107,11 @@ type Config struct {
 	PProf       bool   `arg:"--pprof" help:"enable CPU and memory profiling"`
 	GCRatio     int    `arg:"--gcratio" help:"set GC percentage for triggering GC sweeps"`             // default:"100"
 	MemLimit    int64  `arg:"--memlimit" help:"set memory limit on process to constrain memory usage"` // default:"500000000"
+	// PollFrequency is how often the L2 is queried for recent events
+	PollFrequency time.Duration `arg:"--pollfrequency" help:"if a level 2 event store is enabled how often it polls"`
+	// PollOverlap is the multiple of the PollFrequency within which polling the L2
+	// is done to ensure any slow synchrony on the L2 is covered (2-4 usually)
+	PollOverlap timestamp.T `arg:"--polloverlap" help:"if a level 2 event store is enabled, multiple of poll freq overlap to account for latency"`
 }
 
 func (c *Config) Save(filename string) (err error) {

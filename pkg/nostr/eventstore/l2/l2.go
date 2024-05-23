@@ -33,6 +33,15 @@ type Backend struct {
 	// canister, an IPFS based store with an indexing spider or indeed a giant
 	// spinning disk.
 	L2 eventstore.Store
+	// PollFrequency is how often the L2 is queried for recent events
+	PollFrequency time.Duration
+	// PollOverlap is the multiple of the PollFrequency within which polling the L2
+	// is done to ensure any slow synchrony on the L2 is covered (2-4 usually)
+	PollOverlap timestamp.T
+	// EventSignal triggers when the L1 saves a new event from the L2
+	//
+	// caller is responsible for populating this
+	EventSignal event.C
 }
 
 func (b *Backend) Init() (err error) {
@@ -42,7 +51,15 @@ func (b *Backend) Init() (err error) {
 	if err = b.L2.Init(); chk.E(err) {
 		return
 	}
-
+	// if poll syncing is disabled don't start the ticker
+	if b.PollFrequency == 0 {
+		return
+	}
+	// Polling overlap should be 4x polling frequency, if less than 2x
+	if b.PollOverlap < 2 {
+		b.PollOverlap = 4
+	}
+	log.I.Ln("L2 polling frequency", b.PollFrequency, "overlap", b.PollFrequency*time.Duration(b.PollOverlap))
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		last := timestamp.Now()
@@ -55,10 +72,11 @@ func (b *Backend) Init() (err error) {
 			case <-ticker.C:
 				until := timestamp.Now()
 				var ch event.C
-				if ch, err = b.L2.QueryEvents(b.Ctx, &filter.T{Since: last.Ptr(), Until: until.Ptr()}); chk.E(err) {
+				if ch, err = b.L2.QueryEvents(b.Ctx,
+					&filter.T{Since: last.Ptr(), Until: until.Ptr()}); chk.E(err) {
 					continue out
 				}
-				last = until - 20
+				last = until - b.PollOverlap*timestamp.T(b.PollFrequency/time.Second)
 				go func() {
 					for {
 						select {
@@ -70,6 +88,10 @@ func (b *Backend) Init() (err error) {
 								return
 							} else {
 								chk.T(b.L1.SaveEvent(b.Ctx, ev))
+								// trigger the event signal so the client triggers broadcast
+								if b.EventSignal != nil {
+									b.EventSignal <- ev
+								}
 							}
 						}
 					}

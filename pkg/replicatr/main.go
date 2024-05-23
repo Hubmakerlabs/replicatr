@@ -18,6 +18,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/config/base"
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IConly"
@@ -262,6 +263,12 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.MaxProcs > 0 {
 			conf.MaxProcs = args.MaxProcs
 		}
+		if args.PollFrequency > 0 {
+			conf.PollFrequency = args.PollFrequency
+		}
+		if args.PollOverlap > 0 {
+			conf.PollOverlap = args.PollOverlap
+		}
 	}
 	log.I.Ln(conf.SecKey)
 	_ = debug.SetGCPercent(conf.GCRatio)
@@ -372,7 +379,25 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		db = icDB
 	case "ic":
 		wg.Add(1)
-		db = IC.GetBackend(c, &wg, badgerDB, icDB)
+		if conf.PollFrequency == 0 {
+			conf.PollFrequency = 5 * time.Second
+		}
+		var es event.C
+		db, es = IC.GetBackend(c, &wg, badgerDB, icDB,
+			conf.PollFrequency, conf.PollOverlap)
+		if es != nil {
+			// start up the event signal broadcast
+			go func() {
+				for {
+					select {
+					case <-rl.Ctx.Done():
+						return
+					case ev := <-es:
+						rl.BroadcastEvent(ev)
+					}
+				}
+			}()
+		}
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
 			badgerDB.DB.Close()

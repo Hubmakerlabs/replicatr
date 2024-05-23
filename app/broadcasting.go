@@ -41,11 +41,11 @@ func (rl *Relay) BroadcastEvent(ev *event.T) {
 				}
 			}
 			// todo: there may be an issue triggering repeated broadcasts via L2 reviving
-			// log.D.F("sending event to subscriber %v %s (%d %s)",
-			// 	ws.RealRemote(), ws.AuthPubKey(),
-			// 	ev.Kind,
-			// 	ev.Kind.Name(),
-			// )
+			log.D.F("sending event to subscriber %v %s (%d %s)",
+				ws.RealRemote(), ws.AuthPubKey(),
+				ev.Kind,
+				ev.Kind.Name(),
+			)
 			chk.E(ws.WriteEnvelope(&eventenvelope.T{
 				SubscriptionID: subscriptionid.T(id),
 				Event:          ev},
