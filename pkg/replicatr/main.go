@@ -475,19 +475,25 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		Handler: rl,
 	}
 	servs = append(servs, serv)
+	// this allows local access and works with nostrudel
+	servs = append(servs, http.Server{
+		Addr:    "127.0.0.1:4869",
+		Handler: rl,
+	})
+	for i := range servs {
+		log.I.Ln("listening on", servs[i].Addr)
+	}
 	// }
 	go func() {
 		select {
 		case <-rl.Ctx.Done():
 			for i := range servs {
 				chk.E(servs[i].Close())
-
 			}
 		}
 		wg.Wait()
 		log.I.Ln("relay now cleanly shut down")
 	}()
-	log.I.Ln("listening on", conf.Listen)
 	for i := range servs {
 		go func() {
 			wg.Add(1)
