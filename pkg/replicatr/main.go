@@ -371,12 +371,12 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	case "iconly":
 		db = icDB
 	case "ic":
-		wg.Add(2)
+		wg.Add(1)
 		db = IC.GetBackend(c, &wg, badgerDB, icDB)
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
 			badgerDB.DB.Close()
-			// wg.Done()
+			wg.Done()
 		})
 	case "badger":
 		db = badgerDB
@@ -384,7 +384,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
 			badgerDB.DB.Close()
-			// wg.Done()
+			wg.Done()
 		})
 	case "badgerbadger":
 		log.W.Ln("using badger testing L2")
@@ -399,7 +399,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			badgerDB.DB.Close()
 			b2.DB.Flatten(8)
 			b2.DB.Close()
-			// wg.Done()
+			wg.Done()
 		})
 	}
 	if err = db.Init(); chk.E(err) {

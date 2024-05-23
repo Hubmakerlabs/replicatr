@@ -58,7 +58,7 @@ func (b *Backend) Init() (err error) {
 				if ch, err = b.L2.QueryEvents(b.Ctx, &filter.T{Since: last.Ptr(), Until: until.Ptr()}); chk.E(err) {
 					continue out
 				}
-				last = until
+				last = until - 20
 				go func() {
 					for {
 						select {
