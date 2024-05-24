@@ -2,7 +2,8 @@
 
 ![logo](doc/logo.png)
 
-`replicatr` is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr)
+`replicatr` is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr) with support for `layer 2` event stores, such as the Internet 
+Computer Protocol event store canister.
 
 * Supports most applicable NIPs: 1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40, 42
 * Websocket compression: permessage-deflate with optional sliding window, when supported by clients
@@ -158,8 +159,6 @@ Inside this folder will be stored two configuration files, `config.json` and `in
 settings based on the CLI arguments shown above, and the second contains a
 [NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) Relay Information Document. Any relevant parameters
 set on the command line will override those found in these two files (such as `--auth`) for the duration of the run.
-
-#### Compiling
 
 #### To setup an Owner relay (and start your own cluster):
 
