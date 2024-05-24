@@ -40,21 +40,27 @@ pick the latest one (1.22.3 at time of writing), "copy link location" on the
 relevant version (linux x86-64 in this example, which applies to Linux and WSL, for Mac [see here](https://go.dev/dl/) -
 not tested for BSDs or Windows but should work).
 
-    cd
-    mkdir bin 
-    wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz
-    tar xvf go1.18.linux-amd64.tar.gz
+```bash
+cd
+mkdir bin 
+wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz
+tar xvf go1.18.linux-amd64.tar.gz
+```
 
 Using your favourite editor, open up `~/.bashrc` - or just
 
-    nano ~/.bashrc
+```bash
+nano ~/.bashrc
+```
 
 and put the following lines at the end
 
-    export GOBIN=$HOME/bin
-    export GOPATH=$HOME
-    export GOROOT=$GOPATH/go
-    export PATH=$HOME/go/bin:$HOME/.local/bin:$GOBIN:$PATH
+```bash
+export GOBIN=$HOME/bin
+export GOPATH=$HOME
+export GOROOT=$GOPATH/go
+export PATH=$HOME/go/bin:$HOME/.local/bin:$GOBIN:$PATH
+``` 
 
 save and close, and `ctrl-d` to kill the terminal session, and start a new one.
 
@@ -64,14 +70,26 @@ This also creates a proper place where `go install` will put produced binaries.
 
 You can run the relay directly from the root of the repository:
 
+```bash
+go run . <flags> <args>
 ```
-go run . -<flags> <args>
+
+Or you can build it and place it in the location `GOBIN` as defined above:
+
+```bash
+go install
 ```
 
 Add flags to configure the relay as needed or run without any flags to use defaults:
 
 ```
-Usage: replicatr [--listen LISTEN] [--eventstore EVENTSTORE] [--canisteraddr CANISTERADDR] [--canisterid CANISTERID] [--profile PROFILE] [--name NAME] [--description DESCRIPTION] [--pubkey PUBKEY] [--contact CONTACT] [--icon ICON] [--auth] [--public] [--owner OWNER] [--seckey SECKEY] [--whitelist WHITELIST] [--allow ALLOW] [--sizelimit SIZELIMIT] [--lowwater LOWWATER] [--highwater HIGHWATER] [--gcfreq GCFREQ] [--maxprocs MAXPROCS] [--loglevel LOGLEVEL] [--pprof] [--gcratio GCRATIO] [--memlimit MEMLIMIT] [--pollfrequency POLLFREQUENCY] [--polloverlap POLLOVERLAP] <command> [<args>]
+Usage: replicatr [--listen LISTEN] [--eventstore EVENTSTORE] [--canisteraddr CANISTERADDR] 
+    [--canisterid CANISTERID] [--profile PROFILE] [--name NAME] [--description DESCRIPTION] 
+    [--pubkey PUBKEY] [--contact CONTACT] [--icon ICON] [--auth] [--public] [--owner OWNER] 
+    [--seckey SECKEY] [--whitelist WHITELIST] [--allow ALLOW] [--sizelimit SIZELIMIT] 
+    [--lowwater LOWWATER] [--highwater HIGHWATER] [--gcfreq GCFREQ] [--maxprocs MAXPROCS] 
+    [--loglevel LOGLEVEL] [--pprof] [--gcratio GCRATIO] [--memlimit MEMLIMIT] 
+    [--pollfrequency POLLFREQUENCY] [--polloverlap POLLOVERLAP] <command> [<args>]
 
 Options:
   --listen LISTEN, -l LISTEN
