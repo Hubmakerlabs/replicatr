@@ -24,6 +24,7 @@
 !*.rs
 !*.toml
 !*.file
+!*.md
 # ...even if they are in subdirectories
 !*/
 !cmd/testnet/*
