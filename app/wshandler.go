@@ -7,7 +7,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
-	"github.com/gorilla/websocket"
+	"github.com/fasthttp/websocket"
 )
 
 // HandleWebsocket is a http handler that accepts and manages websocket
@@ -54,25 +54,25 @@ func (rl *Relay) HandleWebsocket(serviceURL string) func(w http.ResponseWriter, 
 				wsKey, ws,
 			),
 		)
-		// if len(rl.Whitelist) > 0 {
-		// 	for i := range rl.Whitelist {
-		// 		if rr == rl.Whitelist[i] {
-		// 			log.T.Ln("whitelisted inbound connection from", rr)
-		// 		}
-		// 	}
-		// } else {
-		// 	log.T.Ln("inbound connection from", rr)
-		// }
+		if len(rl.Whitelist) > 0 {
+			for i := range rl.Whitelist {
+				if rr == rl.Whitelist[i] {
+					log.T.Ln("whitelisted inbound connection from", rr)
+				}
+			}
+		} else {
+			log.T.Ln("inbound connection from", rr)
+		}
 		kill := func() {
-			// if len(rl.Whitelist) > 0 {
-			// 	for i := range rl.Whitelist {
-			// 		if rr == rl.Whitelist[i] {
-			// 			log.T.Ln("disconnecting whitelisted client from", rr)
-			// 		}
-			// 	}
-			// } else {
-			// 	log.T.Ln("disconnecting from", rr)
-			// }
+			if len(rl.Whitelist) > 0 {
+				for i := range rl.Whitelist {
+					if rr == rl.Whitelist[i] {
+						log.T.Ln("disconnecting whitelisted client from", rr)
+					}
+				}
+			} else {
+				log.T.Ln("disconnecting from", rr)
+			}
 			for _, onDisconnect := range rl.OnDisconnect {
 				onDisconnect(c)
 			}

@@ -1,5 +1,7 @@
 # access control lists
 
+> NOT YET FULLY IMPLEMENTED
+
 Access Control Lists are a data structure for storing the user privileges for a
 computer system. In `replicatr` this applies to several use cases, mainly the 
 blacklisting use case, and the paid relay use case.

@@ -9,8 +9,8 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
+	"github.com/fasthttp/websocket"
 	"github.com/fiatjaf/eventstore/badger"
-	"github.com/gorilla/websocket"
 	"github.com/nbd-wtf/go-nostr"
 	"mleku.dev/git/slog"
 )

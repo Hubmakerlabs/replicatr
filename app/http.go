@@ -2,17 +2,45 @@ package app
 
 import (
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 
 	"github.com/rs/cors"
 )
 
+type Headers [][]string
+
+func (h Headers) Len() int           { return len(h) }
+func (h Headers) Less(i, j int) bool { return h[i][0] < h[j][0] }
+func (h Headers) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+func SprintHeader(hdr http.Header) func() (s string) {
+	return func() (s string) {
+		var sections Headers
+		s += "\n"
+		for i := range hdr {
+			sect := []string{i}
+			sect = append(sect, hdr[i]...)
+			sections = append(sections, sect)
+		}
+		sort.Sort(sections)
+		for i := range sections {
+			for j := range sections[i] {
+				s += "\"" + sections[i][j] + "\" "
+			}
+			s += "\n"
+		}
+		return
+	}
+}
+
 // ServeHTTP implements http.Handler interface.
 //
 // This is the main starting function of the relay. This launches
 // HandleWebsocket which runs the message handling main loop.
 func (rl *Relay) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	log.T.C(SprintHeader(r.Header))
 	select {
 	case <-rl.Ctx.Done():
 		log.W.Ln("shutting down")

@@ -15,7 +15,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
-	"github.com/gorilla/websocket"
+	"github.com/fasthttp/websocket"
 	"github.com/puzpuzpuz/xsync/v2"
 )
 
