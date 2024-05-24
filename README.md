@@ -22,9 +22,9 @@ integration allowing for quick and seamless inter-relay synchronization. This is
 interconnected group of relays that're given authorization by a replicatr canister owner to utilize the canister's
 synchronization tooling to achieve consistency across the cluster.
 
-> [Click here](docs/cluster.md) to learn more about the problem this solves.
+> [Click here](doc/cluster.md) to learn more about the problem this solves.
 
-> [Click here](docs/sync.md) to learn more about the synchronization architecture.
+> [Click here](doc/sync.md) to learn more about the synchronization architecture.
 
 ## Usage
 
@@ -187,5 +187,5 @@ chmod +x pkg/ic/setup/owner.sh
    `go run . pubkey`
 5. Send the resulting pubkey to the canister owner and wait for them to grant you user/owner level access
 
-> To learn more about canister permissions, [click here](docs/canister.md).
+> To learn more about canister permissions, [click here](doc/canister.md).
 
