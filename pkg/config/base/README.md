@@ -132,7 +132,7 @@ set on the command line will override those found in these two files (such as `-
   - **Example**: `--polloverlap 2`
 
 ### Commands
-
+> Note: all subcommands will execute the command and exit. The relay will not continue to run as in the general case.
 - **`initcfg`**  
   Initialize relay configuration files.
 
@@ -166,5 +166,5 @@ set on the command line will override those found in these two files (such as `-
 - **`wipebdb`**  
   Empties local badger database (bdb).
 
-> Note: all subcommands will execute the command and exit. The relay will not continue to run as in the general case.
+
 
