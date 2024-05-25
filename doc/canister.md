@@ -1,5 +1,5 @@
 # Relay-To-Canister Access Control
-This document outlines how relays' access to the replicatr canister is managed.
+Relay-access to canisters are managed via Secp256k1 public keys (derived from the relay's secret key) which are then used to sign function calls to the canister. A signed timestamp is additionally inlcuded in the request to ensure the request's validity and to prevent replay attacks. The canister manages these public keys via [self-authenticating Principals](https://wiki.internetcomputer.org/wiki/Principal#:~:text=A%20self%2Dauthenticating%20principal%20is,reference%20a%20subnet%20or%20user.).
 
 ## Permission Levels
 ### Owner
