@@ -189,7 +189,6 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 			return
 		}
 		wg := sync.WaitGroup{}
-		wg.Add(len(env.Filters))
 		// a context just for the "stored events" request handler
 		reqCtx, cancelReqCtx := context.CancelCause(c)
 		// expose subscription id in the context
@@ -197,7 +196,6 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 		// handle each filter separately -- dispatching events as they're loaded
 		// from databases
 		for _, f := range env.Filters {
-			// wg.Add(1)
 			err = rl.handleFilter(handleFilterParams{
 				reqCtx,
 				env.SubscriptionID,
