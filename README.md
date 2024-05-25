@@ -99,5 +99,29 @@ go install
 
 > add flags to configure the relay as needed or run without any flags to use defaults. Click [here](pkg/config/base/README.md) to view customizable parameters, configuration, and subcommand details
 
+## Additional Features
+
+|Package Name|Links |Description|
+|-----------------|-------|-----|
+|`testr`          |       |     |
+|`blowr`|[![README](https://img.shields.io/badge/-README-green)](cmd/blower/README.md)|CLI tool that facilitates the uploading of Nostr events from a JSONL file to a specified Nostr relay|
+|`loggr`|[![README](https://img.shields.io/badge/-README-green)](doc/logger.md) [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/mleku.dev/git/slog@v1.0.16)|highly-informative, configurable logger to monitor relay activity|
+|`agent`| [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/github.com/Hubmakerlabs/replicatr/pkg/ic/agent)|IC-tooling for Nostr data and managing Nostr relays' canister access|
+
+## Credits
+
+## Credits
+
+This project would not be possible without the significant contributions and support from the following organizations and projects:
+
+1. **DFINITY** - For funding our project and enabling us to build on their cutting-edge blockchain technology.
+2. **Hubmaker Labs** - For their funding and ongoing support throughout the development process.
+3. **nbd-wtf** - We forked their [`go-nostr`](https://github.com/nbd-wtf/go-nostr) package, which forms a substantial part of our Nostr tooling.
+4. **fiatjaf** - We based our project on his [`khatru`](https://github.com/fiatjaf/khatru) relay, using it as the foundational structure for our development.
+5. **Aviate Labs** - Their [`agent-go`](https://github.com/aviate-labs/agent-go) tooling has been instrumental in facilitating our interaction with Internet Computer canisters.
+
+We extend our deepest gratitude to all our contributors and supporters, as their efforts and resources have been vital to the success of this project.
+
+
 
 
