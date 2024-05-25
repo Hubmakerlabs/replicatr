@@ -86,7 +86,21 @@ set on the command line will override those found in these two files (such as `-
   IP addresses that are always allowed to access.
   - **Example**: `-A 192.168.1.1`
 
+- **`--auth,a`**
+  Enable mandating NIP-42 authentication for all access
+  - **Example**: `-a`,`--auth`
+ 
+- **`--owners,-o`**
+  specify public keys of users with owner level permissions on relay
+  - **Example**: `-o a432trafdfafd,dafrt4atgargfdfe`
+
 #### Performance and Resource Management
+
+- **`--eventstore,-e`**
+   Select event store backend
+  - **Options**: `ic`, `badger`, `iconly`
+  - **Example**: `-e ic`
+     
 - **`--sizelimit, -S`**  
   Sets the maximum size of the event store in bytes.
   - **Example**: `-S 1000000`
