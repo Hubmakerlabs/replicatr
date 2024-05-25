@@ -3,7 +3,7 @@
 ![logo](doc/logo.png)
 
 `replicatr` is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr) with support for `layer 2` event stores, such as the Internet 
-Computer Protocol event store canister.
+Computer Protocol replicatr canister.
 
 * Supports most applicable NIPs: 1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40, 42
 * Websocket compression: permessage-deflate with optional sliding window, when supported by clients
@@ -99,11 +99,11 @@ go install
 
 > add flags to configure the relay as needed or run without any flags to use defaults. Click [here](pkg/config/base/README.md) to view customizable parameters, configuration, and subcommand details
 
-## Additional Features
+## Additional Features and Documentation
 
 |Package Name|Links |Description|
 |-----------------|-------|-----|
-|`testr`          |       |     |
+|`testr`|[![README](https://img.shields.io/badge/-README-green)](**todo**)|builds and executes highly customizable and exhaustive test cases for the relay|
 |`blowr`|[![README](https://img.shields.io/badge/-README-green)](cmd/blower/README.md)|CLI tool that facilitates the uploading of Nostr events from a JSONL file to a specified Nostr relay|
 |`loggr`|[![README](https://img.shields.io/badge/-README-green)](doc/logger.md) [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/mleku.dev/git/slog@v1.0.16)|highly-informative, configurable logger to monitor relay activity|
 |`agent`| [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/github.com/Hubmakerlabs/replicatr/pkg/ic/agent)|IC-tooling for Nostr data|
