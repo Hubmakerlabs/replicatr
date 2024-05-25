@@ -1,20 +1,19 @@
-# Relay Clusters and Shared Storage
+# The Challenge: Nostr's Data Inconsistencies
+Nostr's rapid rise in popularity highlights its potential for a paradigm shift in social media. However, its current reliance on a scattered network of disjoint relays creates a major challenge: data inconsistency. Here's how this impacts users:
 
-By enabling relays to share a `layer 2` event store, the relay functions as a fast cache that can deliver freshly
-published events quickly to users, while enabling multiple relays to deliver this data, thus a relay cluster can cope
-with very large numbers of users, while keeping users data connected between the relays, serving to distribute the load
-of the work of serving and storing events.
+![nostrprob](problem.jpg)
 
-The individual relays have a storage management feature that allows the limitation of storage usage to the confines of
-what the relay operator has provisioned for this purpose, with configurable parameters of garbage collection frequency,
-and the high and low water marks, the former is the trigger size, and the latter is the target that each garbage
-collection run will cut the storage usage back down to. Events have last access time records and the oldest ones are
-pruned first.
+>The image shows Nostr's relay challenge:  If two users upload their individual posts to different Nostr relays, then the two users might not be able to see each other’s posts. In addition to data inconsistencies across the network, if a user's post on Relay 'A' becomes popular, it leads to a usage spike and potential bottlenecks on 'A', while Relay 'B' remains underutilized
 
-The storage management can be used by itself, without a `layer 2` and for this case the stale events are just completely
-removed.
+## Fragmented Network
+Nostr relays operate independently, and there's no guaranteed synchronization between them. This means users connected to different relays may not see the same content, especially posts from users subscribed to different relays. This creates a fractured user experience and hinders the network's ability to function as a cohesive social platform.
 
-If used with a `layer 2` shared store like the Internet Computer Protocol canister, instead of deleting the whole event
-data, only the event data itself is removed, and the search indexes remain, and are able to fill up the space between
-the high water mark and the database size limit. These are also pruned by age once the total size of the indexes exceeds
-the headroom between the high water mark and the limit.
+## Bottlenecks 
+Nostr's demand-driven approach can overload specific relays serving popular content, impacting performance and potentially leading to data inconsistencies across the network.
+
+## Missed Connections
+Due to data inconsistency, users might miss out on important updates, discussions, or events happening within their Nostr communities. This can be frustrating and lead to a sense of isolation within the broader Nostr ecosystem.
+
+
+## Unreliable Synchronization
+Some existing [relays](https://github.com/hoytech/strfry) use synchronization methods like [negentropy](https://github.com/hoytech/negentropy) are slow and resource-intensive, leading to data inconsistencies, gaps, and longer delays to the replication of the most frequently requested data.
