@@ -18,6 +18,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/config/base"
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IC"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/IConly"
@@ -262,6 +263,12 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.MaxProcs > 0 {
 			conf.MaxProcs = args.MaxProcs
 		}
+		if args.PollFrequency > 0 {
+			conf.PollFrequency = args.PollFrequency
+		}
+		if args.PollOverlap > 0 {
+			conf.PollOverlap = args.PollOverlap
+		}
 	}
 	log.I.Ln(conf.SecKey)
 	_ = debug.SetGCPercent(conf.GCRatio)
@@ -371,12 +378,30 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	case "iconly":
 		db = icDB
 	case "ic":
-		wg.Add(2)
-		db = IC.GetBackend(c, &wg, badgerDB, icDB)
+		wg.Add(1)
+		if conf.PollFrequency == 0 {
+			conf.PollFrequency = 5 * time.Second
+		}
+		var es event.C
+		db, es = IC.GetBackend(c, &wg, badgerDB, icDB,
+			conf.PollFrequency, conf.PollOverlap)
+		if es != nil {
+			// start up the event signal broadcast
+			go func() {
+				for {
+					select {
+					case <-rl.Ctx.Done():
+						return
+					case ev := <-es:
+						rl.BroadcastEvent(ev)
+					}
+				}
+			}()
+		}
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
 			badgerDB.DB.Close()
-			// wg.Done()
+			wg.Done()
 		})
 	case "badger":
 		db = badgerDB
@@ -384,7 +409,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
 			badgerDB.DB.Close()
-			// wg.Done()
+			wg.Done()
 		})
 	case "badgerbadger":
 		log.W.Ln("using badger testing L2")
@@ -399,7 +424,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			badgerDB.DB.Close()
 			b2.DB.Flatten(8)
 			b2.DB.Close()
-			// wg.Done()
+			wg.Done()
 		})
 	}
 	if err = db.Init(); chk.E(err) {
@@ -450,19 +475,25 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		Handler: rl,
 	}
 	servs = append(servs, serv)
+	// // this allows local access and works with nostrudel
+	servs = append(servs, http.Server{
+		Addr:    "127.0.0.1:4869",
+		Handler: rl,
+	})
+	for i := range servs {
+		log.I.Ln("listening on", servs[i].Addr)
+	}
 	// }
 	go func() {
 		select {
 		case <-rl.Ctx.Done():
 			for i := range servs {
 				chk.E(servs[i].Close())
-
 			}
 		}
 		wg.Wait()
 		log.I.Ln("relay now cleanly shut down")
 	}()
-	log.I.Ln("listening on", conf.Listen)
 	for i := range servs {
 		go func() {
 			wg.Add(1)

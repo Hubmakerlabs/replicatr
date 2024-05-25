@@ -16,8 +16,8 @@ func (b *Backend) QueryEvents(f *filter.T) (ch event.C, err error) {
 		}
 		var candidEvents []Event
 		if candidEvents, err = b.GetCandidEvent(FilterToCandid(f)); err != nil {
-			split := strings.Split(err.Error(), "Error:")
-			if len(split) == 2 {
+			split := strings.Split(err.Error(), "Error: ")
+			if len(split) == 2 && split[1] != "No events found" {
 				log.E.F("IC error: %s", split[1])
 			}
 			return
@@ -29,10 +29,10 @@ func (b *Backend) QueryEvents(f *filter.T) (ch event.C, err error) {
 				return
 			default:
 			}
-			log.I.Ln("sending event", i)
+			log.T.Ln("sending event", i)
 			ch <- CandidToEvent(&e)
 		}
-		log.I.Ln("done sending events")
+		log.T.Ln("done sending events")
 	}()
 	return
 }

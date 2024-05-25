@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/fasthttp/websocket"
 	"github.com/fiatjaf/eventstore/badger"
-	"github.com/gorilla/websocket"
 	"github.com/nbd-wtf/go-nostr"
 	// "github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 )

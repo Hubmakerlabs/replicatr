@@ -79,7 +79,7 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 						// log.T.Ln("query result channel closed")
 						break out
 					}
-					log.I.Ln("received result", ev.ToObject().String())
+					log.T.Ln("received result", ev.ToObject().String())
 					for _, ovw := range rl.OverwriteResponseEvent {
 						ovw(h.c, ev)
 					}

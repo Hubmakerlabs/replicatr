@@ -14,7 +14,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
-	"github.com/gorilla/websocket"
+	"github.com/fasthttp/websocket"
 	"mleku.dev/git/atomic"
 	"mleku.dev/git/slog"
 )

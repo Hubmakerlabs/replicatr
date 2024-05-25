@@ -3,6 +3,7 @@ package IC
 import (
 	"os"
 	"sync"
+	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -11,6 +12,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/l2"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"mleku.dev/git/slog"
 )
 
@@ -36,12 +38,17 @@ var _ eventstore.Store = (*Backend)(nil)
 // GetBackend returns a l2.Backend that combines the two provided backends. It
 // is assumed both were
 func GetBackend(c context.T, wg *sync.WaitGroup, L1 *badger.Backend,
-	L2 *IConly.Backend) (es eventstore.Store) {
+	L2 *IConly.Backend, pf time.Duration, po timestamp.T) (es eventstore.Store,
+	signal event.C) {
+	signal = make(event.C)
 	es = &l2.Backend{
-		Ctx: c,
-		WG:  wg,
-		L1:  L1,
-		L2:  L2,
+		Ctx:           c,
+		WG:            wg,
+		L1:            L1,
+		L2:            L2,
+		PollFrequency: pf,
+		PollOverlap:   po,
+		EventSignal:   signal,
 	}
 	return
 }

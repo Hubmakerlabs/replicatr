@@ -1,121 +1,181 @@
-# replicatr
+# Replicatr
 
-## [nostr](https://nostr.com/) [layer2](#what-is-layer2) relay
+![logo](doc/logo.png)
 
-a nostr relay designed to enable modular data storage and connectivity for a borderless, composable global social network.
+`replicatr` is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr) with support for `layer 2` event stores, such as the Internet 
+Computer Protocol event store canister.
 
-Nostr is the base layer, and what Replicatr brings is the **Layer 2** enabling the data to be separated from the delivery.
+* Supports most applicable NIPs: 1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40, 42
+* Websocket compression: permessage-deflate with optional sliding window, when supported by clients
+* Extremely configurable making it seamlessly customizable across several parameters for relay operators
+* No external database required: All data is stored first locally on the filesystem in BadgerDB and optionally on the
+  Internet Computer for inter-relay synchronization.
+* The local badgerDB is additionally equipped with a nostr-specific, highly configurable garbage collection scheme and a
+  nostr-specific prefix-indexing scheme for seamless data mangement and rapid querying
+* Supports optionally mandating nip-42 authorization upon initial connection for enhanced security
+* [Internet Computer](https://internetcomputer.org/docs/current/home)-integration for efficient syncing with remote
+  relays
 
-With Replicatr, Nostr can scale up to massive, heteregenous islands in a great archipelago of social networks, with low friction for users to transit or interact with multiple communities concurrently.
+## Syncing
 
-# sponsors
+The most original feature of replicatr is it's  [Internet Computer](https://internetcomputer.org/docs/current/home)
+integration allowing for quick and seamless inter-relay synchronization. This is achieved by defining relay clusters, an
+interconnected group of relays that're given authorization by a replicatr canister owner to utilize the canister's
+synchronization tooling to achieve consistency across the cluster.
 
-We gratefully acknowledge 
+> [Click here](doc/cluster.md) to learn more about the problem this solves.
 
-### ![](https://cdn-assets-eu.frontify.com/s3/frontify-enterprise-files-eu/eyJwYXRoIjoiZGZpbml0eVwvZmlsZVwvZmE0QTVhcUR4MWVWZVJFQTRiTnAucG5nIn0:dfinity:IdAJOMHSBmHNqnd87mG-FQjWJO9E7dGTG802kJeqRTk?width=32) Dfinity and the Internet Computer Protocol
+> [Click here](doc/sync.md) to learn more about the synchronization architecture.
 
-who provided the funding and framework to execute this project
+## Usage
 
-### ![](https://aqs24-xaaaa-aaaal-qbbea-cai.ic0.app/logos/catalyze-mini.svg) Hubmakerlabs and Catalyze One
+### Setup
 
-who organised this project and brought together the developers and administrators required to make it happen
+Works with Linux, MacOS, and WSL2
 
-# about
+#### Install Go and Clone Repo
 
-`replicatr` is a `nostr` relay written in pure Go, aimed at becoming a single,
-modular, and extensible reference implementation of the `nostr` protocol as
-described in the
-nostr [NIP (nostr implementation possibilities) specification](https://github.com/nostr-protocol/nips).
+Go 1.2+ is recommended - Click [here](doc/golang.md) for installation instructions and specifications.
 
-It will use a [badger](https://github.com/dgraph-io/badger)
-key/value store for local caching, and interface, and be designed to integrate with **layer 2** data storage systems such as [the internet computer protocol](https://internetcomputer.org) - and to bring the borderless, low friction connectivity of Nostr to the world.
-
-# what is **layer2**?
-
-## `nostr` relays as distributed caches for (multiple) larger decentralized data stores
-
-The reason why the name of this relay project is `replicatr` is in reference to the distributed database technology term *replica* which is the name given to a node in a distributed database system that contains a copy, or "replica" of the same data as the other nodes in the database cluster.
-
-Part of the details of implementing a two level storage system is the idea of creating bounds on the expansion of storage utilization in one layer and scalability questions on the second level.
-
-Mutable large data stores like the one being implemented for the initial beta of `replicatr`, the Internet Computer Protocol are one strategy for the *layer2* of `nostr`, but immutable stores with dynamic replication strategies that scale up replicas of data that are in demand and discard data that is of lesser importance, such as IPFS and Arweave and other content addressable storage strategies.
-
-It is entirely conceivable, even, to even go to *layer3* and *layer4* with event storage, but really, it makes no sense to add this distinction, when *layer2* can implicitly mean anything beyond the hot cache of a relay.
-
-## developer notes
-
-### notes about the logger
-
-Due to its high performance at rendering and its programmable custom 
-hyperlink capability, VTE based terminal 
-[Tilix](https://github.com/gnunn1/tilix) is the best option for Linux 
-developers, if you are on windows or mac, there is options but the main 
-author of this repo doesn't and refuses to use such abominations.
-
-The performance of the Goland terminal, which does this by default and 
-manages its relative path interpretation based on the current opened project,
-is abysmal if there is long lines, probably due to it being written in 
-highly abstracted Java rather than C like VTE's rexept hyperlink engine.
-
-So if you use VSCode or other non-Goland IDE, you may want to change the 
-invocation in the following command and script to fit the relevant too; the 
-provided versions here work with Goland so long as it has had a `goland` 
-launch script deployed to your `$PATH` somewhere.
-
-The following are a pair of custom hyperlink specifications, extracted using 
-dconf-editor, from the path /com/gexperts/Tilix/custom-hyperlinks that works 
-to give you absolute and relative paths when you are using the 
-[slog](https://mleku.dev/git/slog) logger that is used throughout this 
-project and also on several of the dependencies that live at the same git 
-hosting address:
-
-```
-[
-  '([/]([a-zA-Z@0-9-_.]+/)+([a-zA-Z@0-9-_.]+)):([0-9]+)$,goland --line $4 $1,false',
-  '([^/]([a-zA-Z@0-9-_.]+/)+([a-zA-Z@0-9-_.]+)):([0-9]+),openhyperlink $1 $4,false'
-]
-```
-
-Two additional small scripts need to be added to your path and marked 
-executable in order to allow you to change the absolute path prefix in the 
-second of these two entries:
-
-`openhyperlink` should look like this:
-```bash
-#!/usr/bin/bash
-goland --line $2 $(cat ~/.currpath)/$1
-
-```
-and to set that `.currpath` file to contain a useful path:
-
-`currpath`
+Then, run to the following to clone the repo:
 
 ```bash
-#!/usr/bin/bash
-echo $(pwd)>~/.currpath
-echo .currpath set to $(< ~/.currpath)
+git clone https://github.com/Hubmakerlabs/replicatr.git && cd replicatr
+```
+
+
+#### To setup an Owner relay (and start your own cluster):
+
+
+1. Ensure [dfx](https://internetcomputer.org/docs/current/developer-docs/getting-started/install/) and all corresponding dependencies are installed in the
+   repo root directory. Ensure a valid [dfx identity](https://internetcomputer.org/docs/current/developer-docs/developer-tools/cli-tools/cli-reference/dfx-identity) with an [initialized wallet](https://internetcomputer.org/docs/current/developer-docs/developer-tools/cli-tools/cli-reference/dfx-quickstart) is created and is being used.
+2. Use [NNS](https://nns.ic0.app/) to [create a canister](https://internetcomputer.org/docs/current/developer-docs/daos/nns/nns-app-quickstart) and [top it up](https://internetcomputer.org/docs/current/developer-docs/smart-contracts/topping-up/topping-up-canister) with at least half an ICP worth of cycles (or more depending on your intended bandwidth usage).
+3. From the root directory, run the initialization script:
+
+```bash
+chmod +x pkg/ic/setup/owner.sh
+./pkg/ic/setup/owner.sh
+```
+Input the canister-id for the previously created canister when prompted:
+
+```bash
+Please enter the canister ID: <canister-id>
+```
+
+> This will initialize your relay and deploy a replicatr canister on the Internet Computer with your relay as the
+> specified owner.
+
+#### To setup as a Minion/Secondary-Owner  relay (and join a preexisting cluster):
+
+1. Identify the a relay cluster you would like to join and ask the owner for their canister-id and if you can join.
+2. Clone the repo and ensure golang (v1.20+) is installed
+3. Run the following command from the root directory to initialize the relay with the previously obtained canister-id:
+
+   ```bash
+   go run . initcfg -I <canister-id>
+   ```
+   
+5. Run the following command to obtain your canister-facing relay pubkey:
+   ```bash
+   go run . pubkey
+   ```
+   
+7. Send the resulting pubkey to the canister owner and wait for them to grant you user/owner level access
+
+> To learn more about canister permissions, [click here](doc/canister.md).
+
+### Building and Running
+
+You can run the relay directly from the root of the repository:
+
+```bash
+go run . <flags> <args>
+```
+
+Or you can build it and place it in the location `GOBIN` as defined [here](doc/golang.md):
+
+```bash
+go install
+```
+
+Add flags to configure the relay as needed or run without any flags to use defaults:
+
+```
+Usage: replicatr [--listen LISTEN] [--eventstore EVENTSTORE] [--canisteraddr CANISTERADDR] 
+    [--canisterid CANISTERID] [--profile PROFILE] [--name NAME] [--description DESCRIPTION] 
+    [--pubkey PUBKEY] [--contact CONTACT] [--icon ICON] [--auth] [--public] [--owner OWNER] 
+    [--seckey SECKEY] [--whitelist WHITELIST] [--allow ALLOW] [--sizelimit SIZELIMIT] 
+    [--lowwater LOWWATER] [--highwater HIGHWATER] [--gcfreq GCFREQ] [--maxprocs MAXPROCS] 
+    [--loglevel LOGLEVEL] [--pprof] [--gcratio GCRATIO] [--memlimit MEMLIMIT] 
+    [--pollfrequency POLLFREQUENCY] [--polloverlap POLLOVERLAP] <command> [<args>]
+
+Options:
+  --listen LISTEN, -l LISTEN
+                         network address to listen on
+  --eventstore EVENTSTORE, -e EVENTSTORE
+                         select event store backend [ic,badger,iconly]
+  --canisteraddr CANISTERADDR, -C CANISTERADDR
+                         IC canister address to use (for local, use http://127.0.0.1:<port number>)
+  --canisterid CANISTERID, -I CANISTERID
+                         IC canister ID to use
+  --profile PROFILE, -p PROFILE
+                         profile name to use for storage [default: replicatr]
+  --name NAME, -n NAME   name of relay for NIP-11
+  --description DESCRIPTION, -d DESCRIPTION
+                         description of relay for NIP-11
+  --pubkey PUBKEY        public key of relay operator
+  --contact CONTACT, -c CONTACT
+                         non-nostr relay operator contact details
+  --icon ICON, -i ICON   icon to show on relay information pages
+  --auth, -a             NIP-42 authentication required for all access
+  --public               allow public read access to users not on ACL
+  --owner OWNER, -o OWNER
+                         specify public keys of users with owner level permissions on relay
+  --seckey SECKEY, -s SECKEY
+                         identity key of relay, used to sign 30066 and 30166 events and for message control interface
+  --whitelist WHITELIST, -w WHITELIST
+                         IP addresses that are only allowed to access
+  --allow ALLOW, -A ALLOW
+                         IP addresses that are always allowed to access
+  --sizelimit SIZELIMIT, -S SIZELIMIT
+                         set the maximum size of the badger event store in bytes
+  --lowwater LOWWATER, -L LOWWATER
+                         set target percentage for database size during garbage collection
+  --highwater HIGHWATER, -H HIGHWATER
+                         set garbage collection trigger percentage for database size during garbage collection
+  --gcfreq GCFREQ, -G GCFREQ
+                         frequency in seconds to check if database needs garbage collection
+  --maxprocs MAXPROCS    maximum number of goroutines to use
+  --loglevel LOGLEVEL    set log level [off,fatal,error,warn,info,debug,trace] (can also use GODEBUG environment variable)
+  --pprof                enable CPU and memory profiling
+  --gcratio GCRATIO      set GC percentage for triggering GC sweeps
+  --memlimit MEMLIMIT    set memory limit on process to constrain memory usage
+  --pollfrequency POLLFREQUENCY
+                         if a level 2 event store is enabled how often it polls
+  --polloverlap POLLOVERLAP
+                         if a level 2 event store is enabled, multiple of poll freq overlap to account for latency
+  --help, -h             display this help and exit
+
+Commands:
+  initcfg                initialize relay configuration files
+  export                 export database as line structured JSON
+  import                 import data from line structured JSON
+  pubkey                 print relay canister public key
+  addrelay               add a relay to the cluster
+  removerelay            remove a relay from the cluster
+  getpermission          get permission of a relay
+  wipebdb                empties local badger database (bdb)
 
 ```
 
-This will then assume any relative code locations like `app/broadcasting.go:32`
-will have the value from `~/.currpath` prefixed in, and you can invoke 
-`currpath` at the root of your repository in order to have the relative 
-paths work.
+By default, `replicatr` creates a profile folder in `$HOME/replicatr` use the `-p` or `--profile` folder to change the
+name, the location is not configurable, however. Add a dot prefix to have it hidden from regular directory listings eg
+`-p .localcache`
 
-The logger doesn't generate relative paths, as this is an additional 
-complexity between the logger code and the environment that is not worth 
-doing anything about, you could add an invocation of `currpath` to your `.
-bashrc` and when you open the terminal in that location it would 
-automatically be set, but if you open a terminal elsewhere it would 
-overwrite it.
+Inside this folder will be stored two configuration files, `config.json` and `info.json`. The first contains persistent
+settings based on the CLI arguments shown above, and the second contains a
+[NIP-11](https://github.com/nostr-protocol/nips/blob/master/11.md) Relay Information Document. Any relevant parameters
+set on the command line will override those found in these two files (such as `--auth`) for the duration of the run.
 
-The reason for having the relative paths is that when you execute your code 
-if there is syntax or other errors that prevent compilation, the Go tooling 
-prints them as module-relative paths, which also may get confusing if you 
-have got a project with multiple go modules in it.
 
-I personally believe that there should be one `go.mod` in a project, as I 
-have seen the results of this in the `btcd` and `lnd` projects and it has 
-led to multiple cases of self-imports of different versions from the same 
-codebase, which is an abomination and the go modules equivalent of 
-spaghetti - how are you going to debug that mess?
+

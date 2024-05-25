@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"mleku.dev/git/slog"
 )
 
@@ -24,11 +26,11 @@ type WipeBDB struct{}
 type RescanAC struct{}
 type PubKey struct{}
 type AddRelay struct {
-	PubKey string `arg:"-k,--pubkey" help:"public key of client to add"`
+	PubKey string `arg:"--addpubkey" help:"public key of client to add"`
 	Admin  bool   `arg:"--admin"  help:"set client as admin"`
 }
 type RemoveRelay struct {
-	PubKey string `arg:"-k,--pubkey" help:"public key of client to remove"`
+	PubKey string `arg:"--removepubkey" help:"public key of client to remove"`
 }
 
 type GetPermission struct {
@@ -36,48 +38,50 @@ type GetPermission struct {
 
 func GetDefaultConfig() *Config {
 	return &Config{
-		Listen:       "0.0.0.0:3334",
-		EventStore:   "badger",
-		CanisterAddr: "https://icp0.io/",
-		Profile:      "replicatr",
-		Name:         "replicatr relay",
-		Icon:         "https://i.nostr.build/n8vM.png",
-		AuthRequired: false,
-		Public:       true,
-		DBLowWater:   86,
-		DBHighWater:  92,
-		GCFrequency:  300,
-		MaxProcs:     128,
-		LogLevel:     "info",
-		GCRatio:      100,
-		MemLimit:     500000000,
+		Listen:        "0.0.0.0:3334",
+		EventStore:    "badger",
+		CanisterAddr:  "https://icp0.io/",
+		Profile:       "replicatr",
+		Name:          "replicatr relay",
+		Icon:          "https://i.nostr.build/n8vM.png",
+		AuthRequired:  false,
+		Public:        true,
+		DBLowWater:    86,
+		DBHighWater:   92,
+		GCFrequency:   300,
+		MaxProcs:      4,
+		LogLevel:      "info",
+		GCRatio:       100,
+		MemLimit:      500000000,
+		PollFrequency: 5 * time.Second,
+		PollOverlap:   4,
 	}
 }
 
 type Config struct {
+	InitCfgCmd       *InitCfg       `arg:"subcommand:initcfg" json:"-" help:"initialize relay configuration files"`
 	ExportCmd        *ExportCmd     `arg:"subcommand:export" json:"-" help:"export database as line structured JSON"`
 	ImportCmd        *ImportCmd     `arg:"subcommand:import" json:"-" help:"import data from line structured JSON"`
-	InitCfgCmd       *InitCfg       `arg:"subcommand:initcfg" json:"-" help:"initialize relay configuration files"`
+	PubKeyCmd        *PubKey        `arg:"subcommand:pubkey" json:"-" help:"print relay canister public key"`
 	AddRelayCmd      *AddRelay      `arg:"subcommand:addrelay" json:"-" help:"add a relay to the cluster"`
-	PubKeyCmd        *PubKey        `arg:"subcommand:pubkey" json:"-" help:"print public key"`
 	RemoveRelayCmd   *RemoveRelay   `arg:"subcommand:removerelay" json:"-" help:"remove a relay from the cluster"`
 	GetPermissionCmd *GetPermission `arg:"subcommand:getpermission" json:"-" help:"get permission of a relay"`
-	Wipe             *WipeBDB       `arg:"subcommand:wipebdb" json:"-" help:"empties database"`
-	Rescan           *RescanAC      `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
-	Listen           string         `arg:"-l,--listen" json:"listen" help:"network address to listen on"`
-	EventStore       string         `arg:"-e,--eventstore" json:"eventstore" help:"select event store backend [ic,badger,iconly]"`
-	CanisterAddr     string         `arg:"-C,--canisteraddr" json:"canister_addr" help:"IC canister address to use (for local, use http://127.0.0.1:<port number>)"`
-	CanisterId       string         `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
-	Profile          string         `arg:"-p,--profile" default:"replicatr" json:"-"  help:"profile name to use for storage"` // default:"replicatr"
-	Name             string         `arg:"-n,--name" json:"name"  help:"name of relay for NIP-11"`                            // default:"replicatr relay"
-	Description      string         `arg:"-d,--description" json:"description" help:"description of relay for NIP-11"`
-	Pubkey           string         `arg:"--pubkey" json:"pubkey" help:"public key of relay operator"`
-	Contact          string         `arg:"-c,--contact" json:"contact,omitempty" help:"non-nostr relay operator contact details"`
-	Icon             string         `arg:"-i,--icon" json:"icon"  help:"icon to show on relay information pages"`                // default:"https://i.nostr.build/n8vM.png"
-	AuthRequired     bool           `arg:"-a,--auth" json:"auth_required"  help:"NIP-42 authentication required for all access"` // default:"false"
-	Public           bool           `arg:"--public" json:"public"  help:"allow public read access to users not on ACL"`          // default:"true"
-	Owners           []string       `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
-	SecKey           string         `arg:"-s,--seckey" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
+	Wipe             *WipeBDB       `arg:"subcommand:wipebdb" json:"-" help:"empties local badger database (bdb)"`
+	// Rescan           *RescanAC      `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
+	Listen       string   `arg:"-l,--listen" json:"listen" help:"network address to listen on"`
+	EventStore   string   `arg:"-e,--eventstore" json:"eventstore" help:"select event store backend [ic,badger,iconly]"`
+	CanisterAddr string   `arg:"-C,--canisteraddr" json:"canister_addr" help:"IC canister address to use (for local, use http://127.0.0.1:<port number>)"`
+	CanisterId   string   `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`
+	Profile      string   `arg:"-p,--profile" default:"replicatr" json:"-"  help:"profile name to use for storage"` // default:"replicatr"
+	Name         string   `arg:"-n,--name" json:"name"  help:"name of relay for NIP-11"`                            // default:"replicatr relay"
+	Description  string   `arg:"-d,--description" json:"description" help:"description of relay for NIP-11"`
+	Pubkey       string   `arg:"--pubkey" json:"pubkey" help:"public key of relay operator"`
+	Contact      string   `arg:"-c,--contact" json:"contact,omitempty" help:"non-nostr relay operator contact details"`
+	Icon         string   `arg:"-i,--icon" json:"icon"  help:"icon to show on relay information pages"`                // default:"https://i.nostr.build/n8vM.png"
+	AuthRequired bool     `arg:"-a,--auth" json:"auth_required"  help:"NIP-42 authentication required for all access"` // default:"false"
+	Public       bool     `arg:"--public" json:"public"  help:"allow public read access to users not on ACL"`          // default:"true"
+	Owners       []string `arg:"-o,--owner,separate" json:"owners" help:"specify public keys of users with owner level permissions on relay"`
+	SecKey       string   `arg:"-s,--seckey" json:"seckey" help:"identity key of relay, used to sign 30066 and 30166 events and for message control interface"`
 	// Whitelist permits ONLY inbound connections from specified IP addresses.
 	Whitelist []string `arg:"-w,--whitelist,separate" json:"ip_whitelist" help:"IP addresses that are only allowed to access"`
 	// AllowIPs is for bypassing authentication required for clients based on IP
@@ -103,6 +107,11 @@ type Config struct {
 	PProf       bool   `arg:"--pprof" help:"enable CPU and memory profiling"`
 	GCRatio     int    `arg:"--gcratio" help:"set GC percentage for triggering GC sweeps"`             // default:"100"
 	MemLimit    int64  `arg:"--memlimit" help:"set memory limit on process to constrain memory usage"` // default:"500000000"
+	// PollFrequency is how often the L2 is queried for recent events
+	PollFrequency time.Duration `arg:"--pollfrequency" help:"if a level 2 event store is enabled how often it polls"`
+	// PollOverlap is the multiple of the PollFrequency within which polling the L2
+	// is done to ensure any slow synchrony on the L2 is covered (2-4 usually)
+	PollOverlap timestamp.T `arg:"--polloverlap" help:"if a level 2 event store is enabled, multiple of poll freq overlap to account for latency"`
 }
 
 func (c *Config) Save(filename string) (err error) {
