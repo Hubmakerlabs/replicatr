@@ -2,8 +2,7 @@
 
 ![logo](doc/logo.png)
 
-`replicatr` is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr) with support for `layer 2` event stores, such as the Internet 
-Computer Protocol replicatr canister.
+`replicatr` is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr) with support for `layer 2` event stores, such as the ICP-`replicatr` canister.
 
 * Supports most applicable NIPs: 1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40, 42
 * Websocket compression: permessage-deflate with optional sliding window, when supported by clients
