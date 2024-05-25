@@ -1,5 +1,6 @@
 # ![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/d19340ee-9c6c-4311-a57a-28e9573074e8)Replicatr Architecture![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/d19340ee-9c6c-4311-a57a-28e9573074e8)
-![arch](arch.png)
+<img src="arch.png" width="50%" />
+
 
 
 ## ![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/6663bfd4-57b1-456a-815b-eebc5507c133)  Cache  ![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/6663bfd4-57b1-456a-815b-eebc5507c133)
