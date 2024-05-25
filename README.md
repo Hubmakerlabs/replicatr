@@ -20,7 +20,7 @@ Computer Protocol event store canister.
 
 The most original feature of replicatr is it's  [Internet Computer](https://internetcomputer.org/docs/current/home)
 integration allowing for quick and seamless inter-relay synchronization. This is achieved by defining relay clusters, an
-interconnected group of relays that're given authorization by a replicatr canister owner to utilize the canister's
+interconnected group of relays that're given authorization by a replicatr [canister](https://internetcomputer.org/docs/current/concepts/canisters-code) owner to utilize the canister's
 synchronization tooling to achieve consistency across the cluster.
 
 > [Click here](doc/cluster.md) to learn more about the problem this solves.
