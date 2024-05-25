@@ -98,7 +98,7 @@ Or you can build it and place it in the location `GOBIN` as defined [here](doc/g
 go install
 ```
 
-> add flags to configure the relay as needed or run without any flags to use defaults. Click [here](pkg/config/base/README.md) to view customizable parameters and configuration details
+> add flags to configure the relay as needed or run without any flags to use defaults. Click [here](pkg/config/base/README.md) to view customizable parameters, configuration, and subcommand details
 
 
 
