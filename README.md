@@ -10,7 +10,7 @@ Computer Protocol event store canister.
 * Extremely configurable making it seamlessly customizable across several parameters for relay operators
 * No external database required: All data is stored first locally on the filesystem in BadgerDB and optionally on the
   Internet Computer for inter-relay synchronization.
-* The local badgerDB is additionally equipped with a nostr-specific, highly configurable garbage collection scheme and a
+* The local badgerDB has been additionally equipped with a nostr-specific, highly configurable garbage collection scheme and a
   nostr-specific prefix-indexing scheme for seamless data mangement and rapid querying
 * Supports optionally mandating nip-42 authorization upon initial connection for enhanced security
 * [Internet Computer](https://internetcomputer.org/docs/current/home)-integration for efficient syncing with remote
