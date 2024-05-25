@@ -1,5 +1,6 @@
-![arch](arch.png)
 # ![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/d19340ee-9c6c-4311-a57a-28e9573074e8)Replicatr Architecture![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/d19340ee-9c6c-4311-a57a-28e9573074e8)
+![arch](arch.png)
+
 
 ## ![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/6663bfd4-57b1-456a-815b-eebc5507c133)  Cache  ![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/6663bfd4-57b1-456a-815b-eebc5507c133)
 By enabling relays to share a `layer 2` event store, the relay functions as a fast cache that can deliver freshly
@@ -31,7 +32,7 @@ The `replicatr` canister stores all posts across the relay cluster with the even
 Each relay is equipped with a sophisticated indexing system designed for swift querying, coupled with a robust caching mechanism that enhances performance while minimizing disk usage. Essentially, the relay functions as an optimized search engine for Nostr, swiftly generating a list of event IDs in response to each query. These event IDs are then transmitted to the IC Datastore, where content retrieval is further streamlined, as the event IDs serve as the primary keys within the datastore.
 
 
-# Synchronisation of Relay Data
+## Synchronisation of Relay Data
 
 With multiple relays sharing a network connected event store, such as the Internet Computer implementation found in this
 repository, the relays check every 5 seconds (a configurable frequency) for the last 15 seconds of events that have been
