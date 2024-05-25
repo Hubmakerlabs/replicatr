@@ -5,8 +5,9 @@ This document provides detailed explanations of the configurable parameters and 
 ## General Usage
 
 ```bash
-replicatr [options] <command> [<args>]
+go run . <flags> <args> <subcommand> <subcommand flags>
 ```
+> Note: all subcommands will execute the command and exit. The relay will not continue to run after the subcommand as in the general case. Only one subcommand should be given per call
 
 ## Stored Settings
 By default, `replicatr` creates a profile folder in `$HOME/replicatr`. use the `-p` or `--profile` folder to change the
