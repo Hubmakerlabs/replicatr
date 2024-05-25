@@ -114,8 +114,8 @@ go install
 
 This project would not be possible without the significant contributions and support from the following organizations and projects:
 
-1. **DFINITY** - For funding our project and enabling us to build on their cutting-edge blockchain technology.
-2. **Hubmaker Labs** - For their funding and ongoing support throughout the development process.
+1. **DFINITY** - For funding our project and enabling us to build on their cutting-edge [blockchain technology](https://internetcomputer.org/docs/current/home).
+2. **[Hubmaker Labs](https://github.com/Hubmakerlabs)** - For their funding and ongoing support throughout the development process.
 3. **nbd-wtf** - We forked their [`go-nostr`](https://github.com/nbd-wtf/go-nostr) package, which forms a substantial part of our Nostr tooling.
 4. **fiatjaf** - We based our project on his [`khatru`](https://github.com/fiatjaf/khatru) relay, using it as the foundational structure for our development.
 5. **Aviate Labs** - Their [`agent-go`](https://github.com/aviate-labs/agent-go) tooling has been instrumental in facilitating our interaction with Internet Computer canisters.
