@@ -68,8 +68,7 @@ Please enter the canister ID: <canister-id>
 #### To setup as a Minion/Secondary-Owner  relay (and join a preexisting cluster):
 
 1. Identify the a relay cluster you would like to join and ask the owner for their canister-id and if you can join.
-2. Clone the repo and ensure golang (v1.20+) is installed
-3. Run the following command from the root directory to initialize the relay with the previously obtained canister-id:
+2. Run the following command from the root directory to initialize the relay with the previously obtained canister-id:
 
    ```bash
    go run . initcfg -I <canister-id>
