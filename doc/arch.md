@@ -29,7 +29,7 @@ Relays also implement Nostr-specific prefix indexing for efficient querying with
 ## IC Eventstore ##
 The `replicatr` canister stores all posts across the relay cluster with the event-id as the primary key.
 
-## The Relay Search-Engine Model ##
+## Putting It All Together: The Relay Search-Engine Model ##
 Each relay is equipped with a sophisticated indexing system designed for swift querying, coupled with a robust caching mechanism that enhances performance while minimizing disk usage. Essentially, the relay functions as an optimized search engine for Nostr, swiftly generating a list of event IDs in response to each query. These event IDs are then transmitted to the IC Datastore, where content retrieval is further streamlined, as the event IDs serve as the primary keys within the datastore.
 
 
