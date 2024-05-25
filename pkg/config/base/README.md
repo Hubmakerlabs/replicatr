@@ -162,7 +162,8 @@ set on the command line will override those found in these two files (such as `-
     - **Example**: `removerelay --removepubkey 987xyz`
 
 - **`getpermission`**  
-  Get permission of a relay.
+  Obtain the access-level of a relay.
+  - **Options**: `Owner`, `User`, `Unauthorized`
 
 - **`wipebdb`**  
   Empties local badger database (bdb).
