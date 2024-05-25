@@ -23,9 +23,9 @@ integration allowing for quick and seamless inter-relay synchronization. This is
 interconnected group of relays that're given authorization by a replicatr [canister](https://internetcomputer.org/docs/current/concepts/canisters-code) owner to utilize the canister's
 synchronization tooling to achieve consistency across the cluster.
 
-> [Click here](doc/cluster.md) to learn more about the problem this solves.
+> [Click here](doc/problem.md) to learn more about the nostrific problem this addresses.
 
-> [Click here](doc/sync.md) to learn more about the synchronization architecture.
+> [Click here](doc/arch.md) to learn more about the synchronization architecture.
 
 ## Usage
 
