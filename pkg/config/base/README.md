@@ -144,10 +144,10 @@ set on the command line will override those found in these two files (such as `-
   Import data from line-structured JSON.
 
 - **`pubkey`**  
-  Print relay canister public key.
+  Print relay's canister public key.
 
 - **`addrelay`**  
-  Add a relay to the cluster.  
+  Add a relay to the cluster - only an `Owner` relay is authorized to do this 
   - **`--addpubkey`**  
     Public key of the client to add.  
     - **Example**: `addrelay --addpubkey 987xyz`
@@ -156,7 +156,7 @@ set on the command line will override those found in these two files (such as `-
     - **Example**: `add relay --addpubkey 987xyz --admin`
 
 - **`removerelay`**  
-  Remove a relay from the cluster.  
+  Remove a relay from the cluster - only an `Owner` relay is authorized to do this
   - **`--removepubkey`**  
     Public key of the client to remove.  
     - **Example**: `removerelay --removepubkey 987xyz`
