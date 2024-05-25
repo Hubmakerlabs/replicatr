@@ -16,4 +16,4 @@ Due to data inconsistency, users might miss out on important updates, discussion
 
 
 ## Unreliable Synchronization
-Some existing [relays](https://github.com/hoytech/strfry) use synchronization methods like [negentropy](https://github.com/hoytech/negentropy) are slow and resource-intensive, leading to data inconsistencies, gaps, and longer delays to the replication of the most frequently requested data.
+Some existing [relays](https://github.com/hoytech/strfry) use synchronization methods like [negentropy](https://github.com/hoytech/negentropy) which are slow, resource-intensive and unreliable, leading to data inconsistencies, gaps, and longer delays to the replication of the most frequently requested data.
