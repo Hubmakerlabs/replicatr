@@ -49,7 +49,7 @@ func GetDefaultConfig() *Config {
 		DBLowWater:    86,
 		DBHighWater:   92,
 		GCFrequency:   300,
-		MaxProcs:      128,
+		MaxProcs:      4,
 		LogLevel:      "info",
 		GCRatio:       100,
 		MemLimit:      500000000,
