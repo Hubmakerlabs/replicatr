@@ -29,6 +29,7 @@
 !*/
 !cmd/testnet/*
 .dfx
+.vscode/
 target
 node_modules
 canister_ids.json
