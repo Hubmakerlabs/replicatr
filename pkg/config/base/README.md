@@ -5,7 +5,7 @@ This document provides detailed explanations of the configurable parameters and 
 ## General Usage
 
 ```bash
-go run . <flags> <args> <subcommand> <subcommand flags>
+go run . <flags> <args> <subcommand> <subcommand flags> <subcommand args>
 ```
 > Note: all subcommands will execute the command and exit. The relay will not continue to run after the subcommand as in the general case. Only one subcommand should be given per call
 
