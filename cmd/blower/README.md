@@ -13,7 +13,7 @@ Blower is a command-line tool that facilitates the uploading of Nostr events fro
 ### Basic Command Structure
 
 ```bash
-go run ./blower --nsec [NSEC] --uploadrelay [RELAY_URL] --sourcefile [PATH_TO_JSONL_FILE]
+go run ./cmd/blower --nsec [NSEC] --uploadrelay [RELAY_URL] --sourcefile [PATH_TO_JSONL_FILE]
 ```
 
 ### Parameters
@@ -30,7 +30,7 @@ Blower can save your Nostr secret key in a configuration file within your home d
 To upload events to a relay, ensure your JSONL file is formatted correctly with valid Nostr events. Here is an example command:
 
 ```bash
-go run ./blower --nsec your_bech32_encoded_key --uploadrelay https://relay.example.com --sourcefile path/to/events.jsonl
+go run ./cmd/blower --nsec your_bech32_encoded_key --uploadrelay https://relay.example.com --sourcefile path/to/events.jsonl
 ```
 This command will start pushing events from events.jsonl to https://relay.example.com.
 

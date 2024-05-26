@@ -49,6 +49,7 @@ func PrepareQueries(f *filter.T) (
 	since uint64,
 	err error,
 ) {
+	since = uint64(math.MaxInt64)
 	switch {
 	// first if there is IDs, just search for them, this overrides all other filters
 	case len(f.IDs) > 0:
@@ -158,7 +159,8 @@ func PrepareQueries(f *filter.T) (
 		// log.T.S("kinds", qs)
 	default:
 		if len(qs) > 0 {
-			qs[0] = query{index: 0, queryFilter: f, searchPrefix: index.CreatedAt.Key()}
+			qs[0] = query{index: 0, queryFilter: f,
+				searchPrefix: index.CreatedAt.Key()}
 			ext = nil
 		}
 		// log.T.S("other", qs)
