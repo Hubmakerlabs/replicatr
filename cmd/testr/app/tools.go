@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	mrand "math/rand"
 
 	"github.com/nbd-wtf/go-nostr"
 )
@@ -41,4 +42,23 @@ func randomInt(max int) int {
 		return 0
 	}
 	return int(nBig.Int64())
+}
+
+// randomSubset selects a random subset of the given slice
+func randomSubset(slice []string) []string {
+	shuffled := make([]string, len(slice))
+	copy(shuffled, slice)
+	mrand.Shuffle(len(shuffled), func(i, j int) {
+		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+	})
+	count := mrand.Intn(len(shuffled)) + 1 // Ensure at least one element is chosen
+	return shuffled[:count]
+}
+
+// generateRandomFilter creates a random filter given arrays of authors and IDs
+func generateRandomFilter(authors, ids []string) nostr.Filter {
+	return nostr.Filter{
+		IDs:     randomSubset(ids),
+		Authors: randomSubset(authors),
+	}
 }

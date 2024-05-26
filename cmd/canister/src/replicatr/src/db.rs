@@ -69,11 +69,7 @@ pub fn get_events_db(filter: Filter) -> Result<Vec<Event>,String> {
             .map(|(_, event)| event.clone())
             .collect()
     });
-    if result.is_empty(){
-        return Err("No events found".to_string());
-    }else{
-        return Ok(result);
-    }
+    Ok(result)
 }
 
 

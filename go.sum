@@ -119,6 +119,8 @@ github.com/minio/sha256-simd v1.0.1 h1:6kaan5IFmwTNynnKKpDHe6FWHohJOHhCPchzK49dz
 github.com/minio/sha256-simd v1.0.1/go.mod h1:Pz6AKMiUdngCLpeTL/RJY1M9rUuPMYujV5xJjtbRSN8=
 github.com/nbd-wtf/go-nostr v0.30.0 h1:rN085pe4IxmSBVht8LChZbWLggonjA8hPIk8l4/+Hjk=
 github.com/nbd-wtf/go-nostr v0.30.0/go.mod h1:tiKJY6fWYSujbTQb201Y+IQ3l4szqYVt+fsTnsm7FCk=
+github.com/nbd-wtf/go-nostr v0.31.4 h1:Qq+PHyKixRZR6Tn+omF7LykK/IR6qcdmThNY132pKsA=
+github.com/nbd-wtf/go-nostr v0.31.4/go.mod h1:vHKtHyLXDXzYBN0fi/9Y/Q5AD0p+hk8TQVKlldAi0gI=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

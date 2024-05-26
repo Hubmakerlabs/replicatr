@@ -39,7 +39,7 @@ type GetPermission struct {
 func GetDefaultConfig() *Config {
 	return &Config{
 		Listen:        "0.0.0.0:3334",
-		EventStore:    "badger",
+		EventStore:    "ic",
 		CanisterAddr:  "https://icp0.io/",
 		Profile:       "replicatr",
 		Name:          "replicatr relay",
