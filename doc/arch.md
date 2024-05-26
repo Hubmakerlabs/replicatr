@@ -1,5 +1,5 @@
 # ![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/d19340ee-9c6c-4311-a57a-28e9573074e8)Replicatr Architecture![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/d19340ee-9c6c-4311-a57a-28e9573074e8)
-<img src="arch.png" width="50%" />
+<img src="arch.png" width="70%" />
 
 
 
