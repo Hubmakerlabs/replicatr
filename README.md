@@ -73,12 +73,12 @@ Please enter the canister ID: <canister-id>
    go run . initcfg -e ic -I <canister-id> 
    ```
    
-5. Run the following command to obtain your canister-facing relay pubkey:
+3. Run the following command to obtain your canister-facing relay pubkey:
    ```bash
    go run . pubkey
    ```
    
-7. Send the resulting pubkey to the canister owner and wait for them to grant you user/owner level access
+4. Send the resulting pubkey to the canister owner and wait for them to grant you user/owner level access
 
 > To learn more about canister permissions, [click here](doc/canister.md).
 
