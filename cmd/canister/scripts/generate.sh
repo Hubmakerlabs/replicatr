@@ -1,7 +1,7 @@
 #!/bin/sh
 
 canisters=(
-    "testnet_backend"
+    "replicatr"
 )
 
 echo -e "${GREEN}> $ENV: Generating required files..${NC}"

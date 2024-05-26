@@ -16,7 +16,7 @@ require (
 	github.com/gookit/color v1.5.4
 	github.com/mdp/qrterminal/v3 v3.2.0
 	github.com/minio/sha256-simd v1.0.1
-	github.com/nbd-wtf/go-nostr v0.30.0
+	github.com/nbd-wtf/go-nostr v0.31.4
 	github.com/puzpuzpuz/xsync/v2 v2.5.1
 	github.com/rs/cors v1.10.1
 	github.com/sebest/xff v0.0.0-20210106013422-671bd2870b3a

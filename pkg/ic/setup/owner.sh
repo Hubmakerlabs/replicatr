@@ -10,7 +10,7 @@ if [ ! -f 'marker.file' ]; then
 fi
 
 # Run dfx start in the background
-dfx start --background
+dfx start --background --clean
 
 # Define the dfx project directory
 DFX_DIR="./cmd/canister/"
@@ -24,28 +24,18 @@ TARGET_DIR="./cmd/canister/src/replicatr/src"
 # Ensure the target directory exists
 mkdir -p "$TARGET_DIR"
 
-cd "$DFX_DIR"
 
-# Build the project
-dfx build
 
-# Create the canister
-dfx canister create replicatr --network=ic
+# Prompt the user to input the canister ID
+read -p "Please enter the canister ID: " ID
 
-# Save the canister ID as a variable
-ID=$(dfx canister id replicatr --network=ic)
-
-# Check if the ID was successfully retrieved
+# Check if the ID was successfully provided
 if [ -z "$ID" ]; then
-    echo "Failed to retrieve canister ID"
+    echo "Canister ID cannot be empty"
     exit 1
 fi
-
-# Return to root directory using marker.file
-while [[ $PWD != '/' && ! -f 'marker.file' ]]; do cd ..; done
-
 # Run initcfg to initialize relay with canister_id and to generate secret key
-go run . initcfg -I $ID
+go run . initcfg -I $ID -e ic
 
 # Execute the Go command and capture the output (pubkey derived from secret key)
 pubkey=$(go run . pubkey --loglevel off)
@@ -67,8 +57,7 @@ echo "owner.rs created successfully with public key at $TARGET_DIR/owner.rs."
 # Cd out from "./cmd/canister/src/replicatr/src" to "./cmd/canister"
 cd ../../..
 
-# Deploy the canister
-dfx deploy --network=ic
+
 
 # Ensure the canister_ids.json file exists
 CANISTER_IDS_FILE="canister_ids.json"
@@ -79,4 +68,7 @@ fi
 # Update canister_ids.json
 jq ".replicatr.ic = \"$ID\"" "$CANISTER_IDS_FILE" > tmp.$$.json && mv tmp.$$.json "$CANISTER_IDS_FILE"
 
-echo "Deployment complete. Canister IDs have been updated."
+# Deploy the canister
+dfx deploy replicatr --network=ic
+
+echo "Relay initialized. Deployment complete. Canister ID updated."

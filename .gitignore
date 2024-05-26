@@ -29,9 +29,11 @@
 !*/
 !cmd/testnet/*
 .dfx
+.vscode/
 target
 node_modules
 canister_ids.json
+owner.rs
 # !cmd/testnet/src/
 # !cmd/testnet/src/**/*
 
