@@ -70,7 +70,7 @@ Please enter the canister ID: <canister-id>
 2. Run the following command from the root directory to initialize the relay with the previously obtained canister-id:
 
    ```bash
-   go run . initcfg -I <canister-id> -e ic
+   go run . initcfg -e ic -I <canister-id> 
    ```
    
 5. Run the following command to obtain your canister-facing relay pubkey:
