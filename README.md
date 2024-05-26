@@ -89,6 +89,7 @@ You can run the relay directly from the root of the repository:
 ```bash
 go run . <flags> <args>
 ```
+> add flags to configure the relay as needed or run without any flags to use defaults. Click [here](pkg/config/base/README.md) to view customizable parameters, configuration, and subcommand details
 
 Or you can build it and place it in the location `GOBIN` as defined [here](doc/golang.md):
 
@@ -96,12 +97,12 @@ Or you can build it and place it in the location `GOBIN` as defined [here](doc/g
 go install
 ```
 
-> add flags to configure the relay as needed or run without any flags to use defaults. Click [here](pkg/config/base/README.md) to view customizable parameters, configuration, and subcommand details
 
 ## Additional Features and Documentation
 
 |Package Name|Links |Description|
 |-----------------|-------|-----|
+|`config`|[![README](https://img.shields.io/badge/-README-green)](pkg/config/base/README.md)|Parameters and commands to configure the relay|
 |`blowr`|[![README](https://img.shields.io/badge/-README-green)](cmd/blower/README.md)|CLI tool that facilitates the uploading of Nostr events from a JSONL file to a specified Nostr relay|
 |`loggr`|[![README](https://img.shields.io/badge/-README-green)](doc/logger.md) [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/mleku.dev/git/slog@v1.0.16)|highly-informative, configurable logger to monitor relay activity|
 |`agent`| [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/github.com/Hubmakerlabs/replicatr/pkg/ic/agent)|IC-tooling for Nostr data|
