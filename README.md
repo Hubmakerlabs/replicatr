@@ -64,6 +64,8 @@ Please enter the canister ID: <canister-id>
 > This will generate a relay secret key, initialize your relay and deploy a replicatr canister on the Internet Computer with your relay as the
 > specified owner. Click [here](pkg/config/base/README.md) to see where the secret key as well other settings are stored.
 
+> If you have any issues with the owner setup, [here](/pkg/ic/setup/troubleshooting.md) is some troubleshooting help.
+
 #### To setup as a Minion/Secondary-Owner  relay (and join a preexisting cluster):
 
 1. Identify the a relay cluster you would like to join and ask the owner for their canister-id and if you can join.
