@@ -152,9 +152,9 @@ func (b *Backend) QueryEventsSearch(c context.T, q2 query, since uint64,
 		return
 	})
 	if err != nil {
+		close(q2.results)
 		for _ = range q2.results {
 		}
-		close(q2.results)
 		return
 	}
 	for _, eventKey := range eventKeys {
@@ -205,8 +205,8 @@ func (b *Backend) QueryEventsSearch(c context.T, q2 query, since uint64,
 			return
 		})
 	}
+	close(q2.results)
 	for _ = range q2.results {
 	}
-	close(q2.results)
 	return
 }

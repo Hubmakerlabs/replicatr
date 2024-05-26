@@ -26,7 +26,7 @@ type handleFilterParams struct {
 }
 
 func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
-	h.eose.Add(1)
+	// h.eose.Add(1)
 	defer h.eose.Done()
 	// overwrite the filter (for example, to eliminate some kinds or that we
 	// know we don't support)
@@ -47,7 +47,8 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// filter we can just reject it)
 	for _, reject := range rl.RejectFilter {
 		if rej, msg := reject(h.c, h.id, h.f); rej {
-			return log.D.Err("%s %s", normalize.Reason(msg, "blocked"), h.ws.AuthPubKey())
+			return log.D.Err("%s %s", normalize.Reason(msg, "blocked"),
+				h.ws.AuthPubKey())
 		}
 	}
 	// run the functions to query events (generally just one, but we might be
