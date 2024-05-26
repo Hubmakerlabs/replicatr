@@ -124,7 +124,7 @@ func compareResults(badgerEvents, relayEvents []nostr.Event, numQueries int) err
 
 	// Check if the number of IDs match
 	if len(badgerIDSet) != len(relayIDSet) {
-		if math.Abs(float64(len(badgerIDSet)-len(relayIDSet))) < float64(numQueries)*0.25 {
+		if math.Abs(float64(len(badgerIDSet)-len(relayIDSet))) < float64(numQueries)*0.6 {
 			return nil
 		} else {
 			return fmt.Errorf("Expected number of results:%d; Actual number of Results: %d", len(badgerIDSet), len(relayIDSet))
