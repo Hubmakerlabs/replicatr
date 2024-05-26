@@ -30,7 +30,7 @@ func main() {
 
 	// Request user input for relayArgs
 	reader := bufio.NewReader(os.Stdin)
-	log.I.F("Enter command to run relay as usual with flags and args as needed:")
+	fmt.Println("Enter command to run relay as usual with flags and args as needed:")
 	input, _ := reader.ReadString('\n')
 	relayArgs := strings.Fields(input)
 

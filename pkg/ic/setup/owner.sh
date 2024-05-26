@@ -35,7 +35,7 @@ if [ -z "$ID" ]; then
     exit 1
 fi
 # Run initcfg to initialize relay with canister_id and to generate secret key
-go run . initcfg -I $ID
+go run . initcfg -I $ID -e ic
 
 # Execute the Go command and capture the output (pubkey derived from secret key)
 pubkey=$(go run . pubkey --loglevel off)
