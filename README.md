@@ -70,7 +70,7 @@ Please enter the canister ID: <canister-id>
 2. Run the following command from the root directory to initialize the relay with the previously obtained canister-id:
 
    ```bash
-   go run . initcfg -I <canister-id>
+   go run . initcfg -e ic -I <canister-id> 
    ```
    
 5. Run the following command to obtain your canister-facing relay pubkey:
@@ -102,11 +102,11 @@ go install
 
 |Package Name|Links |Description|
 |-----------------|-------|-----|
-|`testr`|[![README](https://img.shields.io/badge/-README-green)](**todo**)|builds and executes highly customizable and exhaustive test cases for the relay|
 |`blowr`|[![README](https://img.shields.io/badge/-README-green)](cmd/blower/README.md)|CLI tool that facilitates the uploading of Nostr events from a JSONL file to a specified Nostr relay|
 |`loggr`|[![README](https://img.shields.io/badge/-README-green)](doc/logger.md) [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/mleku.dev/git/slog@v1.0.16)|highly-informative, configurable logger to monitor relay activity|
 |`agent`| [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/github.com/Hubmakerlabs/replicatr/pkg/ic/agent)|IC-tooling for Nostr data|
 |`IC-ACL`|[![README](https://img.shields.io/badge/-README-green)](doc/canister.md) [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/github.com/Hubmakerlabs/replicatr/pkg/ic/agent)|Commands for managing relays' canister access|
+|`testr`|[![README](https://img.shields.io/badge/-README-green)](**todo**)|builds and executes highly customizable and exhaustive test cases for the relay|
 
 
 
