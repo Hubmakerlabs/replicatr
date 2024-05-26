@@ -61,7 +61,7 @@ func FiltersTest(authors []string, ids []string, b *badger.BadgerBackend, numQue
 // Helper function to query the relay
 func queryRelay(relay *nostr.Relay, ctx context.T, filter nostr.Filter) ([]nostr.Event, error) {
 	var events []nostr.Event
-	sc, _ := context.Timeout(ctx, 30*time.Second)
+	sc, _ := context.Timeout(ctx, 10*time.Second)
 	sub := relay.PrepareSubscription(sc, nostr.Filters{filter})
 	if err := sub.Fire(); chk.E(err) {
 		return nil, err
