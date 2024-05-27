@@ -2,7 +2,7 @@
 
 ![logo](doc/logo.png)
 
-`replicatr` is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr) with support for `layer 2` event stores, such as the ICP-`replicatr` canister:
+`replicatr` is a relay for the [nostr protocol](https://github.com/nostr-protocol/nostr):
 
 * Supports most applicable NIPs: 1, 2, 4, 9, 11, 12, 15, 16, 20, 22, 28, 33, 40, 42
 * Websocket compression: permessage-deflate with optional sliding window, when supported by clients
@@ -64,6 +64,8 @@ Please enter the canister ID: <canister-id>
 > This will generate a relay secret key, initialize your relay and deploy a replicatr canister on the Internet Computer with your relay as the
 > specified owner. Click [here](pkg/config/base/README.md) to see where the secret key as well other settings are stored.
 
+> If you have any issues with the owner setup, [here](/pkg/ic/setup/troubleshooting.md) is some troubleshooting help.
+
 #### To setup as a Minion/Secondary-Owner  relay (and join a preexisting cluster):
 
 1. Identify the a relay cluster you would like to join and ask the owner for their canister-id and if you can join.
@@ -73,12 +75,12 @@ Please enter the canister ID: <canister-id>
    go run . initcfg -e ic -I <canister-id> 
    ```
    
-5. Run the following command to obtain your canister-facing relay pubkey:
+3. Run the following command to obtain your canister-facing relay pubkey:
    ```bash
    go run . pubkey
    ```
    
-7. Send the resulting pubkey to the canister owner and wait for them to grant you user/owner level access
+4. Send the resulting pubkey to the canister owner and wait for them to grant you user/owner level access
 
 > To learn more about canister permissions, [click here](doc/canister.md).
 
@@ -89,6 +91,7 @@ You can run the relay directly from the root of the repository:
 ```bash
 go run . <flags> <args>
 ```
+> add flags to configure the relay as needed or run without any flags to use defaults. Click [here](pkg/config/base/README.md) to view customizable parameters, configuration, and subcommand details
 
 Or you can build it and place it in the location `GOBIN` as defined [here](doc/golang.md):
 
@@ -96,12 +99,12 @@ Or you can build it and place it in the location `GOBIN` as defined [here](doc/g
 go install
 ```
 
-> add flags to configure the relay as needed or run without any flags to use defaults. Click [here](pkg/config/base/README.md) to view customizable parameters, configuration, and subcommand details
 
 ## Additional Features and Documentation
 
 |Package Name|Links |Description|
 |-----------------|-------|-----|
+|`config`|[![README](https://img.shields.io/badge/-README-green)](pkg/config/base/README.md)|Parameters and commands to configure the relay|
 |`blowr`|[![README](https://img.shields.io/badge/-README-green)](cmd/blower/README.md)|CLI tool that facilitates the uploading of Nostr events from a JSONL file to a specified Nostr relay|
 |`loggr`|[![README](https://img.shields.io/badge/-README-green)](doc/logger.md) [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/mleku.dev/git/slog@v1.0.16)|highly-informative, configurable logger to monitor relay activity|
 |`agent`| [![DOC](https://img.shields.io/badge/-DOC-blue)](https://pkg.go.dev/github.com/Hubmakerlabs/replicatr/pkg/ic/agent)|IC-tooling for Nostr data|
