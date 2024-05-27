@@ -173,7 +173,7 @@ func (rl *Relay) processReqEnvelope(msg []byte, env *reqenvelope.T,
 		// when all events have been loaded from databases and dispatched
 		// we can cancel the context and fire the EOSE message
 		wg.Wait()
-		log.I.Ln("cancelling req context")
+		// log.I.Ln("cancelling req context")
 		cancelReqCtx(nil)
 		chk.E(ws.WriteEnvelope(&eoseenvelope.T{Sub: env.SubscriptionID}))
 	}()

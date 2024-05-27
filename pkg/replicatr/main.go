@@ -40,7 +40,7 @@ import (
 
 var (
 	AppName = "replicatr"
-	Version = "v0.0.1"
+	Version = "v1.2.16"
 )
 
 var conf, args base.Config
@@ -154,7 +154,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	configPath := filepath.Join(dataDir, "config.json")
 	if _, serr := os.Stat(configPath); serr != nil && args.InitCfgCmd == nil {
 		args.InitCfgCmd = &base.InitCfg{}
-		log.W.Ln("******* configuration missing, creating new one at", configPath,
+		log.W.Ln("******* configuration missing, creating new one at",
+			configPath,
 			"- ensure that it is to as you require")
 	}
 	// initialize configuration with whatever has been read from the CLI.
@@ -299,7 +300,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		fmt.Println(publicKeyBase64)
 		os.Exit(0)
 	case args.AddRelayCmd != nil:
-		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
+		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr,
+			rl.Config.SecKey)
 		if err != nil {
 			log.E.F("Error creating agent: %s\n", err)
 			os.Exit(1)
@@ -313,10 +315,12 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		if args.AddRelayCmd.Admin {
 			perm = "admin"
 		}
-		log.I.F("User %s added with %s level access\n", args.AddRelayCmd.PubKey, perm)
+		log.I.F("User %s added with %s level access\n", args.AddRelayCmd.PubKey,
+			perm)
 		os.Exit(0)
 	case args.RemoveRelayCmd != nil:
-		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
+		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr,
+			rl.Config.SecKey)
 		if err != nil {
 			log.E.F("Error creating agent: %s\n", err)
 			os.Exit(1)
@@ -329,7 +333,8 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		log.I.F("User %s removed\n", args.RemoveRelayCmd.PubKey)
 		os.Exit(0)
 	case args.GetPermissionCmd != nil:
-		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr, rl.Config.SecKey)
+		a, err := agent.New(c, rl.Config.CanisterId, rl.Config.CanisterAddr,
+			rl.Config.SecKey)
 		if err != nil {
 			log.E.F("Error creating agent: %s\n", err)
 			os.Exit(1)
@@ -401,7 +406,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
 			badgerDB.DB.Close()
-			wg.Done()
+			// wg.Done()
 		})
 	case "badger":
 		db = badgerDB
@@ -409,7 +414,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		interrupt.AddHandler(func() {
 			badgerDB.DB.Flatten(8)
 			badgerDB.DB.Close()
-			wg.Done()
+			// wg.Done()
 		})
 	case "badgerbadger":
 		log.W.Ln("using badger testing L2")
@@ -424,7 +429,7 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 			badgerDB.DB.Close()
 			b2.DB.Flatten(8)
 			b2.DB.Close()
-			wg.Done()
+			// wg.Done()
 		})
 	}
 	if err = db.Init(); chk.E(err) {

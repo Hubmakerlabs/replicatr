@@ -54,10 +54,10 @@ func (b *Backend) QueryEventsLoop(c context.T, ch event.C,
 	for _, q1 := range queries {
 		select {
 		case <-c.Done():
-			log.T.Ln("websocket closed")
+			// log.T.Ln("websocket closed")
 			return
 		case <-b.Ctx.Done():
-			log.I.Ln("backend context canceled")
+			// log.I.Ln("backend context canceled")
 			return
 		default:
 		}

@@ -66,7 +66,6 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 		if ch, err = query(h.c, h.f); chk.E(err) {
 			h.ws.OffenseCount.Inc()
 			chk.E(h.ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
-			h.eose.Done()
 			continue
 		}
 		go func(ch event.C) {
@@ -127,10 +126,10 @@ func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 						Event:          ev,
 					}))
 				case <-rl.Ctx.Done():
-					log.T.Ln("shutting down")
+					// log.T.Ln("shutting down")
 					break out
 				case <-h.c.Done():
-					log.T.Ln("query context done")
+					// log.T.Ln("query context done")
 					break out
 				}
 			}

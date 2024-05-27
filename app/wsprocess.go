@@ -83,7 +83,7 @@ func (rl *Relay) wsProcessMessages(msg []byte, c context.T,
 	switch env := en.(type) {
 	case *eventenvelope.T:
 		if err = rl.processEventEnvelope(msg, env, c, ws,
-			serviceURL); chk.E(err) {
+			serviceURL); err != nil {
 			return
 		}
 	case *countenvelope.Request:

@@ -1,6 +1,8 @@
 package app
 
 import (
+	"strings"
+
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/noticeenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
@@ -28,7 +30,10 @@ func (rl *Relay) handleCountRequest(c context.T, id subscriptionid.T,
 	var err error
 	var res int
 	for _, count := range rl.CountEvents {
-		if res, err = count(c, f); chk.E(err) {
+		if res, err = count(c, f); err != nil {
+			if strings.HasSuffix(err.Error(), "No events found") {
+				log.E.Ln(err.Error())
+			}
 			chk.E(ws.WriteEnvelope(&noticeenvelope.T{Text: err.Error()}))
 		}
 		subtotal += res
