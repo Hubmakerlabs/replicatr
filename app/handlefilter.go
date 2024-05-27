@@ -27,7 +27,7 @@ type handleFilterParams struct {
 
 func (rl *Relay) handleFilter(h handleFilterParams) (err error) {
 	// h.eose.Add(1)
-	defer h.eose.Done()
+	// defer h.eose.Done()
 	// overwrite the filter (for example, to eliminate some kinds or that we
 	// know we don't support)
 	for _, ovw := range rl.OverwriteFilter {
