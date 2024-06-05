@@ -18,7 +18,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -59,7 +59,8 @@ func (b *Backend) Init() (err error) {
 	if b.PollOverlap < 2 {
 		b.PollOverlap = 4
 	}
-	log.I.Ln("L2 polling frequency", b.PollFrequency, "overlap", b.PollFrequency*time.Duration(b.PollOverlap))
+	log.I.Ln("L2 polling frequency", b.PollFrequency, "overlap",
+		b.PollFrequency*time.Duration(b.PollOverlap))
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		last := timestamp.Now()
@@ -73,7 +74,8 @@ func (b *Backend) Init() (err error) {
 				until := timestamp.Now()
 				var ch event.C
 				if ch, err = b.L2.QueryEvents(b.Ctx,
-					&filter.T{Since: last.Ptr(), Until: until.Ptr()}); chk.E(err) {
+					&filter.T{Since: last.Ptr(),
+						Until: until.Ptr()}); chk.E(err) {
 					continue out
 				}
 				last = until - b.PollOverlap*timestamp.T(b.PollFrequency/time.Second)
@@ -127,7 +129,8 @@ func (b *Backend) SaveLoop(c context.T, saveChan event.C) {
 	}
 }
 
-func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
+func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C,
+	err error) {
 	ch = make(event.C)
 	// Both calls are async so fire them off at the same time
 	ch1, err1 := b.L1.QueryEvents(c, f)

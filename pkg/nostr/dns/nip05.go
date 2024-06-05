@@ -10,7 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -47,12 +47,14 @@ func QueryIdentifier(c context.T, username string) (pp *pointers.Profile,
 	}
 	var req *http.Request
 	req, err = http.NewRequestWithContext(c, "GET",
-		fmt.Sprintf("https://%s/.well-known/nostr.json?name=%s", domain, name), nil)
+		fmt.Sprintf("https://%s/.well-known/nostr.json?name=%s", domain, name),
+		nil)
 	if chk.E(err) {
 		return nil, fmt.Errorf("failed to create a request: %w", err)
 	}
 	client := &http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) (err error) {
+		CheckRedirect: func(req *http.Request,
+			via []*http.Request) (err error) {
 			return http.ErrUseLastResponse
 		},
 	}

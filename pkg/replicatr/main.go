@@ -35,7 +35,7 @@ import (
 	"github.com/aviate-labs/agent-go/identity"
 	sec "github.com/aviate-labs/secp256k1"
 	"mleku.dev/git/interrupt"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var (
@@ -474,12 +474,13 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 	// run the chat ACL initialization
 	rl.Init()
 	var servs []http.Server
-	// for i := range conf.Listen {
-	serv := http.Server{
-		Addr:    conf.Listen,
-		Handler: rl,
+	for i := range conf.Listen {
+		serv := http.Server{
+			Addr:    conf.Listen[i],
+			Handler: rl,
+		}
+		servs = append(servs, serv)
 	}
-	servs = append(servs, serv)
 	// // this allows local access and works with nostrudel
 	servs = append(servs, http.Server{
 		Addr:    "127.0.0.1:4869",

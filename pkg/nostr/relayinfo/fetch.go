@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

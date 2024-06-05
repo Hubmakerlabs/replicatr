@@ -32,7 +32,7 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/puzpuzpuz/xsync/v2"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

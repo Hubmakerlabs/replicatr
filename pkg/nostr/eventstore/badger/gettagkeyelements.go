@@ -12,10 +12,11 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/pubkey"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys/serial"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
-	"mleku.dev/git/ec/schnorr"
+	"mleku.net/ec/schnorr"
 )
 
-func GetTagKeyElements(tagValue string, CA *createdat.T, ser *serial.T) (prf index.P,
+func GetTagKeyElements(tagValue string, CA *createdat.T,
+	ser *serial.T) (prf index.P,
 	elems []keys.Element, err error) {
 
 	var pkb []byte
@@ -53,7 +54,8 @@ func GetTagKeyElements(tagValue string, CA *createdat.T, ser *serial.T) (prf ind
 					return
 				}
 				prf = index.TagAddr
-				elems = keys.Make(kinder.New(k), pk, arb.NewFromString(d), CA, ser)
+				elems = keys.Make(kinder.New(k), pk, arb.NewFromString(d), CA,
+					ser)
 				return
 			}
 		}

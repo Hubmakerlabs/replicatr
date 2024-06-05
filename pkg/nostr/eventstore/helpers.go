@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

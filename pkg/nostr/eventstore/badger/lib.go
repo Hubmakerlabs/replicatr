@@ -14,7 +14,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/dgraph-io/badger/v4"
 	"github.com/dgraph-io/badger/v4/options"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

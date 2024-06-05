@@ -11,8 +11,8 @@ import (
 
 	b32 "github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"lukechampine.com/frand"
-	secp "mleku.dev/git/ec/secp256k1"
-	"mleku.dev/git/slog"
+	secp "mleku.net/ec/secp256k1"
+	"mleku.net/slog"
 )
 
 var (

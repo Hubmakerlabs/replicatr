@@ -9,7 +9,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

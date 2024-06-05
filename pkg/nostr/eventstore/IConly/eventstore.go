@@ -11,7 +11,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -38,7 +38,8 @@ func (b *Backend) Init() (err error) {
 		return log.E.Err("missing required canister parameters, got addr: \"%s\" and id: \"%s\"",
 			b.CanisterAddr, b.CanisterId)
 	}
-	if b.IC, err = agent.New(b.Ctx, b.CanisterId, b.CanisterAddr, b.SecKey); chk.E(err) {
+	if b.IC, err = agent.New(b.Ctx, b.CanisterId, b.CanisterAddr,
+		b.SecKey); chk.E(err) {
 		return
 	}
 	return
@@ -63,7 +64,8 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 // asynchronously over a provided channel.
 //
 // This is asynchronous, it will never return an error.
-func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
+func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C,
+	err error) {
 	log.D.Ln("querying IC with filter", f.ToObject().String())
 	if ch, err = b.IC.QueryEvents(f); err != nil {
 		split := strings.Split(err.Error(), "Error:")

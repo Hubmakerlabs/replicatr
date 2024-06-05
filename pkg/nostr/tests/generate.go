@@ -9,12 +9,13 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"lukechampine.com/frand"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
 
-func GenerateEvent(nsec string, maxSize int) (ev *event.T, binSize int, err error) {
+func GenerateEvent(nsec string, maxSize int) (ev *event.T, binSize int,
+	err error) {
 	l := frand.Intn(maxSize * 6 / 8) // account for base64 expansion
 	ev = &event.T{
 		Kind:      kind.TextNote,

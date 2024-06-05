@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

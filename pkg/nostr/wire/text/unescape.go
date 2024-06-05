@@ -6,7 +6,7 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

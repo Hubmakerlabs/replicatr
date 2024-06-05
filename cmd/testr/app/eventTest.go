@@ -12,7 +12,7 @@ import (
 	"github.com/fasthttp/websocket"
 	"github.com/fiatjaf/eventstore/badger"
 	"github.com/nbd-wtf/go-nostr"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -37,7 +37,8 @@ var kinds = []int{
 	31990, 32123, 34550, 39998, 40000,
 }
 
-func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T, c *websocket.Conn) (authors []string,
+func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int,
+	ctx context.T, c *websocket.Conn) (authors []string,
 	ids []string, err error) {
 	if seed != nil {
 		src := seededRand.NewSource(int64(*seed))
@@ -56,13 +57,15 @@ func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T
 		}
 		err = e.Sign(keys.GeneratePrivateKey())
 		if err != nil {
-			fmt.Printf("unable to create random event number %d out of %d: %v", i+1, numEvents, err)
+			fmt.Printf("unable to create random event number %d out of %d: %v",
+				i+1, numEvents, err)
 			continue
 		}
 
 		err = b.SaveEvent(ctx, &e)
 		if err != nil {
-			fmt.Printf("failed to save event %d to filterCheckerDB: %v", numEvents, err)
+			fmt.Printf("failed to save event %d to filterCheckerDB: %v",
+				numEvents, err)
 			continue
 
 		}
@@ -80,7 +83,8 @@ func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T
 
 		err = c.WriteMessage(websocket.TextMessage, jsonData)
 		if err != nil {
-			fmt.Printf("Failed to send event %d out of %d through WebSocket: %v", i+1, numEvents, err)
+			fmt.Printf("Failed to send event %d out of %d through WebSocket: %v",
+				i+1, numEvents, err)
 		}
 
 		c.SetReadDeadline(time.Now().Add(100 * time.Second)) // Set a 10-second read deadline
@@ -88,7 +92,8 @@ func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T
 		_, message, err = c.ReadMessage()
 
 		if err != nil {
-			if websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure,
+				websocket.CloseGoingAway) {
 				fmt.Printf("Connection closed normally.\n")
 				break // Exit the loop if the connection is closed normally
 			} else {
@@ -107,7 +112,8 @@ func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T
 		// Parse the JSON array
 		err = json.Unmarshal([]byte(jsonStr), &result)
 		if err != nil {
-			err = fmt.Errorf("Error parsing JSON response from event %d out of %d:%v", i+1, numEvents, err)
+			err = fmt.Errorf("Error parsing JSON response from event %d out of %d:%v",
+				i+1, numEvents, err)
 			return
 		}
 
@@ -120,19 +126,23 @@ func EventsTest(b *badger.BadgerBackend, numEvents int, seed *int, ctx context.T
 				return
 			} else {
 				if firstElement == true {
-					fmt.Printf("Received relay confirmation for Event %d out of %d\n", i+1, numEvents)
+					fmt.Printf("Received relay confirmation for Event %d out of %d\n",
+						i+1, numEvents)
 				} else {
-					err = fmt.Errorf("relay response message for event number %d out of %d was: %s", i+1, numEvents,
+					err = fmt.Errorf("relay response message for event number %d out of %d was: %s",
+						i+1, numEvents,
 						result[3].(string))
 					return
 				}
 			}
 		} else {
-			fmt.Errorf("The JSON array response from event %d out of %d is empty.", i+1, numEvents)
+			fmt.Errorf("The JSON array response from event %d out of %d is empty.",
+				i+1, numEvents)
 		}
 	}
 
-	fmt.Printf("Event Test Successful! %d out of %d OK's received\n", numEvents, numEvents)
+	fmt.Printf("Event Test Successful! %d out of %d OK's received\n", numEvents,
+		numEvents)
 	fmt.Printf("all %d events were randomly generated and successfully saved to the relay with relay confirmation\n\n",
 		numEvents)
 	return

@@ -13,7 +13,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	sec "github.com/aviate-labs/secp256k1"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

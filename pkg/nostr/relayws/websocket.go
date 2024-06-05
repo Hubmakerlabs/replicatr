@@ -16,7 +16,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/fasthttp/websocket"
 	"mleku.dev/git/atomic"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -74,7 +74,8 @@ func (ws *WebSocket) write(t MessageType, b []byte) (err error) {
 	ws.mutex.Lock()
 	defer ws.mutex.Unlock()
 	if len(b) != 0 {
-		log.T.F("sending message to %s %s\n%s", ws.RealRemote(), ws.AuthPubKey(), string(b))
+		log.T.F("sending message to %s %s\n%s", ws.RealRemote(),
+			ws.AuthPubKey(), string(b))
 	}
 	chk.E(ws.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5)))
 	return ws.Conn.WriteMessage(int(t), b)

@@ -12,7 +12,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -37,8 +37,11 @@ func NewResponse(ac *Challenge, rl string) (ae *Response) {
 	return
 }
 
-func (a *Response) Label() string                { return labels.AUTH }
-func (a *Response) ToArray() array.T             { return array.T{labels.AUTH, a.Event.ToObject()} }
+func (a *Response) Label() string { return labels.AUTH }
+func (a *Response) ToArray() array.T {
+	return array.T{labels.AUTH,
+		a.Event.ToObject()}
+}
 func (a *Response) String() string               { return a.ToArray().String() }
 func (a *Response) Bytes() []byte                { return a.ToArray().Bytes() }
 func (a *Response) MarshalJSON() ([]byte, error) { return a.Bytes(), nil }
@@ -73,7 +76,8 @@ func (a *Response) Unmarshal(buf *text.Buffer) (err error) {
 	// technically we maybe should read ahead further to make sure the JSON
 	// closes correctly. Not going to abort because of this.
 	if err = buf.ScanUntil(']'); err != nil {
-		return fmt.Errorf("malformed JSON, no closing bracket on array: %s", err)
+		return fmt.Errorf("malformed JSON, no closing bracket on array: %s",
+			err)
 	}
 	// whatever remains doesn't matter as the envelope has fully unmarshalled.
 	return

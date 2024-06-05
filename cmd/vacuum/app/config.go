@@ -3,7 +3,7 @@ package app
 import (
 	"os"
 
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 const Name = "vacuum"

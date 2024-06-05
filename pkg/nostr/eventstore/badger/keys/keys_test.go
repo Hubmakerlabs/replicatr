@@ -20,8 +20,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"lukechampine.com/frand"
-	"mleku.dev/git/ec/schnorr"
-	"mleku.dev/git/slog"
+	"mleku.net/ec/schnorr"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

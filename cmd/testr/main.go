@@ -16,7 +16,7 @@ import (
 	"github.com/alexflint/go-arg"
 	"github.com/fasthttp/websocket"
 	"github.com/fiatjaf/eventstore/badger"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var conf app.Config
@@ -43,7 +43,8 @@ func main() {
 
 	if conf.Wipe {
 		if relayConf.EventStore == "ic" || relayConf.EventStore == "iconly" {
-			app.CanisterCleanUp(relayConf.CanisterId, relayConf.CanisterAddr, relayConf.SecKey)
+			app.CanisterCleanUp(relayConf.CanisterId, relayConf.CanisterAddr,
+				relayConf.SecKey)
 		}
 
 		app.BadgerCleanUp()
@@ -74,7 +75,8 @@ func main() {
 	}
 	time.Sleep(time.Second)
 	if !conf.SkipSetup && (relayConf.EventStore == "ic" || relayConf.EventStore == "iconly") {
-		app.CanisterCleanUp(relayConf.CanisterId, relayConf.CanisterAddr, relayConf.SecKey)
+		app.CanisterCleanUp(relayConf.CanisterId, relayConf.CanisterAddr,
+			relayConf.SecKey)
 	}
 	// Set up WebSocket connection
 	wsURL := "ws://127.0.0.1:3334"
@@ -87,16 +89,19 @@ func main() {
 	defer c.Close()
 	var ids []string
 	var authors []string
-	if authors, ids, err = app.EventsTest(db, conf.EventAmount, conf.Seed, ctx, c); err != nil {
+	if authors, ids, err = app.EventsTest(db, conf.EventAmount, conf.Seed, ctx,
+		c); err != nil {
 		log.F.F("event test failed: %v", err)
 	}
 
-	if err = app.FiltersTest(authors, ids, db, conf.QueryAmount, ctx); err != nil {
+	if err = app.FiltersTest(authors, ids, db, conf.QueryAmount,
+		ctx); err != nil {
 		log.F.F("filters test failed: %v", err)
 	}
 	if !conf.SkipSetup {
 		if relayConf.EventStore == "ic" || relayConf.EventStore == "iconly" {
-			app.CanisterCleanUp(relayConf.CanisterId, relayConf.CanisterAddr, relayConf.SecKey)
+			app.CanisterCleanUp(relayConf.CanisterId, relayConf.CanisterAddr,
+				relayConf.SecKey)
 		}
 		app.BadgerCleanUp()
 	}

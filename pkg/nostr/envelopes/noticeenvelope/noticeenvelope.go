@@ -8,7 +8,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -33,8 +33,11 @@ func NewNoticeEnvelope(text string) (E *T) {
 
 // Label returns the label enum/type of the envelope. The relevant bytes could
 // be retrieved using nip1.List[T]
-func (E *T) Label() string                { return labels.NOTICE }
-func (E *T) ToArray() array.T             { return array.T{labels.NOTICE, E.Text} }
+func (E *T) Label() string { return labels.NOTICE }
+func (E *T) ToArray() array.T {
+	return array.T{labels.NOTICE,
+		E.Text}
+}
 func (E *T) String() (s string)           { return E.ToArray().String() }
 func (E *T) Bytes() (s []byte)            { return E.ToArray().Bytes() }
 func (E *T) MarshalJSON() ([]byte, error) { return E.Bytes(), nil }
@@ -57,7 +60,8 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	var noticeText []byte
 	// read the string
 	if noticeText, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s",
+			err)
 	}
 	E.Text = string(text.UnescapeByteString(noticeText))
 	return

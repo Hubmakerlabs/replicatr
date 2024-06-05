@@ -8,8 +8,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
-	"mleku.dev/git/ec/secp256k1"
-	"mleku.dev/git/slog"
+	"mleku.net/ec/secp256k1"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

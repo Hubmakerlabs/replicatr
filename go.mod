@@ -3,7 +3,7 @@ module github.com/Hubmakerlabs/replicatr
 go 1.22
 
 require (
-	github.com/alexflint/go-arg v1.4.3
+	github.com/alexflint/go-arg v1.5.0
 	github.com/aviate-labs/agent-go v0.3.4
 	github.com/aviate-labs/secp256k1 v0.0.0-5e6736a
 	github.com/davecgh/go-spew v1.1.1
@@ -26,15 +26,15 @@ require (
 	lukechampine.com/frand v1.4.2
 	mleku.dev/git/atomic v1.11.6
 	mleku.dev/git/bech32 v1.0.7
-	mleku.dev/git/ec v1.0.9
 	mleku.dev/git/interrupt v1.0.13
 	mleku.dev/git/qu v1.0.8
-	mleku.dev/git/slog v1.0.16
+	mleku.net/ec v1.0.11
+	mleku.net/slog v1.2.0
 )
 
 require (
 	github.com/aead/chacha20 v0.0.0-20180709150244-8b13a72661da // indirect
-	github.com/alexflint/go-scalar v1.1.0 // indirect
+	github.com/alexflint/go-scalar v1.2.0 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/aviate-labs/leb128 v0.3.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
@@ -75,5 +75,7 @@ require (
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/term v0.20.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
+	mleku.dev/git/slog v1.0.16 // indirect
+	mleku.net/atomic v1.11.10 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )

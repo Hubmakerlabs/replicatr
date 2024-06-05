@@ -15,7 +15,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 /*
@@ -179,7 +179,8 @@ func Marshal(evt *event.T) (string, error) {
 		2, // the end
 	)
 	base.WriteString(`{"id":"` + evt.ID.String() + `","pubkey":"` + evt.PubKey + `","sig":"` + evt.Sig +
-		`","created_at":` + strconv.FormatInt(int64(evt.CreatedAt), 10) + `,"nson":"`)
+		`","created_at":` + strconv.FormatInt(int64(evt.CreatedAt),
+		10) + `,"nson":"`)
 
 	nsonSizeBytes := len(nsonBuf)
 	if nsonSizeBytes > 255 {

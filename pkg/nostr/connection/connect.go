@@ -16,7 +16,7 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsflate"
 	"github.com/gobwas/ws/wsutil"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -32,7 +32,8 @@ type C struct {
 	msgState          *wsflate.MessageState
 }
 
-func NewConnection(c context.T, url string, requestHeader http.Header) (connection *C, err error) {
+func NewConnection(c context.T, url string,
+	requestHeader http.Header) (connection *C, err error) {
 	dialer := ws.Dialer{
 		Header: ws.HandshakeHeaderHTTP(requestHeader),
 		Extensions: []httphead.Option{
@@ -58,9 +59,10 @@ func NewConnection(c context.T, url string, requestHeader http.Header) (connecti
 	var msgState wsflate.MessageState
 	if enableCompression {
 		msgState.SetCompressed(true)
-		flateReader = wsflate.NewReader(nil, func(r io.Reader) wsflate.Decompressor {
-			return flate.NewReader(r)
-		})
+		flateReader = wsflate.NewReader(nil,
+			func(r io.Reader) wsflate.Decompressor {
+				return flate.NewReader(r)
+			})
 	}
 	controlHandler := wsutil.ControlFrameHandler(conn, ws.StateClientSide)
 	reader := &wsutil.Reader{

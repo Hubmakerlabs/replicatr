@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -38,7 +38,7 @@ type GetPermission struct {
 
 func GetDefaultConfig() *Config {
 	return &Config{
-		Listen:        "0.0.0.0:3334",
+		Listen:        []string{"0.0.0.0:3334"},
 		EventStore:    "ic",
 		CanisterAddr:  "https://icp0.io/",
 		Profile:       "replicatr",
@@ -68,7 +68,7 @@ type Config struct {
 	GetPermissionCmd *GetPermission `arg:"subcommand:getpermission" json:"-" help:"get permission of a relay"`
 	Wipe             *WipeBDB       `arg:"subcommand:wipebdb" json:"-" help:"empties local badger database (bdb)"`
 	// Rescan           *RescanAC      `arg:"subcommand:rescan" json:"-" help:"clear and regenerate access counter records"`
-	Listen       string   `arg:"-l,--listen" json:"listen" help:"network address to listen on"`
+	Listen       []string `arg:"-l,--listen,separate" json:"listen" help:"network address to listen on"`
 	EventStore   string   `arg:"-e,--eventstore" json:"eventstore" help:"select event store backend [ic,badger,iconly]"`
 	CanisterAddr string   `arg:"-C,--canisteraddr" json:"canister_addr" help:"IC canister address to use (for local, use http://127.0.0.1:<port number>)"`
 	CanisterId   string   `arg:"-I,--canisterid" json:"canister_id" help:"IC canister ID to use"`

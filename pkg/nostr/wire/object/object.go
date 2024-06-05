@@ -23,7 +23,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -130,9 +130,12 @@ func (t T) Buffer(b ...*bytes.Buffer) (buf *bytes.Buffer) {
 	return buf
 }
 
-func (t T) String() string                     { return t.Buffer().String() }
-func (t T) Bytes() []byte                      { return t.Buffer().Bytes() }
-func (t T) MarshalJSON() (b []byte, err error) { return t.Buffer().Bytes(), nil }
+func (t T) String() string { return t.Buffer().String() }
+func (t T) Bytes() []byte  { return t.Buffer().Bytes() }
+func (t T) MarshalJSON() (b []byte,
+	err error) {
+	return t.Buffer().Bytes(), nil
+}
 
 // sort.Interface implementation
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 func TestUnescapeByteString(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 // const RELAY = "wss://nos.lol"
@@ -58,7 +58,8 @@ func (E *T) Unmarshal(buf *text.Buffer) (err error) {
 	var sid []byte
 	// read the string
 	if sid, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s",
+			err)
 	}
 	E.Sub = subscriptionid.T(sid[:])
 	return

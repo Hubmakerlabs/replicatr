@@ -12,7 +12,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -24,8 +24,11 @@ type Request struct {
 
 var _ enveloper.I = &Request{}
 
-func (C *Request) Label() string                { return labels.COUNT }
-func (C *Request) ToArray() array.T             { return array.T{labels.COUNT, C.ID, C.Filters} }
+func (C *Request) Label() string { return labels.COUNT }
+func (C *Request) ToArray() array.T {
+	return array.T{labels.COUNT,
+		C.ID, C.Filters}
+}
 func (C *Request) String() string               { return C.ToArray().String() }
 func (C *Request) Bytes() []byte                { return C.ToArray().Bytes() }
 func (C *Request) MarshalJSON() ([]byte, error) { return C.Bytes(), nil }
@@ -46,7 +49,8 @@ func (C *Request) Unmarshal(buf *text.Buffer) (err error) {
 	var sid []byte
 	// read the string
 	if sid, err = buf.ReadUntil('"'); chk.D(err) {
-		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s", err)
+		return fmt.Errorf("unterminated quotes in JSON, probably truncated read: %s",
+			err)
 	}
 	C.ID = subscriptionid.T(sid)
 	// find the opening brace of the first or only filter object.

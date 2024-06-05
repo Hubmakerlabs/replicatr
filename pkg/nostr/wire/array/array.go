@@ -15,7 +15,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

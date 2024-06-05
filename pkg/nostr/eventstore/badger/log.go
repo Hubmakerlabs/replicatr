@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"mleku.dev/git/atomic"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 func NewLogger(logLevel int, label string) (l *logger) {

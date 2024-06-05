@@ -16,7 +16,7 @@ import (
 	"lukechampine.com/frand"
 	"mleku.dev/git/interrupt"
 	"mleku.dev/git/qu"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -86,7 +86,8 @@ end:
 						// has and request every event that gets over 50% so that we
 						// create a bias towards already requested.
 						if counter[i].requested+rn > 192 {
-							log.I.Ln("counter", counter[i].requested, "+", rn, "=",
+							log.I.Ln("counter", counter[i].requested, "+", rn,
+								"=",
 								counter[i].requested+rn)
 							// log.T.Ln("adding to fetchIDs")
 							counter[i].requested++
@@ -148,7 +149,8 @@ end:
 				return
 			default:
 			}
-			if ev, bs, err = tests.GenerateEvent(Sec, cfg.MaxContentSize); chk.E(err) {
+			if ev, bs, err = tests.GenerateEvent(Sec,
+				cfg.MaxContentSize); chk.E(err) {
 				return
 			}
 			mx.Lock()

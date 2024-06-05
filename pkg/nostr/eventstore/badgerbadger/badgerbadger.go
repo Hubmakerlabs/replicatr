@@ -10,7 +10,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/l2"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filter"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -60,7 +60,8 @@ func (b *Backend) DeleteEvent(c context.T, ev *event.T) (err error) {
 
 // QueryEvents searches for events that match a filter and returns them
 // asynchronously over a provided channel.
-func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C, err error) {
+func (b *Backend) QueryEvents(c context.T, f *filter.T) (ch event.C,
+	err error) {
 	return b.Backend.QueryEvents(c, f)
 }
 

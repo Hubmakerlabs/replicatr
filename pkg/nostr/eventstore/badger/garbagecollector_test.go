@@ -17,7 +17,7 @@ package badger
 // 	"lukechampine.com/frand"
 // 	"mleku.dev/git/interrupt"
 // 	"mleku.dev/git/qu"
-// 	"mleku.dev/git/slog"
+// 	"mleku.net/slog"
 // )
 
 // type Counter struct {

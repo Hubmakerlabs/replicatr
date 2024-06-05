@@ -11,9 +11,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
 	"github.com/minio/sha256-simd"
-	"mleku.dev/git/ec/schnorr"
-	"mleku.dev/git/ec/secp256k1"
-	"mleku.dev/git/slog"
+	"mleku.net/ec/schnorr"
+	"mleku.net/ec/secp256k1"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -75,8 +75,11 @@ func (ev *T) ToObject() (o object.T) {
 	}
 }
 
-func (ev *T) MarshalJSON() (bytes []byte, err error) { return ev.ToObject().Bytes(), nil }
-func (ev *T) Serialize() []byte                      { return ev.ToObject().Bytes() }
+func (ev *T) MarshalJSON() (bytes []byte,
+	err error) {
+	return ev.ToObject().Bytes(), nil
+}
+func (ev *T) Serialize() []byte { return ev.ToObject().Bytes() }
 
 // ToCanonical returns a structure that provides a byte stringer that generates
 // the canonical form used to generate the ID hash that can be signed.

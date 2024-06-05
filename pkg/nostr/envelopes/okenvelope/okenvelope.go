@@ -11,7 +11,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -57,7 +57,10 @@ func NewOKEnvelope(eventID eventid.T, ok bool, reason string) (o *T,
 	return
 }
 
-func (env *T) ToArray() (a array.T)         { return array.T{labels.OK, env.ID, env.OK, env.Reason} }
+func (env *T) ToArray() (a array.T) {
+	return array.T{labels.OK, env.ID,
+		env.OK, env.Reason}
+}
 func (env *T) Label() (l string)            { return labels.OK }
 func (env *T) String() (s string)           { return env.ToArray().String() }
 func (env *T) Bytes() (s []byte)            { return env.ToArray().Bytes() }

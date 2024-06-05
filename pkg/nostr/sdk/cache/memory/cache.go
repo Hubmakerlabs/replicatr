@@ -7,7 +7,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	ristretto "github.com/fiatjaf/generic-ristretto"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -26,9 +26,15 @@ func New32[V any](max int64) *RistrettoCache[V] {
 	return &RistrettoCache[V]{Cache: cache}
 }
 
-func (s RistrettoCache[V]) Get(k string) (v V, ok bool) { return s.Cache.Get(k) }
-func (s RistrettoCache[V]) Delete(k string)             { s.Cache.Del(k) }
-func (s RistrettoCache[V]) Set(k string, v V) bool      { return s.Cache.Set(k, v, 1) }
+func (s RistrettoCache[V]) Get(k string) (v V,
+	ok bool) {
+	return s.Cache.Get(k)
+}
+func (s RistrettoCache[V]) Delete(k string) { s.Cache.Del(k) }
+func (s RistrettoCache[V]) Set(k string, v V) bool {
+	return s.Cache.Set(k, v,
+		1)
+}
 func (s RistrettoCache[V]) SetWithTTL(k string, v V, d time.Duration) bool {
 	return s.Cache.SetWithTTL(k, v, 1, d)
 }

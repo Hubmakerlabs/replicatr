@@ -17,7 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/fiatjaf/generic-ristretto/z"
 	"github.com/puzpuzpuz/xsync/v2"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -114,11 +114,13 @@ func (p *Simple) SubMany(c context.T, urls []string, f filters.T,
 }
 
 // SubManyNonUnique is like SubMany, but returns duplicate events if they come from different relays
-func (p *Simple) SubManyNonUnique(c context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
+func (p *Simple) SubManyNonUnique(c context.T, urls []string, filters filters.T,
+	unique bool) chan IncomingEvent {
 	return p.subMany(c, urls, filters, false)
 }
 
-func (p *Simple) subMany(c context.T, urls []string, filters filters.T, unique bool) chan IncomingEvent {
+func (p *Simple) subMany(c context.T, urls []string, filters filters.T,
+	unique bool) chan IncomingEvent {
 	events := make(chan IncomingEvent)
 	seenAlready := xsync.NewMapOf[bool]()
 
@@ -163,17 +165,20 @@ func (p *Simple) subMany(c context.T, urls []string, filters filters.T, unique b
 
 // SubManyEose is like SubMany, but it stops subscriptions and closes the
 // channel when gets a EOSE
-func (p *Simple) SubManyEose(c context.T, urls []string, f filters.T, unique bool) chan IncomingEvent {
+func (p *Simple) SubManyEose(c context.T, urls []string, f filters.T,
+	unique bool) chan IncomingEvent {
 	return p.subManyEose(c, urls, f, true)
 }
 
 // SubManyEoseNonUnique is like SubManyEose, but returns duplicate events if
 // they come from different relays
-func (p *Simple) SubManyEoseNonUnique(c context.T, urls []string, f filters.T, unique bool) chan IncomingEvent {
+func (p *Simple) SubManyEoseNonUnique(c context.T, urls []string, f filters.T,
+	unique bool) chan IncomingEvent {
 	return p.subManyEose(c, urls, f, false)
 }
 
-func (p *Simple) subManyEose(c context.T, urls []string, f filters.T, unique bool) chan IncomingEvent {
+func (p *Simple) subManyEose(c context.T, urls []string, f filters.T,
+	unique bool) chan IncomingEvent {
 	c, cancel := context.Cancel(c)
 
 	events := make(chan IncomingEvent)
@@ -235,7 +240,8 @@ func (p *Simple) subManyEose(c context.T, urls []string, f filters.T, unique boo
 }
 
 // QuerySingle returns the first event returned by the first relay, cancels everything else.
-func (p *Simple) QuerySingle(c context.T, urls []string, f *filter.T, unique bool) *IncomingEvent {
+func (p *Simple) QuerySingle(c context.T, urls []string, f *filter.T,
+	unique bool) *IncomingEvent {
 	c, cancel := context.Cancel(c)
 	defer cancel()
 	for ievt := range p.SubManyEose(c, urls, filters.T{f}, true) {

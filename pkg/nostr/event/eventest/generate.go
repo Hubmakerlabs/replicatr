@@ -9,7 +9,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/nostrbinary"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
 	"lukechampine.com/frand"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

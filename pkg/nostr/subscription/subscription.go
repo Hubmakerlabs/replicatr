@@ -17,7 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/relay"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/subscriptionoption"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

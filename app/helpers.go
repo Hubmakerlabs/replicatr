@@ -11,7 +11,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
 	"github.com/sebest/xff"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 const (

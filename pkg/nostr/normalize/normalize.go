@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -94,7 +94,8 @@ func URL(u string) string {
 // command and prefixes it with "<prefix>: " if it doesn't already have an
 // acceptable prefix.
 func Reason(reason string, prefix string) string {
-	if idx := strings.Index(reason, ": "); idx == -1 || strings.IndexByte(reason[0:idx], ' ') != -1 {
+	if idx := strings.Index(reason,
+		": "); idx == -1 || strings.IndexByte(reason[0:idx], ' ') != -1 {
 		return prefix + ": " + reason
 	}
 	return reason

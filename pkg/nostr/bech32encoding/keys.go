@@ -5,10 +5,10 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"mleku.dev/git/bech32"
-	"mleku.dev/git/ec"
-	"mleku.dev/git/ec/schnorr"
-	"mleku.dev/git/ec/secp256k1"
-	"mleku.dev/git/slog"
+	"mleku.net/ec"
+	"mleku.net/ec/schnorr"
+	"mleku.net/ec/secp256k1"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -100,7 +100,8 @@ func NpubToPublicKey(encoded string) (pk *secp256k1.PublicKey, err error) {
 // signature or encode to Bech32.
 func HexToPublicKey(pk string) (p *ec.PublicKey, err error) {
 	if len(pk) != HexKeyLen {
-		err = log.E.Err("secret key is %d bytes, must be %d", len(pk), HexKeyLen)
+		err = log.E.Err("secret key is %d bytes, must be %d", len(pk),
+			HexKeyLen)
 		return
 	}
 	var pb []byte
@@ -118,7 +119,8 @@ func HexToPublicKey(pk string) (p *ec.PublicKey, err error) {
 // signature or encode to Bech32.
 func HexToSecretKey(sk string) (s *ec.SecretKey, err error) {
 	if len(sk) != HexKeyLen {
-		err = log.E.Err("secret key is %d bytes, must be %d", len(sk), HexKeyLen)
+		err = log.E.Err("secret key is %d bytes, must be %d", len(sk),
+			HexKeyLen)
 		return
 	}
 	var pb []byte

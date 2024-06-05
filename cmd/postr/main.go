@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/urfave/cli/v2"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
@@ -93,7 +93,9 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.StringFlag{Name: "a", Usage: "profile name"},
 			&cli.StringFlag{Name: "relays", Usage: "relays"},
-			&cli.StringFlag{Name: "nevent", Usage: "URL prefix to prepend to nevents for clickable nevent links", Value: "nostr:"},
+			&cli.StringFlag{Name: "nevent",
+				Usage: "URL prefix to prepend to nevents for clickable nevent links",
+				Value: "nostr:"},
 			&cli.BoolFlag{Name: "v", Usage: "verbose"},
 			&cli.BoolFlag{Name: "t", Usage: "trace"},
 		},
@@ -106,7 +108,8 @@ func main() {
 					&cli.IntFlag{Name: "n", Value: 30,
 						Usage: "number of items"},
 					&cli.BoolFlag{Name: "json", Usage: "output JSON"},
-					&cli.BoolFlag{Name: "update", Usage: "force update of follows"},
+					&cli.BoolFlag{Name: "update",
+						Usage: "force update of follows"},
 					// &cli.BoolFlag{Name: "extra", Usage: "extra JSON"},
 				},
 				Action: Timeline,

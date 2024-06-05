@@ -6,7 +6,7 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"lukechampine.com/frand"
-	"mleku.dev/git/ec/schnorr"
+	"mleku.net/ec/schnorr"
 )
 
 func TestT(t *testing.T) {

@@ -22,7 +22,7 @@ import (
 	"lukechampine.com/frand"
 	"mleku.dev/git/interrupt"
 	"mleku.dev/git/qu"
-	"mleku.dev/git/slog"
+	"mleku.net/slog"
 )
 
 type Counter struct {
@@ -58,7 +58,8 @@ func TestBackend(t *testing.T) {
 	defer cancel()
 	// create L1 with cache management settings enabled
 	path1 := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
-	b1 := badger.GetBackend(c, &wg, path1, true, app.MaxMessageSize, TotalSize/100, LW, HW, 2)
+	b1 := badger.GetBackend(c, &wg, path1, true, app.MaxMessageSize,
+		TotalSize/100, LW, HW, 2)
 	// create L2 with no cache management
 	path2 := filepath.Join(os.TempDir(), fmt.Sprintf("%0x", frand.Bytes(8)))
 	b2 := badger.GetBackend(c, &wg, path2, false, app.MaxMessageSize, 0)
@@ -117,7 +118,8 @@ end:
 						// has and request every event that gets over 50% so that we
 						// create a bias towards already requested.
 						if counter[i].requested+rn > 192 {
-							log.T.Ln("counter", counter[i].requested, "+", rn, "=",
+							log.T.Ln("counter", counter[i].requested, "+", rn,
+								"=",
 								counter[i].requested+rn)
 							// log.T.Ln("adding to fetchIDs")
 							counter[i].requested++
@@ -179,11 +181,13 @@ end:
 				return
 			default:
 			}
-			if ev, bs, err = tests.GenerateEvent(sec, MaxContentSize); chk.E(err) {
+			if ev, bs, err = tests.GenerateEvent(sec,
+				MaxContentSize); chk.E(err) {
 				return
 			}
 			mx.Lock()
-			counter = append(counter, Counter{id: &ev.ID, size: bs, requested: 1})
+			counter = append(counter,
+				Counter{id: &ev.ID, size: bs, requested: 1})
 			total += bs
 			if total > TotalSize {
 				mx.Unlock()
