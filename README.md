@@ -10,14 +10,14 @@
 * No external database required: All data is stored first locally on the filesystem in BadgerDB and optionally on the
   Internet Computer for inter-relay synchronization.
 * The local badgerDB has been additionally equipped with a nostr-specific, highly configurable garbage collection scheme and a
-  nostr-specific prefix-indexing scheme for seamless data mangement and rapid querying
+  nostr-specific prefix-indexing scheme for seamless data management and rapid querying
 * Supports optionally mandating nip-42 authorization upon initial connection for enhanced security
 * [Internet Computer](https://internetcomputer.org/docs/current/home)-integration for efficient syncing with remote
   relays
 
 ## Syncing
 
-The most original feature of replicatr is it's  [Internet Computer](https://internetcomputer.org/docs/current/home)
+The most original feature of replicatr is its  [Internet Computer](https://internetcomputer.org/docs/current/home)
 integration allowing for quick and seamless inter-relay synchronization. This is achieved by defining relay clusters, an
 interconnected group of relays that're given authorization by a replicatr [canister](https://internetcomputer.org/docs/current/concepts/canisters-code) owner to utilize the canister's
 synchronization tooling to achieve consistency across the cluster.
