@@ -2,7 +2,7 @@
 <img src="arch.png" width="70%" />
 
 ## IC Eventstore ##
-The `replicatr` IC canister stores all posts across the relay cluster with the event-id as the primary key.
+The `replicatr` IC (Internet Computer) canister stores all posts across the relay cluster with the event-id as the primary key.
 
 ## ![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/6663bfd4-57b1-456a-815b-eebc5507c133)  Cache  ![image](https://github.com/Hubmakerlabs/replicatr/assets/52180187/6663bfd4-57b1-456a-815b-eebc5507c133)
 Since the `layer 2` eventstore stores all of the posts, the relays are afforded more flexibility on what they need to store. Furthermore, by enabling relays to share a `layer 2` event store, the relay functions as a fast cache that can deliver freshly
