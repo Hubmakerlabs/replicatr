@@ -39,7 +39,7 @@ go run ./cmd/testr <flags> <args>
 
 
 ### Relay Configurations
-In addition to the `testr` configurations, all the relay configurations mentioned [here](pkg/config/base/README.md) apply as well.\
+In addition to the `testr` configurations, all the relay configurations mentioned [here](/pkg/config/base/README.md) apply as well.\
 Upon running the `testr` package, you will be prompted with:
 
 ```bash
