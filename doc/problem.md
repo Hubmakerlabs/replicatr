@@ -9,7 +9,7 @@ Nostr's rapid rise in popularity highlights its potential for a paradigm shift i
 Nostr relays operate independently, and there's no guaranteed synchronization between them. This means users connected to different relays may not see the same content, especially posts from users subscribed to different relays. This creates a fractured user experience and hinders the network's ability to function as a cohesive social platform.
 
 ## Bottlenecks 
-Nostr's demand-driven approach can overload specific relays serving popular content, impacting performance and potentially leading to data inconsistencies across the network.
+The lightweight design of NOSTR relays, while advantageous for scaling down, can lead to catastrophic performance issues when a popular post attracts a large volume of users to a single relay. This overwhelming demand can severely impact the relay’s ability to function efficiently and maintain consistent data across the network.
 
 ## Missed Connections
 Due to data inconsistency, users might miss out on important updates, discussions, or events happening within their Nostr communities. This can be frustrating and lead to a sense of isolation within the broader Nostr ecosystem.
