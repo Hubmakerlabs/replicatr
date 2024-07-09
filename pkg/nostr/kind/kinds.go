@@ -15,7 +15,7 @@ func (ki T) Name() string     { return GetString(ki) }
 
 // The event kinds are put in a separate package so they will be referred to as
 // `kind.EventType` rather than `nostr.KindEventType` as this is correct Go
-// idiom and the version in https://mleku.dev/git/nostr is unclear and
+// idiom and the version in https://github.com/Hubmakerlabs/replicatr/pkg/nostr is unclear and
 // excessive in length, impeding readability. Repeating 'nostr' in these
 // constant names is redundant as they are only used in this context, and
 // creating a special type for them makes this implicit and enforced by the

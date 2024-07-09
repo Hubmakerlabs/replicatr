@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	ristretto "github.com/fiatjaf/generic-ristretto"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

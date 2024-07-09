@@ -3,7 +3,7 @@ package app
 import (
 	"os"
 
-	"mleku.net/slog"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 const Name = "vacuum"

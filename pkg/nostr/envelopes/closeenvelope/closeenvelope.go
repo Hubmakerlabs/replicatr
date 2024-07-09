@@ -9,7 +9,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscriptionid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/array"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/text"
-	"mleku.net/slog"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

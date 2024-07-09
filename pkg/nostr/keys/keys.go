@@ -7,9 +7,9 @@ import (
 	"math/big"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
-	"mleku.net/ec"
-	"mleku.net/ec/schnorr"
 )
 
 var GeneratePrivateKey = func() string { return GenerateSecretKey() }

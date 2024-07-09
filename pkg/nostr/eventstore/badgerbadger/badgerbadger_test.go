@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/app"
+	"github.com/Hubmakerlabs/replicatr/pkg/interrupt"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -19,10 +20,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tests"
+	"github.com/Hubmakerlabs/replicatr/pkg/qu"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"lukechampine.com/frand"
-	"mleku.dev/git/interrupt"
-	"mleku.dev/git/qu"
-	"mleku.net/slog"
 )
 
 type Counter struct {

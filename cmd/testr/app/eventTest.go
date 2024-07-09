@@ -9,10 +9,10 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/fasthttp/websocket"
 	"github.com/fiatjaf/eventstore/badger"
 	"github.com/nbd-wtf/go-nostr"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

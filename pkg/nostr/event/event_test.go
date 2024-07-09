@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event/eventest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
@@ -15,9 +16,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tags"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/davecgh/go-spew/spew"
-	"mleku.net/ec/secp256k1"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

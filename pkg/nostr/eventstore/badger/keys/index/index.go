@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore/badger/keys"
-	"mleku.net/slog"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

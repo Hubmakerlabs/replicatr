@@ -14,7 +14,8 @@ import (
 	// "github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
 )
 
-func FiltersTest(authors []string, ids []string, b *badger.BadgerBackend, numQueries int, ctx context.T) error {
+func FiltersTest(authors []string, ids []string, b *badger.BadgerBackend,
+	numQueries int, ctx context.T) error {
 	nostr.InfoLogger = l.New(io.Discard, "", 0)
 	var relay *nostr.Relay
 	var err error
@@ -40,13 +41,15 @@ func FiltersTest(authors []string, ids []string, b *badger.BadgerBackend, numQue
 		// Query the badger backend
 		queryResultBadger, err := queryBadger(b, query, ctx)
 		if err != nil {
-			fmt.Printf("Error querying Badger backend for query # %d: %v\n", i, err)
+			fmt.Printf("Error querying Badger backend for query # %d: %v\n", i,
+				err)
 			passcounter++
 			continue
 		}
 
 		// Compare results (you'll likely want a more robust comparison than this)
-		if err = compareResults(queryResultBadger, queryResultRelay, numQueries); err != nil {
+		if err = compareResults(queryResultBadger, queryResultRelay,
+			numQueries); err != nil {
 			fmt.Printf("Query %d of %d failed: %v \n", i, numQueries, err)
 		} else {
 			fmt.Printf("Query %d of %d passed\n", i, numQueries)
@@ -54,12 +57,14 @@ func FiltersTest(authors []string, ids []string, b *badger.BadgerBackend, numQue
 		}
 	}
 
-	fmt.Println("Filter Test Complete. %d of %d queries passed", passcounter, numQueries)
+	fmt.Printf("Filter Test Complete. %d of %d queries passed", passcounter,
+		numQueries)
 	return nil
 }
 
 // Helper function to query the relay
-func queryRelay(relay *nostr.Relay, ctx context.T, filter nostr.Filter) ([]nostr.Event, error) {
+func queryRelay(relay *nostr.Relay, ctx context.T,
+	filter nostr.Filter) ([]nostr.Event, error) {
 	var events []nostr.Event
 	sc, _ := context.Timeout(ctx, 5*time.Second)
 	sub := relay.PrepareSubscription(sc, nostr.Filters{filter})
@@ -90,7 +95,8 @@ func queryRelay(relay *nostr.Relay, ctx context.T, filter nostr.Filter) ([]nostr
 }
 
 // Helper function to query Badger backend
-func queryBadger(db *badger.BadgerBackend, filter nostr.Filter, ctx context.T) (events []nostr.Event, err error) {
+func queryBadger(db *badger.BadgerBackend, filter nostr.Filter,
+	ctx context.T) (events []nostr.Event, err error) {
 	// Implement the logic to query your Badger DB
 	// ... return a slice of matching events.
 	eventChan, err := db.QueryEvents(ctx, filter)
@@ -102,7 +108,8 @@ func queryBadger(db *badger.BadgerBackend, filter nostr.Filter, ctx context.T) (
 		if event == nil {
 			continue // or handle a nil event as an error if appropriate
 		}
-		events = append(events, *event) // Dereference the pointer to store the value
+		events = append(events,
+			*event) // Dereference the pointer to store the value
 	}
 
 	return
@@ -110,7 +117,8 @@ func queryBadger(db *badger.BadgerBackend, filter nostr.Filter, ctx context.T) (
 
 // Helper function to compare results (may need refinement)
 // Helper function to compare results
-func compareResults(badgerEvents, relayEvents []nostr.Event, numQueries int) error {
+func compareResults(badgerEvents, relayEvents []nostr.Event,
+	numQueries int) error {
 	// Create sets to store event IDs for efficient comparison
 	badgerIDSet := make(map[string]bool)
 	relayIDSet := make(map[string]bool)
@@ -128,7 +136,8 @@ func compareResults(badgerEvents, relayEvents []nostr.Event, numQueries int) err
 		if math.Abs(float64(len(badgerIDSet)-len(relayIDSet))) < float64(numQueries)*0.6 {
 			return nil
 		} else {
-			return fmt.Errorf("Expected number of results:%d; Actual number of Results: %d", len(badgerIDSet), len(relayIDSet))
+			return fmt.Errorf("Expected number of results:%d; Actual number of Results: %d",
+				len(badgerIDSet), len(relayIDSet))
 		}
 	}
 

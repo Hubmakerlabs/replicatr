@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/timestamp"
-	"mleku.net/slog"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

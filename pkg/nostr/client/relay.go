@@ -29,10 +29,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/normalize"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/subscription"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/puzpuzpuz/xsync/v2"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

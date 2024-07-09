@@ -3,12 +3,12 @@ package bech32encoding
 import (
 	"os"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
-	"mleku.dev/git/bech32"
-	"mleku.net/ec"
-	"mleku.net/ec/schnorr"
-	"mleku.net/ec/secp256k1"
-	"mleku.net/slog"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

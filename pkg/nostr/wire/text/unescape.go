@@ -6,7 +6,7 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
-	"mleku.net/slog"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

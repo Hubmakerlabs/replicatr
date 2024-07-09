@@ -9,10 +9,10 @@ import (
 	"os"
 	"strings"
 
+	secp "github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	b32 "github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"lukechampine.com/frand"
-	secp "mleku.net/ec/secp256k1"
-	"mleku.net/slog"
 )
 
 var (

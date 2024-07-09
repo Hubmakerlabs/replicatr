@@ -13,10 +13,10 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/config/base"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/replicatr"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/alexflint/go-arg"
 	"github.com/fasthttp/websocket"
 	"github.com/fiatjaf/eventstore/badger"
-	"mleku.net/slog"
 )
 
 var conf app.Config

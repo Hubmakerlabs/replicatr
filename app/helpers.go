@@ -10,8 +10,8 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayws"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/sebest/xff"
-	"mleku.net/slog"
 )
 
 const (

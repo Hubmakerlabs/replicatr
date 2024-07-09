@@ -10,13 +10,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/atomic"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/eventenvelope"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/envelopes/labels"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/fasthttp/websocket"
-	"mleku.dev/git/atomic"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

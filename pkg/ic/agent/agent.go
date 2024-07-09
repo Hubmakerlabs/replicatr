@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	sec "github.com/aviate-labs/secp256k1"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

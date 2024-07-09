@@ -7,13 +7,13 @@ import (
 	"path/filepath"
 
 	"github.com/Hubmakerlabs/replicatr/cmd/blower/app"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/alexflint/go-arg"
-	"mleku.net/ec"
-	"mleku.net/ec/schnorr"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

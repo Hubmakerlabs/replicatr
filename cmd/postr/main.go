@@ -8,8 +8,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/urfave/cli/v2"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

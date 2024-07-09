@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/schnorr"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"lukechampine.com/frand"
-	"mleku.net/ec/schnorr"
 )
 
 func TestT(t *testing.T) {

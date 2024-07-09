@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"strings"
 
-	"mleku.dev/git/atomic"
-	"mleku.net/slog"
+	"github.com/Hubmakerlabs/replicatr/pkg/atomic"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 func NewLogger(logLevel int, label string) (l *logger) {

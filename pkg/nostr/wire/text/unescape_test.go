@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"mleku.net/slog"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 func TestUnescapeByteString(t *testing.T) {

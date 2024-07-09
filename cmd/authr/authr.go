@@ -5,11 +5,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
-	"mleku.net/ec/secp256k1"
-	"mleku.net/slog"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

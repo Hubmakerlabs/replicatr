@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/interrupt"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/client"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
@@ -13,10 +14,9 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tests"
+	"github.com/Hubmakerlabs/replicatr/pkg/qu"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"lukechampine.com/frand"
-	"mleku.dev/git/interrupt"
-	"mleku.dev/git/qu"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

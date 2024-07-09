@@ -25,6 +25,7 @@
 !*.toml
 !*.file
 !*.md
+!CHANGELOG.md
 # ...even if they are in subdirectories
 !*/
 !cmd/testnet/*

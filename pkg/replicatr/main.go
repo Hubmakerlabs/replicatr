@@ -17,6 +17,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/apputil"
 	"github.com/Hubmakerlabs/replicatr/pkg/config/base"
 	"github.com/Hubmakerlabs/replicatr/pkg/ic/agent"
+	"github.com/Hubmakerlabs/replicatr/pkg/interrupt"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventstore"
@@ -30,12 +31,11 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/relayinfo"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/wire/object"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/Hubmakerlabs/replicatr/pkg/units"
 	"github.com/alexflint/go-arg"
 	"github.com/aviate-labs/agent-go/identity"
 	sec "github.com/aviate-labs/secp256k1"
-	"mleku.dev/git/interrupt"
-	"mleku.net/slog"
 )
 
 var (

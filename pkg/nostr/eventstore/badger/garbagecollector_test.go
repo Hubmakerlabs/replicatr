@@ -15,9 +15,9 @@ package badger
 // 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tag"
 // 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/tests"
 // 	"lukechampine.com/frand"
-// 	"mleku.dev/git/interrupt"
-// 	"mleku.dev/git/qu"
-// 	"mleku.net/slog"
+// 	"github.com/Hubmakerlabs/replicatr/pkg/interrupt"
+// 	"github.com/Hubmakerlabs/replicatr/pkg/qu"
+// 	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 // )
 
 // type Counter struct {

@@ -12,11 +12,11 @@ import (
 
 	"github.com/Hubmakerlabs/replicatr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/context"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/gobwas/httphead"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsflate"
 	"github.com/gobwas/ws/wsutil"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

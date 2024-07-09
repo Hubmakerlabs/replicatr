@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Hubmakerlabs/replicatr/pkg/bech32"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/eventid"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/hex"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/kind"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/pointers"
-	"mleku.dev/git/bech32"
 )
 
 const (
@@ -133,7 +133,8 @@ func Decode(bech32string string) (prefix string, value any, err error) {
 				result.Relays = append(result.Relays, string(v))
 			case TLVAuthor:
 				if len(v) < 32 {
-					return prefix, nil, fmt.Errorf("author is less than 32 bytes (%d)", len(v))
+					return prefix, nil, fmt.Errorf("author is less than 32 bytes (%d)",
+						len(v))
 				}
 				result.PublicKey = hex.Enc(v)
 			case TLVKind:

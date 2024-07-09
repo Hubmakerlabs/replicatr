@@ -15,11 +15,11 @@ import (
 	"strings"
 
 	"github.com/Hubmakerlabs/replicatr/cmd/firehose/app"
+	"github.com/Hubmakerlabs/replicatr/pkg/ec/secp256k1"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/bech32encoding"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/keys"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 	"github.com/alexflint/go-arg"
-	"mleku.net/ec/secp256k1"
-	"mleku.net/slog"
 )
 
 var log, chk = slog.New(os.Stderr)

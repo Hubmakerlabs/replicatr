@@ -15,7 +15,7 @@ import (
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/event/eventest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/filters/filtertest"
 	"github.com/Hubmakerlabs/replicatr/pkg/nostr/interfaces/enveloper"
-	"mleku.net/slog"
+	"github.com/Hubmakerlabs/replicatr/pkg/slog"
 )
 
 var log, chk = slog.New(os.Stderr)
