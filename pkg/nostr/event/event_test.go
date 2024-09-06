@@ -29,11 +29,16 @@ const (
 	TestPubHex    = "4fdb07df4a683e3ee9b2a9d117e01bfe2548d7e8c0d4cb56d77e9c23091c3fc3"
 )
 
-func GetTestKeyPair() (sec *secp256k1.SecretKey,
-	pub *secp256k1.PublicKey) {
-	b, _ := hex.Dec(TestSecHex)
-	sec = secp256k1.SecKeyFromBytes(b)
-	pub = sec.PubKey()
+func GetTestKeyPair() (sec *secp256k1.SecretKey, pub *secp256k1.PublicKey) {
+	for {
+		b, _ := hex.Dec(TestSecHex)
+		sec = secp256k1.SecKeyFromBytes(b)
+		pub = sec.PubKey()
+		pubBytes := pub.SerializeCompressed()
+		if pubBytes[0] == 2 {
+			break
+		}
+	}
 	return
 }
 
@@ -62,9 +67,7 @@ func TestEscaping(t *testing.T) {
 	}
 }
 
-func GenTextNote(sk *secp256k1.SecretKey, replyID,
-	relayURL string) (note string, err error) {
-
+func GenTextNote(sk *secp256k1.SecretKey, replyID, relayURL string) (note string, err error) {
 	// pick random quote to use in content field of event
 	src := rand.Intn(len(quotes.D))
 	q := rand.Intn(len(quotes.D[src].Paragraphs))

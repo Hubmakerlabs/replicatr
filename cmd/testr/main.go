@@ -2,12 +2,11 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-
-	"fmt"
 
 	"github.com/Hubmakerlabs/replicatr/cmd/testr/app"
 	"github.com/Hubmakerlabs/replicatr/pkg/config/base"

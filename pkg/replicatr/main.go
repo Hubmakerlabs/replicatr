@@ -482,10 +482,10 @@ func Main(osArgs []string, c context.T, cancel context.F) {
 		servs = append(servs, serv)
 	}
 	// // this allows local access and works with nostrudel
-	servs = append(servs, http.Server{
-		Addr:    "127.0.0.1:4869",
-		Handler: rl,
-	})
+	// servs = append(servs, http.Server{
+	// 	Addr:    "127.0.0.1:4869",
+	// 	Handler: rl,
+	// })
 	for i := range servs {
 		log.I.Ln("listening on", servs[i].Addr)
 	}
